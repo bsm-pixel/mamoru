@@ -53,6 +53,55 @@
   .slot-empty{grid-column:1/-1; text-align:center; color:var(--mute); font-size:13px; padding:18px 0;}
   .warn{font-size:12.5px; color:#b45309; background:#fef3c7; border-radius:8px; padding:9px 12px; margin-top:12px; line-height:1.6;}
 </style>
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 알림톡 링크 · 예약 확인/변경 폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 예약 전표(방문 예약증)처럼 정확하게 / 시그니처: 굵은 제목 + 키:값 전표 행(방문 일시만 크게·tabular 숫자)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(시트 4px) · 버튼 높이·슬롯 크기·달력 그대로 · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+:root{ --mist:#B8B4AF; --stone:#4A4A4A; --sand:#D4D0CB; }
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+html,body{ background:var(--cream); word-break:keep-all; }
+
+/* ── 1. 카드 → 가는 선 묶음 (흰 판·16px 모서리 제거) ── */
+.card{ background:transparent; border:0; border-top:1px solid var(--void); border-radius:0; padding:22px 0 8px; }
+.card.center{ border-top-color:var(--sand); }
+/* 제목 — 영문 머리말(얇은 라벨) + 굵은 900 제목 */
+.card h1{ font-size:clamp(24px,7vw,30px); font-weight:900; letter-spacing:-.04em; line-height:1.2; margin-bottom:18px; }
+.card h1::before{ content:'RESERVATION'; display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--mute); margin-bottom:10px; }
+
+/* ── 2. 시그니처 — 전표 행: 키는 작게, 값은 굵게 · 방문 일시만 크게 ── */
+.row{ padding:12px 0; border-bottom:1px solid var(--soft); align-items:baseline; }
+.row:last-child{ border-bottom:1px solid var(--soft); }
+.row .k{ font-size:13px; }
+.row .v{ font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; }
+.row:has(#f-when){ padding:16px 0; }
+.row:has(#f-when) .v{ font-size:clamp(17px,4.8vw,20px); font-weight:900; letter-spacing:-.02em; }
+.row:has(#f-asid) .v{ font-family:'Outfit','Pretendard',sans-serif; font-weight:600; letter-spacing:.02em; }
+
+/* ── 3. 버튼 — 12px → 2px (높이·패딩 그대로) ── */
+.btn{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+.btn.ghost{ border-color:var(--soft); }
+.hint{ text-wrap:pretty; }
+
+/* ── 4. 상태 화면(오류·변경 불가·완료) — 가는 선 묶음, 굵은 제목 ── */
+.done{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--soft); border-radius:0; padding:44px 4px; }
+.done h2{ font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; }
+.done p{ text-wrap:pretty; }
+.done p b{ display:inline-block; margin-top:6px; font-size:18px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+
+/* ── 5. 일정 변경·취소 시트 — 20px → 4px, 항목 거대 번호(01 날짜 / 02 시간) ── */
+.sheet{ border-radius:4px 4px 0 0; counter-reset:b-fld; }
+.sheet h2{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+label.fld{ counter-increment:b-fld; font-size:14px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin:20px 0 10px; padding-top:16px; border-top:1px solid var(--soft); }
+label.fld::before{ content:counter(b-fld, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:32px; font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+input[type=date]{ border-radius:2px; border-color:var(--soft); }
+input[type=date]:focus{ outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+.slot{ border-radius:2px; border-color:var(--soft); font-variant-numeric:tabular-nums; }
+.slot.on{ font-weight:800; }
+/* 경고 — 노란 상자 → 왼쪽 검은 선(모노크롬) */
+.warn{ background:transparent; color:var(--void); font-weight:600; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; }
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -80,7 +129,7 @@
         <button class="btn primary" id="btn-change" onclick="openResched()">일정 변경하기</button>
         <button class="btn" id="btn-cancel" onclick="openCancel()">예약 취소하기</button>
       </div>
-      <p class="hint">방문 전까지 언제든 변경·취소하실 수 있어요<br>변경 시 알림톡으로 안내드립니다</p>
+      <p class="hint">방문 전까지 언제든 <span class="b-nw">변경·취소하실 수 있어요</span><br>변경 시 알림톡으로 안내드립니다</p>
     </div>
   </div>
 

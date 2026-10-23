@@ -356,6 +356,113 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트·핀 마킹 표시 무수정 원칙 ═══════════════
+     콘셉트: 정밀 기술 도면의 표제란(Title Block) = 진단 리포트
+     시그니처: 고객 정보 → 도면 표제란 hairline 격자 + 거대 「N자루」 치수 괄호 / 시트 번호 01·02·03
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2px · 상처 색(핀·범례·목록)은 TMS 검수 화면과 같은 데이터 색이라 그대로
+     ⚠ 핀 마킹(.mark-pin/.mk-pt/.mk-flag/.mk-lines)·그림체(.mm-sc-fig svg)는 TMS 검수와 동기화 — 이 블록에서 건드리지 않음
+     ⚠ 이미지 저장(html2canvas)과 호환되게 CSS만(애니메이션·필터 없음) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+/* 도면 한 장처럼 — PC·태블릿에선 용지 가장자리 hairline */
+@media (min-width:440px){ .container{ border-left:1px solid var(--sand); border-right:1px solid var(--sand); } }
+.scissor-card, .scissor-photo img, .mark-photo-wrap img{ box-shadow:none !important; }
+
+/* ── 상단 액션바 — 버튼 2px ── */
+.action-bar button{ border-radius:2px; }
+.btn-back{ background:transparent; border:1px solid rgba(250,249,247,.28) !important; }
+.btn-save{ font-weight:800; }
+
+/* ── 1. 머리 — 워드마크 + 문서명(알약 → hairline 아래 굵은 제목) ── */
+.header{ text-align:left; padding:26px 20px 22px; }
+.header .logo{ height:20px; margin-bottom:0; display:block; }
+.header .doc-title{ display:block; margin-top:22px; padding:14px 0 0; background:none; border:0; border-top:1px solid rgba(250,249,247,.22); border-radius:0;
+  font-family:'Pretendard',sans-serif; font-size:clamp(30px,9.4vw,38px); font-weight:900; letter-spacing:-.04em; line-height:1.05; }
+
+/* ── 2. 고객 정보 → 도면 표제란 (얇은 「님」 ↔ 굵은 이름, hairline 격자 칸) ── */
+.customer-info{ background:var(--white); padding:24px 20px 0; border-bottom:1px solid var(--void); }
+.customer-info .name{ font-family:'Pretendard',sans-serif; font-size:clamp(28px,8.6vw,34px); line-height:1.1; letter-spacing:-.04em; margin-bottom:18px; }
+.customer-info .name #r-name{ font-size:1em; font-weight:900; color:var(--void); margin:0; letter-spacing:-.04em; }
+.customer-info .name span:not(#r-name){ font-size:.62em; font-weight:300; color:var(--warm-gray); margin-left:2px; letter-spacing:0; }
+.customer-info .info-grid{ gap:0; margin:0 !important; border-top:1px solid var(--void); }
+.customer-info .info-grid + .info-grid{ border-top:1px solid var(--sand); }
+.customer-info .info-item{ padding:10px 10px 12px; border-left:1px solid var(--sand); min-width:0; }
+.customer-info .info-item:first-child{ border-left:0; padding-left:0; }
+.customer-info .info-item .label{ font-size:10.5px; font-weight:600; letter-spacing:.04em; }
+.customer-info .info-item .value{ font-family:'Outfit','Pretendard',sans-serif; font-size:14.5px; font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+
+/* ── 3. 가위 수량 — 거대 「N자루」 + 종류 + 치수 괄호(|___|) ── */
+.scissor-summary{ display:grid; grid-template-columns:auto 1fr; column-gap:18px; align-items:end; text-align:left; background:var(--white); border-top:0; padding:28px 20px 24px; }
+.scissor-summary .total{ grid-column:1; grid-row:1 / span 2; margin:0; font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(50px,15vw,62px); font-weight:900; line-height:.82; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }
+.scissor-summary .total-label{ grid-column:2; margin:0 0 6px; font-size:11px; font-weight:800; letter-spacing:.08em; color:var(--void); }
+.scissor-summary .types{ grid-column:2; justify-content:flex-start; gap:2px 14px; }
+.scissor-summary .type-item{ background:none; border:0; border-radius:0; padding:0; font-size:13px; color:var(--stone); }
+.scissor-summary .type-item strong{ font-family:'Outfit',sans-serif; font-weight:800; color:var(--void); margin-left:2px; }
+.scissor-summary::after{ content:''; grid-column:1 / -1; height:7px; margin-top:16px; border:1px solid var(--void); border-top:0; }
+
+/* ── 4. 섹션 머리 — 시트 번호 01·02·03(Outfit 300, 흐림 · 제목 앞 한 줄 — 가위 거대 번호와 겹치지 않게) + 굵은 제목 + 검은 hairline ── */
+.section-title{ padding:30px 20px 10px; font-family:'Pretendard',sans-serif; font-size:clamp(19px,5.6vw,22px); font-weight:900; letter-spacing:-.03em; border-bottom:1px solid var(--void); }
+.section-title::before{ display:inline-block; min-width:1.7em; margin-right:6px; font-family:'Outfit',sans-serif; font-size:1.3em; font-weight:300; line-height:1; letter-spacing:-.05em; color:var(--mist); vertical-align:-.08em; font-variant-numeric:tabular-nums; }
+#capture-area > .section-title:nth-child(4)::before{ content:'01'; }
+#capture-area > .section-title:nth-child(6)::before{ content:'02'; }
+#capture-area > .section-title:nth-child(8)::before{ content:'03'; }
+
+/* ── 5. 가위 카드(구 내역서·핀 마킹) — 모서리 2px·그림자 없음·검은 테두리. 핀/선/플래그 자체는 그대로 ── */
+.scissor-card{ margin:16px 20px; border-radius:2px; border:1px solid var(--void); }
+.scissor-header{ padding:12px 16px; }
+.scissor-header .number{ font-family:'Outfit','Pretendard',sans-serif; font-weight:800; letter-spacing:-.01em; }
+.scissor-header .type{ background:transparent; border:1px solid rgba(250,249,247,.32); border-radius:2px; font-weight:600; }
+.mark-photo-wrap img{ border-radius:2px; }
+.scissor-photo .no-photo, .scissor-body > .no-photo{ border-radius:2px; }
+.mark-legend .leg{ border-radius:2px; }
+.card-ment{ margin:0 16px 18px; padding:2px 0 2px 14px; background:transparent; border:0; border-left:2px solid var(--void); border-radius:0; }
+.card-ment__h{ color:var(--void); font-weight:800; letter-spacing:.08em; }
+.card-ment__dash{ color:var(--mist); }
+
+/* ── 6. 가위별 복원 내역(v3 스와이프) — 거대 번호 + hairline, 둥근 버튼 → 2px ── */
+.mm-sc-index{ align-items:flex-end; padding-bottom:12px; border-bottom:1px solid var(--void); }
+.mm-sc-index b{ font-weight:300; font-size:clamp(56px,17vw,72px); line-height:.8; letter-spacing:-.06em; font-variant-numeric:tabular-nums; }
+.mm-sc-index i{ font-weight:300; font-size:16px; color:var(--mist); }
+.mm-sc-index span{ font-size:14px; font-weight:800; color:var(--void); }
+.mm-sc-photo, .mm-sc-nophoto, .mm-sc-zoom button, .mm-sc-fig{ border-radius:2px; }
+.mm-sc-photo, .mm-sc-nophoto{ margin-top:14px; }
+.mm-sc-label{ display:flex; align-items:center; gap:10px; color:var(--void); font-weight:800; letter-spacing:.08em; }
+.mm-sc-label::after{ content:''; flex:1; height:1px; background:var(--sand); }
+.mm-sc-zoom span{ color:var(--void); font-weight:800; letter-spacing:.04em; }
+.mm-sc-list{ margin-top:14px; }
+.mm-sc-list li{ border-top-color:var(--sand); }
+.mm-sc-list li:first-child{ border-top-color:var(--void); }
+.mm-sc-list b{ font-weight:800; letter-spacing:-.02em; }
+.mm-sc-ok{ background:transparent; border-radius:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); padding:18px 2px; text-align:left; color:var(--void); font-weight:600; }
+.mm-sc-note{ background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 14px; }
+.mm-sc-note b{ color:var(--void); font-weight:800; letter-spacing:.08em; }
+.mm-sc-nav button{ border-radius:2px; border-color:var(--void); color:var(--void); }
+.mm-sc-dots i{ width:14px; height:2px; border-radius:0; }
+.mm-sc-dots i.on{ width:28px; height:2px; border-radius:0; }
+.mm-sc-capture .mm-sc-slide + .mm-sc-slide{ border-top:1px solid var(--void); margin-top:16px; }
+
+/* ── 7. 진행내역 — 회색 상자 → 왼쪽 검은 선 ── */
+.comment-section{ margin:16px 20px; padding:2px 0 2px 14px; background:transparent; border-radius:0; border-left:2px solid var(--void); }
+.comment-section .comment-header{ border-bottom:0; padding-bottom:0; letter-spacing:.04em; font-weight:800; }
+
+/* ── 8. 비용 — 숫자 정렬(tabular) + 총액만 크게 ── */
+.cost-section{ padding:4px 20px 28px; }
+.cost-row .value{ font-family:'Outfit','Pretendard',sans-serif; font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; }
+.cost-row.total{ align-items:flex-end; border-top:1px solid var(--void); padding-top:16px; margin-top:6px; }
+.cost-row.total .label{ font-weight:800; }
+.cost-row.total .value{ font-size:clamp(26px,8vw,32px); font-weight:900; letter-spacing:-.03em; line-height:1; }
+
+/* ── 9. 푸터·오류·확대 보기 ── */
+.footer{ margin-top:8px; text-align:left; }
+.footer .logo{ display:block; height:16px; }
+.footer .tagline{ font-family:'Outfit',sans-serif; font-weight:700; letter-spacing:.2em; padding-bottom:14px; border-bottom:1px solid rgba(250,249,247,.16); }
+.error-title{ font-weight:900; letter-spacing:-.03em; }
+.error-retry{ border-radius:2px; border-color:var(--void); color:var(--void); font-weight:700; }
+.mm-lb-bar button, .mm-lb-x{ border-radius:2px; }
+</style>
 </head>
 <body>
   <!-- 상단 액션바 -->

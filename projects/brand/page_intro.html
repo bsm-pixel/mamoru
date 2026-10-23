@@ -1182,7 +1182,7 @@ body{ word-break:keep-all; overflow-wrap:break-word; }
              mm.navigateTo(postMessage) + return false 로 iframe 자체 이동을 막는다.
              ⚠️ href와 onclick을 둘 다 살려두면 부모·iframe이 동시에 이동해 iframe 쪽이 404가 난다 -->
         <a href="https://pf.kakao.com/_KHWNb" target="_blank" rel="noopener" class="btn-primary">편하게 문의하기 <span><img src="./icons/arrow.svg" alt=""></span></a>
-        <a href="/58" onclick="mm.navigateTo('/58'); return false;" class="btn-secondary">간편 진단 해보기</a>
+        <a href="/58" onclick="mm.navigateTo('/58'); return false;" class="btn-secondary" style="display:none"><!-- 간편진단 미완성 → 임시 숨김(2026-10-23) -->간편 진단 해보기</a>
         <a href="/44" onclick="mm.navigateTo('/44'); return false;" class="btn-secondary">제품들 보러가기</a>
       </div>
 

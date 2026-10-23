@@ -1129,6 +1129,94 @@ body {
   }
 }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 진단 도구라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 진단 리포트(검사지) / 시그니처: 오른쪽 위 거대 얇은 단계 번호(1/5) + 질문 제목 얇은 첫 줄 ↔ 굵은 둘째 줄
+             결과 = 번호 매긴 검사 성적서(01·02·03… hairline 행)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 선택지·버튼 크기 유지 · 히어로 사진 없음 · 아이콘 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ font-family:'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; word-break:keep-all; overflow-wrap:break-word; }
+.mamoru-diagnosis *{ box-shadow:none !important; }
+
+/* ── 1. 머리 — 왼쪽 작은 라벨 ↔ 오른쪽 거대 얇은 단계 번호 ── */
+.diag-header{ align-items:flex-end; padding:12px 0 14px; margin-bottom:0; }
+.diag-title{ font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--warm-gray); padding-bottom:6px; }
+.diag-step-indicator{ background:transparent; padding:0; border-radius:0; font-family:'Outfit',sans-serif; font-weight:300; font-size:clamp(40px,12vw,64px); line-height:.8; letter-spacing:-.05em; color:var(--void); font-variant-numeric:tabular-nums; }
+
+/* 진행 막대 — 둥근 6px → 가는 선 위 2px 검정 */
+.diag-progress-container{ margin-bottom:clamp(28px,6vw,44px); }
+.diag-progress-bar{ height:2px; border-radius:0; background:var(--sand); }
+.diag-progress-fill{ border-radius:0; }
+
+/* ── 2. 질문 — 알약 라벨 → 짧은 선 + 머리말 / 제목 얇은 첫 줄 ↔ 굵은 둘째 줄 ── */
+.diag-question-label{ background:transparent; border-radius:0; padding:0; font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--warm-gray); display:inline-flex; align-items:center; gap:10px; margin-bottom:14px; }
+.diag-question-label::before{ content:''; width:24px; height:1px; background:var(--void); }
+.diag-question-text{ font-family:'Pretendard',sans-serif; font-size:clamp(26px,7.4vw,44px); font-weight:900; line-height:1.25; letter-spacing:-.04em; word-break:keep-all; }
+.diag-question-text::first-line{ font-weight:300; color:var(--stone); }
+.diag-question-sub{ font-size:clamp(14px,3.8vw,16px); color:var(--warm-gray); margin-bottom:clamp(22px,5vw,32px); }
+
+/* ── 3. 선택지 — 회색 판 → 흰 칸 + 가는 선, 2px (크기·여백 그대로) ── */
+.diag-option, .diag-option--with-gif{ background:var(--white); border:1px solid var(--sand); border-radius:2px; }
+.diag-option.selected, .diag-option--with-gif.selected{ background:var(--white); border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; transform:none; }
+@media (hover:hover){
+  .diag-option:hover, .diag-option--with-gif:hover{ background:var(--white); border-color:var(--void); }
+}
+.diag-option-icon{ background:transparent; border-radius:2px; }
+.diag-option.selected .diag-option-icon{ background:transparent; }
+.diag-option-title, .diag-option-info-title{ font-weight:700; letter-spacing:-.02em; }
+.diag-option-desc, .diag-option-info-desc{ color:var(--warm-gray); }
+.diag-option-gif{ background:var(--shell); border-bottom:1px solid var(--parchment); }
+/* 모바일: 좁은 2칸(글 끊김) → 1단 가로 행 [움직이는 그림 | 글 | 체크] */
+@media (max-width:767px){
+  .diag-options--with-gif{ grid-template-columns:1fr; gap:10px; }
+  .diag-option--with-gif{ flex-direction:row; align-items:stretch; }
+  .diag-option-gif{ flex:0 0 38%; height:auto; min-height:88px; border-bottom:0; border-right:1px solid var(--parchment); }
+  .diag-option-info{ flex:1; min-width:0; padding:12px 14px; }
+  .diag-option-info-title{ font-size:15px; }
+  .diag-option-info-desc{ font-size:13px; }
+}
+/* 체크 — 동그라미 → 2px 사각 (선택 = 검정 채움) */
+.diag-option-check, .diag-option-info-check{ border-radius:2px; border-width:1px; border-color:var(--mist); }
+
+/* 복수선택 안내 — 회색 상자 → 왼쪽 검은 선 */
+.diag-multiple-hint{ justify-content:flex-start; background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; color:var(--stone); }
+
+/* ── 4. 하단 버튼 — 알약 → 2px 사각 (높이 그대로) ── */
+.diag-next-btn{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+@media (hover:hover){ .diag-next-btn:not(:disabled):hover{ transform:none; } }
+.diag-back-btn-bottom{ background:transparent; border:1px solid var(--sand); border-radius:2px; }
+
+/* ── 5. 결과 = 검사 성적서 — 판 제거, 검은 가는 선 시작, 행마다 번호 ── */
+.diag-result-card{ background:transparent; border:0; border-radius:0; padding:0 0 4px; }  /* 위 진행 막대(가득 참)가 곧 시작 선 — 선 2줄 겹침 방지 */
+.diag-result-badge{ background:transparent; border:1px solid var(--void); border-radius:2px; color:var(--void); padding:5px 10px; font-size:12px; font-weight:800; letter-spacing:.02em; }
+.diag-result-title{ font-family:'Pretendard',sans-serif; font-size:clamp(26px,7.4vw,40px); font-weight:900; letter-spacing:-.04em; line-height:1.2; word-break:keep-all; }
+.diag-summary{ counter-reset:b-row; margin-top:clamp(20px,5vw,28px); }
+.diag-summary__row{ counter-increment:b-row; align-items:center; padding:14px 0; border-bottom:1px solid var(--sand); }
+.diag-summary__row:first-child{ border-top:1px solid var(--void); }
+.diag-summary__k{ display:inline-flex; align-items:center; font-size:13px; font-weight:600; color:var(--stone); }
+.diag-summary__k::before{ content:counter(b-row, decimal-leading-zero); min-width:2em; margin-right:8px; font-family:'Outfit',sans-serif; font-size:clamp(22px,6vw,28px); font-weight:300; line-height:1; letter-spacing:-.05em; color:var(--mist); font-variant-numeric:tabular-nums; }
+.diag-summary__v{ font-size:15px; font-weight:800; letter-spacing:-.02em; }
+
+/* 복원수리 안내 — 판 → 왼쪽 검은 선 */
+.diag-result-restore{ background:transparent; border:0; border-left:2px solid var(--void); border-radius:0; padding:4px 0 4px 16px; margin:28px 0; }
+.diag-result-restore-title{ font-weight:800; letter-spacing:-.02em; }
+.diag-result-restore-desc{ text-wrap:pretty; }
+.diag-result-youtube-link{ border-radius:2px; background:transparent; border-color:var(--sand); }
+.diag-result-youtube-thumb{ border-radius:2px; background:var(--shell); }
+
+/* 결과 버튼 — 알약 → 2px (높이 그대로) */
+.diag-result-btn{ border-radius:2px; }
+.diag-result-btn-primary{ font-weight:800; letter-spacing:-.01em; }
+@media (hover:hover){ .diag-result-btn-primary:hover{ transform:none; } }
+.diag-result-btn-secondary{ border:1px solid var(--sand); }
+.diag-result-btn-hint{ text-wrap:pretty; }
+@media (min-width:769px){
+  .diag-result-actions{ align-items:flex-start; }
+  .diag-result-btn-hint{ text-align:left; }
+}
+</style>
 </head>
 <body>
 

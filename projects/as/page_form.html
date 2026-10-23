@@ -1251,6 +1251,118 @@ select.err {
   to { transform: rotate(360deg); }
 }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 접수폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 수리 접수 전표(작업 지시서) / 시그니처: 입력 단계 거대 얇은 번호 01·02·03… + 가는 선 구분
+             (숨겨진 단계는 번호에서 자동 제외 — 방문수거·직접발송·직접방문 모드별로 번호가 이어짐)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(달력·주소·결과 창 4px) · 입력칸 48 / 버튼 56 높이 유지 · 히어로 사진 없음
+     달력(수거 불가일·주말·공휴일)·수거 시간 안내(mmDmCaveat)·가격 계산 로직 무수정 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+:root{ --font-body:'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+*{ box-shadow:none !important; }
+
+/* ── 1. 머리 — 작은 영문 머리말 + 굵은 제목, 아래 검은 가는 선 ── */
+.header{ align-items:flex-end; border-bottom:0; padding:28px 0 18px; margin-bottom:0; }
+.header-logo{ border-radius:2px; }
+.header h1{ font-family:'Pretendard',sans-serif; font-size:clamp(28px,8vw,40px); font-weight:900; letter-spacing:-.04em; line-height:1.1; }
+.header h1::before{ content:'RESTORE'; display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); margin-bottom:8px; }
+@media (min-width:768px){ .header{ padding:8px 0 22px; margin-bottom:0; } }
+
+/* ── 2. 카드 → 가는 선 묶음 (흰 판·둥근 모서리 제거, 입력칸만 흰색) ── */
+.card{ background:transparent; border:0; border-top:1px solid var(--void); border-radius:0; }
+.card-body{ padding:26px 0 8px; counter-reset:b-step; }
+@media (min-width:768px){ .card-body{ padding:34px 0 8px; } }
+.form-divider{ background:var(--sand); }
+
+/* ── 3. 시그니처 — 입력 단계 거대 번호 (숨김 단계는 자동 제외) ── */
+.section-title,
+#sec-pick > .form-group:first-child > label,
+#sec-visit > .form-group > label,
+#sec-qty .qty-row > .form-group:first-child > label,
+.form-divider + .form-group > label,
+.privacy-box h4{
+  counter-increment:b-step;
+  display:flex; align-items:baseline; flex-wrap:wrap;
+  font-size:16px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:14px;
+}
+.section-title::before,
+#sec-pick > .form-group:first-child > label::before,
+#sec-visit > .form-group > label::before,
+#sec-qty .qty-row > .form-group:first-child > label::before,
+.form-divider + .form-group > label::before,
+.privacy-box h4::before{
+  content:counter(b-step, decimal-leading-zero); flex:0 0 auto; min-width:1.5em; margin-right:10px;
+  font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8;
+  letter-spacing:-.06em; color:var(--mist); font-variant-numeric:tabular-nums;
+}
+.required::after{ margin-left:3px; content:"*"; }
+/* 같은 줄 짝 라벨(전달방법·타사가위 수량) — 번호 칸 높이에 맞춰 아래 정렬 (PC 2단 / 수량 2단) */
+#sec-pick > .form-group:nth-child(2) > label,
+#sec-qty .qty-row > .form-group:nth-child(2) > label{
+  display:flex; align-items:flex-end; font-size:16px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:14px;
+}
+/* 짝 라벨 두 개를 같은 높이·아래 정렬로 → 아래 입력칸 위치가 나란히 */
+#sec-qty .qty-row > .form-group > label{ align-items:flex-end; height:34px; }
+@media (min-width:768px){ #sec-pick > .form-group > label{ align-items:flex-end; height:34px; } }
+@media (max-width:767px){
+  /* 모바일: 수량 2칸은 좁아서 번호 없는 짝 라벨을 작게 (긴 라벨 줄바꿈 방지) */
+  #sec-qty .qty-row > .form-group > label{ font-size:14px; }
+}
+
+/* 작은 입력 라벨(성함·연락처) — 회색 → 진한 회색 */
+label{ font-size:13px; font-weight:600; color:var(--stone); }
+.form-sub-hint, .form-hint{ color:var(--warm-gray); text-wrap:pretty; }
+
+/* ── 4. 진행방식 — 둥근 세그먼트 → 2px 사각, 선택 = 검정 채움 (높이 그대로) ── */
+.segment-btn{ border-radius:2px; background:var(--white); color:var(--stone); }
+.segment-btn:hover{ background:var(--white); border-color:var(--void); }
+.segment-btn.active{ background:var(--void); border-color:var(--void); color:var(--cream); font-weight:800; }
+.type-info{ background:transparent; border-radius:0; padding:2px 0 2px 14px; text-wrap:pretty; }
+@media (min-width:768px){ .type-info{ padding:2px 0 2px 16px; } }
+.visit-store-card{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); border-radius:0; padding:14px 0; }
+.visit-store-card .store-line .lbl{ min-width:56px; font-weight:600; }
+
+/* 직접방문 시간 칸 — 2px */
+#sec-visit .slot-btn{ border-radius:2px; background:var(--white); font-variant-numeric:tabular-nums; }
+#sec-visit .slot-period-label{ font-family:'Outfit','Pretendard',sans-serif; letter-spacing:.06em; }
+#sec-visit .slot-preview{ border-radius:2px; background:var(--white); }
+#sec-visit .slot-empty{ border-radius:2px; background:transparent; }
+
+/* ── 5. 입력칸·버튼 — 2px (높이 48 그대로), 포커스 = 선 ── */
+input[type="text"], input[type="tel"], textarea, select{ border-radius:2px; }
+input[type="text"]:focus, input[type="tel"]:focus, textarea:focus, select:focus{ outline:1px solid var(--void); outline-offset:-2px; }
+.btn-search{ border-radius:2px; background:var(--white); border-color:var(--void); font-weight:700; }
+.pickup-caveat{ background:transparent; border:0; border-left:2px solid var(--void); border-radius:0; padding:2px 0 2px 12px; text-wrap:pretty; }
+
+/* ── 6. 예상 금액 — 회색 상자 → 검은 선 사이 표, 합계 숫자 크게 ── */
+.mm-price-summary{ background:transparent; border:0; border-top:1px solid var(--void); border-radius:0; padding:16px 0 0; }  /* 아래는 기존 구분선(form-divider)이 닫음 — 선 2줄 방지 */
+@media (min-width:768px){ .mm-price-summary{ padding:18px 0 0; } }
+.mm-price-value{ font-variant-numeric:tabular-nums; }
+.mm-price-row--total{ align-items:baseline; }
+.mm-price-row--total .mm-price-label{ font-weight:800; }
+.mm-price-gold{ font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(24px,6.6vw,30px); font-weight:800; letter-spacing:-.03em; }
+
+/* ── 7. 개인정보 동의 — 판 제거, 내용 칸만 2px ── */
+.privacy-box{ background:transparent; border:0; border-radius:0; padding:0; }
+@media (min-width:768px){ .privacy-box{ padding:0; } }
+.privacy-content{ border-radius:2px; }
+.privacy-check label{ font-weight:700; color:var(--void); }
+
+/* ── 8. 접수하기 — 알약 → 2px 사각 (높이 56 그대로) ── */
+#btn-submit{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+
+/* ── 9. 창(달력·주소 검색·결과) — 4px, 그림자 없음 ── */
+.calendar-sheet, .postcode-wrap, .modal-content{ border-radius:4px; }
+.calendar-nav-btn{ border-radius:2px; }
+.calendar-month-label{ font-family:'Outfit','Pretendard',sans-serif; font-weight:700; letter-spacing:-.01em; }
+.calendar-day{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.modal-footer{ background:var(--white); }
+.modal-footer .btn-primary{ border-radius:2px; }
+.modal-body h2{ font-weight:900; letter-spacing:-.03em; }
+</style>
 </head>
 <body>
 <div id="bootLoader">

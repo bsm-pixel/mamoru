@@ -86,6 +86,61 @@
     .fail-foot p{font-size:12px;color:var(--warm-gray);line-height:1.7;}
     .fail-foot a{color:var(--stone);text-decoration:none;font-weight:600;}
   </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 정품 인증서 = 정밀 검사 성적서(도면 용지)
+     시그니처: 인증서 모서리의 도면 재단 표시(⌐ ⌙ hairline) + 거대 제품명 + 표제란 칸(구매일 │ 구매처)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 인증 도장(원)만 원형 유지 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+.wrap{ padding-top:14px; }
+.header p{ letter-spacing:.32em; }
+
+/* ── 1. 인증서 — 검은 hairline 용지 + 대각 모서리 재단 표시 ── */
+.cert, .fail{ position:relative; overflow:visible; border-radius:2px; border:1px solid var(--void); box-shadow:none; }
+.cert::before, .cert::after, .fail::before, .fail::after{ content:''; position:absolute; width:14px; height:14px; pointer-events:none; }
+.cert::before, .fail::before{ left:-9px; top:-9px; border-left:1px solid var(--void); border-top:1px solid var(--void); }
+.cert::after, .fail::after{ right:-9px; bottom:-9px; border-right:1px solid var(--void); border-bottom:1px solid var(--void); }
+
+/* ── 2. 인증 띠 — 가운데 도장 → 왼쪽 도장 │ 오른쪽 굵은 제목 ── */
+.seal{ display:grid; grid-template-columns:auto 1fr; column-gap:16px; align-items:center; text-align:left; padding:22px 22px; }
+.seal-ring{ grid-row:1 / span 2; width:54px; height:54px; margin:0; }
+.seal-mark{ width:34px; height:34px; font-size:17px; }
+.seal-title{ align-self:end; font-size:clamp(21px,6vw,24px); font-weight:900; letter-spacing:-.04em; line-height:1.15; }
+.seal-sub{ align-self:start; margin-top:3px; color:rgba(250,249,247,.62); }
+
+/* ── 3. 제품 — 왼쪽 정렬 거대 제품명 (Type as Image) ── */
+.hero{ text-align:left; padding:30px 22px 24px; }
+.hero-eyebrow{ display:flex; align-items:center; gap:12px; padding-left:0; color:var(--warm-gray); letter-spacing:.2em; margin-bottom:16px; }
+.hero-eyebrow::after{ content:''; flex:1; height:1px; background:var(--sand); }
+.hero-name{ font-size:clamp(36px,11vw,50px); font-weight:900; letter-spacing:-.045em; line-height:1; word-break:keep-all; overflow-wrap:break-word; }  /* 한글 제품명 단어 중간 끊김 방지 */
+.hero-desc{ margin:14px 0 0; max-width:none; color:var(--stone); text-wrap:pretty; }
+
+/* ── 4. 상세 → 표제란 칸 (1칸이면 전체 폭, 2칸이면 반반) ── */
+.rows{ padding:0 22px; }
+.rows-inner{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); }
+.row{ display:block; padding:11px 0 13px; border-bottom:0; min-width:0; }
+.row + .row{ border-left:1px solid var(--sand); padding-left:14px; }
+.row .k{ display:block; font-size:10.5px; font-weight:600; letter-spacing:.04em; }
+.row .v{ display:block; margin-top:3px; text-align:left; font-size:clamp(15px,4.2vw,17px); font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; }
+
+/* ── 5. 정품 등록 고객 — 회색 상자 → 가는 선 묶음, 50%만 크게 ── */
+.care{ padding:26px 22px 26px; }
+.care-box{ background:transparent; border-radius:0; padding:0; }
+.care-h{ padding-left:0; color:var(--void); font-family:'Pretendard',sans-serif; font-size:11.5px; font-weight:800; letter-spacing:.04em; margin-bottom:10px; }
+.care-item b{ font-family:'Outfit','Pretendard',sans-serif; font-size:1.3em; font-weight:900; letter-spacing:-.02em; }
+.self-cta{ border-radius:2px; padding:16px; font-weight:800; margin-top:20px; }
+
+/* ── 6. 푸터 · 실패 ── */
+.foot .slogan{ color:var(--warm-gray); }
+.fail-top{ background:transparent; border-bottom:1px solid var(--void); }
+.fail-ring{ border-color:var(--void); color:var(--void); }
+.fail-title{ font-weight:900; letter-spacing:-.04em; }
+.fail-sub{ text-wrap:pretty; }
+.fail-foot{ border-top:0; }
+</style>
 </head>
 <body>
 

@@ -1669,6 +1669,109 @@ body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
   }
 }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 상담 접수폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 상담 예약 신청서(서식지) — 흰 카드 틀을 걷어내고 검은 가는 선 서식으로
+     시그니처: 입력 항목 거대 번호 01·02·03…(Outfit 300, 흐린 색) + 굵은 900 제목 / 숨겨진 항목은 번호에서 자동 제외
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(모달 4px) · 입력칸 48·버튼 56·달력·시간 칸 크기 그대로 · 글꼴은 Pretendard+Outfit만(Plus Jakarta Sans 제외) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+html, body{ font-family:'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; word-break:keep-all; }
+
+/* ── 1. 머리 — 영문 머리말 + 굵은 900 제목, 아래 검은 가는 선 ── */
+.header{ flex-wrap:wrap; padding:32px 0 20px; margin:0 0 8px; border-bottom:1px solid var(--void); }
+.header::before{ content:'CONSULTATION'; flex-basis:100%; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); margin-bottom:10px; }
+.header h1{ font-size:clamp(26px,7.6vw,34px); font-weight:900; letter-spacing:-.04em; line-height:1.15; }
+body.pc .header{ padding:44px 0 24px; margin:0 0 12px; }
+body.pc .header h1{ font-size:36px; }
+
+/* ── 2. 카드 → 틀 제거(서식지처럼 선으로만). 입력칸은 흰색으로 띄움 ── */
+.card{ background:transparent; border:0; border-radius:0; }
+.card-body{ padding:16px 0 8px; }
+body.pc .card-body{ padding:24px 0 8px; }
+
+/* ── 3. 시그니처 — 항목 거대 번호 + 가는 선 ── */
+.card-body{ counter-reset:b-step; }
+.segment-wrap > .segment-label,
+.card-body .form-group > label,
+.card-body .form-group > .segment-label,
+.privacy-box > h4{ counter-increment:b-step; font-size:15px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:12px; }
+.segment-wrap > .segment-label::before,
+.card-body .form-group > label::before,
+.card-body .form-group > .segment-label::before,
+.privacy-box > h4::before{ content:counter(b-step, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.card-body .form-group, .segment-wrap{ border-top:1px solid var(--sand); padding-top:18px; }
+.segment-wrap{ border-top:0; padding-top:4px; }
+.form-row{ gap:22px; margin-bottom:22px; }
+.form-row .form-group{ margin-bottom:0; }
+body.pc .form-row{ margin-bottom:28px; }
+#sec-field > .form-group:first-child{ margin-top:4px; }
+.required::after{ color:var(--warm-gray); font-weight:500; }
+
+/* 상담 방식 카드 — 2px, 선택 = 검은 선 2겹(크기 그대로) */
+.segment-btn{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+body.pc .segment-btn{ border-radius:2px; }
+.segment-btn.active{ background:var(--white); border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; font-weight:800; }
+
+/* 방식 안내 — 회색 상자 → 왼쪽 검은 선 */
+.type-info{ background:transparent; border-left:2px solid var(--void); border-radius:0; padding:2px 0 2px 14px; color:var(--stone); text-wrap:pretty; }
+body.pc .type-info{ padding:2px 0 2px 16px; }
+
+/* 매장 위치 — 2px 가는 선 상자, 지도 버튼 알약 → 2px */
+.store-location-card{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+.store-location-map{ border-radius:2px; font-weight:700; }
+
+/* 입력칸·날짜 버튼 — 8px → 2px, 크림 → 흰색(틀 없는 바탕 위에서 칸이 보이게). 높이 그대로 */
+input[type="text"], input[type="tel"], textarea, select, .date-picker-btn{ border-radius:2px; background:var(--white); border-color:var(--sand); }
+input[type="text"]:focus, input[type="tel"]:focus, textarea:focus, select:focus{ box-shadow:none; outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+input[readonly], #address2:disabled{ background:var(--shell); }
+.btn-search{ border-radius:2px; border-color:var(--void); font-weight:700; }
+.day-chip, .time-pref-btn{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+.day-chip.active, .time-pref-btn.active{ font-weight:800; }
+.memo-note{ border-radius:2px; background:transparent; border:0; border-left:2px solid var(--sand); padding:2px 0 2px 14px; }
+body.pc .memo-note{ padding:2px 0 2px 16px; }
+
+/* 달력(인라인) — 2px, 크기 그대로 */
+#date-picker-modal .modal-content{ border-radius:2px; border-color:var(--sand); }
+.calendar-nav button, #date-picker-modal .calendar-nav button{ border-radius:2px; }
+.calendar-nav .month{ font-family:'Outfit','Pretendard',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; }
+.day, #date-picker-modal .day{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.time-slot, #date-picker-modal .time-slot{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.time-section h4{ font-weight:800; }
+
+/* 진단 배너 — 2px · 가는 선 */
+.diagnosis-banner, body.pc .diagnosis-banner{ border-radius:2px; background:transparent; border-color:var(--sand); }
+.diagnosis-banner:not(.diagnosis-banner-empty){ border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); padding-left:0; padding-right:0; }
+.diagnosis-banner-badge, .diagnosis-banner-badge-empty{ border-radius:2px; }
+.diagnosis-banner:not(.diagnosis-banner-empty){ border-top:0; padding-top:4px; }   /* 머리 선과 2줄 겹침 방지 */
+/* (원본 버그 보정) 진단완료 배지 안 체크 아이콘 크기 미지정 → 큰 체크가 배지를 부풀림. 12px 인라인으로 */
+.diagnosis-banner-badge{ display:inline-flex; align-items:center; gap:5px; }
+.diagnosis-banner-badge svg{ width:12px; height:12px; flex:0 0 auto; }
+.diagnosis-banner-title{ font-weight:800; color:var(--void); }
+.diagnosis-banner-btn{ border-radius:2px; font-weight:700; }
+.diagnosis-banner-desc{ color:var(--stone); text-wrap:pretty; }
+.memo-note-title{ color:var(--warm-gray); }
+.memo-note li::before{ color:var(--mist); }
+.diagnosis-tag{ border-radius:2px; background:transparent; border-color:var(--sand); color:var(--stone); }
+
+/* 개인정보 동의 — 흰 상자 → 가는 선, 약관 칸 2px */
+.privacy-box, body.pc .privacy-box{ background:transparent; border:0; border-top:1px solid var(--sand); border-radius:0; padding:18px 0 0; }
+.privacy-content{ border-radius:2px; background:var(--white); border-color:var(--sand); }
+
+/* ── 4. 신청 버튼 — 알약 → 2px (높이 56 그대로), hover 들림 제거 ── */
+.btn-primary{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+@media (hover: hover){ .btn-primary:not(:disabled):hover{ transform:none; } }
+
+/* ── 5. 완료 모달·주소 검색 — 16px → 4px ── */
+.modal-content{ border-radius:4px; }
+.modal-body h2{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+.modal-close{ border-radius:2px; }
+.postcode-wrap{ border-radius:4px; }
+/* 간편진단 미완성 → 임시 숨김(2026-10-23 사장님): 미첨부·진단완료 상자 모두. 재개 시 이 줄 삭제 (진단 내용 memo 첨부 로직은 그대로) */
+#diagnosis-banner, #diagnosis-banner-empty{ display:none !important; }
+</style>
 </head>
 <body>
 <div id="bootLoader">

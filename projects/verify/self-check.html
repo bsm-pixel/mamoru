@@ -92,6 +92,58 @@
     .foot a{color:var(--stone);text-decoration:none;font-weight:600;font-size:12px;}
     .foot .row{margin-top:10px;}
   </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 체크(입력)형이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 진단 체크시트(검사 기록지)
+     시그니처: 증상 6행 = [거대 번호 01~06 │ 증상 │ 체크칸] hairline 기록지 + 얇은 첫 줄 ↔ 굵은 둘째 줄 제목
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 체크 행 터치 높이·버튼 크기 유지 · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+*{ box-shadow:none !important; }
+
+/* ── 머리 — 흰 띠 → 크림 + 검은 hairline ── */
+.header{ background:var(--cream); border-bottom:1px solid var(--void); }
+.header p{ font-family:'Outfit',sans-serif; font-weight:600; letter-spacing:.28em; }
+
+/* ── 1. 제목 — 첫 줄 얇게 ↔ 둘째 줄 굵게 ── */
+.intro .eyebrow{ display:flex; align-items:center; gap:12px; color:var(--void); font-family:'Pretendard',sans-serif; font-weight:800; letter-spacing:.06em; }
+.intro .eyebrow::after{ content:''; flex:1; height:1px; background:var(--sand); }
+.intro h2{ font-size:clamp(28px,8.4vw,36px); font-weight:900; line-height:1.22; letter-spacing:-.04em; }
+.intro h2::first-line{ font-weight:300; color:var(--stone); }
+.intro p{ text-wrap:pretty; }
+.intro .quiet{ border-left:2px solid var(--void); padding-left:12px; margin-top:14px; color:var(--stone); }
+
+/* ── 2. 증상 체크 → 기록지 행 [번호 │ 증상 │ 체크칸] ── */
+.q-label{ color:var(--void); font-family:'Pretendard',sans-serif; font-weight:800; letter-spacing:.04em; }
+.checks{ gap:0; border-top:1px solid var(--void); counter-reset:b-chk; }
+.check{ counter-increment:b-chk; align-items:center; gap:14px; padding:16px 2px; border:0; border-bottom:1px solid var(--sand); border-radius:0; background:transparent; }
+.check::before{ content:counter(b-chk, decimal-leading-zero); flex:0 0 1.5em; font-family:'Outfit',sans-serif; font-size:clamp(28px,8vw,34px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--sand); font-variant-numeric:tabular-nums; }
+.check .t{ order:1; flex:1 1 auto; min-width:0; font-weight:600; }
+.check .box{ order:2; margin-top:0; border-radius:2px; }
+.check:hover{ border-color:var(--sand); background:var(--white); }
+.check.on{ background:var(--white); border-color:var(--sand); }
+.check.on::before{ color:var(--void); font-weight:400; }
+.check.on .t{ color:var(--void); font-weight:800; }
+
+/* ── 3. 버튼 — 2px (높이 그대로) ── */
+.cta{ border-radius:2px; font-weight:800; display:block; text-align:center; text-decoration:none; }
+
+/* ── 4. 결과 — 카드 → 검은 hairline 용지, 제목 왼쪽 굵게 ── */
+.result-card{ border-radius:2px; border:1px solid var(--void); }
+.result-top{ text-align:left; }
+.result-top .badge{ font-family:'Pretendard',sans-serif; font-weight:700; letter-spacing:.06em; }
+.result-top h3{ font-weight:900; letter-spacing:-.04em; }
+.result-body p{ text-wrap:pretty; }
+
+/* ── 5. 정품 등록 고객 — 회색 상자 → 가는 선 묶음 ── */
+.hairline{ background:transparent; }  /* 아래 묶음의 검은 선과 겹쳐 두 줄로 보이던 것 — 간격만 유지 */
+.benefit{ background:transparent; border-radius:0; border-top:1px solid var(--void); padding:20px 0 0; }
+.benefit .h{ color:var(--void); font-family:'Pretendard',sans-serif; font-size:11.5px; font-weight:800; letter-spacing:.04em; }
+.benefit li b{ font-weight:800; }
+.benefit .note{ border-left:2px solid var(--void); padding-left:12px; color:var(--stone); text-wrap:pretty; }
+</style>
 </head>
 <body>
 

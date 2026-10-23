@@ -176,6 +176,97 @@
   .mm-embed .mm-pc-box{ max-width:560px; margin:0 auto; max-height:none; border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 50px rgba(26,26,26,.18); }
   .mm-embed #doneModal{ min-height:440px; padding:36px 18px; }
 </style>
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 주문 접수폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 이벤트 주문서(전표) — 안내장 넘겨 읽고 → 1·2·3 순서대로 고르기
+     시그니처: 단계 번호 거대화(1. 2. 3. = Outfit 300 흐린 큰 숫자) + 섹션마다 검은 가는 선
+     규칙: 모노크롬(가격대 색 틴트 → 무채색 3단 명도) · 그림자/그라데이션 금지 · 모서리 2px · 칩·카드·입력칸·버튼 크기 유지 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style id="b09">
+:root{ --stone:#4A4A4A; --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; }
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+body{ font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif; word-break:keep-all; }
+
+/* ── 1. 섹션 머리말 — 세로 막대 → 검은 가는 선 + 굵은 900 ── */
+.mm-sec{ margin-top:34px; padding-top:16px; border-top:1px solid var(--void); }
+.mm-sec__label{ font-size:17px; font-weight:900; letter-spacing:-.03em; margin-bottom:14px; }
+.mm-sec__label::before{ display:none; }
+.mm-sec__label small{ font-weight:500; letter-spacing:-.01em; }
+/* 시그니처 — 번호가 붙은 1·2·3 단계: 앞 숫자("1.")만 거대·얇게 (글자는 그대로) */
+.mm-wrap > .mm-sec:not([id]) > .mm-sec__label,
+#priceSec > .mm-sec__label, #catalogSec > .mm-sec__label{ display:block; line-height:1.3; }
+.mm-wrap > .mm-sec:not([id]) > .mm-sec__label::first-letter,
+#priceSec > .mm-sec__label::first-letter, #catalogSec > .mm-sec__label::first-letter{
+  font-family:'Outfit',sans-serif; font-size:40px; font-weight:300; line-height:.8; letter-spacing:-.04em; color:var(--mist);
+  padding-right:8px; font-variant-numeric:tabular-nums; }
+
+/* ── 2. 안내장 — 넘기기 지시 바·카운터·화살표 2px ── */
+.mm-car-note{ border-radius:2px; }
+.mm-car-count{ border-radius:2px; font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+.mm-car-nav{ border-radius:2px; }
+.mm-dot.on{ border-radius:0; }
+
+/* ── 3. 칩·카드 — 12~16px → 2px (크기 그대로) ── */
+.mm-chip{ border-radius:2px; border-color:var(--sand); }
+.mm-chip[aria-pressed="true"]{ font-weight:800; }
+.mm-ico-x, .mm-cat-ico-x{ border-radius:2px; }
+.mm-catgroup{ margin-top:26px; }
+.mm-catgroup__h{ border-bottom:1px solid var(--void); }
+.mm-catgroup__name{ font-size:21px; font-weight:900; letter-spacing:-.03em; }
+.mm-pcard{ border-radius:2px; border-color:var(--sand); }
+.mm-pcard__spec{ font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.mm-pcard__price{ border-radius:2px; font-family:'Outfit','Pretendard',sans-serif; font-weight:800; font-variant-numeric:tabular-nums; }
+.mm-pcard__add{ border-radius:2px; font-weight:800; }
+.mm-pcard__qty button, .mm-qty button{ border-radius:2px; border-color:var(--sand); }
+.mm-pcard__slice{ border-radius:2px; }
+
+/* 가격대 톤 — 녹·청·보라 틴트 → 무채색 3단(흰 / 셸 / 파치먼트), 가격 칩은 검정 선 하나로 통일. 칩↔카드 대응은 그대로 */
+.mm-pcard--t1{ background:#fff; border-color:var(--sand); }
+.mm-pcard--t2{ background:var(--shell); border-color:var(--sand); }
+.mm-pcard--t3{ background:var(--parchment); border-color:var(--mist); }
+.mm-pcard--t1 .mm-pcard__price, .mm-pcard--t2 .mm-pcard__price, .mm-pcard--t3 .mm-pcard__price{ color:var(--void); border-color:var(--void); background:transparent; }
+.mm-chip--t1{ background:#fff; border-color:var(--sand); color:var(--void); }
+.mm-chip--t2{ background:var(--shell); border-color:var(--sand); color:var(--void); }
+.mm-chip--t3{ background:var(--parchment); border-color:var(--mist); color:var(--void); }
+.mm-chip--t1[aria-pressed="true"], .mm-chip--t2[aria-pressed="true"], .mm-chip--t3[aria-pressed="true"]{ background:var(--void); border-color:var(--void); color:#fff; }
+.mm-chip--t1, .mm-chip--t2, .mm-chip--t3{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; }
+
+/* 재고 배지 — 노랑·파랑 → 무채색 (적음 = 검은 선 강조) */
+.mm-stock{ border-radius:2px; }
+.mm-stock--low{ background:transparent; color:var(--void); border:1px solid var(--void); font-weight:700; }
+.mm-stock--ok{ background:var(--parchment); color:var(--stone); }
+.mm-stock--soldout{ background:transparent; color:var(--mist); border:1px solid var(--sand); }
+
+/* ── 4. 담은 목록·수령·입력 — 2px, 합계 tabular ── */
+.mm-cart{ border-radius:2px; }
+.mm-cart__total{ font-size:17px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.mm-cart__item{ font-variant-numeric:tabular-nums; }
+.mm-cart__item button{ color:var(--stone); text-decoration:underline; text-underline-offset:2px; }   /* 빨강 → 무채색 */
+.mm-cart__item[style*="color"]{ color:var(--void) !important; font-weight:700; }   /* 묶음 할인(스크립트 주황 인라인) → 검정 굵게 */
+#receiveSec > div:not(.mm-sec__label){ border-radius:0 !important; border:0 !important; border-left:2px solid var(--void) !important; background:transparent !important; padding:2px 0 2px 14px !important; }
+.mm-field label{ font-weight:700; color:var(--void); }
+.mm-field input, .mm-field textarea{ border-radius:2px; border-color:var(--sand); }
+.mm-field input:focus, .mm-field textarea:focus{ outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+.mm-addr-btn{ border-radius:2px; }
+
+/* ── 5. 하단 고정 접수 버튼 — 알약 → 2px (높이 52 그대로) · 그라데이션 띠 → 크림 단색 + 가는 선 ── */
+.mm-submit button{ border-radius:2px; letter-spacing:-.01em; }
+html:not(.mm-embed) .mm-submit{ background:var(--cream); border-top:1px solid var(--line); }
+
+/* ── 6. 담기 확인·완료·주소 검색 — 2~4px ── */
+.mm-modal__box{ border-radius:4px; }
+.mm-modal__box h3{ font-size:20px; font-weight:900; letter-spacing:-.03em; }
+.mm-modal__box button{ border-radius:2px; }
+#addModal .mm-add__ic{ border-radius:2px; }
+#addModal .mm-add__btns button{ border-radius:2px; }
+#addModal .mm-add__more{ border:1px solid var(--void); }
+#doneModal .mm-modal__box h3{ font-size:24px; }
+.mm-pc-box{ border-radius:4px 4px 0 0; }
+.mm-embed .mm-pc-box{ border-radius:4px; }
+.mm-pc-head button{ border-radius:2px; }
+</style>
+
 <script>
 /* 임베드 판별 — 렌더 전에 클래스를 심어야 고정 CTA가 한 프레임도 잘못 그려지지 않는다 */
 (function(){

@@ -1718,6 +1718,8 @@ html, body {
 /* ── 8. 하단 플로팅 CTA — 그림자 대신 가는 선 ── */
 #consultFloatingCta{ border-top:1px solid rgba(0,0,0,.08); }
 #consultFloatingCta button{ border-radius:2px !important; }
+/* 간편진단 미완성 → 임시 숨김(2026-10-23 사장님). 재개 시 이 줄과 data-diag-off 요소의 style 삭제 */
+.mamoru-consult-page [data-diag-off], [data-diag-off]{ display:none !important; }
 </style>
 
 </head>
@@ -2141,7 +2143,8 @@ html, body {
       <div class="process-section">
         <h3 class="process-section-title">PROCESS</h3>
         <div class="process-grid">
-          <div class="process-step">
+          <!-- 간편진단 미완성 → 임시 숨김(2026-10-23 사장님). 재개 시 style="display:none" data-diag-off 제거 -->
+          <div class="process-step" style="display:none" data-diag-off>
             <div class="process-step-image">
               <span class="process-step-number">1</span>
               <!-- ✏️ 수정가능: 톡상담 STEP1 이미지 (src URL만 교체) -->
@@ -2154,18 +2157,18 @@ html, body {
             </div>
           </div>
 
-          <div class="process-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
+          <div class="process-arrow" style="display:none" data-diag-off><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16"/><path d="M6 14l6 6 6-6"/></svg></div>
 
           <div class="process-step">
             <div class="process-step-image">
-              <span class="process-step-number">2</span>
+              <span class="process-step-number">1</span><!-- 간편진단 숨김 중 번호 당김(원래 2) -->
               <!-- ✏️ 수정가능: 톡상담 STEP2 이미지 (src URL만 교체) -->
               <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
               <!-- <img src="이미지URL" alt="톡상담접수" style="width:48px;height:48px;object-fit:contain;"> -->
             </div>
             <div class="process-step-content">
               <h4 class="process-step-title">톡상담 접수</h4>
-              <p class="process-step-desc">진단 결과와 함께 상담을 접수합니다</p>
+              <p class="process-step-desc">카카오톡 채널로 상담을 접수합니다</p><!-- 간편진단 숨김 중 문구(원래: 진단 결과와 함께 상담을 접수합니다) -->
             </div>
           </div>
 
@@ -2173,7 +2176,7 @@ html, body {
 
           <div class="process-step">
             <div class="process-step-image">
-              <span class="process-step-number">3</span>
+              <span class="process-step-number">2</span><!-- 간편진단 숨김 중 번호 당김(원래 3) -->
               <!-- ✏️ 수정가능: 톡상담 STEP3 이미지 (src URL만 교체) -->
               <!-- 📐 추천: 80x80px PNG(투명배경) 또는 GIF -->
               <!-- <img src="이미지URL" alt="맞춤상담" style="width:48px;height:48px;object-fit:contain;"> -->
@@ -2189,12 +2192,12 @@ html, body {
       <div class="method-notes">
         <div class="method-notes-card">
           <div class="method-notes-list">
-            <p class="method-note-item">톡상담 진행 전 페이지 내 간편진단으로 스타일과 사용습관을 진단해주세요 (상담사에게 전달됩니다)</p>
+            <p class="method-note-item" style="display:none" data-diag-off>톡상담 진행 전 페이지 내 간편진단으로 스타일과 사용습관을 진단해주세요 (상담사에게 전달됩니다)</p>
             <p class="method-note-item">상담 전 주로 쓰는 메인가위의 사진을 찍어주시면 상담 시 도움이 될 수 있습니다</p>
             <p class="method-note-item">기존 사용중인 가위의 불편으로 인한 상담일 경우, 해당 가위의 전면 사진 · 날 벌린 사진 각 한 장씩 찍어 준비해주세요</p>
           </div>
 
-          <div class="method-tip">
+          <div class="method-tip" style="display:none" data-diag-off>
             <span class="method-tip-label">Tip!</span>
             <p class="method-tip-text">간편진단을 먼저 진행하시면<br>상담사가 고객님의 스타일을 미리 파악하여 더 정확한 안내가 가능합니다</p>
           </div>
@@ -2269,7 +2272,7 @@ html, body {
        ========================================================= -->
   <div class="consult-cta-fixed">
     <!-- [URL] 간편진단: /55, 상담접수: /56 -->
-    <button class="consult-cta-btn consult-cta-secondary" onclick="goToDiag();">간편진단 체험하기</button>
+    <button class="consult-cta-btn consult-cta-secondary" onclick="goToDiag();" style="display:none" data-diag-off>간편진단 체험하기</button>
     <button class="consult-cta-btn consult-cta-primary" onclick="goToForm();">상담접수 진행하기</button>
   </div>
 
@@ -2280,7 +2283,7 @@ html, body {
      PC에서는 .consult-floating-cta { display: none } 처리
      ========================================================= -->
 <div class="consult-floating-cta" id="consultFloatingCta">
-  <button class="consult-floating-cta-btn consult-floating-cta-secondary" onclick="goToDiag();" aria-label="간편진단">진단</button>
+  <button class="consult-floating-cta-btn consult-floating-cta-secondary" onclick="goToDiag();" aria-label="간편진단" style="display:none" data-diag-off>진단</button>
   <button class="consult-floating-cta-btn consult-floating-cta-primary" onclick="goToForm();">상담 접수하기</button>
 </div>
 
