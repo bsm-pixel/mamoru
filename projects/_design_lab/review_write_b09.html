@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>시안 B-09 · 후기 작성</title><meta name="robots" content="noindex">
+  <style>
+    /* 캐논 토큰 (Brand Guide SSOT) */
+    :root {
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', 'Plus Jakarta Sans', 'Pretendard', sans-serif; /* Brand Guide v1.0 */
+      background: #FAF9F7; color: #1A1A1A; line-height: 1.6; /* Cream / Void */
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; }
+
+    .header { text-align: center; padding: 32px 0 24px; }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header p { font-size: 13px; color: #8A8580; margin-top: 4px; } /* Warm Gray */
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 24px 20px; /* radius 12px */
+      margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    /* 칩 — 모노크롬 통일 */
+    .chip {
+      display: inline-block; padding: 4px 12px; border-radius: 8px; /* Brand Guide radius */
+      font-size: 12px; font-weight: 600; margin-bottom: 16px;
+      border: 1px solid #D4D0CB; /* Sand */
+      background: transparent;
+      color: #4A4A4A; /* Stone */
+    }
+
+    /* 고객 정보 */
+    .customer-info {
+      background: #F5F3F0; border-radius: 8px; padding: 14px 16px; /* Shell bg, 8px radius */
+      margin-bottom: 20px; font-size: 14px;
+    }
+    .customer-info .name { font-weight: 600; }
+    .mm-hon { font-size: 0.88em; font-weight: 500; color: #4A4A4A; } /* 이름 뒤 '님' — 자연스럽게 */
+    .customer-info .meta { font-size: 13px; color: #8A8580; margin-top: 2px; } /* Warm Gray */
+
+    /* 폼 */
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;
+    }
+    .form-group .optional { font-weight: 400; color: #B8B4AF; font-size: 13px; } /* Mist */
+
+    textarea {
+      width: 100%; padding: 14px; border: 1px solid #D4D0CB; /* Sand */
+      border-radius: 8px; font-size: 15px; color: #1A1A1A;
+      resize: vertical; min-height: 150px; font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08); } /* Void */
+    textarea::placeholder { color: #B8B4AF; } /* Mist */
+
+    /* 별점 */
+    .star-rating { display: flex; gap: 8px; margin-bottom: 4px; }
+    .star {
+      width: 36px; height: 36px; cursor: pointer; font-size: 28px;
+      color: #D4D0CB; /* Sand (비활성) */
+      transition: color 0.15s; user-select: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .star.active { color: #1A1A1A; } /* Void */
+    .star-hint { font-size: 12px; color: #8A8580; } /* Warm Gray */
+
+    /* 속성 태그 선택 */
+    .tag-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 7px 12px; min-height: 38px; /* 살짝 축소 (터치 타겟 유지) */
+      border: 1px solid #D4D0CB; /* Sand */
+      border-radius: 8px;
+      font-size: 12px; font-weight: 500; line-height: 1.35;
+      color: #4A4A4A; /* Stone */
+      background: transparent;
+      cursor: pointer; transition: all 0.15s ease;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+    }
+    .tag-chip.selected {
+      background: #F5F3F0; /* Shell */
+      border-color: #1A1A1A; /* Void */
+      color: #1A1A1A; /* Void */
+      font-weight: 600;
+    }
+    .tag-hint { font-size: 12px; color: #8A8580; margin-top: 6px; } /* Warm Gray */
+
+    /* 사진 업로드 */
+    .photo-area { display: flex; gap: 10px; flex-wrap: wrap; }
+    /* .photo-btn 은 <label> — .form-group label(display:block, 특이성 0,1,1)에 눌리면
+       flex 가 무력화돼 글씨가 좌측/상단으로 쏠림. .photo-area 스코프(0,2,0)로 특이성 ↑ */
+    .photo-area .photo-btn {
+      width: 80px; height: 80px; border: 1.5px dashed #CFCAC4; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      margin: 0;
+      cursor: pointer; transition: all 0.18s ease; background: #FCFBFA;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .photo-btn:hover, .photo-btn:active { border-color: #1A1A1A; background: #F5F3F0; }
+    .photo-btn .icon { width: 100%; display: flex; align-items: center; justify-content: center; color: #A29D97; line-height: 0; }
+    .photo-btn .icon svg { width: 24px; height: 24px; display: block; }
+    .photo-btn .text { width: 100%; text-align: center; font-size: 11px; color: #8A8580; font-weight: 600; line-height: 1; letter-spacing: -0.01em; }
+    .photo-preview {
+      width: 80px; height: 80px; border-radius: 8px; object-fit: cover;
+      position: relative;
+    }
+    .photo-wrap {
+      position: relative; width: 80px; height: 80px;
+    }
+    .photo-wrap img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
+    .photo-remove {
+      position: absolute; top: -6px; right: -6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1A1A1A; color: #fff; border: 2px solid #fff; /* Void bg */
+      font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* 업로드 중 표시 */
+    .photo-wrap.uploading::after {
+      content: ''; position: absolute; inset: 0; border-radius: 8px;
+      background: rgba(255,255,255,0.6);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* 버튼 */
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #1A1A1A; color: #FAF9F7; border-radius: 999px; } /* Void / Cream — Primary CTA 알약 */
+    .btn-primary:hover { background: #2D2D2D; } /* Graphite */
+    .btn-primary:disabled { background: #D4D0CB; color: #8A8580; cursor: not-allowed; } /* Sand / Warm Gray */
+    .btn-close { background: #EDEBE8; color: #4A4A4A; margin-top: 8px; } /* Parchment / Stone */
+
+    /* 상태 — 모노크롬 */
+    .loading { text-align: center; padding: 80px 20px; color: #8A8580; } /* Warm Gray */
+    .loading::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #D4D0CB; border-top-color: #1A1A1A; /* Sand / Void */
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-card {
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
+    }
+    .error-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .error-card p { font-size: 14px; color: #4A4A4A; } /* Stone */
+    .success-card {
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
+    }
+    .success-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .success-card p { font-size: 14px; line-height: 1.6; color: #4A4A4A; } /* Stone */
+
+    .hidden { display: none; }
+
+    /* 제품 선택 리스트 */
+    .product-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .product-item {
+      display: flex; align-items: center; gap: 12px; padding: 14px;
+      border: 2px solid #D4D0CB; border-radius: 8px; cursor: pointer; /* Sand, 8px */
+      transition: border-color 0.15s;
+    }
+    .product-item:hover { border-color: #8A8580; } /* Warm Gray */
+    .product-item.selected { border-color: #1A1A1A; } /* Void */
+    .product-item.reviewed { opacity: 0.5; pointer-events: none; }
+    .product-item .pname { font-size: 14px; font-weight: 600; flex: 1; }
+    .product-item .poption { font-size: 12px; color: #8A8580; } /* Warm Gray */
+    .product-item .pbadge {
+      font-size: 11px; padding: 2px 8px; border-radius: 8px;
+      background: #F5F3F0; color: #4A4A4A; /* Shell / Stone */
+    }
+    .all-reviewed-card {
+      background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; /* Shell / Sand / Void */
+      text-align: center; padding: 60px 20px; border-radius: 12px;
+    }
+    .all-reviewed-card h2 { font-size: 18px; margin-bottom: 8px; }
+    .all-reviewed-card p { font-size: 14px; color: #4A4A4A; } /* Stone */
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 작성폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 검수 기록지에 서명하듯 쓰는 후기 / 시그니처: 입력 항목마다 거대 얇은 번호(01·02·03…) + 가는 선
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 입력칸·버튼 크기 유지(입력 편의 우선) · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ font-family:'Pretendard', -apple-system, system-ui, sans-serif; word-break:keep-all; overflow-wrap:break-word; }
+*{ box-shadow:none !important; }
+
+/* ── 1. 머리 — 왼쪽 정렬 · 굵은 제목 ↔ 얇은 부제 ── */
+.header{ text-align:left; padding:36px 0 22px; }
+.header::before{ content:'REVIEW'; display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); margin-bottom:10px; }
+.header h1{ font-size:clamp(30px,9vw,40px); font-weight:900; letter-spacing:-.04em; line-height:1.1; }
+.header p{ font-size:clamp(17px,4.8vw,20px); font-weight:300; color:var(--stone); letter-spacing:-.02em; margin-top:8px; }
+/* (짧은 룰은 생략 — 바로 아래 카드의 검은 가는 선이 룰 역할. 선 2줄 겹침 방지) */
+
+/* ── 2. 카드 → 가는 선 묶음 (흰 판·둥근 모서리 제거, 입력칸만 흰색) ── */
+.card{ background:transparent; border-radius:0; border-top:1px solid var(--void); padding:22px 0 8px; margin-bottom:12px; }
+.chip{ border-radius:2px; border-color:var(--void); color:var(--void); font-weight:700; padding:4px 10px; letter-spacing:-.01em; }
+.customer-info{ background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 14px; margin-bottom:6px; }
+.customer-info .name{ font-size:18px; font-weight:800; letter-spacing:-.02em; }
+.customer-info .meta{ font-size:13px; }
+
+/* ── 3. 시그니처 — 입력 항목 거대 번호 + 가는 선 (숨겨진 항목은 번호에서 자동 제외) ── */
+#main .card{ counter-reset:b-step; }
+#main .form-group{ counter-increment:b-step; border-top:1px solid var(--sand); padding-top:18px; margin-bottom:22px; }
+#main .customer-info + .form-group{ margin-top:22px; }
+#main .form-group > label{ font-size:15px; font-weight:800; letter-spacing:-.02em; margin-bottom:12px; }
+#main .form-group > label::before{ content:counter(b-step, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.form-group .optional{ white-space:nowrap; font-weight:500; }
+#product-select .form-group > label{ font-size:15px; font-weight:800; letter-spacing:-.02em; margin:18px 0 12px; }
+
+/* 별점 — 크기 그대로, 색만 */
+.star-hint{ font-weight:600; color:var(--stone); }
+
+/* 태그 — 2px 모서리, 선택 = 검정 채움(선택 여부가 한눈에) */
+.tag-chip{ border-radius:2px; background:var(--white); }
+.tag-chip.selected{ background:var(--void); border-color:var(--void); color:var(--cream); font-weight:700; }
+
+/* 입력칸 — 2px, 포커스는 그림자 대신 선 */
+textarea{ border-radius:2px; background:var(--white); }
+textarea:focus{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+
+/* 사진 — 2px */
+.photo-area .photo-btn{ border-radius:2px; border-color:var(--mist); background:var(--white); }
+.photo-wrap img, .photo-preview{ border-radius:2px; }
+.photo-remove{ border-radius:2px; }
+.photo-wrap.uploading::after{ border-radius:2px; }
+
+/* ── 4. 버튼 — 알약 → 2px 사각 (크기 유지) ── */
+.btn{ border-radius:2px; letter-spacing:-.01em; }
+.btn-primary{ border-radius:2px; font-weight:800; }
+.btn-close{ background:transparent; border:1px solid var(--sand); color:var(--stone); }
+#main > .btn-close{ margin-top:4px; }
+
+/* ── 5. 상태 화면(로딩·오류·완료) — 가는 선 묶음, 굵은 제목 ── */
+.card.loading{ border-top:1px solid var(--sand); padding:72px 20px; }
+.error-card, .success-card, .all-reviewed-card{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); border-radius:0; padding:56px 4px; }
+.error-card h2, .success-card h2, .all-reviewed-card h2{ font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; }
+.success-card .btn-close, .all-reviewed-card .btn-close{ background:transparent; }
+
+/* ── 6. 제품 선택(구매 후기) — 2px · 가는 선 ── */
+.product-item{ border-width:1px; border-radius:2px; background:var(--white); }
+.product-item.selected{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+.product-item .pname{ font-weight:700; }
+.product-item .pbadge{ border-radius:2px; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/reviews/page_review.html 에 B-09 덧입힘(문구·입력칸·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제
+     아래 띠의 「폼 화면 보기」는 시안 전용 미리보기 버튼(서버 호출 없음, 등록·사진 업로드 막음) — 원본에 옮기지 않는다 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 후기 작성(알림톡). 문구·입력칸·버튼은 같고 디자인만 다릅니다. 알림톡 링크 없이 열면 「잘못된 접근」 화면이라, 오른쪽 버튼으로 예시 화면을 봅니다(저장 안 됨).</span>
+    <button type="button" onclick="b09Demo('form')" style="font:inherit;color:#FAF9F7;font-weight:700;background:none;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;cursor:pointer;white-space:nowrap;">폼 화면 보기</button>
+    <button type="button" onclick="b09Demo('done')" style="font:inherit;color:#FAF9F7;font-weight:700;background:none;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;cursor:pointer;white-space:nowrap;">완료 화면</button>
+    <a href="https://page.mamoru.kr/projects/reviews/page_review.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<script>
+/* 시안 전용 미리보기 — 페이지 함수(showForm)로 화면만 띄움. 등록·사진 업로드는 막아 라이브 DB에 아무것도 들어가지 않음 */
+function b09Demo(v){
+  window.submitReview = function(){ alert('시안 미리보기 — 실제로 등록되지 않습니다'); };
+  var pi = document.getElementById('photo-input'); if (pi) pi.disabled = true;
+  ['error','success','all-reviewed','product-select','main','loading'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  if (v === 'done') { document.getElementById('success').classList.remove('hidden'); return; }
+  document.getElementById('type-chip').textContent = '복원수리 후기';
+  showForm('홍*동', '복원수리 후기 · 2026-10-20');
+}
+</script>
+  <div class="container">
+    <div class="header">
+      <h1>후기 작성</h1>
+      <p>소중한 후기를 남겨주세요</p>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loading" class="card loading">정보를 불러오는 중</div>
+
+    <!-- 에러 -->
+    <div id="error" class="error-card hidden">
+      <h2>오류</h2>
+      <p id="error-message">정보를 찾을 수 없습니다</p>
+    </div>
+
+    <!-- 작성 완료 -->
+    <div id="success" class="success-card hidden">
+      <h2>후기가 등록되었습니다</h2>
+      <p>소중한 후기 감사합니다</p>
+      <button id="btn-next-product" class="btn btn-primary" style="margin-top:16px;display:none" onclick="writeNextProduct()">다른 제품 후기도 작성하기</button>
+      <button class="btn btn-close" style="margin-top:8px" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 모든 제품 리뷰 완료 -->
+    <div id="all-reviewed" class="all-reviewed-card hidden">
+      <h2>모든 제품의 후기를 작성하셨습니다</h2>
+      <p>소중한 후기 감사합니다</p>
+      <button class="btn btn-close" style="margin-top:16px" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 제품 선택 (purchase 타입) -->
+    <div id="product-select" class="hidden">
+      <div class="card">
+        <span class="chip">제품 구매 후기</span>
+        <div class="customer-info">
+          <div class="name" id="ps-name">-</div>
+          <div class="meta" id="ps-meta">-</div>
+        </div>
+        <div class="form-group">
+          <label>후기를 작성할 제품을 선택해주세요</label>
+          <div class="product-list" id="product-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 메인 폼 -->
+    <div id="main" class="hidden">
+      <div class="card">
+        <!-- 타입 칩 -->
+        <span id="type-chip" class="chip">복원수리 후기</span>
+
+        <!-- 고객 정보 (자동) -->
+        <div class="customer-info">
+          <div class="name" id="r-name">-</div>
+          <div class="meta" id="r-meta">-</div>
+        </div>
+
+        <!-- 별점 -->
+        <div class="form-group">
+          <label>만족도</label>
+          <div class="star-rating" id="stars">
+            <span class="star" data-v="1">★</span>
+            <span class="star" data-v="2">★</span>
+            <span class="star" data-v="3">★</span>
+            <span class="star" data-v="4">★</span>
+            <span class="star" data-v="5">★</span>
+          </div>
+          <p class="star-hint" id="star-hint">별점을 선택해주세요</p>
+        </div>
+
+        <!-- 속성 태그 (선택사항) -->
+        <div class="form-group" id="tag-section" style="display:none">
+          <label>이런 점이 좋았어요 <span class="optional">(선택, 최대 5개)</span></label>
+          <div class="tag-chips" id="tag-chips"></div>
+          <p class="tag-hint" id="tag-hint"></p>
+        </div>
+
+        <!-- 후기 내용 -->
+        <div class="form-group">
+          <label>후기 내용</label>
+          <textarea id="content" placeholder="수리 결과는 어떠셨나요? 자유롭게 작성해주세요"></textarea>
+        </div>
+
+        <!-- 사진 -->
+        <div class="form-group">
+          <label>사진 <span class="optional">(선택, 최대 3장)</span></label>
+          <div class="photo-area" id="photo-area">
+            <label class="photo-btn" id="photo-add">
+              <span class="icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" /></svg></span>
+              <span class="text">사진 추가</span>
+              <input type="file" accept="image/*" multiple style="display:none" id="photo-input">
+            </label>
+          </div>
+        </div>
+
+        <button id="btnSubmit" class="btn btn-primary" disabled onclick="submitReview()">후기 등록</button>
+      </div>
+
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    // ── 설정 ──
+    var API_URL = 'https://app-eta-sandy-75.vercel.app/api/reviews';
+    var MAX_PHOTOS = 3;
+
+    var params = new URLSearchParams(location.search);
+    var uid = params.get('uid') || '';
+    var rawType = params.get('type') || 'repair';
+    // 솔라피 템플릿 URL 호환: consulting→consult, as→repair
+    var reviewType = (rawType === 'consulting') ? 'consult' : (rawType === 'as') ? 'repair' : rawType;
+    var urlName = params.get('name') || '';   // 솔라피 URL에서 전달된 이름
+    var urlSubtype = params.get('subtype') || ''; // store_visit, field_request 등
+
+    var rating = 0;
+    var photos = [];    // { file, dataUrl, url(업로드 후) }
+    var uploading = 0;  // 업로드 진행 중 카운트
+    var selectedTags = []; // 속성 태그
+    var STORAGE_KEY = 'mamoru_review_' + uid;
+
+    // ── 타입별 설정 ──
+    var selectedProductNo = ''; // purchase 타입: 선택된 제품 번호
+    var cachedName = '';        // 제품 선택 복귀용
+    var cachedMeta = '';
+    var cachedItems = [];
+
+    var TYPE_CONFIG = {
+      repair: { label: '복원수리 후기', placeholder: '복원 결과는 어떠셨나요? 자유롭게 작성해주세요', header: '소중한 후기를 남겨주세요' },
+      consult: { label: '상담 후기', placeholder: '상담은 어떠셨나요? 자유롭게 작성해주세요', header: '상담 경험을 들려주세요' },
+      purchase: { label: '제품 구매 후기', placeholder: '제품 사용 경험을 자유롭게 작성해주세요', header: '구매하신 제품은 어떠셨나요?' }
+    };
+
+    // ── 카테고리별 속성 태그 ──
+    var TAG_CONFIG = {
+      consult: [
+        { key: 'comfortable', label: '강요없이 편안해요' },
+        { key: 'detailed_guide', label: '설명이 자세해요' },
+        { key: 'professional', label: '전문적이에요' },
+        { key: 'personalized', label: '내 상황에 맞게 안내해줘요' },
+        { key: 'worth_time', label: '시간이 아깝지 않아요' },
+        { key: 'reasonable_price', label: '가격이 합리적이에요' },
+        { key: 'kind', label: '친절해요' }
+      ],
+      repair: [
+        { key: 'like_new', label: '새 가위처럼 돌아왔어요' },
+        { key: 'better_cut', label: '커트감이 개선됐어요' },
+        { key: 'above_expect', label: '기대 이상이에요' },
+        { key: 'kind_response', label: '응대가 친절해요' },
+        { key: 'thorough_info', label: '안내가 꼼꼼해요' },
+        { key: 'fast_service', label: '진행이 빨라요' },
+        { key: 'worth_money', label: '돈이 아깝지 않아요' },
+        { key: 'good_value', label: '가격 대비 만족해요' },
+        { key: 'will_return', label: '또 이용할게요' }
+      ],
+      purchase: [
+        { key: 'above_expect', label: '기대 이상이에요' },
+        { key: 'good_quality', label: '품질이 좋아요' },
+        { key: 'fast_delivery', label: '배송이 빨라요' },
+        { key: 'neat_packaging', label: '포장이 꼼꼼해요' },
+        { key: 'good_value', label: '가격 대비 만족해요' },
+        { key: 'would_recommend', label: '다른 분께 추천하고 싶어요' }
+      ]
+    };
+    var MAX_TAGS = 5;
+
+    // ── subtype → 한글 라벨 ──
+    var SUBTYPE_LABELS = {
+      // 상담 3종 = 고객 노출 칩과 동일 표기(2026-09-13 통일, 구 '매장 방문/출장 상담/온라인상담')
+      store_visit: '상담 · 직접방문',
+      field_request: '상담 · 출장',
+      talk_consult: '상담 · 톡상담',
+      // 복원수리 3종 (119) — 링크 subtype 그대로 후기 chip 표기
+      direct_visit: '직접방문 수리',
+      pickup: '방문수거 수리',
+      delivery: '택배 수리'
+    };
+
+    // ── sessionStorage 상태 보존 (카카오 인앱 카메라 새로고침 대응) ──
+    function saveState() {
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+          rating: rating,
+          content: document.getElementById('content') ? document.getElementById('content').value : '',
+          photoUrls: photos.map(function(p) { return p.url; }).filter(Boolean),
+          tags: selectedTags
+        }));
+      } catch(e) {}
+    }
+    function loadState() {
+      try {
+        var saved = sessionStorage.getItem(STORAGE_KEY);
+        if (!saved) return null;
+        return JSON.parse(saved);
+      } catch(e) { return null; }
+    }
+    function clearState() {
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    }
+
+    // ── 이름 마스킹: 김미영 → 김*영, 이수 → 이* ──
+    function maskName(name) {
+      if (!name) return '';
+      if (name.length <= 1) return name;
+      if (name.length === 2) return name[0] + '*';
+      return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+    }
+
+    /* 이름 + 작은 폰트 '님' (예의) — XSS 방지 위해 DOM API 사용 */
+    function setNameWithHonorific(elId, nameText) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = nameText || '';
+      if (nameText) {
+        var hon = document.createElement('span');
+        hon.className = 'mm-hon';
+        hon.textContent = ' 님';
+        el.appendChild(hon);
+      }
+    }
+
+    // ── 사진 리사이즈 (Canvas, 최대 1200px, JPEG 0.8) ──
+    function resizeImage(file, maxSize, quality) {
+      return new Promise(function(resolve) {
+        var img = new Image();
+        img.onload = function() {
+          var w = img.width, h = img.height;
+          if (w > maxSize || h > maxSize) {
+            var ratio = Math.min(maxSize / w, maxSize / h);
+            w = Math.round(w * ratio);
+            h = Math.round(h * ratio);
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function(blob) { resolve(blob); }, 'image/jpeg', quality || 0.8);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // ── 사진 업로드 (서버) ──
+    function uploadPhoto(photo, idx) {
+      uploading++;
+      checkSubmit();
+      var wrap = document.querySelectorAll('.photo-wrap')[idx];
+      if (wrap) wrap.classList.add('uploading');
+
+      resizeImage(photo.file, 1200, 0.8).then(function(blob) {
+        var fd = new FormData();
+        fd.append('file', blob, 'review.jpg');
+        return fetch(API_URL + '/upload', { method: 'POST', body: fd });
+      }).then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.url) {
+            photo.url = data.url;
+            saveState(); // 업로드 완료 즉시 상태 저장
+          } else {
+            console.error('업로드 실패:', data.error);
+          }
+        }).catch(function(err) {
+          console.error('업로드 에러:', err);
+        }).finally(function() {
+          uploading--;
+          if (wrap) wrap.classList.remove('uploading');
+          checkSubmit();
+        });
+    }
+
+    // ── 초기화 ──
+    function init() {
+      if (!uid) { showError('잘못된 접근입니다'); return; }
+
+      // 타입별 UI 설정
+      var cfg = TYPE_CONFIG[reviewType] || TYPE_CONFIG.repair;
+      var chip = document.getElementById('type-chip');
+      chip.textContent = cfg.label;
+      document.querySelector('.header p').textContent = cfg.header;
+      document.getElementById('content').placeholder = cfg.placeholder;
+
+      // API에서 고객 정보 조회
+      fetch(API_URL + '/info?uid=' + encodeURIComponent(uid) + '&type=' + encodeURIComponent(reviewType))
+        .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, status: res.status, data: d }; }); })
+        .then(function(result) {
+          if (!result.ok) {
+            if (result.data.code === 'ALREADY_SUBMITTED') {
+              showError('이미 후기를 작성하셨습니다');
+              return;
+            }
+            // API 실패 시 URL 파라미터 fallback (솔라피 URL에 이름이 포함됨)
+            if (urlName) {
+              showForm(maskName(urlName), SUBTYPE_LABELS[urlSubtype] || cfg.label);
+              return;
+            }
+            showError(result.data.error || '정보를 찾을 수 없습니다');
+            return;
+          }
+          // purchase 타입: 제품 선택 → 폼 표시
+          if (reviewType === 'purchase' && result.data.items) {
+            var items = result.data.items;
+            var available = items.filter(function(it) { return !it.reviewed; });
+            if (available.length === 0) {
+              // 모든 제품 리뷰 완료
+              document.getElementById('loading').classList.add('hidden');
+              document.getElementById('all-reviewed').classList.remove('hidden');
+              return;
+            }
+            if (items.length === 1 || available.length === 1) {
+              // 자동 선택: 남은 제품 1개
+              selectedProductNo = available[0].imweb_product_no;
+              showForm(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : '') + ' · ' + available[0].product_name);
+              return;
+            }
+            // 여러 제품 → 선택 화면 표시
+            showProductSelect(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : ''), items);
+            return;
+          }
+          // 폼 표시
+          showForm(result.data.name, result.data.typeLabel + (result.data.date ? ' · ' + result.data.date : ''));
+        })
+        .catch(function(err) {
+          // 네트워크 실패 시에도 URL 파라미터 fallback
+          if (urlName) {
+            showForm(maskName(urlName), SUBTYPE_LABELS[urlSubtype] || cfg.label);
+            return;
+          }
+          showError('서버 연결에 실패했습니다');
+          console.error(err);
+        });
+    }
+
+    // ── 별점 ──
+    document.getElementById('stars').addEventListener('click', function(e) {
+      var star = e.target.closest('.star');
+      if (!star) return;
+      rating = parseInt(star.dataset.v);
+      document.querySelectorAll('.star').forEach(function(s) {
+        s.classList.toggle('active', parseInt(s.dataset.v) <= rating);
+      });
+      var hints = ['', '별로예요', '그저 그래요', '괜찮아요', '만족해요', '최고예요!'];
+      document.getElementById('star-hint').textContent = hints[rating] || '';
+      checkSubmit();
+      saveState();
+    });
+
+    // ── 속성 태그 선택 ──
+    document.getElementById('tag-chips').addEventListener('click', function(e) {
+      var chip = e.target.closest('.tag-chip');
+      if (!chip) return;
+      var key = chip.dataset.key;
+      var idx = selectedTags.indexOf(key);
+      if (idx > -1) {
+        selectedTags.splice(idx, 1);
+        chip.classList.remove('selected');
+      } else {
+        if (selectedTags.length >= MAX_TAGS) return;
+        selectedTags.push(key);
+        chip.classList.add('selected');
+      }
+      var hint = document.getElementById('tag-hint');
+      hint.textContent = selectedTags.length > 0 ? selectedTags.length + '개 선택됨' : '';
+      saveState();
+    });
+
+    // ── 사진 선택 → 리사이즈 → 즉시 업로드 ──
+    document.getElementById('photo-input').addEventListener('change', function(e) {
+      var files = Array.from(e.target.files);
+      files.forEach(function(file) {
+        if (photos.length >= MAX_PHOTOS) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          var photo = { file: file, dataUrl: ev.target.result, url: '' };
+          photos.push(photo);
+          renderPhotos();
+          uploadPhoto(photo, photos.length - 1); // 즉시 업로드
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    });
+
+    function renderPhotos() {
+      var area = document.getElementById('photo-area');
+      area.querySelectorAll('.photo-wrap').forEach(function(el) { el.remove(); });
+      photos.forEach(function(p, i) {
+        var wrap = document.createElement('div');
+        wrap.className = 'photo-wrap';
+        wrap.innerHTML = '<img src="' + p.dataUrl + '"><div class="photo-remove" data-idx="' + i + '">✕</div>';
+        area.insertBefore(wrap, document.getElementById('photo-add'));
+      });
+      document.getElementById('photo-add').classList.toggle('hidden', photos.length >= MAX_PHOTOS);
+    }
+
+    document.getElementById('photo-area').addEventListener('click', function(e) {
+      var rm = e.target.closest('.photo-remove');
+      if (!rm) return;
+      photos.splice(parseInt(rm.dataset.idx), 1);
+      renderPhotos();
+      saveState();
+    });
+
+    // ── 제출 가능 여부 ──
+    function checkSubmit() {
+      var content = document.getElementById('content').value.trim();
+      document.getElementById('btnSubmit').disabled = !(rating > 0 && content.length > 0 && uploading === 0);
+    }
+    document.getElementById('content').addEventListener('input', function() { checkSubmit(); saveState(); });
+
+    // ── 제출 ──
+    function submitReview() {
+      var btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.textContent = '등록 중...';
+
+      var photoUrls = photos.map(function(p) { return p.url; }).filter(Boolean);
+
+      fetch(API_URL + '/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: uid,
+          type: reviewType,
+          subtype: urlSubtype || undefined,
+          stars: rating,
+          content: document.getElementById('content').value.trim(),
+          photoUrls: photoUrls,
+          productNo: selectedProductNo || undefined,
+          tags: selectedTags.length > 0 ? selectedTags : undefined
+        })
+      })
+      .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, data: d }; }); })
+      .then(function(result) {
+        if (!result.ok) {
+          alert(result.data.error || '등록에 실패했습니다');
+          btn.disabled = false;
+          btn.textContent = '후기 등록';
+          return;
+        }
+        showSuccess();
+      })
+      .catch(function(err) {
+        alert('서버 연결에 실패했습니다');
+        btn.disabled = false;
+        btn.textContent = '후기 등록';
+        console.error(err);
+      });
+    }
+
+    // ── 제품 선택 화면 (purchase 타입, 아이템 2개+) ──
+    function showProductSelect(nameText, metaText, items) {
+      cachedName = nameText;
+      cachedMeta = metaText;
+      cachedItems = items;
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('product-select').classList.remove('hidden');
+      setNameWithHonorific('ps-name', nameText);
+      document.getElementById('ps-meta').textContent = metaText;
+
+      var list = document.getElementById('product-list');
+      list.innerHTML = items.map(function(it) {
+        var cls = 'product-item' + (it.reviewed ? ' reviewed' : '');
+        var badge = it.reviewed ? '<span class="pbadge">작성완료</span>' : '';
+        var opt = it.option_text ? '<div class="poption">' + it.option_text + (it.quantity > 1 ? ' x' + it.quantity : '') + '</div>' : '';
+        return '<div class="' + cls + '" data-pno="' + it.imweb_product_no + '">' +
+          '<div style="flex:1"><div class="pname">' + it.product_name + '</div>' + opt + '</div>' +
+          badge +
+        '</div>';
+      }).join('');
+
+      list.addEventListener('click', function(e) {
+        var item = e.target.closest('.product-item');
+        if (!item || item.classList.contains('reviewed')) return;
+        selectedProductNo = item.dataset.pno;
+        var pname = item.querySelector('.pname').textContent;
+        document.getElementById('product-select').classList.add('hidden');
+        showForm(nameText, metaText + ' · ' + pname);
+      });
+    }
+
+    // ── UI 헬퍼 ──
+    function showForm(nameText, metaText) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+      setNameWithHonorific('r-name', nameText);
+      document.getElementById('r-meta').textContent = metaText;
+
+      // 태그 칩 렌더링
+      var tags = TAG_CONFIG[reviewType];
+      if (tags && tags.length > 0) {
+        document.getElementById('tag-section').style.display = '';
+        document.getElementById('tag-chips').innerHTML = tags.map(function(t) {
+          return '<span class="tag-chip" data-key="' + t.key + '">' + t.label + '</span>';
+        }).join('');
+      }
+
+      // sessionStorage에서 이전 상태 복원 (카메라 새로고침 대응)
+      var saved = loadState();
+      if (saved) {
+        // 별점 복원
+        if (saved.rating) {
+          rating = saved.rating;
+          document.querySelectorAll('.star').forEach(function(s) {
+            s.classList.toggle('active', parseInt(s.dataset.v) <= rating);
+          });
+          var hints = ['', '별로예요', '그저 그래요', '괜찮아요', '만족해요', '최고예요!'];
+          document.getElementById('star-hint').textContent = hints[rating] || '';
+        }
+        // 텍스트 복원
+        if (saved.content) {
+          document.getElementById('content').value = saved.content;
+        }
+        // 업로드 완료된 사진 URL 복원
+        if (saved.photoUrls && saved.photoUrls.length > 0) {
+          saved.photoUrls.forEach(function(url) {
+            photos.push({ file: null, dataUrl: url, url: url });
+          });
+          renderPhotos();
+        }
+        // 태그 복원
+        if (saved.tags && saved.tags.length > 0) {
+          selectedTags = saved.tags;
+          selectedTags.forEach(function(key) {
+            var chip = document.querySelector('.tag-chip[data-key="' + key + '"]');
+            if (chip) chip.classList.add('selected');
+          });
+          var hint = document.getElementById('tag-hint');
+          hint.textContent = selectedTags.length + '개 선택됨';
+        }
+        checkSubmit();
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+    function showSuccess() {
+      clearState();
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+
+      // purchase 타입: 미작성 제품이 남아있으면 "다른 제품 후기" 버튼 표시
+      if (reviewType === 'purchase') {
+        fetch(API_URL + '/info?uid=' + encodeURIComponent(uid) + '&type=purchase')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (data.items) {
+              var remaining = data.items.filter(function(it) { return !it.reviewed; });
+              if (remaining.length > 0) {
+                cachedItems = data.items;
+                cachedName = data.name;
+                cachedMeta = data.typeLabel + (data.date ? ' · ' + data.date : '');
+                document.getElementById('btn-next-product').style.display = '';
+              }
+            }
+          }).catch(function() {});
+      }
+    }
+
+    // ── 다른 제품 후기 작성 (purchase 연속 작성) ──
+    function writeNextProduct() {
+      // 폼 상태 리셋
+      rating = 0;
+      photos = [];
+      selectedTags = [];
+      selectedProductNo = '';
+      uploading = 0;
+      document.querySelectorAll('.star').forEach(function(s) { s.classList.remove('active'); });
+      document.getElementById('star-hint').textContent = '별점을 선택해주세요';
+      document.getElementById('content').value = '';
+      document.getElementById('tag-hint').textContent = '';
+      document.querySelectorAll('.tag-chip').forEach(function(c) { c.classList.remove('selected'); });
+      document.getElementById('photo-area').querySelectorAll('.photo-wrap').forEach(function(el) { el.remove(); });
+      document.getElementById('photo-add').classList.remove('hidden');
+      document.getElementById('btnSubmit').disabled = true;
+      document.getElementById('btnSubmit').textContent = '후기 등록';
+
+      // 화면 전환: 성공 → 제품 선택
+      document.getElementById('success').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('btn-next-product').style.display = 'none';
+
+      var available = cachedItems.filter(function(it) { return !it.reviewed; });
+      if (available.length === 1) {
+        // 남은 제품 1개 → 바로 폼
+        selectedProductNo = available[0].imweb_product_no;
+        showForm(cachedName, cachedMeta + ' · ' + available[0].product_name);
+      } else {
+        // 2개 이상 → 선택 화면
+        showProductSelect(cachedName, cachedMeta, cachedItems);
+      }
+    }
+
+    // ── 카카오 인앱 닫기 (page_suggest.html 검증 패턴) ──
+    function safeClose() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
+    }
+
+    init();
+  </script>
+</body>
+</html>

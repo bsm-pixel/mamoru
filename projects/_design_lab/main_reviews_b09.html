@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시안 B-09 · 메인 후기</title>
+<meta name="robots" content="noindex">
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE : projects/main/iframe_main_reviews.html
+  📍 용도 : 메인페이지 "고객 후기" 섹션 — btm에서 분리한 자기완결 iframe 페이지
+  🔗 임베드: 아임웹 코드위젯에 아래 한 줄
+      <iframe src="https://page.mamoru.kr/projects/main/iframe_main_reviews.html"
+              style="width:100%;border:0;display:block" scrolling="no"></iframe>
+  ⚙️ 높이 : 전역 banner-widget.js 리사이저가 src=page.mamoru.kr iframe을 source매칭 자동 사이징
+  📝 데이터: 라이브 API(reviews/public) — 커스텀 위젯 불가(fetch 금지)라 iframe 페이지로 유지
+  🚫 후기 표시 규칙: 데이터는 API가 SSOT. 표시 로직은 page_reviews.html·ImwebWidgetCode_product_reviews.html과 동일 유지
+═══════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<script>/* ⭐ 조기 높이 부트스트랩 — 파싱 중부터 높이 전송 → iframe 짤림 차단 */
+(function(){var ID='reviews',last=0;function gh(){var b=document.body;if(!b)return 0;var d=document.documentElement;return Math.max(b.scrollHeight||0,(d&&d.scrollHeight)||0,b.offsetHeight||0);}function s(){var h=Math.ceil(gh());if(h>last+1){last=h;try{window.parent.postMessage({type:'MAMORU_IFRAME_SIZE',id:ID,height:h},'*');}catch(_){}}}var t=setInterval(s,200);setTimeout(function(){clearInterval(t);},16000);document.addEventListener('DOMContentLoaded',s);})();</script>
+<style>
+/* ── 변수 & 리셋 ── */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --parchment: #EDEBE8;
+  --shell: #F5F3F0;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mm-max-w: 1200px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 0.15s;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scrollbar-width: none; -ms-overflow-style: none; overflow-x: hidden; }
+html::-webkit-scrollbar { display: none; }
+body {
+  overflow-x: hidden; overflow-y: visible; height: auto !important; min-height: auto !important;
+  font-family: var(--font-body); background: var(--cream); color: var(--void);
+  line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+.mm-inner { max-width: var(--mm-max-w); margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+@media (min-width: 768px)  { .mm-inner { padding-left: 32px; padding-right: 32px; } }
+@media (min-width: 1440px) { .mm-inner { padding-left: 64px; padding-right: 64px; } }
+
+/* ── 스크롤 애니메이션 ── */
+.mm-anim { opacity: 0; transform: translateY(28px); transition: opacity 0.65s var(--ease), transform 0.65s var(--ease); }
+.mm-anim.mm-visible { opacity: 1; transform: translateY(0); }
+.mm-anim-stagger.mm-visible:nth-child(1) { transition-delay: 0s; }
+.mm-anim-stagger.mm-visible:nth-child(2) { transition-delay: 0.07s; }
+.mm-anim-stagger.mm-visible:nth-child(3) { transition-delay: 0.14s; }
+.mm-anim-stagger.mm-visible:nth-child(4) { transition-delay: 0.21s; }
+.mm-anim-stagger.mm-visible:nth-child(5) { transition-delay: 0.28s; }
+.mm-anim-stagger.mm-visible:nth-child(6) { transition-delay: 0.35s; }
+
+.mm-section-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--warm-gray); margin-bottom: 8px; }
+
+/* ══════════════════════════════════════════════════════════════
+   고객 후기 — Cream, 탭 + 서브타입 칩 + 카드
+   ══════════════════════════════════════════════════════════════ */
+.mm-reviews { background: var(--cream); padding: 80px 0 64px; color: var(--void); }
+.mm-reviews__head { margin-bottom: 28px; }
+.mm-reviews__title { font-size: 18px; font-weight: 700; color: var(--void); margin-bottom: 4px; }
+.mm-reviews__desc { font-size: 13px; color: var(--stone); }
+.mm-reviews__tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.mm-reviews__tab {
+  padding: 8px 16px; border: 1px solid var(--sand); border-radius: var(--radius-sm);
+  background: transparent; font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  color: var(--stone); cursor: pointer; transition: all var(--duration-fast);
+}
+.mm-reviews__tab--active { background: var(--void); border-color: var(--void); color: var(--cream); }
+
+/* 카드 내 서브타입 칩 */
+.mm-review-card__subtype {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px;
+  border: 1px solid var(--sand); border-radius: 4px; color: var(--warm-gray); white-space: nowrap;
+}
+/* 출처 배지 — 모노크롬 */
+.mm-review-card__source-badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+  white-space: nowrap; background: var(--sand); color: var(--stone);
+}
+.mm-reviews__scroll {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  padding-bottom: 8px;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+  mask-image: linear-gradient(to right, black 85%, transparent);
+  transition: opacity 0.3s var(--ease);
+}
+.mm-reviews__scroll::-webkit-scrollbar { display: none; }
+.mm-review-card {
+  flex: 0 0 280px; scroll-snap-align: start; background: var(--white);
+  border: 1px solid var(--sand); border-radius: var(--radius-lg); padding: 24px;
+}
+.mm-review-card__img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 14px; }
+.mm-review-card__header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+.mm-review-card__name { font-size: 14px; font-weight: 700; color: var(--void); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-hon { font-size: 0.88em; font-weight: 500; color: var(--stone); }
+.mm-review-card__chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+.mm-review-card__source { font-size: 11px; font-weight: 500; color: var(--warm-gray); }
+.mm-review-card__stars { font-size: 13px; color: var(--void); letter-spacing: 2px; margin-bottom: 10px; }
+.mm-review-card__text { font-size: 13px; line-height: 1.65; color: var(--stone); }
+.mm-review-card__date { margin-top: 12px; font-size: 11px; color: var(--warm-gray); }
+.mm-reviews__more { display: block; text-align: center; margin-top: 24px; font-size: 14px; font-weight: 600; color: var(--stone); transition: color var(--duration-fast); }
+
+@media (min-width: 1024px) {
+  .mm-reviews { padding: 120px 0 80px; }
+  .mm-reviews__title { font-size: 22px; }
+  .mm-reviews__scroll { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+  .mm-review-card { flex: none; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+}
+@media (hover: hover) { .mm-reviews__more:hover { color: var(--void); } }
+
+/* ══ 리뷰 상세 바텀시트 (뷰포트 앵커 — 높이동기 iframe에서도 '지금 자리'에 배치) ══ */
+.mm-review-card { cursor: pointer; transition: transform .2s var(--ease), box-shadow .2s var(--ease); }
+@media (hover:hover){ .mm-review-card:hover{ transform: translateY(-3px); box-shadow:0 8px 24px rgba(26,26,26,.08); } }
+.mm-review-card:active{ transform: scale(.99); }
+.mm-rv-backdrop{ position:absolute; left:0; right:0; z-index:900; background:rgba(26,26,26,.55);
+  display:flex; align-items:flex-end; justify-content:center; padding:0 12px; opacity:0; visibility:hidden; transition:opacity .3s var(--ease),visibility .3s; }
+.mm-rv-backdrop--open{ opacity:1; visibility:visible; }
+.mm-rv-sheet{ position:relative; background:var(--cream); border-radius:20px; width:100%; max-height:calc(100% - 14px); margin-bottom:14px; overflow:hidden;
+  display:flex; flex-direction:column; transform:translateY(120%); transition:transform .38s cubic-bezier(.32,.72,0,1); box-shadow:0 -8px 40px rgba(26,26,26,.18); }
+.mm-rv-backdrop--open .mm-rv-sheet{ transform:translateY(0); }
+.mm-rv-sheet__grip{ padding:10px 0 4px; display:flex; justify-content:center; flex-shrink:0; touch-action:none; cursor:grab; }
+.mm-rv-sheet__grip::before{ content:""; width:40px; height:4px; border-radius:99px; background:var(--sand); }
+.mm-rv-sheet__close{ position:absolute; right:12px; top:10px; z-index:2; width:32px; height:32px; border:none; border-radius:99px; display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--stone); background:rgba(255,255,255,.72); cursor:pointer; }
+.mm-rv-sheet__scroll{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 0 22px; }
+.mm-rv-gallery{ display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; padding:4px 20px 0; }
+.mm-rv-gallery::-webkit-scrollbar{ display:none; }
+.mm-rv-gallery img{ flex:0 0 auto; width:82%; max-width:420px; aspect-ratio:4/3; object-fit:cover; border-radius:12px; scroll-snap-align:center; cursor:zoom-in; background:var(--parchment); }
+.mm-rv-gallery--single img{ width:100%; }
+.mm-rv-sheet__pad{ padding:18px 20px 0; }
+.mm-rv-sheet__topline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.mm-rv-sheet__chip{ font-size:11px; font-weight:600; padding:3px 9px; border:1px solid var(--sand); border-radius:99px; color:var(--stone); }
+.mm-rv-sheet__chip--src{ background:var(--sand); color:var(--stone); }
+.mm-rv-sheet__name{ font-size:17px; font-weight:800; font-family:var(--font-display); color:var(--void); }
+.mm-rv-sheet__stars{ font-size:16px; letter-spacing:2px; color:var(--void); margin:2px 0 12px; }
+.mm-rv-sheet__tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.mm-rv-sheet__tag{ font-size:12px; font-weight:600; padding:5px 11px; border-radius:99px; background:var(--shell); border:1px solid var(--parchment); color:var(--stone); }
+.mm-rv-sheet__body{ font-size:15px; line-height:1.75; color:var(--graphite); white-space:pre-wrap; }
+.mm-rv-sheet__date{ margin-top:18px; padding-top:14px; border-top:1px solid var(--parchment); font-size:12px; color:var(--warm-gray); }
+.mm-rv-sheet__nav{ display:flex; gap:8px; padding:14px 20px; flex-shrink:0; border-top:1px solid var(--parchment); background:var(--cream); }
+.mm-rv-sheet__navbtn{ flex:1; padding:11px; font-size:13px; font-weight:600; border:1px solid var(--sand); border-radius:12px; color:var(--stone); background:var(--white); cursor:pointer; transition:all .15s; }
+.mm-rv-sheet__navbtn:disabled{ opacity:.35; cursor:default; }
+.mm-rv-sheet__navbtn--close{ flex:0.55; background:var(--void); color:var(--cream); border-color:var(--void); }
+@media(hover:hover){ .mm-rv-sheet__navbtn:not(:disabled):hover{ border-color:var(--void); color:var(--void); } .mm-rv-sheet__navbtn--close:hover{ opacity:.88; color:var(--cream); border-color:var(--void); } }
+.mm-rv-lb{ position:absolute; left:0; right:0; top:0; height:100%; z-index:950; background:rgba(26,26,26,.92); display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; visibility:hidden; transition:opacity .25s,visibility .25s; }
+.mm-rv-lb--open{ opacity:1; visibility:visible; }
+.mm-rv-lb img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:6px; }
+.mm-rv-lb__x{ position:absolute; right:16px; top:16px; width:40px; height:40px; border:none; border-radius:99px; font-size:22px; color:#fff; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+@media(min-width:768px){
+  .mm-rv-backdrop{ align-items:center; }
+  .mm-rv-sheet{ width:min(560px,94vw); max-height:88%; border-radius:22px; margin-bottom:0; transform:translateY(24px) scale(.98); opacity:0; transition:transform .3s var(--ease),opacity .3s; }
+  .mm-rv-backdrop--open .mm-rv-sheet{ transform:translateY(0) scale(1); opacity:1; }
+  .mm-rv-sheet__grip{ display:none; }
+}
+/* 2026-10-01 구매 제품 칩 — 분류 칩보다 한 톤 진한 채움(Parchment) + 모델명 서체 (page_reviews 와 동일) */
+.mm-rv-product { display: inline-block; max-width: 100%; vertical-align: middle; padding: 3px 10px; border-radius: 999px; background: var(--parchment); color: var(--void); font-family: 'Outfit', 'Pretendard', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 2026-10-01 카드 헤더 세로 3단 (분류 / 이름 / 매장) */
+.mm-review-card__header { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 3px; margin-bottom: 8px; }
+.mm-review-card__meta { font-size: 11px; font-weight: 500; color: var(--warm-gray); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-review-card__store { font-size: 12px; font-weight: 500; color: var(--warm-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 후기 아카이브 색인(메인 일부라 히어로 없음) / 시그니처: 헤드라인 굵기 대비 + 기록 카드 / 후기 공통 블록 = 전체보기·상품상세와 동일
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 후기 사진은 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+/* ═══════════════ [B-09 후기 공통] — 3곳 동일 블록 (2026-10-23) ═══════════════
+   대상: page_reviews.html(/62) · iframe_main_reviews.html(메인) · ImwebWidgetCode_product_reviews.html(상품상세)
+   🚫 후기 표시 동시 수정 규칙: 이 공통 블록은 3파일에 글자 하나 다르지 않게 똑같이 넣는다(고칠 때도 3곳 같이).
+      각 파일 클래스명이 달라서 선택자를 묶어 둠 — 다른 파일 클래스는 그 파일에선 그냥 무시됨.
+   콘셉트: 후기 = "기록 카드(아카이브 색인)" — hairline 테두리 · 모서리 2px · 그림자 0 · 날짜/숫자는 Outfit 표 숫자
+   모달은 겉모양만(위치·열림·뷰포트 앵커 로직 무수정). 후기 사진은 원래 색 유지(흑백 금지). */
+.b-nw{ white-space:nowrap; }
+
+/* 1. 후기 카드 */
+.mm-rv-card, .mm-review-card, .mm-prv__card{ background:#FFFFFF !important; border:1px solid rgba(26,26,26,.14) !important; border-radius:2px !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-card:active, .mm-review-card:active, .mm-prv__card:active{ transform:none !important; }
+@media (hover:hover){ .mm-rv-card:hover, .mm-review-card:hover, .mm-prv__card:hover{ border-color:#1A1A1A !important; box-shadow:none !important; transform:none !important; } }
+.mm-rv-card__img, .mm-review-card__img, .mm-prv__card-img{ border-radius:2px !important; }
+.mm-rv-card__meta, .mm-review-card__meta, .mm-prv__card-meta{ font-size:10.5px !important; font-weight:600 !important; letter-spacing:.08em !important; color:#8A8580 !important; }
+.mm-rv-card__meta-src, .mm-review-card__meta b{ color:#1A1A1A !important; font-weight:800 !important; }
+.mm-rv-card__name, .mm-review-card__name, .mm-prv__card-name{ font-weight:900 !important; letter-spacing:-.02em !important; color:#1A1A1A !important; }
+.mm-hon{ font-weight:400 !important; color:#8A8580 !important; }
+.mm-rv-card__store, .mm-review-card__store, .mm-prv__card-store{ color:#8A8580 !important; }
+.mm-rv-card__stars, .mm-review-card__stars, .mm-prv__card-stars{ color:#1A1A1A !important; letter-spacing:2px !important; }
+.mm-rv-card__text, .mm-review-card__text, .mm-prv__card-text{ color:#2D2D2D !important; word-break:keep-all; }
+.mm-rv-card__date, .mm-review-card__date, .mm-prv__card-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; padding-top:10px !important; }
+.mm-rv-card__date, .mm-rv-modal__date{ flex-wrap:wrap; row-gap:2px; }
+.mm-rv-card__date span, .mm-rv-modal__date span{ white-space:nowrap; }
+
+/* 2. 태그 · 분류 칩 · 구매 제품 칩 — 둥근 알약 → 2px 사각 */
+.mm-rv-tag, .mm-rv-sheet__tag, .mm-prv__tag{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:500 !important; padding:2px 8px !important; }
+.mm-rv-tag--more, .mm-prv__tag--more{ border:0 !important; color:#B8B4AF !important; font-weight:600 !important; padding:2px 4px !important; }
+.mm-review-card > div[style*="nowrap"] > span:first-child{ border-radius:2px !important; border-color:#D4D0CB !important; color:#4A4A4A !important; } /* 메인 카드 태그=인라인 스타일 → 같은 값으로 */
+.mm-rv-chip, .mm-rv-sheet__chip, .mm-prv__chip, .mm-review-card__subtype, .mm-rv-best__chip{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:600 !important; padding:2px 8px !important; }
+.mm-rv-chip--naver, .mm-rv-sheet__chip--src, .mm-review-card__source-badge{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#D4D0CB !important; color:#2D2D2D !important; }
+.mm-rv-product, .mm-prv__modal-product, .mm-prv__card-product{ border-radius:2px !important; background:#EDEBE8 !important; color:#1A1A1A !important; font-family:'Outfit','Pretendard',sans-serif !important; font-weight:600 !important; letter-spacing:.04em !important; }
+
+/* 3. 필터 탭 — 알약 → 글자 탭 + 굵은 밑줄 2px (가는 기준선 위) */
+.mm-rv-tabs, .mm-reviews__tabs, .mm-prv__filters{ gap:0 !important; border-bottom:1px solid #D4D0CB; flex-wrap:nowrap !important; }
+.mm-rv-tab, .mm-reviews__tab, .mm-prv__filter-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:#8A8580 !important; font-size:13px !important; font-weight:600 !important; letter-spacing:-.01em !important; padding:10px 12px 11px !important; transform:none !important; white-space:nowrap; }
+.mm-rv-tab:first-child, .mm-reviews__tab:first-child, .mm-prv__filter-btn:first-child{ padding-left:2px !important; }
+.mm-rv-tab--active, .mm-reviews__tab--active, .mm-prv__filter-btn.active{ color:#1A1A1A !important; font-weight:800 !important; background:transparent !important; }
+.mm-rv-tab--active::after, .mm-reviews__tab--active::after, .mm-prv__filter-btn.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2px; background:#1A1A1A; }
+.mm-rv-tab--active:first-child::after, .mm-reviews__tab--active:first-child::after, .mm-prv__filter-btn.active:first-child::after{ left:2px; }
+@media (hover:hover){ .mm-rv-tab:hover, .mm-reviews__tab:hover, .mm-prv__filter-btn:hover{ color:#1A1A1A !important; } }
+
+/* 4. 별점 분포 막대 · 사진 칸 · 더보기 */
+.mm-rv-bar__track, .mm-prv__dist-bar{ height:2px !important; border-radius:0 !important; background:#D4D0CB !important; }
+.mm-rv-bar__fill, .mm-prv__dist-bar-fill{ border-radius:0 !important; background:#1A1A1A !important; }
+.mm-rv-bar__label, .mm-rv-bar__pct, .mm-prv__dist-star, .mm-prv__dist-count{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; }
+.mm-rv-photos__item, .mm-prv__gallery-item, .mm-rv-allgrid__item{ border-radius:2px !important; }
+.mm-rv-loadmore, .mm-prv__loadmore{ border-radius:2px !important; border:1px solid #1A1A1A !important; background:transparent !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-loadmore:active, .mm-prv__loadmore:active{ transform:none !important; }
+
+/* 5. 리뷰 상세 모달 — 겉모양만. 흰 기록지 + 머리 굵은 선 2px · 모서리 4px · 그림자 0 */
+.mm-rv-modal, .mm-rv-sheet, .mm-prv__modal{ background:#FFFFFF !important; border-radius:4px !important; border-top:2px solid #1A1A1A !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-sheet__nav{ background:#FFFFFF !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__foot, .mm-prv__modal-foot{ border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__close, .mm-rv-sheet__close, .mm-prv__modal-close{ border-radius:2px !important; background:#FFFFFF !important; border:1px solid #D4D0CB !important; color:#1A1A1A !important; }
+.mm-rv-modal__photo, .mm-rv-gallery img, .mm-prv__modal-photo{ border-radius:2px !important; }
+.mm-rv-modal__chips, .mm-rv-sheet__topline, .mm-prv__modal-chips{ gap:6px !important; }
+.mm-rv-modal__name, .mm-rv-sheet__name, .mm-prv__modal-name{ font-family:'Pretendard',sans-serif !important; font-size:20px !important; font-weight:900 !important; letter-spacing:-.03em !important; color:#1A1A1A !important; line-height:1.35 !important; }
+.mm-rv-modal__stars, .mm-rv-sheet__stars, .mm-prv__modal-stars{ font-size:15px !important; letter-spacing:3px !important; color:#1A1A1A !important; }
+.mm-rv-modal__text, .mm-rv-sheet__body, .mm-prv__modal-text{ font-size:15px !important; line-height:1.85 !important; color:#2D2D2D !important; }
+.mm-rv-modal__date, .mm-rv-sheet__date, .mm-prv__modal-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11.5px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__navbtn, .mm-rv-sheet__navbtn, .mm-prv__modal-footbtn{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#FFFFFF !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-modal__navbtn--close, .mm-rv-sheet__navbtn--close, .mm-prv__modal-footbtn--close{ background:#1A1A1A !important; border-color:#1A1A1A !important; color:#FAF9F7 !important; }
+
+/* 6. 사진 확대(라이트박스) — 둥근 버튼 → 2px, 캡션 그라데이션 → 단색 띠 */
+.mm-lb__close, .mm-lb__arrow, .mm-rv-lb__x{ border-radius:2px !important; backdrop-filter:none !important; }
+.mm-lb__img, .mm-rv-lb img{ border-radius:2px !important; }
+.mm-lb__caption{ background:rgba(26,26,26,.88) !important; padding-top:18px !important; }
+.mm-lb__cap-chip{ border-radius:2px !important; }
+.mm-lb__cap-date{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+/* ═══════════════ [B-09 후기 공통] 끝 ═══════════════ */
+
+/* ═══════════════ [B-09 페이지 전용] 메인 후기 iframe ═══════════════
+   메인 페이지 일부 → 큰 히어로 없음. 헤드라인 위계(작은 라벨 → 제목 900 ↔ 설명 300) + 공통 기록 카드만.
+   시그니처: 헤드라인 굵기 대비 + 2px 밑줄 탭. */
+.mm-reviews{ word-break:keep-all; overflow-wrap:break-word; padding:clamp(64px,13vw,120px) 0 clamp(52px,10vw,88px) !important; }
+.mm-reviews__head{ margin-bottom:clamp(24px,6vw,36px) !important; }
+.mm-section-kicker{ display:flex; align-items:center; gap:10px; font-family:'Outfit',sans-serif; font-size:11px !important; font-weight:700 !important; letter-spacing:.2em !important; color:#8A8580 !important; margin-bottom:14px !important; }
+.mm-section-kicker::before{ content:''; width:38px; height:2px; background:#1A1A1A; flex-shrink:0; }
+.mm-reviews__title{ font-family:'Pretendard',sans-serif; font-size:clamp(32px,9vw,52px) !important; font-weight:900 !important; letter-spacing:-.045em !important; line-height:1.05 !important; margin-bottom:10px !important; }
+.mm-reviews__desc{ font-size:clamp(15px,4.2vw,20px) !important; font-weight:300 !important; letter-spacing:-.03em; color:#4A4A4A !important; }
+.mm-reviews__tabs{ margin-bottom:18px !important; }
+.mm-review-card{ padding:20px !important; }
+.mm-review-card__img{ margin-bottom:14px !important; }
+@media (min-width:1024px){ .mm-reviews__tabs{ margin-bottom:24px !important; } .mm-reviews__tab{ font-size:14px !important; } .mm-review-card{ padding:24px !important; } }
+.mm-reviews__more{ display:table !important; margin:28px auto 0 !important; padding:0 0 2px !important; border-bottom:1px solid #1A1A1A; color:#1A1A1A !important; font-weight:700 !important; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본에 B-09 덧입힘(문구·탭·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 메인 후기 영역(mamoru.kr 메인 iframe). 문구·버튼은 같고 디자인만 다릅니다. 메인 페이지 일부라 큰 히어로 없이 제목 위계·카드만.</span>
+    <a href="https://page.mamoru.kr/projects/main/iframe_main_reviews.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<!-- ══════════════════════════════════════════════════════════════
+     고객 후기 — 탭 (상담/복원/구매) + 서브타입 칩
+     ══════════════════════════════════════════════════════════════ -->
+<section class="mm-reviews">
+  <div class="mm-inner">
+    <div class="mm-reviews__head mm-anim">
+      <p class="mm-section-kicker">Reviews</p>
+      <h2 class="mm-reviews__title">고객 후기</h2>
+      <p class="mm-reviews__desc">마모루를 경험한 분들의 이야기</p>
+    </div>
+
+    <div class="mm-reviews__tabs" id="mmReviewTabs">
+      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consult">컨설팅상담</button>
+      <button class="mm-reviews__tab" data-type="repair">복원수리</button>
+      <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
+    </div>
+
+    <div class="mm-reviews__scroll" id="mmReviews">
+      <!-- JS 렌더링 -->
+    </div>
+
+    <!-- ✏️ 수정가능: 후기 더보기 링크 URL -->
+    <a href="/62" class="mm-reviews__more">후기 더보기 →</a>
+  </div>
+</section>
+
+<!-- 리뷰 상세 바텀시트 (뷰포트 앵커) -->
+<div class="mm-rv-backdrop" id="rvBackdrop">
+  <div class="mm-rv-sheet" id="rvSheet" role="dialog" aria-modal="true">
+    <div class="mm-rv-sheet__grip" id="rvGrip"></div>
+    <button class="mm-rv-sheet__close" id="rvSheetClose" aria-label="닫기">×</button>
+    <div class="mm-rv-sheet__scroll" id="rvSheetScroll"></div>
+    <div class="mm-rv-sheet__nav">
+      <button class="mm-rv-sheet__navbtn" id="rvPrev">← 이전</button>
+      <button class="mm-rv-sheet__navbtn" id="rvNext">다음 →</button>
+      <button class="mm-rv-sheet__navbtn mm-rv-sheet__navbtn--close" id="rvCloseBtn">닫기</button>
+    </div>
+  </div>
+  <div class="mm-rv-lb" id="rvLb"><button class="mm-rv-lb__x" aria-label="닫기">×</button><img id="rvLbImg" src="" alt=""></div>
+</div>
+
+<script>
+(function(){
+  var REVIEW_API = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
+  var allReviews = [];
+  var reviewState = { list: [], idx: 0 };
+  var _rvBackdrop, _rvScroll, _rvLb, _rvLbImg, _pendingVpCb = null;
+
+  /* ── 마스킹/표시 헬퍼 (page_reviews·page_main_btm 와 동일 — 3화면 SSOT) ── */
+  function maskName(name) {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+  function maskStore(s) {
+    if (!s) return '';
+    s = String(s).trim();
+    if (s.length <= 1) return s;
+    if (s.length === 2) return s[0] + '*';
+    if (s.length === 3) return s[0] + '**';
+    return s[0] + '**' + s.slice(3);
+  }
+  function storeHtml(r, fs) {
+    if (!r.store_name) return '';
+    return ' <span style="font-size:' + fs + 'px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
+  }
+  function honHtml(name) { return name ? ' <span class="mm-hon">님</span>' : ''; }
+  function fmtDate(d) {
+    if (!d) return '';
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
+  }
+
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
+  var SUBTYPE_LABELS = { store: '직접방문', field: '출장', store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '직접방문', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리', event: '이벤트참여' };
+  var TAG_LABELS = {
+    comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않아요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요', kind:'친절해요',
+    like_new:'새 가위처럼', better_cut:'커트감 개선', above_expect:'기대 이상',
+    precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    kind_response:'응대 친절', worth_money:'돈 안 아까워요', will_return:'또 이용할게요',
+    good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
+    would_recommend:'추천하고 싶어요'
+  };
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+  function renderDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push(lab + ' ' + rec);
+    if (cr) parts.push('작성 ' + cr);
+    return '<div class="mm-review-card__date">' + parts.join('  ·  ') + '</div>';
+  }
+
+  /* ── 후기 렌더링 (서브타입 필터 지원) ── */
+  function renderReviews(type) {
+    var el = document.getElementById('mmReviews');
+    if (!el) return;
+    var items = allReviews.filter(function(r) { return r.type === type; });
+    if (items.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
+      return;
+    }
+    var shown = items.slice(0, 8);
+    reviewState.list = items; // 모달 순회는 전체(미리보기 8개 넘어도 계속 조회)
+    el.innerHTML = shown.map(function(r, idx) {
+      var stars = '';
+      for (var i = 0; i < 5; i++) stars += i < r.stars ? '★' : '☆';
+      var imgUrl = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls[0] : (r.product_image_url || '');
+      var imgHtml = imgUrl ? '<img class="mm-review-card__img" src="' + imgUrl + '" alt="후기 이미지" loading="lazy">' : '';
+      var tagsHtml = '';
+      if (r.meta && r.meta.tags && r.meta.tags.length > 0) {
+        var _tg = r.meta.tags;                    // 카드=상위 1개 + '+N' 한 줄 고정(모달은 전량) — 2026-10-01 줄바꿈 정리
+        tagsHtml = '<div style="display:flex;flex-wrap:nowrap;overflow:hidden;gap:4px;margin-bottom:8px;">' +
+          _tg.slice(0, 1).map(function(t) {
+            return '<span style="font-size:11px;padding:2px 8px;border:1px solid var(--sand);border-radius:6px;color:var(--stone);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">' + (TAG_LABELS[t] || t) + '</span>';
+          }).join('') +
+          (_tg.length > 1 ? '<span style="font-size:11px;padding:2px 4px;color:#B8B4AF;font-weight:600;flex-shrink:0;">+' + (_tg.length - 1) + '</span>' : '') +
+          '</div>';
+      }
+      var chips = '';
+      var clbl = chipLabel(r);
+      if (clbl) { chips += '<span class="mm-review-card__subtype">' + clbl + '</span>'; }
+      if (r.source === 'naver') { chips += '<span class="mm-review-card__source-badge">네이버</span>'; }
+      var metaHtml = (clbl || '').replace('·', ' · ') + (r.source === 'naver' ? (clbl ? ' · ' : '') + '<b style="font-weight:700;color:var(--stone);">네이버</b>' : '');
+      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '…' : r.content;
+      return '<div class="mm-review-card mm-anim mm-anim-stagger" data-idx="' + idx + '">' +
+        imgHtml +
+        // 2026-10-01: 분류(위·작게) → 이름(한 줄 전체) → 매장(자기 줄) — 이름 옆 칩이 줄바꿈되며 틀이 깨지던 문제 (page_reviews 와 동일)
+        '<div class="mm-review-card__header">' +
+          (metaHtml ? '<div class="mm-review-card__meta">' + metaHtml + '</div>' : '') +
+          '<span class="mm-review-card__name">' + maskName(r.name) + honHtml(r.name) + '</span>' +
+          (r.store_name ? '<div class="mm-review-card__store">' + maskStore(r.store_name) + '</div>' : '') +
+          (r.product ? '<div style="margin-top:4px;"><span class="mm-rv-product">' + r.product + '</span></div>' : '') +
+        '</div>' +
+        '<div class="mm-review-card__stars">' + stars + '</div>' +
+        tagsHtml +
+        '<div class="mm-review-card__text">' + preview + '</div>' +
+        renderDates(r) +
+        '</div>';
+    }).join('');
+    el.querySelectorAll('.mm-anim').forEach(function(card) { card.classList.add('mm-visible'); });
+  }
+
+  function loadReviews() {
+    fetch(REVIEW_API + '?type=all')
+      .then(function(res) { return res.json(); })
+      .then(function(data) { allReviews = Array.isArray(data) ? data : []; renderReviews('consult'); })
+      .catch(function() { allReviews = []; renderReviews('consult'); });
+  }
+
+  function initReviewTabs() {
+    var tabWrap = document.getElementById('mmReviewTabs');
+    if (!tabWrap) return;
+    tabWrap.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-reviews__tab');
+      if (!btn || btn.classList.contains('mm-reviews__tab--active')) return;
+      tabWrap.querySelectorAll('.mm-reviews__tab').forEach(function(t) { t.classList.remove('mm-reviews__tab--active'); });
+      btn.classList.add('mm-reviews__tab--active');
+      renderReviews(btn.getAttribute('data-type'));
+    });
+  }
+
+  /* ── 스크롤 등장 애니메이션 (헤드) ── */
+  function initAnimations() {
+    var revealAll = function() { document.querySelectorAll('.mm-anim').forEach(function(el) { el.classList.add('mm-visible'); }); };
+    if (!('IntersectionObserver' in window)) { revealAll(); return; }
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) { if (entry.isIntersecting) { entry.target.classList.add('mm-visible'); observer.unobserve(entry.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+    document.querySelectorAll('.mm-anim').forEach(function(el) { observer.observe(el); });
+    setTimeout(revealAll, 2500); // 안전망
+  }
+
+  /* ── iframe 높이 자동 전송 (아임웹 parent 통신) ── */
+  function initIframeComm() {
+    var lastSent = 0;
+    function getHeight() {
+      var bodyScroll = document.body.scrollHeight || 0;
+      var docScroll  = document.documentElement.scrollHeight || 0;
+      var bodyOffset = document.body.offsetHeight || 0;
+      var lastBottom = 0;
+      var lastEl = document.body.lastElementChild;
+      while (lastEl && (lastEl.tagName === 'SCRIPT' || lastEl.tagName === 'STYLE')) { lastEl = lastEl.previousElementSibling; }
+      if (lastEl) {
+        var rect = lastEl.getBoundingClientRect();
+        lastBottom = (window.pageYOffset || document.documentElement.scrollTop || 0) + rect.bottom;
+      }
+      return Math.max(bodyScroll, docScroll, bodyOffset, lastBottom);
+    }
+    function send(force) {
+      var h = Math.ceil(getHeight());
+      if (force === true || h > lastSent + 1) {
+        if (h > lastSent) lastSent = h;
+        window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', id: 'reviews', height: h }, '*');
+      }
+    }
+    if (window.ResizeObserver) { try { new ResizeObserver(send).observe(document.body); } catch(_) {} }
+    document.querySelectorAll('img').forEach(function(img) {
+      if (img.complete) return;
+      img.addEventListener('load', send, { once: true });
+      img.addEventListener('error', send, { once: true });
+    });
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(send).catch(function(){}); }
+    function multiSend() { send(); [50, 150, 400, 800, 1500, 3000, 5000, 8000].forEach(function(ms) { setTimeout(send, ms); }); }
+    if (document.readyState === 'complete') { multiSend(); } else { window.addEventListener('load', multiSend); send(); }
+    var resizeT;
+    window.addEventListener('resize', function() { clearTimeout(resizeT); resizeT = setTimeout(send, 200); });
+    window.addEventListener('message', function(e) { if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true); });
+    if (window.MutationObserver) { try { new MutationObserver(send).observe(document.body, { childList: true, subtree: true }); } catch(_) {} }
+    var __mmTick = setInterval(send, 280);
+    setTimeout(function() { clearInterval(__mmTick); }, 15000);
+    window.addEventListener('pageshow', function(e) { if (e.persisted) multiSend(); else send(); });
+    document.addEventListener('visibilitychange', function() { if (!document.hidden) send(); });
+    window.addEventListener('focus', send);
+    window.addEventListener('orientationchange', function() { setTimeout(send, 300); });
+
+    /* 아임웹 parent에서 페이지 이동 위임 (후기 더보기 /62 등) */
+    document.addEventListener('click', function(e) {
+      var a = e.target.closest('a[href]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('mailto:')) return;
+      e.preventDefault();
+      window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: href }, '*');
+    });
+  }
+
+  /* ── 리뷰 상세 바텀시트 (뷰포트 앵커 — 배경 잘림 방지) ── */
+  window.addEventListener('message', function(e){
+    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && _pendingVpCb) {
+      var cb = _pendingVpCb; _pendingVpCb = null; cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
+    }
+  });
+  function placeInViewport(el, done){
+    _pendingVpCb = function(top, h){ el.style.top = top + 'px'; el.style.height = h + 'px'; if (done) done(); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
+  }
+  function openSheet(idx){
+    reviewState.idx = idx;
+    placeInViewport(_rvBackdrop, function(){
+      renderSheet();
+      _rvBackdrop.classList.add('mm-rv-backdrop--open');
+      document.body.style.overflow = 'hidden';
+      try { history.pushState({ mmRvSheet: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘
+      try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} // 배경 스크롤 잠금
+    });
+  }
+  function doCloseSheet(){ _rvBackdrop.classList.remove('mm-rv-backdrop--open'); document.body.style.overflow = ''; try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {} }
+  function closeSheet(){ if (history.state && history.state.mmRvSheet) history.back(); else doCloseSheet(); }
+  window.addEventListener('popstate', function(){ if (_rvBackdrop && _rvBackdrop.classList.contains('mm-rv-backdrop--open')) doCloseSheet(); });
+  function renderSheet(){
+    var r = reviewState.list[reviewState.idx]; if (!r) return;
+    var photos = (r.photo_urls && r.photo_urls.length) ? r.photo_urls : (r.product_image_url ? [r.product_image_url] : []);
+    var stars = ''; for (var i = 0; i < 5; i++) stars += i < r.stars ? '★' : '☆';
+    var gallery = photos.length ? '<div class="mm-rv-gallery' + (photos.length === 1 ? ' mm-rv-gallery--single' : '') + '">' +
+      photos.map(function(p){ return '<img src="' + p + '" alt="후기 사진" data-full="' + p + '">'; }).join('') + '</div>' : '';
+    var tags = '';
+    if (r.meta && r.meta.tags && r.meta.tags.length) {
+      tags = '<div class="mm-rv-sheet__tags">' + r.meta.tags.map(function(t){ return '<span class="mm-rv-sheet__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + '</div>';
+    }
+    var clbl = chipLabel(r);
+    var chip = clbl ? '<span class="mm-rv-sheet__chip">' + clbl + '</span>' : '';
+    if (r.source === 'naver') chip += '<span class="mm-rv-sheet__chip mm-rv-sheet__chip--src">네이버</span>';
+    if (r.product) chip += '<span class="mm-rv-product">' + r.product + '</span>';  // 2026-10-01 구매 제품 = 분류 칩 옆 채움 칩
+    _rvScroll.innerHTML = gallery +
+      '<div class="mm-rv-sheet__pad">' +
+        (chip ? '<div class="mm-rv-sheet__topline">' + chip + '</div>' : '') +
+        '<div class="mm-rv-sheet__name">' + maskName(r.name) + honHtml(r.name) + storeHtml(r, 12) + '</div>' +
+        '<div class="mm-rv-sheet__stars">' + stars + '</div>' +
+        tags +
+        '<div class="mm-rv-sheet__body">' + r.content + '</div>' +
+        renderDates(r).replace('mm-review-card__date', 'mm-rv-sheet__date') +
+      '</div>';
+    _rvScroll.scrollTop = 0;
+    document.getElementById('rvPrev').disabled = reviewState.idx <= 0;
+    document.getElementById('rvNext').disabled = reviewState.idx >= reviewState.list.length - 1;
+    _rvScroll.querySelectorAll('.mm-rv-gallery img').forEach(function(im){ im.onclick = function(){ openLb(im.getAttribute('data-full')); }; });
+  }
+  function navSheet(d){ var ni = reviewState.idx + d; if (ni < 0 || ni >= reviewState.list.length) return; reviewState.idx = ni; renderSheet(); }
+  function openLb(src){ _rvLbImg.src = src; _rvLb.classList.add('mm-rv-lb--open'); }
+  function closeLb(){ _rvLb.classList.remove('mm-rv-lb--open'); }
+  function initSheet(){
+    _rvBackdrop = document.getElementById('rvBackdrop'); _rvScroll = document.getElementById('rvSheetScroll');
+    _rvLb = document.getElementById('rvLb'); _rvLbImg = document.getElementById('rvLbImg');
+    document.getElementById('mmReviews').addEventListener('click', function(e){
+      var c = e.target.closest('.mm-review-card'); if (!c) return; var i = +c.getAttribute('data-idx'); if (isNaN(i)) return; openSheet(i);
+    });
+    _rvBackdrop.addEventListener('click', function(e){ if (e.target === _rvBackdrop) closeSheet(); });
+    document.getElementById('rvSheetClose').addEventListener('click', closeSheet);
+    document.getElementById('rvCloseBtn').addEventListener('click', closeSheet);
+    document.getElementById('rvPrev').addEventListener('click', function(){ navSheet(-1); });
+    document.getElementById('rvNext').addEventListener('click', function(){ navSheet(1); });
+    _rvLb.addEventListener('click', closeLb);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') { if (_rvLb.classList.contains('mm-rv-lb--open')) closeLb(); else if (_rvBackdrop.classList.contains('mm-rv-backdrop--open')) closeSheet(); }
+      else if (_rvBackdrop.classList.contains('mm-rv-backdrop--open') && !_rvLb.classList.contains('mm-rv-lb--open')) {
+        if (e.key === 'ArrowLeft') navSheet(-1); if (e.key === 'ArrowRight') navSheet(1);
+      }
+    });
+    var grip = document.getElementById('rvGrip'), sheet = document.getElementById('rvSheet'), sY = 0, cY = 0, drag = false;
+    grip.addEventListener('touchstart', function(e){ sY = cY = e.touches[0].clientY; drag = true; sheet.style.transition = 'none'; }, { passive: true });
+    grip.addEventListener('touchmove', function(e){ if (!drag) return; cY = e.touches[0].clientY; var d = Math.max(0, cY - sY); sheet.style.transform = 'translateY(' + d + 'px)'; }, { passive: true });
+    grip.addEventListener('touchend', function(){ if (!drag) return; drag = false; sheet.style.transition = ''; if (cY - sY > 110) closeSheet(); sheet.style.transform = ''; });
+  }
+
+  function init() { loadReviews(); initReviewTabs(); initAnimations(); initIframeComm(); initSheet(); }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1994 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>시안 B-09 · 상품상세 후기 위젯</title>
+<meta name="robots" content="noindex">
+<!-- 미리보기 껍데기(시안 전용): 원본은 <html>/<body> 없는 붙여넣기 조각. 주소에 ?group·?idx·?demo 가 없으면 ?demo=1(원본 스크립트의 검증용 더미 12건)로 띄움 -->
+<script>if(!/[?&](group|idx|demo)=/.test(location.search)){try{history.replaceState(null,"",location.pathname+"?demo=1");}catch(_){}}</script>
+<style>html,body{margin:0;background:#FAF9F7;overflow-x:hidden;}</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본에 B-09 덧입힘(문구·탭·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 상품상세 후기 위젯(아임웹 상품상세 코드위젯). 문구·버튼은 같고 디자인만 다릅니다. 지금 보이는 후기는 원본 스크립트의 데모 더미(?demo=1). 실제 후기 보기 → <a href="?group=R4" style="color:#FAF9F7;">?group=R4</a> · 데모 <a href="?demo=1" style="color:#FAF9F7;">?demo=1</a></span>
+    <a href="https://page.mamoru.kr/projects/reviews/ImwebWidgetCode_product_reviews.html?demo=1" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<div class="b-preview-widget">
+<!-- ═══════════════════════════════════════════════════════════════
+  📦 FILE   : projects/reviews/ImwebWidgetCode_product_reviews.html
+  📍 PASTE  : 아임웹 디자인 모드 → 상품 상세 공통 → 코드위젯 (후기 영역)
+  📝 기능   : 자체 후기 위젯 + sticky 탭바(정보/후기/문의) + 모달 좌우 화살표
+  🔧 최종   : Phase 2-C (2026-05-16)
+  ⚠️ 함께   : product_detail_common.html (공통 영역 코드위젯) 도 같이 paste
+═══════════════════════════════════════════════════════════════ -->
+
+<!-- Google Fonts: Outfit (display) + Plus Jakarta Sans + Pretendard (body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU 제품별 후기 — Brand Guide v1.0 (Monochrome)
+   아임웹 상품 상세 하단 코드위젯 삽입용
+   자동 감지: URL의 idx 파라미터로 상품 식별 → 리뷰 자동 표시
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 아임웹 네이티브 구매평 내용 + 탭 자체 숨김 (2026-05-15 Phase 1) ── */
+._review_wrap { display: none !important; }
+[class*="review-tab"],
+[class*="review_tab"],
+.shop_review_tab,
+li[data-tab="review"],
+a[href*="review"][class*="tab"] { display: none !important; }
+
+/* ── 아임웹 네이티브 Q&A 영역 자체 숨김 (2026-05-15 Phase 1) ──
+   자체 시스템 없음 + 고객 문의는 공통 영역 카톡/이메일/전화로 유도
+   탭 설정에서 "사용안함" 1차 + CSS 강제 숨김 2차 (이중 안전) */
+._detail_qna_wrap, ._detail_qna_wrap_mobile,
+.detail_qna_wrap, .detail_qna_wrap_mobile,
+._qna_wrap, ._qna,
+.prod_detail_qna,
+#first_qna,
+#prod_detail_qna_target,
+#prod_detail_qna_target_mobile,
+[class*="qna-tab"], [class*="qna_tab"],
+li[data-tab="qna"],
+a[href*="qna"][class*="tab"] { display: none !important; }
+
+/* ── 반품/교환 영역 자체 숨김 (FAQ에 정책 포함되어 있음) ── */
+[class*="exchange_wrap"], [class*="refund_wrap"],
+[class*="exchange-tab"], [class*="refund-tab"],
+li[data-tab="exchange"], li[data-tab="refund"],
+a[href*="exchange"][class*="tab"], a[href*="refund"][class*="tab"] { display: none !important; }
+
+/* ── 아임웹 네이티브 sticky 탭바 자체 숨김 (Phase 2-C 2026-05-16) ──
+   자체 탭바 [정보 | 후기 | 문의] 로 대체 → 중복 방지 */
+._prod_detail_tab_fixed,
+.site_prod_nav_wrap,
+.background_tab { display: none !important; }
+
+/* ── 위젯 초기 숨김 (DOM 이동 완료 후 표시 → 깜빡임 방지) ── */
+.mm-prv--ready { opacity: 1 !important; transition: opacity 0.2s ease; }
+.mm-prv-initial-hidden { opacity: 0; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════════════════
+   Phase 2-C — 자체 sticky 탭바 (모바일 전용) + 모달 화살표
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 자체 탭바 (모바일에서만 표시) ── */
+.mm-tabs {
+  display: none; /* 기본 숨김, 모바일에서만 표시 */
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  background: var(--mm-cream);
+  border-bottom: 1px solid var(--mm-border);
+  font-family: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* ⚠️ JS가 탭바를 상세정보 부모(그리드 안)로 이동 → 부모 너비 상속 시 우측 여백 발생
+     width:100vw 명시 + 음수 마진으로 좌우 대칭 풀폭 (2026-05-17 갱신) */
+  width: 100vw;
+  margin-left: calc((100% - 100vw) / 2);
+  margin-right: calc((100% - 100vw) / 2);
+  box-sizing: border-box;
+}
+.mm-tabs__inner {
+  display: flex;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  width: 100%;
+}
+.mm-tab {
+  flex: 1;
+  padding: 14px 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+.mm-tab.active {
+  color: var(--mm-void);
+  font-weight: 700;
+  border-bottom-color: var(--mm-void);
+}
+.mm-tab:focus { outline: none; }
+
+@media (max-width: 767px) {
+  .mm-tabs { display: block; }
+}
+
+/* ── 모달 좌우 화살표 (Phase 2-C 신규) ── */
+.mm-prv__modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: var(--mm-shell);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mm-void);
+  transition: background var(--mm-ease-fast), opacity var(--mm-ease-fast);
+  z-index: 2;
+}
+.mm-prv__modal-nav:hover { background: var(--mm-parchment); }
+.mm-prv__modal-nav--prev { left: -52px; }
+.mm-prv__modal-nav--next { right: -52px; }
+.mm-prv__modal-nav.hidden { display: none; }
+.mm-prv__modal-counter {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+.mm-prv__modal-counter.hidden { display: none; }
+
+@media (max-width: 767px) {
+  /* 모바일: 화살표를 모달 밖이 아닌 안쪽 상단에 배치 (공간 절약) */
+  .mm-prv__modal-nav { position: absolute; top: 14px; transform: none; width: 32px; height: 32px; font-size: 16px; }
+  .mm-prv__modal-nav--prev { left: 14px; }
+  .mm-prv__modal-nav--next { right: 56px; } /* 닫기(✕) 좌측 */
+  .mm-prv__modal-counter { top: 18px; bottom: auto; transform: translateX(-50%); }
+  /* 모바일 모달은 상단 padding 더 → 화살표·카운터 자리 확보 */
+  .mm-prv__modal { padding-top: 56px; }
+}
+
+/* ── 0. 변수 & 리셋 ── */
+:root {
+  --mm-void: #1A1A1A;
+  --mm-graphite: #2D2D2D;
+  --mm-stone: #4A4A4A;
+  --mm-warm-gray: #8A8580;
+  --mm-mist: #B8B4AF;
+  --mm-sand: #D4D0CB;
+  --mm-parchment: #EDEBE8;
+  --mm-shell: #F5F3F0;
+  --mm-cream: #FAF9F7;
+  --mm-white: #FFFFFF;
+  --mm-border: rgba(26,26,26,0.08);
+  --mm-radius-sm: 8px;
+  --mm-radius-md: 12px;
+  --mm-radius-lg: 16px;
+  --mm-max-w: 780px;
+  --mm-ease: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --mm-ease-fast: 0.15s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.mm-prv {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-cream);
+  color: var(--mm-void);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow: visible;
+}
+
+/* ⚠️ JS가 후기 위젯을 상세정보 부모(그리드 안)로 이동 → 좌우 여백 발생
+   PC + 모바일 양쪽에서 viewport 풀폭 강제 (2026-05-17 갱신 — 공통 영역과 폭 통일)
+   내부 콘텐츠는 자체 max-width 컨테이너로 중앙 정렬 유지 */
+.mm-prv {
+  margin-left: calc((100% - 100vw) / 2);
+  margin-right: calc((100% - 100vw) / 2);
+  width: 100vw;
+}
+
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ── 1. 요약 헤더 — 큰 평균숫자 + 영문 라벨 (Phase 2) ── */
+.mm-prv__summary {
+  text-align: center;
+  padding: 56px 20px 28px;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+.mm-prv__bar {
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--mm-void);
+  border-radius: 2px;
+  margin-bottom: 18px;
+}
+.mm-prv__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mm-warm-gray);
+  margin-bottom: 16px;
+}
+.mm-prv__avg {
+  font-family: 'Outfit', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--mm-void);
+  display: block;
+  margin-bottom: 12px;
+}
+.mm-prv__stars-display {
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: var(--mm-void);
+  margin-bottom: 8px;
+}
+.mm-prv__count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.02em;
+}
+
+/* ── 1-B. 별점 분포 그래프 — 슬림화 (Phase 2 미세조정) ── */
+.mm-prv__dist {
+  max-width: 360px;
+  margin: 0 auto 8px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mm-prv__dist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity var(--mm-ease-fast);
+}
+.mm-prv__dist-row:hover { opacity: 0.7; }
+.mm-prv__dist-row.active { font-weight: 700; }
+.mm-prv__dist-star {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: var(--mm-warm-gray);
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.mm-prv__dist-row.active .mm-prv__dist-star { color: var(--mm-void); }
+.mm-prv__dist-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--mm-parchment);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.mm-prv__dist-bar-fill {
+  height: 100%;
+  background: var(--mm-void);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.mm-prv__dist-count {
+  font-size: 10px;
+  color: var(--mm-mist);
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 1-C. 필터/정렬 바 — 슬림 (Phase 2 미세조정) ── */
+.mm-prv__controls {
+  max-width: var(--mm-max-w);
+  margin: 20px auto 4px;
+  padding: 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+.mm-prv__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mm-prv__filter-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  background: transparent;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.mm-prv__filter-btn:hover {
+  border-color: var(--mm-stone);
+  color: var(--mm-void);
+}
+.mm-prv__filter-btn.active {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  font-weight: 600;
+}
+.mm-prv__sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--mm-warm-gray);
+}
+.mm-prv__sort-select {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-void);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--mm-border);
+  border-radius: 0;
+  padding: 4px 22px 4px 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%231A1A1A' stroke-width='1.5' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+.mm-prv__sort-select:focus { outline: none; border-bottom-color: var(--mm-void); }
+
+/* ── 1-D. 포토 후기 갤러리 — 호흡 (Phase 2 미세조정) ── */
+.mm-prv__gallery-wrap {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding: 28px 20px 4px;
+}
+.mm-prv__gallery-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.mm-prv__gallery-count {
+  font-size: 10px;
+  color: var(--mm-mist);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+}
+.mm-prv__gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.mm-prv__gallery-item {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  background: var(--mm-shell);
+}
+.mm-prv__gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--mm-ease);
+}
+.mm-prv__gallery-item:hover img { transform: scale(1.05); }
+.mm-prv__gallery-item.more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* ── 빈 상태 (필터 결과 0건 / 후기 0건) ── */
+.mm-prv__empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--mm-warm-gray);
+  font-size: 14px;
+}
+.mm-prv__zero {
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+  padding: 80px 20px 96px;
+  text-align: center;
+}
+.mm-prv__zero-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mm-warm-gray);
+  margin-bottom: 24px;
+}
+.mm-prv__zero-icon {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  letter-spacing: 4px;
+  color: var(--mm-sand);
+  margin-bottom: 20px;
+  line-height: 1;
+}
+.mm-prv__zero-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mm-void);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.mm-prv__zero-sub {
+  font-size: 13px;
+  color: var(--mm-warm-gray);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+@media (min-width: 768px) {
+  .mm-prv__zero { padding: 96px 40px 112px; }
+  .mm-prv__zero-icon { font-size: 36px; }
+  .mm-prv__zero-title { font-size: 17px; }
+  .mm-prv__zero-sub { font-size: 14px; }
+}
+
+/* ── 2. 리뷰 그리드 ── */
+.mm-prv__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  padding: 16px 20px 0;
+  max-width: var(--mm-max-w);
+  margin: 0 auto;
+}
+
+/* ── 3. 리뷰 카드 — 호흡 강화 (Phase 2 미세조정) ── */
+.mm-prv__card {
+  background: var(--mm-white);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  padding: 22px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow var(--mm-ease), transform var(--mm-ease-fast);
+  cursor: pointer;
+}
+.mm-prv__card-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--mm-radius-sm);
+  object-fit: cover;
+}
+/* 2026-10-01 카드 헤더 세로 3단 (분류 / 이름·별점 / 매장) */
+.mm-prv__card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.mm-prv__card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mm-prv__card-meta,
+.mm-prv__card-store {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mm-prv__card-store { font-size: 12px; }
+.mm-prv__card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mm-void);
+  letter-spacing: -0.01em;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mm-prv__card-stars {
+  color: var(--mm-void);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}
+.mm-prv__card-product {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  letter-spacing: 0.01em;
+}
+.mm-prv__card-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--mm-graphite);
+  line-height: 1.75;
+}
+.mm-prv__card-date {
+  font-size: 11px;
+  color: var(--mm-mist);
+  padding-top: 12px;
+  border-top: 1px solid var(--mm-border);
+  letter-spacing: 0.02em;
+}
+/* 속성 태그 — 미니멀 (Phase 2) */
+.mm-prv__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+/* 카드 '+N' — 조용한 보조 표시 */
+.mm-prv__tag--more { border: none; color: var(--mm-warm-gray); font-weight: 600; padding: 2px 4px; opacity: .7; }
+/* 2026-10-01 카드 태그 = 한 줄 고정 (1개 + N). 모달(.mm-prv__modal 쪽)은 그대로 전량 줄바꿈 */
+.mm-prv__card .mm-prv__tags { flex-wrap: nowrap; overflow: hidden; }
+.mm-prv__card .mm-prv__tag { flex-shrink: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mm-prv__card .mm-prv__tag--more { flex-shrink: 0; border: none; }  /* 아래 .mm-prv__tag 가 뒤에 선언돼 테두리가 되살아나던 것 */
+.mm-prv__tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  padding: 2px 8px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-sm);
+  background: transparent;
+  letter-spacing: 0.02em;
+}
+
+/* ── 모달 ── */
+.mm-prv__overlay {
+  position: absolute; left: 0; right: 0; z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: flex-end; justify-content: center;  /* 하단 기준 — 버튼 위치 고정(다음 연타) */
+  padding: 20px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+@media (min-width: 768px) { .mm-prv__overlay { align-items: center; } }  /* PC는 중앙 */
+.mm-prv__overlay--open { opacity: 1; visibility: visible; }
+.mm-prv__modal {
+  background: var(--mm-white); border-radius: var(--mm-radius-lg);
+  max-width: 520px; width: 100%;
+  max-height: calc(100% - 24px); overflow: hidden;
+  padding: 28px 24px;
+  position: relative;
+  display: flex; flex-direction: column;
+}
+/* 내용(사진+글씨) 영역만 스크롤 — 상단 잘림 방지 */
+#prvModalBody { flex: 1; min-height: 0; overflow-y: auto; }
+/* 하단 순회/닫기 버튼 (이전·다음·닫기, 닫기는 우측·작게 — 3화면 통일) */
+.mm-prv__modal-foot { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mm-border); display: flex; gap: 8px; flex-shrink: 0; }
+.mm-prv__modal-footbtn { flex: 1; padding: 11px; font-size: 13px; font-weight: 600; border: 1px solid var(--mm-border); border-radius: 10px; background: #fff; color: var(--mm-stone); cursor: pointer; transition: all .15s; }
+.mm-prv__modal-footbtn:disabled { opacity: .35; cursor: default; }
+.mm-prv__modal-footbtn--close { flex: .55; background: var(--mm-void); color: #fff; border-color: var(--mm-void); }
+.mm-prv__modal-footbtn:not(:disabled):hover { border-color: var(--mm-void); color: var(--mm-void); }
+.mm-prv__modal-footbtn--close:hover { opacity: .88; color: #fff; }
+/* 좌우 화살표·카운터 → 하단 버튼으로 통일(숨김) */
+.mm-prv__modal-nav, .mm-prv__modal-counter { display: none !important; }
+.mm-prv__modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border: none; background: var(--mm-shell);
+  border-radius: 50%; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mm-stone);
+  transition: background var(--mm-ease-fast);
+}
+.mm-prv__modal-close:hover { background: var(--mm-parchment); }
+.mm-prv__modal-stars {
+  color: var(--mm-void); font-size: 18px; letter-spacing: 2px; margin-bottom: 12px;
+}
+.mm-prv__modal-name {
+  font-size: 17px; font-weight: 700; margin-bottom: 4px;
+}
+/* 2026-10-01 모달 태그↔본문 간격 (예전엔 제품명 줄이 대신 띄워주고 있었음) */
+#prvModalBody > .mm-prv__tags { margin-bottom: 14px; }
+/* 2026-10-01 모달 칩줄 (분류 + 구매 제품) */
+.mm-prv__modal-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
+.mm-prv__modal-chips .mm-prv__chip { margin-left: 0; }
+/* 구매 제품 칩 — 분류 칩보다 한 톤 진한 채움(Parchment) + 모델명 서체 (page_reviews 와 동일) */
+.mm-prv__modal-product,
+.mm-prv__card-product {
+  display: inline-block; max-width: 100%; align-self: flex-start;
+  padding: 3px 10px; border-radius: 999px;
+  background: #EDEBE8; color: var(--mm-void);
+  font-family: 'Outfit', 'Pretendard', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mm-prv__modal-text {
+  font-size: 15px; line-height: 1.8; color: var(--mm-void); margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.mm-prv__modal-photos {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.mm-prv__modal-photo {
+  width: 120px; height: 120px; border-radius: var(--mm-radius-sm); object-fit: cover; cursor: pointer;
+  flex-shrink: 0;
+}
+@media (max-width: 767px) {
+  .mm-prv__modal-photos {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+  .mm-prv__modal-photos::-webkit-scrollbar { display: none; }
+  .mm-prv__modal-photo {
+    width: 75vw; height: auto; aspect-ratio: 4/3;
+    scroll-snap-align: center;
+  }
+  .mm-prv__modal-photos--single {
+    justify-content: center; overflow-x: hidden; scroll-snap-type: none;
+  }
+  .mm-prv__modal-photos--single .mm-prv__modal-photo {
+    width: 100%; max-width: 320px;
+  }
+}
+.mm-prv__modal-date {
+  font-size: 12px; color: var(--mm-mist);
+  padding-top: 12px; border-top: 1px solid var(--mm-border);
+}
+
+/* ── 더보기 버튼 — 미니멀 (Phase 2) ── */
+.mm-prv__loadmore {
+  display: block;
+  width: fit-content;
+  margin: 36px auto 56px;
+  padding: 11px 28px;
+  border: 1px solid var(--mm-sand);
+  border-radius: 999px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  cursor: pointer;
+  transition: all var(--mm-ease-fast);
+  letter-spacing: 0.02em;
+}
+.mm-prv__loadmore:hover {
+  border-color: var(--mm-void);
+  color: var(--mm-void);
+}
+.mm-prv__loadmore:active { transform: scale(0.97); }
+
+/* ── 모바일 가로 스크롤 — 무신사 패턴 + 더보기 숨김 (Phase 2 수정) ── */
+@media (max-width: 767px) {
+  .mm-prv__grid {
+    display: flex !important;
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 12px;
+    padding: 16px 24px 8px;
+    grid-template-columns: none;
+    scrollbar-width: none;
+  }
+  .mm-prv__grid::-webkit-scrollbar { display: none; }
+  .mm-prv__card {
+    flex: 0 0 78%;
+    max-width: 300px;
+    scroll-snap-align: start;
+  }
+  /* 카드 텍스트 3줄로 제한 (높이 균일화) */
+  .mm-prv__card-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* 모바일은 가로 스크롤이 곧 전체 노출 → "후기 더보기" 버튼 불필요 (인지 부조화 방지) */
+  .mm-prv__loadmore { display: none !important; }
+}
+
+/* ── 반응형 (PC: 호흡 더 크게) ── */
+@media (min-width: 768px) {
+  .mm-prv__summary { padding: 72px 40px 32px; }
+  .mm-prv__title { font-size: 12px; }
+  .mm-prv__avg { font-size: 56px; }
+  .mm-prv__stars-display { font-size: 18px; letter-spacing: 5px; }
+  .mm-prv__count { font-size: 13px; }
+  .mm-prv__dist { padding-left: 40px; padding-right: 40px; }
+  .mm-prv__controls, .mm-prv__gallery-wrap { padding-left: 40px; padding-right: 40px; }
+  .mm-prv__gallery { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .mm-prv__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px 40px 0;
+  }
+  .mm-prv__card { padding: 28px 28px 20px; gap: 14px; }
+  .mm-prv__card-text { font-size: 15px; }
+  .mm-prv__card-name { font-size: 15px; }
+}
+
+@media (min-width: 1024px) {
+  .mm-prv__summary { padding: 80px 40px 36px; }
+  .mm-prv__avg { font-size: 64px; }
+  .mm-prv__gallery { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .mm-prv__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    padding: 24px 40px 0;
+  }
+  .mm-prv__card { padding: 32px 32px 24px; }
+  .mm-prv__card-text { font-size: 15px; line-height: 1.75; }
+}
+
+/* PC hover */
+@media (hover: hover) {
+  .mm-prv__card:hover {
+    box-shadow: 0 4px 20px rgba(26,26,26,0.06);
+  }
+}
+
+/* ── 라이트박스 ── */
+.mm-lb {
+  position: absolute; left: 0; right: 0; z-index: 10000;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  touch-action: pan-y;
+}
+.mm-lb--open { opacity: 1; visibility: visible; }
+.mm-lb__img {
+  max-width: 90vw; max-height: 85vh;
+  object-fit: contain; border-radius: 4px;
+  user-select: none; -webkit-user-drag: none;
+}
+.mm-lb__close {
+  position: absolute; top: 16px; right: 16px;
+  width: 40px; height: 40px; border: none;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
+  border-radius: 50%; font-size: 20px; color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.mm-lb__close:hover { background: rgba(255,255,255,0.3); }
+.mm-lb__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 44px; height: 44px; border: none;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
+  border-radius: 50%; font-size: 20px; color: #fff;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.mm-lb__arrow:hover { background: rgba(255,255,255,0.3); }
+.mm-lb__arrow--prev { left: 16px; }
+.mm-lb__arrow--next { right: 16px; }
+.mm-lb__counter {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  font-size: 13px; color: rgba(255,255,255,0.7);
+}
+.mm-lb__arrow.hidden, .mm-lb__counter.hidden { display: none; }
+@media (max-width: 767px) {
+  /* 모바일에서도 넘김 화살표 노출 (작게) — '넘겨보는 표시' 확보 */
+  .mm-lb__arrow { width: 40px; height: 40px; font-size: 19px; }
+  .mm-lb__arrow--prev { left: 8px; }
+  .mm-lb__arrow--next { right: 8px; }
+}
+/* ── 라이트박스 캡션 (사진의 부모 리뷰) — page_reviews 동기화 ── */
+.mm-lb__counter { top: 16px; bottom: auto; }
+.mm-lb__caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 20px 24px; background: linear-gradient(transparent, rgba(0,0,0,0.82) 36%); color: #fff; pointer-events: none; }
+.mm-lb__cap-inner { max-width: 680px; margin: 0 auto; }
+.mm-lb__cap-stars { font-size: 12px; letter-spacing: 2px; color: #fff; margin-bottom: 6px; }
+.mm-lb__cap-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.mm-lb__cap-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; margin-left: 6px; font-weight: 500; vertical-align: middle; }
+.mm-lb__cap-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.9); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.mm-lb__cap-date { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 8px; display: flex; gap: 10px; }
+.mm-lb--cap .mm-lb__img { max-height: 64vh; margin-top: 4vh; margin-bottom: auto; }
+/* ── 칩 (카드/모달 — 상담·직접방문 등) ── */
+.mm-prv__chip { display: inline-block; font-size: 11px; font-weight: 500; color: #4A4A4A; padding: 2px 8px; background: #F5F3F0; border: 1px solid #EDEBE8; border-radius: 999px; vertical-align: middle; margin-left: 6px; }
+</style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 제품 성적표 / 시그니처: 거대 평균 점수 / 후기 공통 블록 = 전체보기·메인과 동일. ※ 실제 반영 시 이 블록은 붙여넣기 코드 안 원본 </style> 바로 뒤에
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 후기 사진은 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+/* ═══════════════ [B-09 후기 공통] — 3곳 동일 블록 (2026-10-23) ═══════════════
+   대상: page_reviews.html(/62) · iframe_main_reviews.html(메인) · ImwebWidgetCode_product_reviews.html(상품상세)
+   🚫 후기 표시 동시 수정 규칙: 이 공통 블록은 3파일에 글자 하나 다르지 않게 똑같이 넣는다(고칠 때도 3곳 같이).
+      각 파일 클래스명이 달라서 선택자를 묶어 둠 — 다른 파일 클래스는 그 파일에선 그냥 무시됨.
+   콘셉트: 후기 = "기록 카드(아카이브 색인)" — hairline 테두리 · 모서리 2px · 그림자 0 · 날짜/숫자는 Outfit 표 숫자
+   모달은 겉모양만(위치·열림·뷰포트 앵커 로직 무수정). 후기 사진은 원래 색 유지(흑백 금지). */
+.b-nw{ white-space:nowrap; }
+
+/* 1. 후기 카드 */
+.mm-rv-card, .mm-review-card, .mm-prv__card{ background:#FFFFFF !important; border:1px solid rgba(26,26,26,.14) !important; border-radius:2px !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-card:active, .mm-review-card:active, .mm-prv__card:active{ transform:none !important; }
+@media (hover:hover){ .mm-rv-card:hover, .mm-review-card:hover, .mm-prv__card:hover{ border-color:#1A1A1A !important; box-shadow:none !important; transform:none !important; } }
+.mm-rv-card__img, .mm-review-card__img, .mm-prv__card-img{ border-radius:2px !important; }
+.mm-rv-card__meta, .mm-review-card__meta, .mm-prv__card-meta{ font-size:10.5px !important; font-weight:600 !important; letter-spacing:.08em !important; color:#8A8580 !important; }
+.mm-rv-card__meta-src, .mm-review-card__meta b{ color:#1A1A1A !important; font-weight:800 !important; }
+.mm-rv-card__name, .mm-review-card__name, .mm-prv__card-name{ font-weight:900 !important; letter-spacing:-.02em !important; color:#1A1A1A !important; }
+.mm-hon{ font-weight:400 !important; color:#8A8580 !important; }
+.mm-rv-card__store, .mm-review-card__store, .mm-prv__card-store{ color:#8A8580 !important; }
+.mm-rv-card__stars, .mm-review-card__stars, .mm-prv__card-stars{ color:#1A1A1A !important; letter-spacing:2px !important; }
+.mm-rv-card__text, .mm-review-card__text, .mm-prv__card-text{ color:#2D2D2D !important; word-break:keep-all; }
+.mm-rv-card__date, .mm-review-card__date, .mm-prv__card-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; padding-top:10px !important; }
+.mm-rv-card__date, .mm-rv-modal__date{ flex-wrap:wrap; row-gap:2px; }
+.mm-rv-card__date span, .mm-rv-modal__date span{ white-space:nowrap; }
+
+/* 2. 태그 · 분류 칩 · 구매 제품 칩 — 둥근 알약 → 2px 사각 */
+.mm-rv-tag, .mm-rv-sheet__tag, .mm-prv__tag{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:500 !important; padding:2px 8px !important; }
+.mm-rv-tag--more, .mm-prv__tag--more{ border:0 !important; color:#B8B4AF !important; font-weight:600 !important; padding:2px 4px !important; }
+.mm-review-card > div[style*="nowrap"] > span:first-child{ border-radius:2px !important; border-color:#D4D0CB !important; color:#4A4A4A !important; } /* 메인 카드 태그=인라인 스타일 → 같은 값으로 */
+.mm-rv-chip, .mm-rv-sheet__chip, .mm-prv__chip, .mm-review-card__subtype, .mm-rv-best__chip{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:transparent !important; color:#4A4A4A !important; font-size:11px !important; font-weight:600 !important; padding:2px 8px !important; }
+.mm-rv-chip--naver, .mm-rv-sheet__chip--src, .mm-review-card__source-badge{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#D4D0CB !important; color:#2D2D2D !important; }
+.mm-rv-product, .mm-prv__modal-product, .mm-prv__card-product{ border-radius:2px !important; background:#EDEBE8 !important; color:#1A1A1A !important; font-family:'Outfit','Pretendard',sans-serif !important; font-weight:600 !important; letter-spacing:.04em !important; }
+
+/* 3. 필터 탭 — 알약 → 글자 탭 + 굵은 밑줄 2px (가는 기준선 위) */
+.mm-rv-tabs, .mm-reviews__tabs, .mm-prv__filters{ gap:0 !important; border-bottom:1px solid #D4D0CB; flex-wrap:nowrap !important; }
+.mm-rv-tab, .mm-reviews__tab, .mm-prv__filter-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:#8A8580 !important; font-size:13px !important; font-weight:600 !important; letter-spacing:-.01em !important; padding:10px 12px 11px !important; transform:none !important; white-space:nowrap; }
+.mm-rv-tab:first-child, .mm-reviews__tab:first-child, .mm-prv__filter-btn:first-child{ padding-left:2px !important; }
+.mm-rv-tab--active, .mm-reviews__tab--active, .mm-prv__filter-btn.active{ color:#1A1A1A !important; font-weight:800 !important; background:transparent !important; }
+.mm-rv-tab--active::after, .mm-reviews__tab--active::after, .mm-prv__filter-btn.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2px; background:#1A1A1A; }
+.mm-rv-tab--active:first-child::after, .mm-reviews__tab--active:first-child::after, .mm-prv__filter-btn.active:first-child::after{ left:2px; }
+@media (hover:hover){ .mm-rv-tab:hover, .mm-reviews__tab:hover, .mm-prv__filter-btn:hover{ color:#1A1A1A !important; } }
+
+/* 4. 별점 분포 막대 · 사진 칸 · 더보기 */
+.mm-rv-bar__track, .mm-prv__dist-bar{ height:2px !important; border-radius:0 !important; background:#D4D0CB !important; }
+.mm-rv-bar__fill, .mm-prv__dist-bar-fill{ border-radius:0 !important; background:#1A1A1A !important; }
+.mm-rv-bar__label, .mm-rv-bar__pct, .mm-prv__dist-star, .mm-prv__dist-count{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; }
+.mm-rv-photos__item, .mm-prv__gallery-item, .mm-rv-allgrid__item{ border-radius:2px !important; }
+.mm-rv-loadmore, .mm-prv__loadmore{ border-radius:2px !important; border:1px solid #1A1A1A !important; background:transparent !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-loadmore:active, .mm-prv__loadmore:active{ transform:none !important; }
+
+/* 5. 리뷰 상세 모달 — 겉모양만. 흰 기록지 + 머리 굵은 선 2px · 모서리 4px · 그림자 0 */
+.mm-rv-modal, .mm-rv-sheet, .mm-prv__modal{ background:#FFFFFF !important; border-radius:4px !important; border-top:2px solid #1A1A1A !important; box-shadow:none !important; word-break:keep-all; overflow-wrap:break-word; }
+.mm-rv-sheet__nav{ background:#FFFFFF !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__foot, .mm-prv__modal-foot{ border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__close, .mm-rv-sheet__close, .mm-prv__modal-close{ border-radius:2px !important; background:#FFFFFF !important; border:1px solid #D4D0CB !important; color:#1A1A1A !important; }
+.mm-rv-modal__photo, .mm-rv-gallery img, .mm-prv__modal-photo{ border-radius:2px !important; }
+.mm-rv-modal__chips, .mm-rv-sheet__topline, .mm-prv__modal-chips{ gap:6px !important; }
+.mm-rv-modal__name, .mm-rv-sheet__name, .mm-prv__modal-name{ font-family:'Pretendard',sans-serif !important; font-size:20px !important; font-weight:900 !important; letter-spacing:-.03em !important; color:#1A1A1A !important; line-height:1.35 !important; }
+.mm-rv-modal__stars, .mm-rv-sheet__stars, .mm-prv__modal-stars{ font-size:15px !important; letter-spacing:3px !important; color:#1A1A1A !important; }
+.mm-rv-modal__text, .mm-rv-sheet__body, .mm-prv__modal-text{ font-size:15px !important; line-height:1.85 !important; color:#2D2D2D !important; }
+.mm-rv-modal__date, .mm-rv-sheet__date, .mm-prv__modal-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11.5px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; }
+.mm-rv-modal__navbtn, .mm-rv-sheet__navbtn, .mm-prv__modal-footbtn{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#FFFFFF !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-modal__navbtn--close, .mm-rv-sheet__navbtn--close, .mm-prv__modal-footbtn--close{ background:#1A1A1A !important; border-color:#1A1A1A !important; color:#FAF9F7 !important; }
+
+/* 6. 사진 확대(라이트박스) — 둥근 버튼 → 2px, 캡션 그라데이션 → 단색 띠 */
+.mm-lb__close, .mm-lb__arrow, .mm-rv-lb__x{ border-radius:2px !important; backdrop-filter:none !important; }
+.mm-lb__img, .mm-rv-lb img{ border-radius:2px !important; }
+.mm-lb__caption{ background:rgba(26,26,26,.88) !important; padding-top:18px !important; }
+.mm-lb__cap-chip{ border-radius:2px !important; }
+.mm-lb__cap-date{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+/* ═══════════════ [B-09 후기 공통] 끝 ═══════════════ */
+
+/* ═══════════════ [B-09 위젯 전용] 상품상세 후기 위젯 ═══════════════
+   콘셉트: 제품 성적표 / 시그니처: 평균 점수를 거대 숫자(Outfit 900)로 — 글자를 그림처럼. 가운데 정렬은 이 요약 1곳만.
+   ⚠️ 아임웹 상품상세 '코드위젯'에 붙여넣는 코드 → 이 블록은 원본 <style> 끝(또는 바로 뒤 별도 <style>)에 추가. 스크립트 무수정. */
+.mm-prv{ word-break:keep-all; overflow-wrap:break-word; }
+.mm-prv__summary{ padding-bottom:20px !important; }
+.mm-prv__bar{ width:38px !important; height:2px !important; border-radius:0 !important; margin-bottom:16px !important; }
+.mm-prv__title{ letter-spacing:.2em !important; margin-bottom:18px !important; }
+.mm-prv__avg{ font-size:clamp(96px,28vw,168px) !important; font-weight:900 !important; letter-spacing:-.06em !important; line-height:.78 !important; margin-bottom:16px !important; font-variant-numeric:tabular-nums; }
+.mm-prv__stars-display{ letter-spacing:5px !important; }
+.mm-prv__count{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; letter-spacing:.06em !important; }
+.mm-prv__dist{ border-top:1px solid #1A1A1A; padding-top:14px !important; max-width:312px !important; gap:7px !important; }
+@media (min-width:768px){ .mm-prv__dist{ padding-left:0 !important; padding-right:0 !important; } }
+@media (max-width:767px){ .mm-prv__dist{ margin-left:24px !important; margin-right:24px !important; padding-left:0 !important; padding-right:0 !important; max-width:none !important; } }
+.mm-prv__gallery-wrap{ padding-top:36px !important; }
+.mm-prv__gallery-title{ border-top:1px solid #1A1A1A; padding-top:12px; }
+.mm-prv__gallery{ gap:2px !important; }
+.mm-prv__gallery-item.more{ font-family:'Outfit','Pretendard',sans-serif; }
+.mm-prv__controls{ align-items:flex-end !important; margin-top:28px !important; }
+.mm-prv__sort{ padding-bottom:8px; }
+.mm-prv__sort-select{ border-bottom-color:#1A1A1A !important; font-weight:700 !important; }
+.mm-prv__zero-icon{ color:#D4D0CB !important; }
+.mm-prv__zero-title{ font-weight:900 !important; letter-spacing:-.02em !important; }
+@media (max-width:767px){ .mm-prv__grid{ scroll-padding-left:24px; } } /* 첫 카드가 화면 끝에 붙던 것(스냅이 왼쪽 여백을 무시) → 여백 유지 */
+</style>
+
+<!-- 자체 sticky 탭바 (모바일 전용) — JS가 상세정보 직전으로 DOM 이동 (Phase 2-C) -->
+<nav class="mm-tabs" id="mmTabs">
+  <div class="mm-tabs__inner">
+    <button class="mm-tab active" data-target="info" type="button">정보</button>
+    <button class="mm-tab" data-target="reviews" type="button">후기</button>
+    <button class="mm-tab" data-target="contact" type="button">문의</button>
+  </div>
+</nav>
+
+<div class="mm-prv" id="mmPrvRoot" style="display:none">
+
+<!-- 요약 헤더 — 큰 평점 숫자가 메인, 영문 라벨 보조 (Phase 2) -->
+<header class="mm-prv__summary" id="prvSummary">
+  <span class="mm-prv__bar"></span>
+  <p class="mm-prv__title">CUSTOMER REVIEWS · 고객 후기</p>
+  <span class="mm-prv__avg" id="prvAvg"></span>
+  <div class="mm-prv__stars-display" id="prvStars"></div>
+  <div class="mm-prv__count" id="prvCount"></div>
+</header>
+
+<!-- 별점 분포 그래프 (Phase 1 신규) -->
+<div class="mm-prv__dist" id="prvDist"></div>
+
+<!-- 포토 후기 갤러리 (Phase 1 신규) -->
+<div class="mm-prv__gallery-wrap" id="prvGalleryWrap" style="display:none">
+  <div class="mm-prv__gallery-title">
+    PHOTO REVIEW
+    <span class="mm-prv__gallery-count" id="prvGalleryCount"></span>
+  </div>
+  <div class="mm-prv__gallery" id="prvGallery"></div>
+</div>
+
+<!-- 필터 + 정렬 바 (Phase 1 신규) -->
+<div class="mm-prv__controls">
+  <div class="mm-prv__filters" id="prvFilters">
+    <button class="mm-prv__filter-btn active" data-filter="all">전체</button>
+    <button class="mm-prv__filter-btn" data-filter="photo">포토</button>
+    <button class="mm-prv__filter-btn" data-filter="5">★ 5</button>
+    <button class="mm-prv__filter-btn" data-filter="4">★ 4</button>
+    <button class="mm-prv__filter-btn" data-filter="3">★ 3</button>
+  </div>
+  <div class="mm-prv__sort">
+    <span>정렬</span>
+    <select class="mm-prv__sort-select" id="prvSort">
+      <option value="recent">최신순</option>
+      <option value="rating_high">별점 높은순</option>
+      <option value="rating_low">별점 낮은순</option>
+    </select>
+  </div>
+</div>
+
+<!-- 리뷰 그리드 -->
+<div class="mm-prv__grid" id="prvGrid"></div>
+
+<!-- 필터 결과 빈 상태 -->
+<div class="mm-prv__empty" id="prvEmpty" style="display:none">조건에 맞는 후기가 없어요.</div>
+
+<!-- 후기 0건 빈 상태 — 위젯 본체 (Phase 2-C+) -->
+<div class="mm-prv__zero" id="prvZero" style="display:none">
+  <div class="mm-prv__zero-label">CUSTOMER REVIEWS · 고객 후기</div>
+  <div class="mm-prv__zero-icon">☆ ☆ ☆ ☆ ☆</div>
+  <div class="mm-prv__zero-title">아직 등록된 후기가 없어요</div>
+  <div class="mm-prv__zero-sub">첫 후기의 주인공이 되어 주세요.</div>
+</div>
+
+<!-- 더보기 -->
+<button class="mm-prv__loadmore" id="prvLoadmore" style="display:none">후기 더보기</button>
+
+<!-- 상세 모달 — 좌우 화살표로 다음/이전 후기 (Phase 2-C) -->
+<div class="mm-prv__overlay" id="prvOverlay">
+  <div class="mm-prv__modal">
+    <button class="mm-prv__modal-nav mm-prv__modal-nav--prev" id="prvModalPrev" type="button" aria-label="이전 후기">‹</button>
+    <button class="mm-prv__modal-nav mm-prv__modal-nav--next" id="prvModalNext" type="button" aria-label="다음 후기">›</button>
+    <button class="mm-prv__modal-close" id="prvModalClose" type="button" aria-label="닫기">✕</button>
+    <div class="mm-prv__modal-counter" id="prvModalCounter"></div>
+    <div id="prvModalBody"></div>
+    <div class="mm-prv__modal-foot">
+      <button class="mm-prv__modal-footbtn" id="prvModalFootPrev">← 이전</button>
+      <button class="mm-prv__modal-footbtn" id="prvModalFootNext">다음 →</button>
+      <button class="mm-prv__modal-footbtn mm-prv__modal-footbtn--close" id="prvModalCloseBtn">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 사진 라이트박스 -->
+<div class="mm-lb" id="prvLightbox">
+  <button class="mm-lb__close" id="lbClose">✕</button>
+  <button class="mm-lb__arrow mm-lb__arrow--prev" id="lbPrev">‹</button>
+  <img class="mm-lb__img" id="lbImg" src="" alt="사진 확대">
+  <button class="mm-lb__arrow mm-lb__arrow--next" id="lbNext">›</button>
+  <div class="mm-lb__counter" id="lbCounter"></div>
+  <div class="mm-lb__caption" id="lbCaption" style="display:none"></div>
+</div>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var API_URL = 'https://app-eta-sandy-75.vercel.app/api/reviews/public';
+  var PER_PAGE = 6;
+  var currentPage = 1;
+  var allReviews = [];       // 원본 데이터 (불변)
+  var filteredReviews = [];  // 필터/정렬 적용된 데이터
+  var galleryPhotos = [];    // 전체 리뷰 사진 평면화 {url, review} (page_reviews 동기화)
+  var currentModalReview = null;
+  var lbList = [];           // 라이트박스 순회 대상 [{url, review}]
+  var currentFilter = 'all'; // all | photo | 5 | 4 | 3
+  var currentSort = 'recent';
+  var root = document.getElementById('mmPrvRoot');
+
+  /* ── 자동 감지: 아임웹 상품번호 추출 ── */
+  var urlParams = new URLSearchParams(window.location.search);
+
+  /* ── 데모 모드 체크 (?demo=1 — 검증용, 일반 사용자 영향 X) ── */
+  var DEMO_MODE = urlParams.get('demo') === '1';
+
+  function extractIdx(url) {
+    if (!url) return null;
+    try {
+      var match = url.match(/[?&]idx=(\d+)/);
+      return match ? match[1] : null;
+    } catch(e) { return null; }
+  }
+
+  // 1순위: ?group= (수동 지정, 하위호환)
+  // 2순위: ?idx= (아임웹 URL에서 직접)
+  // 3순위: referrer에서 idx 추출
+  var group = urlParams.get('group');
+  var imwebNo = urlParams.get('idx')
+    || extractIdx(document.referrer)
+    || extractIdx(window.location.href);
+
+  var apiQuery = '';
+  if (group) {
+    apiQuery = '?group=' + encodeURIComponent(group);
+  } else if (imwebNo) {
+    apiQuery = '?imweb_no=' + encodeURIComponent(imwebNo);
+  } else if (!DEMO_MODE) {
+    // 감지 실패 → 위젯 숨김 유지 (데모 모드는 imweb_no 없어도 통과)
+    sendHeight(0);
+    return;
+  }
+
+  /* ── 유틸 ── */
+  function maskName(name) {
+    if (!name) return '';
+    if (name.length <= 1) return name;
+    if (name.length === 2) return name[0] + '*';
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+
+  var TAG_LABELS = {
+    comfortable:'강요없이 편안해요', detailed_guide:'설명이 자세해요', professional:'전문적이에요',
+    personalized:'맞춤 안내', worth_time:'시간이 아깝지 않았어요',
+    reasonable_price:'합리적이에요', fair_price:'적당해요',
+    like_new:'새 가위처럼', better_cut:'커트감이 달라요', above_expect:'기대 이상',
+    precise_edge:'날 조절 정확', thorough_info:'안내 꼼꼼', fast_service:'진행 빠름', good_value:'가격 대비 만족',
+    good_quality:'품질이 좋아요', fast_delivery:'배송이 빨라요', neat_packaging:'포장이 꼼꼼해요',
+    would_recommend:'추천하고 싶어요'
+  };
+
+  function renderTagChips(r, cls, limit) {
+    var tags = r.meta && r.meta.tags;
+    if (!tags || !tags.length) return '';
+    var over = limit && tags.length > limit;      // 카드=상위 N + '+나머지', 모달=전량
+    var shown = over ? tags.slice(0, limit) : tags;
+    var more = over ? '<span class="mm-prv__tag mm-prv__tag--more">+' + (tags.length - limit) + '</span>' : '';
+    return '<div class="' + cls + '">' +
+      shown.map(function(t) { return '<span class="mm-prv__tag">' + (TAG_LABELS[t] || t) + '</span>'; }).join('') + more +
+    '</div>';
+  }
+
+  /* 날짜 YYMMDD (page_reviews 동기화) */
+  function fmtDate(d) {
+    if (!d) return '';
+    var dt = new Date(d);
+    var yy = String(dt.getFullYear()).slice(2);
+    var mm = String(dt.getMonth() + 1).padStart(2, '0');
+    var dd = String(dt.getDate()).padStart(2, '0');
+    return yy + mm + dd;
+  }
+
+  /* ── 타입/서브타입/칩/날짜 (page_reviews 와 동일 — 3화면 SSOT) ── */
+  var TYPE_LABELS = { consult: '상담', repair: '복원수리', purchase: '제품구매' };
+  var SUBTYPE_LABELS = { store: '직접방문', field: '출장', store_visit: '직접방문', field_request: '출장', talk_consult: '톡상담', restoration: '복원수리', direct_visit: '직접방문', pickup: '방문수거', parcel_pickup: '방문수거', self_ship: '직접발송', offline: '직접방문', online: '온라인', talk: '톡상담', visit_pickup: '방문수거', direct_send: '직접발송', same_day: '당일수리' };
+  var DATE_LABELS = { consult: '상담', repair: '접수', purchase: '구매' };
+  function getTypeLabel(r) { return TYPE_LABELS[r.type] || ''; }
+  function getSubtypeLabel(r) {
+    var sub = r.subtype || (r.meta && r.meta.consultation_type) || '';
+    return SUBTYPE_LABELS[sub] || '';
+  }
+  function chipLabel(r) {
+    var t = getTypeLabel(r), s = getSubtypeLabel(r);
+    if (r.type === 'consult' && s) return t + '·' + s;
+    var rawSub = r.subtype || '';
+    if (s && rawSub !== 'restoration' && s !== t) return t + '·' + s;
+    return t;
+  }
+  function chipHtml(r) {
+    var lbl = chipLabel(r);
+    return lbl ? '<span class="mm-prv__chip">' + lbl + '</span>' : '';
+  }
+  function maskStore(s) {
+    if (!s) return '';
+    s = String(s).trim();
+    if (s.length <= 1) return s;
+    if (s.length === 2) return s[0] + '*';
+    if (s.length === 3) return s[0] + '**';
+    return s[0] + '**' + s.slice(3);
+  }
+  function storeHtml(r) {
+    if (!r.store_name) return '';
+    return ' <span style="font-size:11px;color:#8A8580;font-weight:500;">· ' + maskStore(r.store_name) + '</span>';
+  }
+  function renderDates(r, cls) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push(lab + ' ' + rec);
+    if (cr) parts.push('작성 ' + cr);
+    return '<div class="' + cls + '">' + parts.join(' · ') + '</div>';
+  }
+
+  function renderStars(n) {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += (i < n) ? '★' : '☆';
+    return s;
+  }
+
+  function renderSummaryStars(avg) {
+    var s = '';
+    for (var i = 0; i < 5; i++) s += (i < Math.round(avg)) ? '★' : '☆';
+    return s;
+  }
+
+  /* ── 카드 렌더링 ── */
+  function renderCard(r, idx) {
+    var imgHtml = '';
+    if (r.photo_urls && r.photo_urls.length > 0) {
+      imgHtml = '<img class="mm-prv__card-img" src="' + r.photo_urls[0] + '" alt="후기 이미지" loading="lazy">';
+    } else if (r.product_image_url) {
+      imgHtml = '<img class="mm-prv__card-img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
+    }
+    var productHtml = r.product ? '<div class="mm-prv__card-product">' + r.product + '</div>' : '';
+    var preview = r.content.length > 80 ? r.content.substring(0, 80) + '…' : r.content;
+
+    return '<article class="mm-prv__card" data-idx="' + idx + '">' +
+      imgHtml +
+      // 2026-10-01: 분류(위·작게) → 이름·별점(한 줄) → 매장(자기 줄). 이름 뒤에 매장·칩이 줄줄이 붙던 것 정리 (page_reviews 와 동일 틀)
+      '<div class="mm-prv__card-header">' +
+        (chipLabel(r) ? '<div class="mm-prv__card-meta">' + chipLabel(r).replace('·', ' · ') + '</div>' : '') +
+        '<div class="mm-prv__card-row">' +
+          '<span class="mm-prv__card-name">' + maskName(r.name) + '</span>' +
+          '<span class="mm-prv__card-stars">' + renderStars(r.stars) + '</span>' +
+        '</div>' +
+        (r.store_name ? '<div class="mm-prv__card-store">' + maskStore(r.store_name) + '</div>' : '') +
+      '</div>' +
+      productHtml +
+      renderTagChips(r, 'mm-prv__tags', 1) +
+      '<div class="mm-prv__card-text">' + preview + '</div>' +
+      renderDates(r, 'mm-prv__card-date') +
+    '</article>';
+  }
+
+  // 모바일은 가로 스크롤 → 처음부터 전체 노출 (더보기 버튼 없음)
+  function getEffectivePerPage() {
+    return window.innerWidth < 768 ? 999 : PER_PAGE;
+  }
+
+  function render() {
+    var grid = document.getElementById('prvGrid');
+    var btn = document.getElementById('prvLoadmore');
+    var empty = document.getElementById('prvEmpty');
+    var perPage = getEffectivePerPage();
+    var visible = filteredReviews.slice(0, currentPage * perPage);
+    if (filteredReviews.length === 0) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      btn.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none';
+    grid.innerHTML = visible.map(function(r, i) { return renderCard(r, i); }).join('');
+    // PC에서만 더보기 버튼 노출 (모바일은 CSS로 추가 숨김)
+    btn.style.display = (visible.length < filteredReviews.length) ? 'block' : 'none';
+  }
+
+  function renderSummary(stats) {
+    if (!stats || stats.count === 0) return;
+    document.getElementById('prvStars').textContent = renderSummaryStars(stats.average);
+    document.getElementById('prvAvg').textContent = stats.average.toFixed(1);
+    document.getElementById('prvCount').textContent = '후기 ' + stats.count + '건';
+  }
+
+  /* ── Phase 1: 별점 분포 그래프 ── */
+  function renderDist() {
+    var total = allReviews.length;
+    if (total === 0) return;
+    var counts = [0, 0, 0, 0, 0]; // index 0=★5, 1=★4, 2=★3, 3=★2, 4=★1
+    allReviews.forEach(function(r) {
+      var s = Math.max(1, Math.min(5, parseInt(r.stars) || 0));
+      counts[5 - s]++;
+    });
+    var distEl = document.getElementById('prvDist');
+    distEl.innerHTML = counts.map(function(c, i) {
+      var star = 5 - i;
+      var pct = total > 0 ? Math.round((c / total) * 100) : 0;
+      return '<div class="mm-prv__dist-row" data-filter="' + star + '">' +
+        '<span class="mm-prv__dist-star">★ ' + star + '</span>' +
+        '<div class="mm-prv__dist-bar"><div class="mm-prv__dist-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="mm-prv__dist-count">' + c + '건</span>' +
+      '</div>';
+    }).join('');
+    // 분포 막대 클릭 → 해당 별점 필터 적용
+    distEl.addEventListener('click', function(e) {
+      var row = e.target.closest('.mm-prv__dist-row');
+      if (!row) return;
+      var star = row.dataset.filter;
+      setFilter(star);
+    });
+  }
+
+  /* ── 포토 후기 갤러리 — 전 사진 평면화(리뷰당 모든 사진), 사진 단위 라이트박스 (page_reviews 동기화) ── */
+  var galMaxShow = 6;
+  function renderGallery() {
+    galleryPhotos = [];
+    allReviews.forEach(function(r) {
+      if (r.photo_urls && r.photo_urls.length > 0) {
+        r.photo_urls.forEach(function(u) { galleryPhotos.push({ url: u, review: r }); });
+      }
+    });
+    if (galleryPhotos.length === 0) return;
+
+    var wrap = document.getElementById('prvGalleryWrap');
+    var galleryEl = document.getElementById('prvGallery');
+    var countEl = document.getElementById('prvGalleryCount');
+    wrap.style.display = 'block';
+    countEl.textContent = '· ' + galleryPhotos.length + '장';
+
+    // page_reviews와 동일: PC 12 / 태블릿 8 / 모바일 6 (컬럼수×2행)
+    galMaxShow = window.innerWidth >= 1024 ? 12 : (window.innerWidth >= 768 ? 8 : 6);
+    var maxShow = galMaxShow;
+    var displayed = galleryPhotos.slice(0, maxShow);
+    var hasMore = galleryPhotos.length > maxShow;
+
+    galleryEl.innerHTML = displayed.map(function(p, i) {
+      if (hasMore && i === maxShow - 1) {
+        return '<div class="mm-prv__gallery-item more" data-gallery-more="1">+' + (galleryPhotos.length - maxShow + 1) + '</div>';
+      }
+      return '<div class="mm-prv__gallery-item" data-gal-idx="' + i + '">' +
+        '<img src="' + p.url + '" alt="포토 후기" loading="lazy">' +
+      '</div>';
+    }).join('');
+
+    // 사진 클릭 → 라이트박스. 리스너는 1회만 바인딩(리사이즈 재렌더 시 중복 방지), galMaxShow는 공유값
+    if (!galleryEl.__galBound) {
+      galleryEl.__galBound = true;
+      galleryEl.addEventListener('click', function(e) {
+        if (e.target.closest('[data-gallery-more]')) { openLightbox(galleryPhotos, galMaxShow - 1); return; }
+        var item = e.target.closest('[data-gal-idx]');
+        if (item) openLightbox(galleryPhotos, parseInt(item.dataset.galIdx));
+      });
+    }
+  }
+
+  // 뷰포트 폭 변화 시 갤러리 노출 장수 재계산 (page_reviews와 동일, 디바운스)
+  var _prvGalRz;
+  window.addEventListener('resize', function () {
+    clearTimeout(_prvGalRz);
+    _prvGalRz = setTimeout(function () { if (galleryPhotos.length) renderGallery(); }, 200);
+  });
+
+  /* ── Phase 1: 필터 + 정렬 ── */
+  function applyFilterSort() {
+    var arr = allReviews.slice();
+
+    // 필터
+    if (currentFilter === 'photo') {
+      arr = arr.filter(function(r) { return r.photo_urls && r.photo_urls.length > 0; });
+    } else if (currentFilter === '5' || currentFilter === '4' || currentFilter === '3') {
+      var target = parseInt(currentFilter);
+      arr = arr.filter(function(r) { return parseInt(r.stars) === target; });
+    }
+
+    // 정렬
+    if (currentSort === 'recent') {
+      arr.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+    } else if (currentSort === 'rating_high') {
+      arr.sort(function(a, b) {
+        if (b.stars !== a.stars) return b.stars - a.stars;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    } else if (currentSort === 'rating_low') {
+      arr.sort(function(a, b) {
+        if (a.stars !== b.stars) return a.stars - b.stars;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+    }
+
+    filteredReviews = arr;
+    currentPage = 1; // 필터 변경 시 페이지 초기화
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    // 버튼 active 상태 갱신
+    var btns = document.querySelectorAll('.mm-prv__filter-btn');
+    btns.forEach(function(b) {
+      b.classList.toggle('active', b.dataset.filter === filter);
+    });
+    // 분포 행 active 표시
+    var rows = document.querySelectorAll('.mm-prv__dist-row');
+    rows.forEach(function(r) {
+      r.classList.toggle('active', r.dataset.filter === filter);
+    });
+    applyFilterSort();
+    render();
+    // 그리드 위로 스크롤
+    var grid = document.getElementById('prvGrid');
+    if (grid && grid.scrollIntoView) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // 필터 버튼 클릭
+  document.getElementById('prvFilters').addEventListener('click', function(e) {
+    var btn = e.target.closest('.mm-prv__filter-btn');
+    if (!btn) return;
+    setFilter(btn.dataset.filter);
+  });
+
+  // 정렬 변경
+  document.getElementById('prvSort').addEventListener('change', function(e) {
+    currentSort = e.target.value;
+    applyFilterSort();
+    render();
+  });
+
+  /* ── 상세 모달 — 좌우 화살표로 다음/이전 후기 순환 (Phase 2-C) ── */
+  var overlay = document.getElementById('prvOverlay');
+  /* 뷰포트 앵커 — 높이동기 iframe 안에서 fixed 오버레이가 잘리는 문제 해결(page_reviews 패턴) */
+  var _pendingVpCb = null;
+  window.addEventListener('message', function(e){
+    if (e.data && e.data.type === 'MAMORU_VIEWPORT_INFO' && _pendingVpCb) {
+      var cb = _pendingVpCb; _pendingVpCb = null; cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
+    }
+  });
+  function placeInViewport(el, done){
+    _pendingVpCb = function(top, h){ el.style.top = top + 'px'; el.style.height = h + 'px'; if (done) done(); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
+  }
+  var modalBody = document.getElementById('prvModalBody');
+  var modalPrev = document.getElementById('prvModalPrev');
+  var modalNext = document.getElementById('prvModalNext');
+  var modalCounter = document.getElementById('prvModalCounter');
+  var currentModalPhotos = [];
+  var modalContext = { list: [], idx: -1, source: 'card' }; // list = 순회 대상, idx = 현재 인덱스
+
+  function renderModalContent(r) {
+    currentModalReview = r;
+    currentModalPhotos = (r.photo_urls && r.photo_urls.length > 0) ? r.photo_urls : [];
+    var photosHtml = '';
+    if (currentModalPhotos.length > 0) {
+      var singleCls = currentModalPhotos.length === 1 ? ' mm-prv__modal-photos--single' : '';
+      photosHtml = '<div class="mm-prv__modal-photos' + singleCls + '">' +
+        currentModalPhotos.map(function(url, i) {
+          return '<img class="mm-prv__modal-photo" src="' + url + '" alt="후기 사진" data-lb-idx="' + i + '">';
+        }).join('') + '</div>';
+    }
+    // 2026-10-01 순서: 사진 → 칩줄(분류 + 구매 제품) → 이름 → 매장 → 별점 → 태그 → 내용 → 날짜
+    //   (이름 뒤에 매장·칩이 줄줄이 붙고, 제품명이 별점 아래 끼어 있던 것 정리 — page_reviews 모달과 동일 틀)
+    var chipRow = chipHtml(r).replace(' style="margin-left:6px"', '') +
+      (r.product ? '<span class="mm-prv__modal-product">' + r.product + '</span>' : '');
+    modalBody.innerHTML =
+      photosHtml +
+      (chipRow ? '<div class="mm-prv__modal-chips">' + chipRow + '</div>' : '') +
+      '<div class="mm-prv__modal-name">' + maskName(r.name) + '</div>' +
+      (r.store_name ? '<div class="mm-prv__card-store" style="margin-top:-2px;margin-bottom:6px">' + maskStore(r.store_name) + '</div>' : '') +
+      '<div class="mm-prv__modal-stars">' + renderStars(r.stars) + '</div>' +
+      renderTagChips(r, 'mm-prv__tags') +
+      '<div class="mm-prv__modal-text">' + r.content + '</div>' +
+      renderDates(r, 'mm-prv__modal-date');
+  }
+
+  function updateModalNav() {
+    var total = modalContext.list.length;
+    // 하단 이전/다음 버튼 disabled (page_reviews 와 통일)
+    var fp = document.getElementById('prvModalFootPrev'), fn = document.getElementById('prvModalFootNext');
+    if (fp) fp.disabled = modalContext.idx <= 0;
+    if (fn) fn.disabled = modalContext.idx >= total - 1;
+  }
+
+  function openModalAt(list, idx, source) {
+    if (!list || list.length === 0) return;
+    var safeIdx = ((idx % list.length) + list.length) % list.length; // 음수 보정 + 순환
+    modalContext = { list: list, idx: safeIdx, source: source || 'card' };
+    var doRender = function(){
+      renderModalContent(list[safeIdx]);
+      updateModalNav();
+      overlay.classList.add('mm-prv__overlay--open');
+      document.body.style.overflow = 'hidden';
+      // 모달 내용 위로 스크롤 (긴 후기 후 다음 후기 진입 시 상단부터 보이도록)
+      var modalEl = document.querySelector('.mm-prv__modal');
+      if (modalEl) modalEl.scrollTop = 0;
+    };
+    // 최초 열기만 뷰포트 배치(순회 중엔 이미 배치돼 있어 재요청 불필요)
+    if (overlay.classList.contains('mm-prv__overlay--open')) doRender();
+    else placeInViewport(overlay, function(){ doRender(); try { history.pushState({ mmPrvModal: 1 }, ''); } catch(_) {} try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} }); // 폰 뒤로가기 → 모달만 닫힘 + 배경 스크롤 잠금
+  }
+
+  function navigateModal(dir) {
+    if (!modalContext.list || modalContext.list.length === 0) return;
+    var newIdx = modalContext.idx + dir;
+    openModalAt(modalContext.list, newIdx, modalContext.source);
+  }
+
+  function doCloseModal() {
+    overlay.classList.remove('mm-prv__overlay--open');
+    document.body.style.overflow = '';
+    try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {}
+  }
+  function closeModal() { if (history.state && history.state.mmPrvModal) history.back(); else doCloseModal(); }
+  window.addEventListener('popstate', function(){ if (overlay.classList.contains('mm-prv__overlay--open')) doCloseModal(); });
+
+  document.getElementById('prvModalClose').addEventListener('click', closeModal);
+  document.getElementById('prvModalCloseBtn').addEventListener('click', closeModal);
+  modalPrev.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(-1); });
+  modalNext.addEventListener('click', function(e) { e.stopPropagation(); navigateModal(1); });
+  document.getElementById('prvModalFootPrev').addEventListener('click', function(){ navigateModal(-1); });
+  document.getElementById('prvModalFootNext').addEventListener('click', function(){ navigateModal(1); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+
+  document.getElementById('prvGrid').addEventListener('click', function(e) {
+    var card = e.target.closest('.mm-prv__card');
+    if (!card) return;
+    var idx = parseInt(card.dataset.idx);
+    // 모달 순회는 전체 리뷰 기준(더보기 로드 여부 무관 끝까지)
+    if (filteredReviews[idx]) openModalAt(filteredReviews, idx, 'card');
+  });
+
+  // 모달이 열려있을 때 스와이프 (모바일) — 라이트박스 닫혀있을 때만
+  var modalTouchStartX = 0;
+  overlay.addEventListener('touchstart', function(e) {
+    if (!overlay.classList.contains('mm-prv__overlay--open')) return;
+    modalTouchStartX = e.touches[0].clientX;
+  }, { passive: true });
+  overlay.addEventListener('touchend', function(e) {
+    if (!overlay.classList.contains('mm-prv__overlay--open')) return;
+    // 라이트박스가 열려있으면 라이트박스 스와이프가 우선 (모달 스와이프 무시)
+    if (document.getElementById('prvLightbox').classList.contains('mm-lb--open')) return;
+    var dx = e.changedTouches[0].clientX - modalTouchStartX;
+    if (Math.abs(dx) > 60) navigateModal(dx > 0 ? -1 : 1);
+  });
+
+  /* ── 라이트박스 (lbList = [{url, review}], 캡션 = 부모 리뷰 — page_reviews 동기화) ── */
+  var lb = document.getElementById('prvLightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbCounter = document.getElementById('lbCounter');
+  var lbPrev = document.getElementById('lbPrev');
+  var lbNext = document.getElementById('lbNext');
+  var capEl = document.getElementById('lbCaption');
+  var lbIdx = 0;
+
+  function openLightbox(list, idx) {
+    lbList = list || [];
+    lbIdx = idx || 0;
+    updateLightbox();
+    // 라이트박스도 오버레이와 동일 뷰포트 좌표로(잘림 방지)
+    lb.style.top = overlay.style.top || '0px';
+    lb.style.height = overlay.style.height || window.innerHeight + 'px';
+    lb.classList.add('mm-lb--open');
+  }
+  function closeLightbox() { lb.classList.remove('mm-lb--open'); }
+
+  function capDates(r) {
+    var rec = (r.meta && r.meta.received_at) ? fmtDate(r.meta.received_at) : '';
+    var cr = fmtDate(r.created_at);
+    var lab = DATE_LABELS[r.type] || '접수';
+    var parts = [];
+    if (rec) parts.push('<span>' + lab + ' ' + rec + '</span>');
+    if (cr) parts.push('<span>작성 ' + cr + '</span>');
+    return parts.length ? '<div class="mm-lb__cap-date">' + parts.join('') + '</div>' : '';
+  }
+
+  function updateLightbox() {
+    var item = lbList[lbIdx];
+    if (!item) return;
+    lbImg.src = item.url;
+    var multi = lbList.length > 1;
+    lbPrev.classList.toggle('hidden', !multi);
+    lbNext.classList.toggle('hidden', !multi);
+    lbCounter.classList.toggle('hidden', !multi);
+    if (multi) lbCounter.textContent = (lbIdx + 1) + ' / ' + lbList.length;
+    var r = item.review;
+    if (r) {
+      lb.classList.add('mm-lb--cap');
+      capEl.style.display = '';
+      capEl.innerHTML = '<div class="mm-lb__cap-inner">' +
+        '<div class="mm-lb__cap-stars">' + renderStars(r.stars) + '</div>' +
+        '<div class="mm-lb__cap-name">' + maskName(r.name) + (r.name ? ' 님' : '') +
+          '<span class="mm-lb__cap-chip">' + chipLabel(r) + '</span>' +
+        '</div>' +
+        '<div class="mm-lb__cap-text">' + (r.content || '') + '</div>' +
+        capDates(r) +
+      '</div>';
+    } else {
+      lb.classList.remove('mm-lb--cap'); capEl.style.display = 'none'; capEl.innerHTML = '';
+    }
+  }
+
+  document.getElementById('lbClose').addEventListener('click', closeLightbox);
+  lb.addEventListener('click', function(e) { if (e.target === lb) closeLightbox(); });
+  lbPrev.addEventListener('click', function() {
+    if (!lbList.length) return;
+    lbIdx = (lbIdx - 1 + lbList.length) % lbList.length; updateLightbox();
+  });
+  lbNext.addEventListener('click', function() {
+    if (!lbList.length) return;
+    lbIdx = (lbIdx + 1) % lbList.length; updateLightbox();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (lb.classList.contains('mm-lb--open')) {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') lbPrev.click();
+      if (e.key === 'ArrowRight') lbNext.click();
+    } else if (overlay.classList.contains('mm-prv__overlay--open')) {
+      if (e.key === 'Escape') closeModal();
+      if (e.key === 'ArrowLeft') navigateModal(-1);
+      if (e.key === 'ArrowRight') navigateModal(1);
+    }
+  });
+
+  var touchStartX = 0;
+  lb.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { dx > 0 ? lbPrev.click() : lbNext.click(); }
+  });
+
+  // 모달 내 사진 클릭 → 라이트박스 (그 리뷰 사진들 + 캡션)
+  modalBody.addEventListener('click', function(e) {
+    var img = e.target.closest('[data-lb-idx]');
+    if (!img) return;
+    var list = currentModalPhotos.map(function(u) { return { url: u, review: currentModalReview }; });
+    openLightbox(list, parseInt(img.dataset.lbIdx));
+  });
+
+  /* 더보기 */
+  document.getElementById('prvLoadmore').addEventListener('click', function() { currentPage++; render(); });
+
+  /* ── iframe 높이 전달 ── */
+  function sendHeight(h) {
+    var height = (h !== undefined) ? h : document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+  }
+  function initIframeComm() {
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(function() { sendHeight(); }).observe(document.body);
+    } else {
+      setInterval(function() { sendHeight(); }, 500);
+    }
+    sendHeight();
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     Phase 2-C: DOM 배치 + sticky 탭바 (2026-05-16)
+     ──────────────────────────────────────────────────────────────
+     배치 흐름 (무신사 표준):
+       1) 상품 메인 (이미지·가격·구매하기)
+       2) [sticky 탭바: 정보 | 후기 | 문의]  ← 모바일만 표시
+       3) 상세정보 (아임웹 네이티브)
+       4) 후기 위젯
+       5) 공통 영역 (PROMISE·카카오·FAQ) — 외부 코드위젯
+
+     아임웹 PC/모바일 DOM 분리 대응:
+       findVisible(selector) — offsetParent !== null 인 노드만 선택
+       resize 이벤트에서 viewport 변경 시 재배치 */
+
+  // 보이는(현재 viewport에서 렌더되는) 노드 1개만 반환
+  function findVisible(selector) {
+    var nodes = document.querySelectorAll(selector);
+    for (var i = 0; i < nodes.length; i++) {
+      if (nodes[i].offsetParent !== null) return nodes[i];
+    }
+    return null;
+  }
+
+  // 상세정보 본문 영역 (PC: lazy_load, 모바일: lazy_load_mobile)
+  function findDetailSection() {
+    var selectors = [
+      '._prod_detail_detail_lazy_load',
+      '._prod_detail_detail_lazy_load_mobile',
+      '._detail_detail_wrap',
+      '._detail_detail_wrap_mobile'
+    ];
+    for (var i = 0; i < selectors.length; i++) {
+      var el = findVisible(selectors[i]);
+      if (el) return el;
+    }
+    return null;
+  }
+
+  // ⚠️ 상세정보 블록 끝(펼쳐보기 버튼) 찾기 — 후기 위젯을 *그 다음*에 배치하기 위함
+  //    아임웹 lazy_load_mobile 은 미리보기만 감싸고, "펼쳐보기" 버튼은 형제로 존재
+  //    → 펼쳐보기 버튼 다음으로 후기 위젯을 옮겨야 사장님 의도(상세정보 블록 전체 아래) 일치
+  function findExpandAnchor(detail) {
+    if (!detail || !detail.parentNode) return null;
+    var parent = detail.parentNode;
+    var children = parent.children;
+    var passed = false;
+    for (var i = 0; i < children.length; i++) {
+      var el = children[i];
+      if (el === detail) { passed = true; continue; }
+      if (!passed) continue;
+      // detail 다음 형제 중 "펼쳐보기"·"더보기" 텍스트 or 일반적인 more/expand 클래스
+      var text = (el.textContent || '').trim();
+      if (text.length < 30 && /펼쳐보기|상세보기|더보기|펼치기/.test(text)) return el;
+      var cls = el.className || '';
+      if (typeof cls === 'string' && /\b(view_more|view-more|btn_more|btn-more|_more|more_btn|expand|detail_more)\b/i.test(cls)) return el;
+      // 또는 자식에 펼쳐보기 버튼이 포함된 경우 (감싸는 div)
+      if (el.querySelector && el.querySelector('a, button')) {
+        var inner = el.querySelector('a, button');
+        var innerText = (inner.textContent || '').trim();
+        if (innerText.length < 30 && /펼쳐보기|상세보기|더보기|펼치기/.test(innerText)) return el;
+      }
+    }
+    return null; // 못 찾으면 null → fallback 으로 detail 직후 사용
+  }
+
+  function tryArrangeLayout() {
+    try {
+      var widget = root && root.parentElement; // 후기 위젯 코드위젯 래퍼
+      var tabs = document.getElementById('mmTabs');
+      if (!widget) return false;
+
+      var detail = findDetailSection();
+      if (!detail || !detail.parentNode) {
+        console.log('[MAMORU 리뷰] 상세정보 영역 미발견 — 재시도 대기');
+        return false;
+      }
+
+      // (1) 후기 위젯 위치 결정:
+      //     1순위: "상세정보 펼쳐보기" 버튼 *직후* (사장님 의도)
+      //     2순위: 펼쳐보기 버튼 못 찾으면 상세정보 미리보기 직후 (fallback)
+      var expand = findExpandAnchor(detail);
+      var widgetAnchor = expand || detail;
+      var anchorLabel = expand ? '펼쳐보기 버튼 직후' : '상세정보 직후 (펼쳐보기 미발견)';
+
+      if (widgetAnchor.nextElementSibling !== widget) {
+        widgetAnchor.parentNode.insertBefore(widget, widgetAnchor.nextElementSibling);
+        console.log('[MAMORU 리뷰] 후기 위젯 배치:', anchorLabel,
+          expand ? '(matched: ' + (expand.className || expand.tagName) + ')' : '');
+      }
+
+      // (2) sticky 탭바 → 상세정보 *직전* (모바일에서만 보임, CSS 처리)
+      if (tabs && detail.previousElementSibling !== tabs) {
+        detail.parentNode.insertBefore(tabs, detail);
+        console.log('[MAMORU 리뷰] 탭바 배치: 상세정보 직전');
+      }
+
+      return true;
+    } catch(e) {
+      console.warn('[MAMORU 리뷰] 레이아웃 배치 실패:', e.message);
+      return false;
+    }
+  }
+
+  // 아임웹은 페이지 동적 로딩 → 여러 시점에 시도 + viewport 변경 대응
+  function scheduleMove() {
+    if (root) root.classList.add('mm-prv-initial-hidden');
+
+    var attempts = [50, 200, 500, 1000, 2000];
+    var arranged = false;
+    attempts.forEach(function(ms) {
+      setTimeout(function() {
+        if (!arranged) arranged = tryArrangeLayout();
+        if (ms === attempts[attempts.length - 1] && root) {
+          root.classList.remove('mm-prv-initial-hidden');
+          root.classList.add('mm-prv--ready');
+        }
+      }, ms);
+    });
+
+    // viewport 변경(PC↔모바일 전환) 시 재배치 (visible 노드 갱신)
+    var resizeTimer = null;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() { tryArrangeLayout(); }, 200);
+    });
+  }
+
+  /* ── 탭 클릭 핸들러 + scroll spy (Phase 2-C) ── */
+  function getTabTargets() {
+    return {
+      info: findDetailSection(),
+      reviews: root,
+      contact: document.getElementById('mm-contact-anchor')
+    };
+  }
+
+  function setActiveTab(name) {
+    var tabs = document.querySelectorAll('.mm-tab');
+    tabs.forEach(function(t) {
+      t.classList.toggle('active', t.dataset.target === name);
+    });
+  }
+
+  function scrollToSection(name) {
+    var targets = getTabTargets();
+    var el = targets[name];
+    if (!el) {
+      console.log('[MAMORU 리뷰] 탭 대상 미발견:', name);
+      return;
+    }
+    var stickyOffset = 56; // sticky 탭바 높이 보정
+    var top = el.getBoundingClientRect().top + window.pageYOffset - stickyOffset;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+    setActiveTab(name);
+  }
+
+  function initTabs() {
+    var tabBar = document.getElementById('mmTabs');
+    if (!tabBar) return;
+    tabBar.addEventListener('click', function(e) {
+      var btn = e.target.closest('.mm-tab');
+      if (!btn) return;
+      scrollToSection(btn.dataset.target);
+    });
+
+    // scroll spy: 현재 viewport에 보이는 영역에 따라 active 탭 갱신
+    var spyTimer = null;
+    window.addEventListener('scroll', function() {
+      clearTimeout(spyTimer);
+      spyTimer = setTimeout(updateActiveTabByScroll, 80);
+    }, { passive: true });
+  }
+
+  function updateActiveTabByScroll() {
+    // 모바일만 (PC는 탭바 자체 숨김)
+    if (window.innerWidth >= 768) return;
+    var targets = getTabTargets();
+    var triggerY = 80; // sticky 탭바 아래 80px 지점 기준
+    var active = 'info';
+    ['info', 'reviews', 'contact'].forEach(function(name) {
+      var el = targets[name];
+      if (!el) return;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= triggerY) active = name;
+    });
+    setActiveTab(active);
+  }
+
+  /* ── 데모 데이터 (?demo=1 일 때만 사용) ── */
+  function getDemoData() {
+    var IMG_BASE = 'https://page.mamoru.kr/projects/products/product_detail/CL1-4T/images/';
+    var PRODUCT = 'A2-55FS · 블런트 5.5인치';
+    var now = Date.now();
+    var day = 24 * 60 * 60 * 1000;
+
+    var reviews = [
+      {
+        name: '김민수', stars: 5, product: PRODUCT,
+        content: '10년차 미용사인데 이렇게 손맛 좋은 가위는 처음이에요. 컷감이 정말 부드럽고 끝매김이 일관적이라 작업이 훨씬 편해졌습니다. 무엇보다 상담받을 때 "안 사셔도 됩니다"라는 말을 들어본 게 처음이라 신선했어요. 다른 브랜드와 다른 진정성이 느껴집니다.',
+        photo_urls: [IMG_BASE + 'hero.png', IMG_BASE + 'blade1.png'],
+        created_at: new Date(now - 3 * day).toISOString(),
+        meta: { tags: ['comfortable', 'professional', 'better_cut'] }
+      },
+      {
+        name: '박지혜', stars: 5, product: PRODUCT,
+        content: '컨설팅 받고 결정했는데 정말 만족스러워요. 제 손과 작업 스타일에 딱 맞는 가위를 추천해 주셔서 결정하기 편했고, 실제로 써보니 컷감이 달라요. 평생 복원수리도 가능하다니 마음이 편합니다.',
+        photo_urls: [IMG_BASE + 'blade2.png', IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 7 * day).toISOString(),
+        meta: { tags: ['personalized', 'detailed_guide', 'professional'] }
+      },
+      {
+        name: '이서연', stars: 4, product: PRODUCT,
+        content: '처음에는 가격이 부담스러웠는데 써보니 그 값을 합니다. 가벼워서 손목 부담이 적고 끝매김이 깔끔해요. 다만 적응하는데 며칠 걸렸어요.',
+        photo_urls: [],
+        created_at: new Date(now - 10 * day).toISOString(),
+        meta: { tags: ['good_quality', 'reasonable_price'] }
+      },
+      {
+        name: '최유진', stars: 5, product: PRODUCT,
+        content: '컷감 진짜 부드러워요!! 5.5인치 블런트 작업이 이렇게 일관성 있게 나올 수 있는지 처음 알았네요. 추천합니다.',
+        photo_urls: [IMG_BASE + 'bolt.png'],
+        created_at: new Date(now - 14 * day).toISOString(),
+        meta: { tags: ['better_cut', 'would_recommend', 'above_expect'] }
+      },
+      {
+        name: '정현우', stars: 5, product: PRODUCT,
+        content: '대표님께서 직접 상담해 주시는데 미용가위에 대한 지식이 정말 깊으세요. 판매하려는 게 아니라 진짜로 안내해 주신다는 느낌. 가위도 명품이고요.',
+        photo_urls: [IMG_BASE + 'model.png', IMG_BASE + 'hero.png', IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 18 * day).toISOString(),
+        meta: { tags: ['detailed_guide', 'thorough_info', 'professional'] }
+      },
+      {
+        name: '강수민', stars: 4, product: PRODUCT,
+        content: '디자인이 깔끔하고 모노톤이라 매장 어느 곳에 둬도 잘 어울려요. 무엇보다 손에 잡히는 그립감이 좋습니다. 약지부 카멜 형태가 안정적이에요.',
+        photo_urls: [],
+        created_at: new Date(now - 22 * day).toISOString(),
+        meta: { tags: ['comfortable', 'good_quality'] }
+      },
+      {
+        name: '한지영', stars: 5, product: PRODUCT,
+        content: '평생 복원수리가 진짜 좋네요. 다른 브랜드는 무뎌지면 신품 사라고 하는데 여긴 자체 기술로 복원해 주신다고. 그동안 가위 여러 자루 산 게 아까울 정도예요.',
+        photo_urls: [IMG_BASE + 'blade1.png'],
+        created_at: new Date(now - 26 * day).toISOString(),
+        meta: { tags: ['like_new', 'precise_edge', 'professional'] }
+      },
+      {
+        name: '오태호', stars: 5, product: PRODUCT,
+        content: '다른 가위 못 쓰겠어요. 손에 너무 잘 맞고 절삭력이 좋아서 작업 시간이 줄었습니다. 적극 추천!',
+        photo_urls: [],
+        created_at: new Date(now - 30 * day).toISOString(),
+        meta: { tags: ['better_cut', 'would_recommend'] }
+      },
+      {
+        name: '윤소희', stars: 3, product: PRODUCT,
+        content: '처음 받았을 때 약간 무거운 느낌이 있었는데 며칠 쓰니까 적응됐어요. 좋은 가위인 건 분명한데 손이 작은 분은 한 번 잡아보고 결정하시면 좋겠습니다.',
+        photo_urls: [],
+        created_at: new Date(now - 35 * day).toISOString(),
+        meta: { tags: ['fair_price'] }
+      },
+      {
+        name: '신재민', stars: 4, product: PRODUCT,
+        content: '포장도 꼼꼼하고 송장 알림톡도 빠르게 왔어요. 가위는 5.5인치라 블런트 작업에 적합하고 일관성이 좋습니다.',
+        photo_urls: [IMG_BASE + 'handle.png'],
+        created_at: new Date(now - 40 * day).toISOString(),
+        meta: { tags: ['fast_delivery', 'neat_packaging', 'good_quality'] }
+      },
+      {
+        name: '임가람', stars: 5, product: PRODUCT,
+        content: '대표님이 친절하시고 컨설팅이 정말 도움됩니다. 가격은 정직하고 할인이 없는 것도 신뢰가 가요. "이 가위 안 사도 된다" 솔직한 말 듣고 오히려 더 사고 싶어졌어요.',
+        photo_urls: [],
+        created_at: new Date(now - 45 * day).toISOString(),
+        meta: { tags: ['fair_price', 'comfortable', 'worth_time'] }
+      },
+      {
+        name: '조민재', stars: 3, product: PRODUCT,
+        content: '나쁘진 않은데 기대가 너무 컸나봐요. 본인 손에 맞는지 컨설팅 꼭 받고 결정하세요.',
+        photo_urls: [],
+        created_at: new Date(now - 55 * day).toISOString(),
+        meta: { tags: ['personalized'] }
+      }
+    ];
+
+    var avg = reviews.reduce(function(s, r) { return s + r.stars; }, 0) / reviews.length;
+    return {
+      reviews: reviews,
+      stats: { count: reviews.length, average: Math.round(avg * 10) / 10 }
+    };
+  }
+
+  /* ── 후기 0건 빈 상태 렌더 — 위젯 본체는 유지(탭바 작동 위해) ── */
+  function renderZeroState() {
+    // 후기 데이터가 없을 때: 요약/분포/갤러리/필터/그리드/더보기 모두 숨김
+    var summary = document.getElementById('prvSummary');
+    var dist = document.getElementById('prvDist');
+    var galleryWrap = document.getElementById('prvGalleryWrap');
+    var controls = document.querySelector('.mm-prv__controls');
+    var grid = document.getElementById('prvGrid');
+    var loadmore = document.getElementById('prvLoadmore');
+    var zero = document.getElementById('prvZero');
+    if (summary) summary.style.display = 'none';
+    if (dist) dist.style.display = 'none';
+    if (galleryWrap) galleryWrap.style.display = 'none';
+    if (controls) controls.style.display = 'none';
+    if (grid) grid.style.display = 'none';
+    if (loadmore) loadmore.style.display = 'none';
+    if (zero) zero.style.display = 'block';
+  }
+
+  /* ── 데이터 로드 ── */
+  if (DEMO_MODE) {
+    // 데모 모드 — 임시 더미 데이터로 즉시 렌더 (검증용)
+    var demo = getDemoData();
+    allReviews = demo.reviews;
+    root.style.display = '';
+    renderSummary(demo.stats);
+    renderDist();
+    renderGallery();
+    applyFilterSort();
+    render();
+    initIframeComm();
+    scheduleMove();   // DOM 배치 (상세정보 직후 + 탭바 상세정보 직전)
+    initTabs();       // 탭 클릭 핸들러 + scroll spy (Phase 2-C)
+    console.log('[MAMORU 리뷰 — 데모 모드] 더미 데이터 ' + demo.reviews.length + '건 표시');
+  } else {
+    fetch(API_URL + apiQuery)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        var reviews = [];
+        var stats = { count: 0, average: 0 };
+
+        if (data && data.reviews) {
+          reviews = Array.isArray(data.reviews) ? data.reviews : [];
+          stats = data.stats || stats;
+        } else if (Array.isArray(data)) {
+          reviews = data;
+        }
+
+        allReviews = reviews;
+        root.style.display = '';
+
+        if (reviews.length === 0) {
+          // 후기 0건 — 빈 상태 메시지만 + sticky 탭바 정상 작동 (정보/문의 점프)
+          renderZeroState();
+        } else {
+          renderSummary(stats);
+          renderDist();
+          renderGallery();
+          applyFilterSort();
+          render();
+        }
+
+        initIframeComm();
+        scheduleMove();   // DOM 배치 (Phase 2-C) — 후기 0건이어도 탭바 배치
+        initTabs();       // 탭 핸들러 — 후기 0건이어도 [정보]/[문의] 점프 작동
+      })
+      .catch(function(err) {
+        console.error('[MAMORU 리뷰] API 에러:', err);
+        // 에러 시에도 위젯·탭바는 유지 (정보/문의는 작동)
+        allReviews = [];
+        root.style.display = '';
+        renderZeroState();
+        initIframeComm();
+        scheduleMove();
+        initTabs();
+      });
+  }
+})();
+</script>
+
+</div>
+</body>
+</html>

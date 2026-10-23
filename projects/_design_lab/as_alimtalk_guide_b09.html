@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <title>시안 B-09 · 복원수리 안내(알림톡용)</title><meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+  <style>
+/* ══════════════════════════════════════════════════════════
+   MAMORU 복원수리 안내 — Dark Monochrome · Mobile-Only
+   알림톡 버튼 링크 전용 (URL 불변)
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --void: #1A1A1A;
+  --graphite: #2D2D2D;
+  --stone: #4A4A4A;
+  --warm-gray: #8A8580;
+  --mist: #B8B4AF;
+  --sand: #D4D0CB;
+  --cream: #FAF9F7;
+  --white: #FFFFFF;
+  --font-display: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Pretendard', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--void);
+  color: var(--cream);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: 480px; margin: 0 auto; }
+
+/* ── 헤더 ── */
+.header {
+  text-align: center;
+  padding: 40px 20px 20px;
+}
+.header-label {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mist);
+  letter-spacing: 0.03em;
+  margin-bottom: 16px;
+}
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.35;
+}
+.header p {
+  font-size: 14px;
+  color: var(--mist);
+  margin-top: 8px;
+}
+
+/* ── 탭 바 — 스티키 ── */
+.tab-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(26,26,26,0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-bar-inner {
+  display: flex;
+  gap: 6px;
+  min-width: max-content;
+  justify-content: center;
+}
+.tab-btn {
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 100px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn:active { transform: scale(0.96); }
+.tab-btn.active {
+  background: var(--cream);
+  border-color: var(--cream);
+  color: var(--void);
+  font-weight: 600;
+}
+
+/* ── 탭 콘텐츠 ── */
+.tab-panel { display: none; padding: 24px 16px 32px; }
+.tab-panel.active { display: block; }
+
+/* ── 공통 카드 ── */
+.card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 14px;
+}
+
+/* ══ 탭1: 과정안내 ══ */
+
+/* 스텝 플로우 */
+.step-flow { display: flex; flex-direction: column; gap: 36px; }
+
+.step-item { text-align: center; }
+.step-num {
+  display: inline-block;
+  width: 28px; height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 14px;
+}
+.step-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+/* Step 1 ("두 가지 진행방식 중 선택하여 접수") 위계 강화 — 두 옵션 카드의 부모 라벨 */
+/* 첫 step만 적용 (호환성 좋은 :first-child 사용) */
+.step-flow > .step-item:first-child > .step-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.step-desc {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.7;
+}
+
+/* 접수방식 선택 영역 — 시각 위계 강화 (사장님 룰: "두 가지 진행방식"이 명확히 두 카드로 인식되도록) */
+.method-group {
+  margin-top: 12px;
+  padding: 20px 18px 22px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+}
+.method-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+
+/* "또는" 구분자 — 두 method-group 사이 시각 분리 */
+.method-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 6px;
+  color: var(--mist);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.method-or-divider::before,
+.method-or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.12);
+}
+.icon-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.icon-circle {
+  width: 88px; height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* 아이콘 placeholder (src 비어있을 때) */
+.icon-circle img[src=""], .icon-circle img:not([src]) {
+  width: 88px; height: 88px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+.icon-name {
+  font-size: 11px;
+  color: var(--mist);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* 스텝 내 아이콘 (검수/복원수리/발송) */
+.step-icon {
+  margin: 0 auto 10px;
+  width: 180px; height: auto;
+}
+.step-icon img[src=""], .step-icon img:not([src]) {
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+
+/* 스텝 구분선 */
+.step-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 auto;
+}
+
+/* 하단 안내 노트 */
+.step-note {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--warm-gray);
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* ══ 탭2: 소요시간 ══ */
+.dur-flow { display: flex; flex-direction: column; gap: 0; }
+.dur-section { text-align: center; padding: 8px 0; }
+.dur-heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+.dur-sub {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.dur-footnote {
+  font-size: 11px;
+  color: var(--warm-gray);
+  line-height: 1.7;
+}
+.dur-divider {
+  width: 40px;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+  margin: 28px auto;
+}
+/* 캘린더 이미지 영역 */
+.dur-cal-img {
+  width: calc(100% - 160px);
+  margin: 16px auto 20px;
+  aspect-ratio: 5 / 7;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dur-cal-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.dur-cal-img img[src=""], .dur-cal-img img:not([src]) {
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.04);
+}
+/* 수거→수령 리스트 (플레인 텍스트) */
+.dur-list {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 2.2;
+  margin-bottom: 14px;
+}
+/* 가로폭 복원수리 이미지 */
+.dur-wide-img {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.dur-wide-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dur-wide-img img[src=""], .dur-wide-img img:not([src]) {
+  width: 100%; height: 100%;
+  background: rgba(255,255,255,0.04);
+}
+/* 비교 카드 */
+.compare-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.compare-item {
+  flex: 1;
+  padding: 14px 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+.compare-item.other { background: rgba(255,255,255,0.04); }
+.compare-item.mamoru {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.compare-label { font-size: 11px; color: var(--mist); margin-bottom: 4px; }
+.compare-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--cream);
+}
+.compare-item.other .compare-value {
+  color: var(--warm-gray);
+  text-decoration: line-through;
+}
+
+/* 이미지 placeholder */
+.img-area {
+  width: 100%;
+  min-height: 70px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.1);
+  font-size: 11px;
+}
+.img-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ══ 탭3: 비용안내 ══ */
+.price-section-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+.price-section-sub {
+  text-align: center;
+  font-size: 13px;
+  color: var(--mist);
+  margin-bottom: 24px;
+}
+.price-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.price-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 22px 12px;
+  text-align: center;
+}
+.price-label { font-size: 13px; color: var(--sand); margin-bottom: 10px; font-weight: 600; }
+.price-value {
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--cream);
+  line-height: 1;
+}
+.price-value span {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+.price-unit { font-size: 12px; color: var(--mist); margin-top: 6px; }
+
+/* 배송비 영역 */
+.ship-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--warm-gray);
+  letter-spacing: 0.04em;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.ship-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ship-card {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 16px 14px;
+}
+.ship-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cream);
+  text-align: center;
+  margin-bottom: 12px;
+}
+/* 원가 취소선 */
+.ship-original {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--warm-gray);
+}
+.ship-original .strike {
+  text-decoration: line-through;
+  margin-right: 2px;
+}
+.ship-original .tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--cream);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.ship-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.ship-row:last-child { margin-bottom: 0; }
+.ship-row.hl {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.ship-row .qty { color: var(--cream); font-size: 12px; }
+.ship-row .price { font-weight: 600; color: var(--cream); font-size: 13px; }
+
+/* ══ 탭4: 포장방법 ══ */
+.pack-summary {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.pack-summary-sub {
+  text-align: center;
+  font-size: 13px;
+  color: var(--mist);
+  margin-bottom: 32px;
+}
+.pack-flow { display: flex; flex-direction: column; gap: 0; }
+
+/* Step 1 — 강조 카드 */
+.pack-hero {
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pack-hero-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.pack-hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pack-hero-body {
+  padding: 16px 18px 18px;
+  text-align: center;
+}
+.pack-hero-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.pack-hero-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+.pack-hero-desc {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.6;
+}
+
+/* Step 2, 3 — 가벼운 스텝 */
+.pack-step-item { text-align: center; }
+.pack-step-num {
+  display: inline-block;
+  width: 28px; height: 28px;
+  line-height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cream);
+  margin-bottom: 14px;
+}
+.pack-step-img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.pack-step-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pack-step-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+.pack-step-desc {
+  font-size: 13px;
+  color: var(--mist);
+  line-height: 1.6;
+}
+.pack-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,0.08);
+  margin: 24px auto;
+}
+.pack-note {
+  margin-top: 8px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--warm-gray);
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* ── CTA ── */
+.cta-area { padding: 28px 16px 40px; }
+.cta-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: var(--cream);
+  border: none;
+  border-radius: 12px;
+  color: var(--void);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transition: all 0.2s;
+}
+.cta-btn:active { transform: scale(0.98); }
+.cta-btn-sub {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  margin-top: 8px;
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: var(--cream);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
+}
+.cta-btn-sub:active { transform: scale(0.98); }
+.cta-desc {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+
+/* ── 푸터 ── */
+.footer {
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  padding: 0 16px 32px;
+  line-height: 1.8;
+}
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙(히어로만 교체) ═══════════════
+     콘셉트: 정밀 기술 도면 · 작업 기록 (1번 복원수리 안내 /60 시안과 같은 언어) / 시그니처: 히어로 사진 위 치수선 주석 + 거대 RESTORE / 연출 순간: 히어로 진입 1곳
+     바탕: 다크 → 크림(1번과 통일). 히어로 사진만 흑백, 아이콘·작업사진은 원래 색.
+     규칙: 모노크롬 · 그림자/그라데이션/블러 금지 · 모서리 0/2px · 새 글꼴 없음(Outfit+Pretendard) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style id="b09">
+:root{ --parchment:#EDEBE8; --shell:#F5F3F0; }      /* 이 페이지에 없던 토큰 정의 */
+/* ── 0. 공통: 크림 바탕 · 그림자 제거 · 모서리 2px · 단어 단위 줄바꿈 ── */
+body{ background:var(--cream) !important; color:var(--void) !important; font-family:'Pretendard',sans-serif !important; word-break:keep-all; overflow-wrap:break-word; }
+.container *{ box-shadow:none !important; }
+.b-num{ font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+.container b{ color:var(--void); font-weight:800; }
+.tab-btn{ font-family:'Pretendard',sans-serif !important; }
+
+/* ── 1. 히어로 — 흑백 확대 사진 + 정밀 주석 + 거대 RESTORE (1번과 같은 사진·좌표) ── */
+.header.b-hero{ position:relative; padding:0 !important; text-align:left !important; background:var(--void); overflow:hidden; }
+.b-hero__photo{ position:relative; aspect-ratio:1/1; width:100%; }
+.b-hero__photo > img{ display:block; width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.12) brightness(.82); border-radius:0 !important; }
+.b-anno{ position:absolute; inset:0; pointer-events:none; }
+.b-anno svg{ position:absolute; inset:0; width:100%; height:100%; }
+.b-anno line, .b-anno circle{ stroke:rgba(250,249,247,.8); stroke-width:1; fill:none; vector-effect:non-scaling-stroke; }
+.b-tag{ position:absolute; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--cream); white-space:nowrap; line-height:1.3; }
+.b-tag small{ display:block; font-family:'Pretendard',sans-serif; font-size:11px; letter-spacing:0; text-transform:none; color:var(--mist); font-weight:500; margin-top:2px; }
+/* 페이지 폭이 480px로 제한 → 글자 크기도 480 기준 상한(min) */
+.b-hero__word{ position:absolute; left:14px; bottom:-0.17em; margin:0 !important; font-family:'Outfit',sans-serif; font-weight:900; font-size:min(20.5vw, 98px) !important; line-height:.8 !important; letter-spacing:-.05em; color:var(--cream) !important; white-space:nowrap; }
+.b-hero__body{ background:var(--cream); color:var(--void); padding:clamp(36px,8vw,48px) 20px 8px; }
+.b-hero__body .header-label{ display:block; padding:0; margin:0; background:none; border:0; border-radius:0; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); }
+.b-hero__body h1{ margin-top:10px; font-family:'Pretendard',sans-serif; font-size:clamp(34px,10vw,46px); line-height:1.1; letter-spacing:-.045em; font-weight:900; color:var(--void); }
+/* 부제: 얇게(300) ↔ 핵심 구절만 굵게(900) */
+.b-hero__body > p{ margin-top:12px !important; font-size:clamp(17px,4.8vw,21px) !important; line-height:1.5; font-weight:300; letter-spacing:-.025em; color:var(--stone) !important; }
+.b-hero__body > p b{ font-weight:900; color:var(--void); }
+.b-spec{ display:grid; grid-template-columns:repeat(3,1fr); margin:0 0 24px; border-top:1px solid var(--sand); }
+.b-spec div{ padding:14px 8px 0 0; }
+.b-spec dt{ font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(26px,7vw,34px); font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--void); font-variant-numeric:tabular-nums; }
+.b-spec dt span{ font-size:.5em; font-family:'Pretendard',sans-serif; }
+.b-spec dd{ margin-top:6px; font-size:12px; color:var(--warm-gray); line-height:1.5; }
+/* 연출된 순간 1곳 — 히어로 진입 */
+@keyframes b-rise{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:none; } }
+@keyframes b-draw{ from{ stroke-dashoffset:120; } to{ stroke-dashoffset:0; } }
+.b-seq{ animation:b-rise .85s cubic-bezier(.2,.7,.2,1) both; }
+.b-seq:nth-child(2){ animation-delay:.1s; } .b-seq:nth-child(3){ animation-delay:.2s; } .b-seq:nth-child(4){ animation-delay:.3s; }
+.b-anno line{ stroke-dasharray:120; animation:b-draw 1.1s .35s ease-out both; }
+@media (prefers-reduced-motion: reduce){ .b-seq, .b-anno line{ animation:none !important; stroke-dasharray:none; } }
+
+/* ── 2. 탭 — 글자 탭 + 굵은 밑줄(2px), 4칸 균등 ── */
+.tab-bar{ background:var(--cream) !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; border-bottom:1px solid var(--sand) !important; padding:0 20px !important; }
+.tab-bar-inner{ display:grid !important; grid-template-columns:repeat(4,1fr); gap:0 !important; min-width:0 !important; }
+.tab-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:var(--warm-gray) !important; font-size:14px !important; font-weight:600 !important; padding:15px 0 14px !important; }
+.tab-btn:active{ transform:none !important; }
+.tab-btn.active{ color:var(--void) !important; font-weight:800 !important; }
+.tab-btn.active::after{ content:''; position:absolute; left:14%; right:14%; bottom:-1px; height:2px; background:var(--void); }
+
+/* ── 3. 탭 본문 — 도면 표제 줄(번호 · 영문 라벨, hairline) ── */
+.tab-panel{ padding:clamp(32px,8vw,44px) 20px 36px !important; }
+.tab-panel::before{ display:block; margin-bottom:clamp(24px,6vw,32px); padding-top:10px; border-top:1px solid var(--void); font-family:'Outfit',sans-serif; font-size:11px; font-weight:600; letter-spacing:.18em; color:var(--warm-gray); font-variant-numeric:tabular-nums; }
+#tab-process::before{ content:'01 / 04 — PROCESS'; } #tab-duration::before{ content:'02 / 04 — DURATION'; }
+#tab-price::before{ content:'03 / 04 — PRICE'; } #tab-packing::before{ content:'04 / 04 — PACKING'; }
+
+/* ── 4. 과정안내 — 공정표: [거대 번호 | 제목 | 일러스트(원래 색)] 한 줄 → 설명은 전체 폭(좁은 글 칸 방지) ── */
+.step-flow{ gap:0 !important; }
+.step-item{ display:grid !important; grid-template-columns:clamp(44px,12vw,56px) 1fr clamp(76px,22vw,96px); column-gap:clamp(12px,3.6vw,16px); align-items:center; text-align:left !important; }
+.step-item > *{ grid-column:1 / -1; }
+.step-item > .step-num{ grid-column:1; grid-row:1; }
+.step-item > .step-title{ grid-column:2 / span 2; grid-row:1; }
+.step-item:has(> .step-icon) > .step-title{ grid-column:2; }
+.step-item > .step-icon{ grid-column:3; grid-row:1; }
+.step-item > .step-desc{ margin-top:12px; }
+.step-icon.icon-circle{ width:100% !important; height:auto !important; margin:0 !important; }
+.step-icon.icon-circle img{ height:auto !important; }
+.step-num{ display:block !important; width:auto !important; height:auto !important; margin:0 !important; padding:0 !important; background:none !important; border:0 !important; border-radius:0 !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(48px,13vw,64px) !important; line-height:.85 !important; letter-spacing:-.06em; color:var(--sand) !important; font-variant-numeric:tabular-nums; }
+.step-title{ margin:0 !important; font-size:clamp(17px,4.8vw,20px) !important; font-weight:900 !important; letter-spacing:-.03em; line-height:1.35 !important; color:var(--void) !important; }
+.step-flow > .step-item:first-child > .step-title{ font-size:clamp(18px,5.2vw,22px) !important; font-weight:900 !important; margin-bottom:0 !important; }
+.step-flow > .step-item:first-child > .method-group:first-of-type{ margin-top:18px !important; }
+.step-desc{ color:var(--stone) !important; }
+.step-divider{ width:100% !important; height:1px !important; margin:28px 0 !important; background:var(--sand) !important; }
+.step-note, .pack-note{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 12px !important; text-align:left !important; color:var(--stone) !important; }
+.tab-panel > .step-note{ margin-top:32px !important; }
+/* 방문수거·직접발송 카드: 흰 바탕 + 가는 선 · 아이콘 3개는 폭에 고르게 / 1개는 글 오른쪽 */
+.method-group{ background:var(--white) !important; border:1px solid var(--sand) !important; border-radius:2px !important; padding:18px 16px 18px !important; }
+.method-label{ font-size:17px !important; font-weight:900 !important; letter-spacing:-.02em !important; color:var(--void) !important; margin-bottom:4px !important; }
+.method-or-divider{ color:var(--warm-gray) !important; font-family:'Outfit','Pretendard',sans-serif; }
+.method-or-divider::before, .method-or-divider::after{ background:var(--sand) !important; }
+.icon-row{ display:grid !important; grid-template-columns:repeat(3,1fr); justify-items:center; gap:8px !important; margin-top:14px; }
+.icon-circle{ width:clamp(60px,17vw,80px) !important; height:clamp(60px,17vw,80px) !important; }
+.icon-name{ color:var(--stone) !important; font-weight:600 !important; }
+.method-group:has(.icon-item:only-child){ display:grid; grid-template-columns:1fr clamp(64px,18vw,88px); column-gap:12px; align-items:center; }
+.method-group:has(.icon-item:only-child) > .icon-row{ grid-column:2; grid-row:1 / span 2; grid-template-columns:1fr; margin-top:0; }
+.method-group:has(.icon-item:only-child) .icon-circle{ width:100% !important; height:auto !important; }
+
+/* ── 5. 소요시간 — 문제(7~15일, 흐림·취소선) ↔ 답(2~3일, 크게) ── */
+.dur-section{ text-align:left !important; padding:0 !important; }
+.dur-heading{ font-size:clamp(21px,5.8vw,26px) !important; font-weight:900 !important; letter-spacing:-.035em; line-height:1.3 !important; color:var(--void) !important; }
+.dur-sub, .dur-list{ color:var(--stone) !important; }
+.dur-footnote{ color:var(--warm-gray) !important; }
+.dur-divider{ width:100% !important; height:1px !important; margin:32px 0 !important; background:var(--sand) !important; }
+.dur-cal-img{ width:min(64%, 260px) !important; margin:24px auto !important;   /* 세로 그림 1장은 가운데(왼쪽에 두면 오른쪽이 빈 공간) */
+  background:var(--white) !important; border:1px solid var(--sand) !important; border-radius:2px !important; }
+.dur-wide-img{ border-radius:2px !important; background:var(--shell) !important; }
+.dur-flow > .dur-wide-img{ margin-bottom:24px !important; }
+#tab-duration .dur-sub[style*="cream"]{ color:var(--void) !important; font-weight:800 !important; font-size:clamp(16px,4.4vw,18px) !important; }  /* 다크용 인라인 색 보정 */
+.compare-row{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 !important; margin-top:20px !important; border-top:1px solid var(--void); }
+.compare-item{ background:transparent !important; border:0 !important; border-radius:0 !important; text-align:left !important; padding:14px 8px 0 0 !important; }
+.compare-label{ font-size:12px !important; color:var(--warm-gray) !important; }
+.compare-value{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; letter-spacing:-.04em; line-height:1 !important; margin-top:6px; }
+.compare-item.other .compare-value{ font-size:clamp(24px,7vw,32px) !important; font-weight:300 !important; color:var(--mist) !important; text-decoration:line-through; text-decoration-thickness:1px; }
+.compare-item.mamoru .compare-value{ font-size:clamp(40px,12vw,58px) !important; font-weight:900 !important; color:var(--void) !important; }
+
+/* ── 6. 비용안내 — 거대 숫자 + 가는 선 표 ── */
+.price-section-title{ text-align:left !important; font-size:clamp(21px,5.8vw,26px) !important; font-weight:900 !important; letter-spacing:-.035em; color:var(--void) !important; }
+.price-section-sub{ text-align:left !important; color:var(--warm-gray) !important; margin-bottom:16px !important; }
+.price-grid{ gap:0 !important; border-top:1px solid var(--void); margin-bottom:40px !important; }
+.price-card{ background:transparent !important; border:0 !important; border-radius:0 !important; text-align:left !important; padding:16px 8px 0 0 !important; }
+.price-card + .price-card{ border-left:1px solid var(--sand) !important; padding-left:16px !important; }
+.price-label{ font-size:13px !important; font-weight:700 !important; color:var(--stone) !important; }
+.price-value{ font-family:'Outfit',sans-serif !important; font-size:clamp(64px,19vw,92px) !important; font-weight:900 !important; letter-spacing:-.06em; line-height:.9 !important; color:var(--void) !important; margin-top:8px; font-variant-numeric:tabular-nums; }
+.price-value span{ font-family:'Pretendard',sans-serif !important; font-size:clamp(16px,4.4vw,19px) !important; font-weight:700 !important; letter-spacing:-.02em; margin-left:2px; }
+.price-unit{ color:var(--warm-gray) !important; }
+.ship-section-label{ text-align:left !important; font-size:clamp(18px,5vw,21px) !important; font-weight:900 !important; letter-spacing:-.03em !important; color:var(--void) !important; margin-bottom:16px !important; }
+/* 배송비 카드: 모바일 좁은 2단 금지 → 1단 표 */
+.ship-cards{ grid-template-columns:1fr !important; gap:28px !important; }
+.ship-card{ background:transparent !important; border:0 !important; border-top:1px solid var(--void) !important; border-radius:0 !important; padding:12px 0 0 !important; }
+.ship-card-title{ text-align:left !important; font-size:15px !important; font-weight:800 !important; color:var(--void) !important; margin-bottom:6px !important; }
+.ship-original{ text-align:left !important; color:var(--warm-gray) !important; margin-bottom:6px !important; }
+.ship-original .tag{ background:transparent !important; border:1px solid var(--void); border-radius:2px !important; color:var(--void) !important; }
+.ship-row{ background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; padding:10px 0 !important; margin:0 !important; }
+.ship-row .qty{ color:var(--stone) !important; font-size:13px !important; }
+.ship-row .price{ color:var(--stone) !important; font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; font-weight:700 !important; }
+.ship-row.hl{ border:0 !important; border-bottom:1px solid var(--sand) !important; }
+.ship-row.hl .qty, .ship-row.hl .price{ color:var(--void) !important; font-weight:900 !important; }
+.ship-card p[style*="text-align:center"]{ text-align:left !important; }
+
+/* ── 7. 포장방법 — 단계 번호를 도면 번호처럼 ── */
+.pack-summary{ text-align:left !important; font-size:clamp(22px,6.2vw,28px) !important; font-weight:900 !important; letter-spacing:-.035em; color:var(--void) !important; }
+.pack-summary-sub{ text-align:left !important; color:var(--warm-gray) !important; }
+.pack-hero{ background:transparent !important; border:0 !important; border-radius:0 !important; overflow:visible !important; }
+.pack-hero-img{ padding:0 !important; background:var(--shell) !important; border-radius:2px; overflow:hidden; }
+.pack-hero-img video{ border-radius:0 !important; }
+.pack-hero-body, .pack-step-item{ display:grid !important; grid-template-columns:clamp(40px,11vw,52px) 1fr; column-gap:clamp(12px,3.6vw,16px); text-align:left !important; }
+.pack-hero-body{ padding:18px 0 0 !important; }
+.pack-hero-body > *, .pack-step-item > *{ grid-column:2; }
+.pack-hero-body::before{ content:'1'; }       /* 2·3번과 같은 번호 체계(1번 = 가장 중요 단계) */
+.pack-hero-body::before, .pack-step-num{ grid-column:1 !important; grid-row:1 / span 4; display:block !important; width:auto !important; height:auto !important; margin:0 !important; padding:0 !important; background:none !important; border:0 !important; border-radius:0 !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(48px,13vw,60px) !important; line-height:.85 !important; letter-spacing:-.06em; color:var(--sand) !important; font-variant-numeric:tabular-nums; }
+.pack-hero-body::before{ color:var(--void) !important; }
+.pack-hero-badge{ justify-self:start; background:var(--void) !important; border:0 !important; border-radius:2px !important; color:var(--cream) !important; padding:3px 8px !important; margin-bottom:8px !important; }
+.pack-hero-title, .pack-step-title{ font-size:clamp(16px,4.6vw,19px) !important; font-weight:900 !important; letter-spacing:-.03em; line-height:1.4 !important; color:var(--void) !important; }
+.pack-hero-desc, .pack-step-desc{ color:var(--stone) !important; }
+.pack-step-img{ width:100% !important; margin:0 0 14px !important; background:var(--shell) !important; border:0 !important; border-radius:2px !important; }
+.pack-divider{ width:100% !important; height:1px !important; margin:28px 0 !important; background:var(--sand) !important; }
+.pack-note{ margin-top:32px !important; }
+
+/* ── 8. 하단 안내·푸터 — 왼쪽 정렬, 크림 바탕용 색 ── */
+.container > div[style*="text-align:center"]{ text-align:left !important; padding:28px 20px 0 !important; border-top:1px solid var(--sand); margin:0 20px; padding-left:0 !important; padding-right:0 !important; }
+.container > div[style*="text-align:center"] p{ color:var(--stone) !important; font-size:13px !important; }
+.footer{ text-align:left !important; color:var(--warm-gray) !important; padding:16px 20px 40px !important; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/as/page_as_guide.html 에 B-09 덧입힘(문구·기능·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 복원수리 안내(알림톡용). 문구·탭은 지금 페이지와 같고 디자인만 다릅니다. 1번 복원수리 안내 시안과 같은 디자인 언어(다크 → 크림 바탕 전환).</span>
+    <a href="https://page.mamoru.kr/projects/as/page_as_guide.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 헤더 -->
+  <!-- B-09 히어로: 1번 복원수리 안내 시안과 같은 사진·같은 주석 좌표 — 흑백 확대 사진 + 정밀 주석 + 거대 RESTORE + 숫자 스펙.
+       문구(라벨·제목·부제)와 원래 헤더 사진(c41e…)은 그대로 유지 -->
+  <div class="header b-hero">
+    <div class="b-hero__photo">
+      <!-- [IMG] 히어로 사진 — 날·손 매크로 크롭(흑백 처리는 CSS) · 1:1 원본 비율 고정 -->
+      <img src="../as/images/날등.jpg" alt="연마 중인 가위 날 확대">
+      <div class="b-anno" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line x1="43.2" y1="14.5" x2="50.6" y2="51"/>
+          <line x1="41.6" y1="14.8" x2="44.8" y2="14.2"/><line x1="49" y1="51.3" x2="52.2" y2="50.7"/>
+          <circle cx="48.1" cy="36" r="1.3"/><line x1="49.4" y1="36" x2="68" y2="36"/>
+          <circle cx="47.6" cy="58.5" r="1.3"/><line x1="46.3" y1="58.5" x2="24" y2="58.5"/>
+        </svg>
+        <span class="b-tag" style="left:27%;top:6%">BLADE LINE<small>날끝 정렬 확인</small></span>
+        <span class="b-tag" style="left:69%;top:33.5%">01 EDGE<small>날 각도 복원</small></span>
+        <span class="b-tag" style="left:5%;top:60.5%">02 PIVOT<small>밸런스·장력</small></span>
+      </div>
+      <p class="b-hero__word" aria-hidden="true">RESTORE</p>
+    </div>
+    <div class="b-hero__body">
+      <span class="header-label b-seq">MAMORU RESTORATION</span>
+
+      <h1 class="b-seq">복원수리 안내</h1>
+      <p class="b-seq" style="margin-bottom: 24px;">2대 기술력의 수냉식 복원수리<br><b>가위를 위한 최고의 선택</b>이란 것을<br>증명하겠습니다</p>
+      <dl class="b-spec b-seq">
+        <div><dt>2~3<span>일</span></dt><dd>보내는날 기준<br>받아보시는 기간</dd></div>
+        <div><dt>5<span>단계</span></dt><dd>접수부터<br>발송까지</dd></div>
+        <div><dt>직접</dt><dd>마모루가<br>직접 작업</dd></div>
+      </dl>
+      <div class="dur-wide-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/c41e774c08e36.jpg" alt="복원수리 이미지"></div>
+    </div>
+  </div>
+
+  <!-- 탭 바 -->
+  <div class="tab-bar">
+    <div class="tab-bar-inner">
+      <button class="tab-btn active" data-tab="process">과정안내</button>
+      <button class="tab-btn" data-tab="duration">소요시간</button>
+      <button class="tab-btn" data-tab="price">비용안내</button>
+      <button class="tab-btn" data-tab="packing">포장방법</button>
+    </div>
+  </div>
+
+  <!-- ═══ 탭1: 과정안내 ═══ -->
+  <div class="tab-panel active" id="tab-process">
+    <div class="step-flow">
+
+      <!-- Step 1: 접수 방식 선택 -->
+      <div class="step-item">
+        <span class="step-num">1</span>
+        <p class="step-title">두 가지 진행방식 중<br>선택하여 접수</p>
+
+        <!-- 방문수거 -->
+        <div class="method-group">
+          <p class="method-label">방문수거</p>
+          <p class="step-desc">3가지 방법에 맞추어 수거요청일에 수거 진행</p>
+          <div class="icon-row">
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/3876fc8ff40d5.png" alt="문앞보관"></div>
+              <span class="icon-name">문앞보관</span>
+            </div>
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/899f7ba019566.png" alt="카운터보관"></div>
+              <span class="icon-name">카운터보관</span>
+            </div>
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/fa4a888f822d0.png" alt="직접전달"></div>
+              <span class="icon-name">직접전달</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 두 옵션 사이 "또는" 구분자 -->
+        <div class="method-or-divider" aria-hidden="true">또는</div>
+
+        <!-- 직접발송 -->
+        <div class="method-group">
+          <p class="method-label">직접발송</p>
+          <p class="step-desc">접수 후 7일 이내 직접 발송</p>
+          <div class="icon-row">
+            <div class="icon-item">
+              <div class="icon-circle"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/54b3187745037.png" alt="직접발송"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 2: 입고 -->
+      <div class="step-item">
+        <span class="step-num">2</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/7aec0a5522785.png" alt="포장"></div>
+        <p class="step-title">포장 후 가위 보내기</p>
+        <p class="step-desc">접수 후, 안내드린 포장방법을 참고하여 준비 후<br><b>접수방식에 맞추어</b> 마모루로 보내집니다</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 3: 검수 + 비용안내 -->
+      <div class="step-item">
+        <span class="step-num">3</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/71be81048aac2.png" alt="검수 아이콘"></div>
+        <p class="step-title">입고 후 검수 & 비용안내</p>
+        <p class="step-desc">수량 및 상태를 판단하여<br>비용안내 알림톡을 발송해드립니다</p>
+        <div class="step-note" style="margin-top:12px;">복원이 불필요한 경우(간편해결로 가능),<br>해당 자루는 미반영하여 비용을 안내합니다</div>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 4: 입금확인 + 복원수리 -->
+      <div class="step-item">
+        <span class="step-num">4</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/015ef4ce00dec.png" alt="복원수리 아이콘"></div>
+        <p class="step-title">복원수리 진행</p>
+        <p class="step-desc">고객님이 남겨주신 메모를 우선 참고하며<br>고객 불편을 직접 해결과 동시에 가위를 복원합니다</p>
+      </div>
+
+      <div class="step-divider"></div>
+
+      <!-- Step 5: 발송 -->
+      <div class="step-item">
+        <span class="step-num">5</span>
+        <div class="icon-circle step-icon"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/4d3e32ac11112.png" alt="발송 아이콘"></div>
+        <p class="step-title">복원수리 완료 후<br>고객님께 발송</p>
+        <p class="step-desc">발송시점에 <b>송장정보, 수리내역</b>이 함께 안내되며,<br>수리내역과 배송과정까지 확인 가능합니다</p>
+      </div>
+
+    </div>
+
+    <div class="step-note">
+       수리비용 입금이 지연될 경우,<br>발송이 지연될 수 있는 점 참고해주세요
+    </div>
+  </div>
+
+  <!-- ═══ 탭2: 소요시간 ═══ -->
+  <div class="tab-panel" id="tab-duration">
+    <div class="dur-flow">
+
+      <!-- 섹션 1: 핵심 소요일 -->
+      <div class="dur-section">
+        <p class="dur-heading">가위를 보내는날 기준<br>2~3일 후 받아보십니다</p>
+        <!-- [IMG] 캘린더 이미지 -->
+        <div class="dur-cal-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/eecc6eec779ee.png" alt="캘린더 이미지"></div>
+        <div class="dur-list">
+          <p>* 주말 및 공휴일은 소요일에서 제외됩니다</p>
+          <p>* 수거처리 및 직접발송이 지연 될 경우<br>그에 따른 수령일도 지연됩니다</p>
+         </div>
+        
+      </div>
+
+      <div class="dur-divider"></div>
+
+      <!-- 섹션 2: 입고 당일 출고 원칙 -->
+      <div class="dur-section">
+        <p class="dur-heading">입고 당일 출고 원칙</p>
+        <p class="dur-footnote">* 복원작업 물량이 몰리는 경우 지연될 수 있습니다</p>
+      </div>
+
+      <div class="dur-divider"></div>
+
+      <!-- 복원수리 이미지 (가로폭) -->
+      <div class="dur-wide-img"><img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/24aff72079b18.jpg" alt="복원수리 작업 이미지"></div>
+
+      <!-- 섹션 3: 마모루 직접작업 비교 -->
+      <div class="dur-section" style="text-align:center;">
+        <p class="dur-heading" style="margin-top:8px;">마모루는 직접 작업하여 빠릅니다</p>
+        <p class="dur-sub">일반적인 가위회사의 경우<br><b>작업을 외주업체로 보내어 진행</b>하기에,<br>보통 7~15일까지도 소요됩니다</p>
+        <div class="compare-row">
+          <div class="compare-item other">
+            <p class="compare-label">타 가위회사</p>
+            <p class="compare-value">7~15일</p>
+          </div>
+          <div class="compare-item mamoru">
+            <p class="compare-label">마모루</p>
+            <p class="compare-value">2~3일</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dur-divider"></div>
+
+      <!-- 섹션 4: 수냉식 기법 -->
+      <div class="dur-section" style="text-align:center;">
+        <p class="dur-heading">하지만, 작업 순간의<br>속도는 빠르지 않습니다</p>
+        <p class="dur-sub" style="margin-top:6px;">
+          수냉식 기법에 의한 ZERO DMG 를 우선하여<br>
+          상처부위만을 잡아내는 작업 기술을 제공합니다
+        </p>
+        <p class="dur-sub" style="margin-top:20px; font-size:15px; font-weight:600; color:var(--cream);">마모루 자체복원의 속도로 진행합니다<br>완벽에 의한 만족을 기다려주세요</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ 탭3: 비용안내 ═══ -->
+  <div class="tab-panel" id="tab-price">
+
+    <!-- 핵심: 수리비 -->
+    <p class="price-section-title">복원수리 비용</p>
+    <p class="price-section-sub">자루당 수리비</p>
+    <div class="price-grid">
+      <div class="price-card">
+        <p class="price-label">마모루 가위</p>
+        <p class="price-value">1<span>만원</span></p>
+        <p class="price-unit">자루당</p>
+      </div>
+      <div class="price-card">
+        <p class="price-label">타사 가위</p>
+        <p class="price-value">2<span>만원</span></p>
+        <p class="price-unit">자루당</p>
+      </div>
+    </div>
+
+    <!-- 부가: 배송비 (2열 병렬) -->
+    <p class="ship-section-label">배송비 안내</p>
+    <div class="ship-cards">
+      <!-- 방문수거 -->
+      <div class="ship-card">
+        <p class="ship-card-title">방문수거</p>
+        <p class="ship-original"><span class="strike">8,000원</span><span class="tag">할인</span></p>
+        <div class="ship-row"><span class="qty">1자루</span><span class="price">6,000원</span></div>
+        <div class="ship-row"><span class="qty">2자루</span><span class="price">3,000원</span></div>
+        <div class="ship-row hl"><span class="qty">3자루+</span><span class="price">무료</span></div>
+      </div>
+      <!-- 직접발송 -->
+      <div class="ship-card">
+        <p class="ship-card-title">직접발송</p>
+        <div class="ship-row"><span class="qty">1자루</span><span class="price">3,000원</span></div>
+        <div class="ship-row hl"><span class="qty">2자루+</span><span class="price">무료</span></div>
+        <p style="margin-top:10px; font-size:11px; color:var(--warm-gray); line-height:1.6; text-align:center;">보내실 때 택배비는<br>고객님 선불 부담이며<br>위 비용과 별도입니다</p>
+      </div>
+    </div>
+
+    <!-- 참고: 주석 -->
+    <div class="step-note" style="margin-top:16px;">
+      비용은 입고 후 검수 결과에 따라 자동계산되어<br>입금 안내 알림톡을 받으시게 됩니다<br>
+      (수리 불필요한 경우 자루수에서 제외하여 차감)
+    </div>
+  </div>
+
+  <!-- ═══ 탭4: 포장방법 ═══ -->
+  <div class="tab-panel" id="tab-packing">
+    <p class="pack-summary">고정하고 · 감싸고 · 담기</p>
+    <p class="pack-summary-sub">3가지만 해주시면 됩니다</p>
+
+    <div class="pack-flow">
+
+      <!-- Step 1: 고무줄 고정 (강조) -->
+      <div class="pack-hero">
+        <div class="pack-hero-img" style="padding:12px 24px;background:rgba(255,255,255,0.03);">
+          <!-- [VIDEO] 포장 Step 1 고무줄 (videos/고무줄.mp4) — 핸들부 감기 -->
+          <video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block;border-radius:10px;" src="../as/videos/고무줄.mp4"></video>
+        </div>
+        <div class="pack-hero-body">
+          <span class="pack-hero-badge">가장 중요</span>
+          <p class="pack-hero-title">핸들부를 고무줄로 감아<br>날이 벌어지지 않도록 고정해주세요</p>
+          <p class="pack-hero-desc">벌어진 상태의 날은 가장 위험합니다</p>
+        </div>
+      </div>
+
+      <div class="pack-divider"></div>
+
+      <!-- Step 2: 감싸기 -->
+      <div class="pack-step-item">
+        <span class="pack-step-num">2</span>
+        <div class="pack-step-img" style="width:85%;margin:0 auto 14px;">
+          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/bf336bf7a49b6.png" alt="구긴 종이나 수건으로 감싸기">
+        </div>
+        <p class="pack-step-title">구긴 종이 또는 수건으로 감싸주세요</p>
+        <p class="pack-step-desc">수건의경우 안전하게 다시 돌려보내드립니다</p>
+      </div>
+
+      <div class="pack-divider"></div>
+
+      <!-- Step 3: 담기 -->
+      <div class="pack-step-item">
+        <span class="pack-step-num">3</span>
+        <div class="pack-step-img" style="width:85%;margin:0 auto 14px;">
+          <img src="https://cdn.imweb.me/upload/S20250825bc9b09c7146df/1333029d67b25.png" alt="박스에 담기">
+        </div>
+        <p class="pack-step-title">주변 박스에 담아주세요</p>
+        <p class="pack-step-desc">메모지에 접수자 이름을 적어 동봉해주세요</p>
+      </div>
+
+    </div>
+
+    <div class="pack-note">
+      직접 발송의 경우,<br>꼭 접수 후 발송해주시길 바랍니다<br>(미접수 상태에서 입고 시 접수자 확인이 어려워 곤란합니다) 
+    </div>
+  </div>
+
+  <!-- 하단 안내 — 이미 접수 완료 고객 대상 페이지 -->
+  <div style="text-align:center;padding:28px 16px 0;">
+    <p style="font-size:12px;color:var(--mist);">궁금한 점이 있으시면 알림톡으로 문의해주세요</p>
+  </div>
+
+  <div class="footer">
+    MAMORU 미용가위<br>
+    상담 운영시간 10:00 ~ 21:00
+  </div>
+
+</div>
+
+<script>
+/* 탭 전환 */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('tab-' + this.getAttribute('data-tab')).classList.add('active');
+  });
+});
+
+</script>
+
+</body>
+</html>
