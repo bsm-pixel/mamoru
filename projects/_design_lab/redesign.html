@@ -87,17 +87,17 @@ var PAGES = [
   { g:'review', name:'후기 작성',              path:'reviews/page_review.html',        where:'알림톡 후기 요청',     status:'done', mock:'review_write_b09.html', note:'작성폼 가볍게: 항목 번호 01~04·가는 선·선택 태그 검정(입력칸 크기 그대로)' },
   { g:'review', name:'리뷰 이벤트',            path:'reviews/page_review_event.html',  where:'아임웹·알림톡',        status:'done', mock:'review_event_b09.html', note:'이달의 리뷰 주인공은?(얇게↔굵게)·REVIEW 겹침·큰 카운트다운, 참여방법 거대 번호' },
   { g:'review', name:'이벤트 당첨 배송지',      path:'reviews/page_event_address.html', where:'알림톡(당첨자)',       status:'done', mock:'event_address_b09.html', note:'입력폼 가볍게: 축하 제목 대비·항목 번호 01·02·가는 선' },
-  { g:'trust',  name:'수리내역서 (고객 화면)',  path:'as/page_as_report.html',          where:'출고 알림톡',          status:'wait', mock:'' },
-  { g:'trust',  name:'정품확인',               path:'verify/index.html',               where:'시리얼 QR',            status:'wait', mock:'' },
-  { g:'trust',  name:'자가진단',               path:'verify/self-check.html',          where:'정품확인에서 이동',     status:'wait', mock:'' },
-  { g:'trust',  name:'가위 진단',              path:'consulting/page_diag.html',       where:'아임웹 /58',          status:'wait', mock:'' },
-  { g:'form',   name:'복원수리 접수',          path:'as/page_form.html',               where:'아임웹 /53',          status:'wait', mock:'' },
-  { g:'form',   name:'상담 접수',              path:'consulting/page_form.html',       where:'아임웹 상담',          status:'wait', mock:'' },
-  { g:'form',   name:'EVENT 접수',             path:'event/page_form.html',            where:'릴스·DM 링크',         status:'wait', mock:'' },
-  { g:'form',   name:'상담 일정 확인·변경',     path:'consulting/page_change_request.html', where:'알림톡',           status:'wait', mock:'' },
-  { g:'form',   name:'상담 일정 제안',          path:'consulting/page_suggest.html',    where:'알림톡',              status:'wait', mock:'' },
-  { g:'form',   name:'상담 처리 결과',          path:'consulting/page_result.html',     where:'알림톡 버튼 결과',     status:'wait', mock:'' },
-  { g:'form',   name:'직접방문 일정 변경',      path:'as/page_change_request.html',     where:'알림톡',              status:'wait', mock:'' }
+  { g:'trust',  name:'수리내역서 (고객 화면)',  path:'as/page_as_report.html',          where:'출고 알림톡',          status:'review', mock:'as_report_b09.html', note:'도면 표제란(접수번호·입고·출고 칸)·거대 N자루·가위별 01/02 — 핀 마킹은 TMS와 동기라 그대로. 그냥 열면 조회 실패 화면이 정상(실제 링크로 확인)' },
+  { g:'trust',  name:'정품확인',               path:'verify/index.html',               where:'시리얼 QR',            status:'review', mock:'verify_b09.html', note:'인증서 용지+모서리 재단 표시·제품명 크게·구매일│구매처 칸 — 그냥 열면 확인되지 않습니다 화면이 정상' },
+  { g:'trust',  name:'자가진단',               path:'verify/self-check.html',          where:'정품확인에서 이동',     status:'review', mock:'self_check_b09.html', note:'진단 체크시트 [거대 번호│증상│체크칸], 체크하면 진하게' },
+  { g:'trust',  name:'가위 진단',              path:'consulting/page_diag.html',       where:'아임웹 /58',          status:'review', mock:'diag_b09.html', note:'검사지: 오른쪽 위 큰 단계 번호 4/9·선택지 가는 선 칸·결과=01~09 성적서 표' },
+  { g:'form',   name:'복원수리 접수',          path:'as/page_form.html',               where:'아임웹 /53',          status:'review', mock:'as_form_b09.html', note:'접수 전표: 단계마다 큰 번호 01~07(방식별 자동)·흰 카드→가는 선·예상 금액 표 — 시안에선 접수 막아둠' },
+  { g:'form',   name:'상담 접수',              path:'consulting/page_form.html',       where:'아임웹 상담',          status:'review', mock:'consult_form_b09.html', note:'상담 신청서: 항목 큰 번호(방식별 자동)·CONSULTATION 머리말 — 시안에선 접수 막아둠' },
+  { g:'form',   name:'EVENT 접수',             path:'event/page_form.html',            where:'릴스·DM 링크',         status:'review', mock:'event_form_b09.html', note:'이벤트 주문서: 1·2·3 큰 숫자·알약→2px·색 배지 무채색(가격대 색 구분 약해짐 확인 필요) — 시안에선 접수 막아둠' },
+  { g:'form',   name:'상담 일정 확인·변경',     path:'consulting/page_change_request.html', where:'알림톡',           status:'review', mock:'consult_change_b09.html', note:'예약 정정 전표: 예약 정보 장부 줄·요청 항목 큰 번호 — 그냥 열면 오류 화면이 정상' },
+  { g:'form',   name:'상담 일정 제안',          path:'consulting/page_suggest.html',    where:'알림톡',              status:'review', mock:'consult_suggest_b09.html', note:'제안표: 날짜 굵게│시간 큰 얇은 숫자·달력 제안일 검은 칸 — 그냥 열면 오류 화면이 정상' },
+  { g:'form',   name:'상담 처리 결과',          path:'consulting/page_result.html',     where:'알림톡 버튼 결과',     status:'review', mock:'consult_result_b09.html', note:'결과 전표 한 장(굵은 선+굵은 제목) — TMS에서 부르는 곳을 못 찾음(옛 GAS용?) 사용 여부 확인 필요' },
+  { g:'form',   name:'직접방문 일정 변경',      path:'as/page_change_request.html',     where:'알림톡',              status:'review', mock:'as_change_b09.html', note:'방문 예약증: 방문 일시만 크게·변경 시트 01 날짜/02 시간 — 그냥 열면 오류 화면이 정상' }
 ];
 /* ─────────────────── */
 

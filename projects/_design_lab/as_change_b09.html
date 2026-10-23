@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>시안 B-09 · 직접방문 일정 변경</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css" rel="stylesheet">
+<style>
+  :root{
+    --void:#1A1A1A; --ink:#2D2D2D; --mute:#8A8580; --line:#EDEBE8;
+    --soft:#D4D0CB; --shell:#F5F3F0; --cream:#FAF9F7;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--shell); color:var(--void);
+    font-family:'Pretendard',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6;}
+  .wrap{max-width:460px; margin:0 auto; padding:24px 18px 60px; min-height:100vh;}
+  .brand{font-family:'Outfit',sans-serif; font-weight:900; letter-spacing:.14em; font-size:13px; color:var(--void); text-align:center; margin-bottom:22px;}
+  .brand .mm-wordmark{display:block; height:10px; width:auto; margin:0 auto;}  /* 로고 = AGRESSIVE 워드마크(SVG) — 원본 projects/brand/img/mamoru-wordmark.svg */
+  .card{background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px 20px; margin-bottom:14px;}
+  .card h1{font-size:18px; font-weight:800; letter-spacing:-.01em; margin-bottom:16px;}
+  .row{display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:14px;}
+  .row:last-child{border-bottom:0;}
+  .row .k{color:var(--mute); flex:0 0 auto;}
+  .row .v{color:var(--ink); font-weight:600; text-align:right;}
+  .btns{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .btn{display:block; width:100%; text-align:center; padding:15px; border-radius:12px; font-size:15px; font-weight:700; border:1px solid var(--void); cursor:pointer; transition:.15s; background:#fff; color:var(--void); font-family:inherit;}
+  .btn.primary{background:var(--void); color:var(--cream);}
+  .btn.ghost{border-color:var(--line); color:var(--mute);}
+  .btn:active{transform:scale(.985);}
+  .btn:disabled{opacity:.4; cursor:default;}
+  .hint{font-size:12.5px; color:var(--mute); text-align:center; margin-top:14px; line-height:1.7;}
+  .hidden{display:none !important;}
+  .center{text-align:center;}
+  .done{background:var(--shell); border:1px solid var(--soft); text-align:center; padding:40px 22px;}
+  .done .em{font-size:30px; margin-bottom:12px;}
+  .done h2{font-size:19px; font-weight:800; margin-bottom:10px;}
+  .done p{font-size:14px; color:var(--ink); line-height:1.7;}
+  /* 모달 */
+  .overlay{position:fixed; inset:0; background:rgba(26,26,26,.5); display:flex; align-items:flex-end; justify-content:center; z-index:50; padding:0;}
+  .sheet{background:var(--cream); width:100%; max-width:460px; border-radius:20px 20px 0 0; padding:24px 20px calc(24px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;}
+  .sheet h2{font-size:17px; font-weight:800; margin-bottom:4px;}
+  .sheet .sub{font-size:13px; color:var(--mute); margin-bottom:18px;}
+  label.fld{display:block; font-size:12.5px; color:var(--mute); font-weight:600; margin:14px 0 7px;}
+  input[type=date]{width:100%; font-family:inherit; font-size:15px; padding:12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--void);}
+  .slots{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:4px;}
+  .slot{padding:11px 6px; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:14px; font-weight:600; color:var(--void); cursor:pointer; text-align:center; font-family:inherit;}
+  .slot:disabled{opacity:.32; text-decoration:line-through; cursor:default;}
+  .slot.on{background:var(--void); color:var(--cream); border-color:var(--void);}
+  .slot-empty{grid-column:1/-1; text-align:center; color:var(--mute); font-size:13px; padding:18px 0;}
+  .warn{font-size:12.5px; color:#b45309; background:#fef3c7; border-radius:8px; padding:9px 12px; margin-top:12px; line-height:1.6;}
+</style>
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 알림톡 링크 · 예약 확인/변경 폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 예약 전표(방문 예약증)처럼 정확하게 / 시그니처: 굵은 제목 + 키:값 전표 행(방문 일시만 크게·tabular 숫자)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(시트 4px) · 버튼 높이·슬롯 크기·달력 그대로 · 히어로 사진 없음 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+:root{ --mist:#B8B4AF; --stone:#4A4A4A; --sand:#D4D0CB; }
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+html,body{ background:var(--cream); word-break:keep-all; }
+
+/* ── 1. 카드 → 가는 선 묶음 (흰 판·16px 모서리 제거) ── */
+.card{ background:transparent; border:0; border-top:1px solid var(--void); border-radius:0; padding:22px 0 8px; }
+.card.center{ border-top-color:var(--sand); }
+/* 제목 — 영문 머리말(얇은 라벨) + 굵은 900 제목 */
+.card h1{ font-size:clamp(24px,7vw,30px); font-weight:900; letter-spacing:-.04em; line-height:1.2; margin-bottom:18px; }
+.card h1::before{ content:'RESERVATION'; display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--mute); margin-bottom:10px; }
+
+/* ── 2. 시그니처 — 전표 행: 키는 작게, 값은 굵게 · 방문 일시만 크게 ── */
+.row{ padding:12px 0; border-bottom:1px solid var(--soft); align-items:baseline; }
+.row:last-child{ border-bottom:1px solid var(--soft); }
+.row .k{ font-size:13px; }
+.row .v{ font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; }
+.row:has(#f-when){ padding:16px 0; }
+.row:has(#f-when) .v{ font-size:clamp(17px,4.8vw,20px); font-weight:900; letter-spacing:-.02em; }
+.row:has(#f-asid) .v{ font-family:'Outfit','Pretendard',sans-serif; font-weight:600; letter-spacing:.02em; }
+
+/* ── 3. 버튼 — 12px → 2px (높이·패딩 그대로) ── */
+.btn{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+.btn.ghost{ border-color:var(--soft); }
+.hint{ text-wrap:pretty; }
+
+/* ── 4. 상태 화면(오류·변경 불가·완료) — 가는 선 묶음, 굵은 제목 ── */
+.done{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--soft); border-radius:0; padding:44px 4px; }
+.done h2{ font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; }
+.done p{ text-wrap:pretty; }
+.done p b{ display:inline-block; margin-top:6px; font-size:18px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+
+/* ── 5. 일정 변경·취소 시트 — 20px → 4px, 항목 거대 번호(01 날짜 / 02 시간) ── */
+.sheet{ border-radius:4px 4px 0 0; counter-reset:b-fld; }
+.sheet h2{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+label.fld{ counter-increment:b-fld; font-size:14px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin:20px 0 10px; padding-top:16px; border-top:1px solid var(--soft); }
+label.fld::before{ content:counter(b-fld, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:32px; font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+input[type=date]{ border-radius:2px; border-color:var(--soft); }
+input[type=date]:focus{ outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+.slot{ border-radius:2px; border-color:var(--soft); font-variant-numeric:tabular-nums; }
+.slot.on{ font-weight:800; }
+/* 경고 — 노란 상자 → 왼쪽 검은 선(모노크롬) */
+.warn{ background:transparent; color:var(--void); font-weight:600; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/as/page_change_request.html 에 B-09 덧입힘(문구·버튼·달력·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 직접방문 일정 변경(알림톡). 문구·버튼은 같고 디자인만 다릅니다. 실제 링크(알림톡 uid)로 열면 고객 예약이 보입니다 — 시안을 그냥 열면 「확인할 수 없어요」 화면입니다.</span>
+    <a href="https://page.mamoru.kr/projects/as/page_change_request.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<div class="wrap">
+  <div class="brand"><svg class="mm-wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="3.19 205.21 315.73 34.01" role="img" aria-label="MAMORU"><path fill="currentColor" d="M3.21875 205.211H10.958C12.1787 205.211 13.0739 205.805 13.6436 206.993C13.8063 207.237 14.8561 209.052 16.793 212.437C19.6087 217.304 22.4652 222.244 25.3623 227.257C25.4762 227.452 25.8506 228.095 26.4854 229.185H26.5098C26.6074 229.006 27.9258 226.719 30.4648 222.325C34.2083 215.88 36.1777 212.462 36.373 212.071C36.5358 211.827 37.6182 209.963 39.6201 206.48C39.9945 205.943 40.4746 205.569 41.0605 205.357C41.3372 205.26 41.6872 205.211 42.1104 205.211H49.7764C49.7926 205.211 49.8008 205.219 49.8008 205.235V236.314C49.8008 237.437 49.3206 238.284 48.3604 238.853C47.9372 239.097 47.4977 239.219 47.042 239.219H41.0605C41.0443 239.219 41.0361 239.211 41.0361 239.195V221.568C40.7106 222.105 39.0179 225.027 35.958 230.333L32.2471 236.754C31.6611 237.584 30.8962 237.999 29.9521 237.999H23.043C22.1315 237.999 21.3828 237.608 20.7969 236.827C20.6992 236.697 19.7389 235.037 17.916 231.846C17.8021 231.667 16.443 229.324 13.8389 224.815C12.9111 223.204 12.2845 222.122 11.959 221.568V239.195C11.959 239.211 11.9508 239.219 11.9346 239.219H5.95312C5.1556 239.219 4.45573 238.886 3.85352 238.219C3.41406 237.681 3.19434 237.095 3.19434 236.461V205.235C3.19434 205.219 3.20247 205.211 3.21875 205.211ZM77.6055 205.211H84.7588C86.2074 205.211 87.4199 205.813 88.3965 207.017C88.6569 207.375 88.9824 207.929 89.373 208.677C89.4382 208.775 89.4951 208.873 89.5439 208.97C89.6904 209.198 90.9437 211.396 93.3037 215.562C93.971 216.75 94.736 218.101 95.5986 219.615C100.953 229.071 103.704 233.905 103.851 234.117L106.707 239.219H99.1875C97.2018 239.219 95.737 238.284 94.793 236.412C94.1257 235.273 93.6374 234.426 93.3281 233.873C93.0677 233.401 92.9212 233.149 92.8887 233.116H69.5488C69.5163 233.116 69.4756 233.132 69.4268 233.165C69.3942 233.197 69.3698 233.262 69.3535 233.36L67.1562 237.218C66.1634 238.552 64.8451 239.219 63.2012 239.219H55.7549C55.7223 239.219 55.7061 239.219 55.7061 239.219C55.7061 239.203 55.7061 239.187 55.7061 239.171C59.3031 232.807 62.4362 227.289 65.1055 222.618C67.2214 218.891 68.9303 215.88 70.2324 213.585C72.2507 210.02 73.3086 208.165 73.4062 208.018C73.6667 207.53 73.9434 207.099 74.2363 206.724C75.1803 205.715 76.3034 205.211 77.6055 205.211ZM81.1943 212.462L73.5527 225.914H88.8359C83.8392 217.157 81.292 212.673 81.1943 212.462ZM112.734 205.211H120.474C121.694 205.211 122.59 205.805 123.159 206.993C123.322 207.237 124.372 209.052 126.309 212.437C129.124 217.304 131.981 222.244 134.878 227.257C134.992 227.452 135.366 228.095 136.001 229.185H136.025C136.123 229.006 137.441 226.719 139.98 222.325C143.724 215.88 145.693 212.462 145.889 212.071C146.051 211.827 147.134 209.963 149.136 206.48C149.51 205.943 149.99 205.569 150.576 205.357C150.853 205.26 151.203 205.211 151.626 205.211H159.292C159.308 205.211 159.316 205.219 159.316 205.235V236.314C159.316 237.437 158.836 238.284 157.876 238.853C157.453 239.097 157.013 239.219 156.558 239.219H150.576C150.56 239.219 150.552 239.211 150.552 239.195V221.568C150.226 222.105 148.534 225.027 145.474 230.333L141.763 236.754C141.177 237.584 140.412 237.999 139.468 237.999H132.559C131.647 237.999 130.898 237.608 130.312 236.827C130.215 236.697 129.255 235.037 127.432 231.846C127.318 231.667 125.959 229.324 123.354 224.815C122.427 223.204 121.8 222.122 121.475 221.568V239.195C121.475 239.211 121.466 239.219 121.45 239.219H115.469C114.671 239.219 113.971 238.886 113.369 238.219C112.93 237.681 112.71 237.095 112.71 236.461V205.235C112.71 205.219 112.718 205.211 112.734 205.211ZM181.945 205.211H199.45C202.396 205.211 205.147 206.098 207.702 207.872C208.125 208.132 208.654 208.555 209.289 209.141C209.387 209.223 209.493 209.312 209.606 209.41C210.404 210.321 210.982 211.021 211.34 211.51C213.049 214.032 213.903 216.816 213.903 219.859V224.571C213.903 228.168 212.74 231.366 210.412 234.166C209.68 234.963 209.077 235.533 208.605 235.875C207.792 236.558 206.953 237.12 206.091 237.559C203.975 238.666 201.745 239.219 199.401 239.219H181.994C178.853 239.219 175.956 238.251 173.303 236.314C172.863 235.972 172.245 235.411 171.447 234.63C170.65 233.767 170.104 233.067 169.812 232.53C168.265 230.137 167.492 227.517 167.492 224.669V219.761C167.492 216.425 168.558 213.398 170.69 210.679C171 210.321 171.504 209.768 172.204 209.019C172.904 208.417 173.506 207.969 174.011 207.677C176.501 206.033 179.146 205.211 181.945 205.211ZM176.306 219.981V224.425C176.306 225.629 176.558 226.63 177.062 227.427C177.16 227.72 177.453 228.135 177.941 228.673C179.097 229.844 180.497 230.43 182.141 230.43H199.255C201.159 230.43 202.705 229.657 203.894 228.111C204.235 227.672 204.504 227.224 204.699 226.768C204.96 226.134 205.09 225.32 205.09 224.327V220.177C205.09 219.119 204.976 218.329 204.748 217.808C204.243 216.523 203.397 215.53 202.209 214.83C201.314 214.293 200.345 214.024 199.304 214.024H182.092C180.204 214.024 178.641 214.822 177.404 216.417C177.062 216.905 176.826 217.336 176.696 217.711C176.436 218.313 176.306 219.07 176.306 219.981ZM225.155 205.211H249.911C253.248 205.211 256.129 205.732 258.554 206.773C259.042 206.969 259.424 207.131 259.701 207.261C260.108 207.489 260.539 207.758 260.995 208.067C263.16 209.385 264.698 211.249 265.609 213.658C266.098 214.944 266.342 216.311 266.342 217.76V218.077C266.342 219.818 265.976 221.462 265.243 223.009C265.015 223.448 264.73 223.936 264.389 224.473C264.096 224.864 263.746 225.279 263.339 225.719C263.144 225.946 262.948 226.15 262.753 226.329L262.509 226.573L262.313 226.719L261.947 227.012C261.654 227.224 261.288 227.468 260.849 227.745C260.784 227.777 260.718 227.818 260.653 227.867C260.214 228.095 259.815 228.298 259.457 228.477C259.278 228.559 259.107 228.64 258.944 228.721C258.31 228.982 257.642 229.218 256.942 229.429C258.961 231.513 260.344 233.026 261.093 233.97C261.597 234.54 262.094 235.102 262.582 235.655C263.51 236.729 264.397 237.73 265.243 238.658C265.504 238.902 265.658 239.073 265.707 239.171H255.16C254.558 239.171 254.086 239.106 253.744 238.975C253.646 238.927 253.557 238.878 253.476 238.829C253.394 238.78 253.305 238.723 253.207 238.658C252.865 238.43 252.483 238.048 252.06 237.51C250.513 235.671 248.878 233.661 247.152 231.48L246.298 230.382C246.249 230.382 246.151 230.398 246.005 230.43C244.996 230.43 241.96 230.447 236.898 230.479H230.697V236.021C230.697 237.063 230.25 237.942 229.354 238.658C228.817 239.032 228.199 239.219 227.499 239.219H221.908V208.629C221.908 208.075 221.973 207.636 222.104 207.31C222.169 207.115 222.283 206.887 222.445 206.627C222.559 206.464 222.698 206.309 222.86 206.163C223.544 205.528 224.309 205.211 225.155 205.211ZM230.697 214.024V221.715H250.692C252.255 221.715 253.443 221.446 254.257 220.909C254.843 220.535 255.274 220.038 255.551 219.42C255.779 218.948 255.893 218.411 255.893 217.808C255.893 216.62 255.347 215.627 254.257 214.83C254.094 214.716 253.923 214.618 253.744 214.537C253.695 214.521 253.646 214.496 253.598 214.464C253.305 214.317 252.857 214.187 252.255 214.073C252.06 214.073 251.791 214.057 251.449 214.024H230.697ZM286.725 239.219C285.471 239.171 284.552 239.122 283.966 239.073C283.51 239.073 282.59 238.918 281.207 238.609C280.165 238.349 279.368 238.088 278.814 237.828C278.049 237.486 277.285 236.965 276.52 236.265C274.518 234.475 273.517 231.326 273.517 226.817L273.712 209.581C273.712 208.425 274.029 207.473 274.664 206.724C275.543 205.715 276.609 205.211 277.862 205.211H282.721V227.965C282.721 228.225 282.786 228.51 282.916 228.819C283.355 229.714 284.023 230.162 284.918 230.162H307.525C308.176 230.162 308.738 229.877 309.21 229.307C309.552 228.966 309.723 228.42 309.723 227.672V205.26C309.723 205.243 309.723 205.235 309.723 205.235C309.723 205.219 309.739 205.211 309.771 205.211H314.605C315.159 205.211 315.696 205.333 316.217 205.577C317.226 206 317.958 206.733 318.414 207.774C318.561 208.165 318.658 208.564 318.707 208.97C318.854 219.648 318.927 225.662 318.927 227.012C318.927 229.47 318.577 231.602 317.877 233.409C317.698 233.881 317.429 234.402 317.071 234.971C316.534 235.753 315.867 236.436 315.069 237.022C314.402 237.445 313.718 237.795 313.019 238.072C312.319 238.365 311.269 238.634 309.869 238.878C308.258 239.106 306.923 239.219 305.865 239.219H286.725Z"/></svg></div>
+
+  <!-- 로딩 -->
+  <div id="loading" class="card center"><p style="color:var(--mute);font-size:14px;padding:20px 0;">예약 정보를 불러오는 중…</p></div>
+
+  <!-- 오류 -->
+  <div id="error" class="card done hidden"><div class="em">🔒</div><h2>확인할 수 없어요</h2><p id="error-msg">잘못된 접근이거나 만료된 링크입니다.</p></div>
+
+  <!-- 이미 취소/완료/불가 -->
+  <div id="closed" class="card done hidden"><div class="em">ℹ️</div><h2 id="closed-title">변경할 수 없어요</h2><p id="closed-msg"></p>
+    <div class="btns"><button class="btn ghost" onclick="closeInapp()">닫기</button></div></div>
+
+  <!-- 예약 정보 + 액션 -->
+  <div id="main" class="hidden">
+    <div class="card">
+      <h1>매장 방문 수리 예약</h1>
+      <div class="row"><span class="k">예약자</span><span class="v" id="f-name">-</span></div>
+      <div class="row"><span class="k">방문 일시</span><span class="v" id="f-when">-</span></div>
+      <div class="row"><span class="k">수리 수량</span><span class="v" id="f-qty">-</span></div>
+      <div class="row"><span class="k">접수번호</span><span class="v" id="f-asid">-</span></div>
+      <div class="btns">
+        <button class="btn primary" id="btn-change" onclick="openResched()">일정 변경하기</button>
+        <button class="btn" id="btn-cancel" onclick="openCancel()">예약 취소하기</button>
+      </div>
+      <p class="hint">방문 전까지 언제든 <span class="b-nw">변경·취소하실 수 있어요</span><br>변경 시 알림톡으로 안내드립니다</p>
+    </div>
+  </div>
+
+  <!-- 완료 화면 -->
+  <div id="done-resched" class="card done hidden"><div class="em">✅</div><h2>일정이 변경되었어요</h2><p id="done-resched-msg"></p>
+    <div class="btns"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div></div>
+  <div id="done-cancel" class="card done hidden"><div class="em">✅</div><h2>예약이 취소되었어요</h2>
+    <p>다음에 더 좋은 상태로 뵙기를 바랄게요<br>수리가 다시 필요하시면 언제든 신청해 주세요</p>
+    <div class="btns"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div></div>
+</div>
+
+<!-- 일정변경 모달 -->
+<div id="m-resched" class="overlay hidden">
+  <div class="sheet">
+    <h2>일정 변경</h2>
+    <p class="sub">원하시는 날짜와 시간을 선택해 주세요</p>
+    <label class="fld">방문 날짜</label>
+    <input type="date" id="r-date">
+    <label class="fld">방문 시간</label>
+    <div class="slots" id="r-slots"><div class="slot-empty">날짜를 먼저 선택해 주세요</div></div>
+    <div id="r-warn" class="warn hidden"></div>
+    <div class="btns">
+      <button class="btn primary" id="r-confirm" disabled onclick="submitResched()">이 시간으로 변경</button>
+      <button class="btn ghost" onclick="closeSheet('m-resched')">뒤로</button>
+    </div>
+  </div>
+</div>
+
+<!-- 취소 재확인 모달 -->
+<div id="m-cancel" class="overlay hidden">
+  <div class="sheet">
+    <h2>예약을 취소할까요?</h2>
+    <p class="sub">취소하시면 방문 예약이 사라지며, 다시 예약하셔야 해요</p>
+    <div class="btns">
+      <button class="btn" onclick="closeSheet('m-cancel')">일정 유지하기</button>
+      <button class="btn primary" id="c-confirm" onclick="submitCancel()">취소 확정하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/repair/public';
+  var params = new URLSearchParams(location.search);
+  var uid = params.get('uid') || '';
+  var RES = null;          // 예약 정보
+  var pickedTime = '';     // 선택된 슬롯
+  // 2026-09-21: 이 페이지는 '직접방문(매장)' 일정변경 전용 — 우체국 '수거 불가일'은 적용하지 않는다.
+  //   매장 휴무·시간 충돌은 /slots 가 상담 매장방문과 같은 매장 달력으로 판정한다.
+
+  function $(id){ return document.getElementById(id); }
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+
+  // ── 카카오 인앱 닫기 (검증된 패턴) ──
+  function closeInapp(){
+    var ua = navigator.userAgent || '';
+    var isKakao = /KAKAOTALK/i.test(ua);
+    var isIOS = /iPhone|iPad|iPod/i.test(ua);
+    if (isKakao){
+      location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+      setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+      setTimeout(function(){ window.close(); }, 1200);
+      return;
+    }
+    if (history.length > 1){ history.back(); return; }
+    window.close();
+  }
+
+  // ── 예약 정보 로드 ──
+  function load(){
+    if (!uid){ hide('loading'); showErr('링크가 올바르지 않습니다. URL을 확인해 주세요.'); return; }
+    fetch(API_BASE + '/reservation?uid=' + encodeURIComponent(uid))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        hide('loading');
+        if (!res.ok){ showErr(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
+        RES = res.data;
+        if (RES.status === 'cancelled'){ showClosed('이미 취소된 예약이에요', '이 예약은 취소 처리되었습니다.'); return; }
+        if (!res.canRequestChange){
+          showClosed('변경할 수 없는 예약이에요', '수리가 시작되었거나 완료된 예약은 변경·취소가 어려워요. 매장으로 문의해 주세요.');
+          return;
+        }
+        renderMain();
+      })
+      .catch(function(){ hide('loading'); showErr('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'); });
+  }
+  function showErr(msg){ $('error-msg').textContent = msg; show('error'); }
+  function showClosed(title, msg){ $('closed-title').textContent = title; $('closed-msg').textContent = msg; show('closed'); }
+
+  function fmtWhen(date, time){
+    if (!date) return '미정';
+    var d = new Date(date + 'T00:00:00+09:00');
+    var days = ['일','월','화','수','목','금','토'];
+    var s = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+    return time ? s + ' ' + time : s;
+  }
+  function renderMain(){
+    $('f-name').textContent = RES.name || '-';
+    $('f-when').textContent = fmtWhen(RES.date, RES.time);
+    $('f-qty').textContent = (RES.qty || 0) + '자루';
+    $('f-asid').textContent = RES.asId || '-';
+    show('main');
+  }
+
+  // ── 일정 변경 ──
+  function openResched(){
+    pickedTime = '';
+    $('r-confirm').disabled = true;
+    hide('r-warn');
+    var di = $('r-date');
+    var today = new Date(); today.setHours(0,0,0,0);
+    di.min = toYmd(today);
+    di.value = RES.date || toYmd(today);
+    show('m-resched');
+    loadSlots(di.value);
+    di.onchange = function(){ pickedTime=''; $('r-confirm').disabled=true; loadSlots(di.value); };
+  }
+  function toYmd(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+
+  function loadSlots(date){
+    var box = $('r-slots');
+    box.innerHTML = '<div class="slot-empty">시간을 불러오는 중…</div>';
+    fetch(API_BASE + '/slots?date=' + encodeURIComponent(date) + '&qty=' + (RES.qty || 1))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok || !res.slots || !res.slots.length){ box.innerHTML = '<div class="slot-empty">이 날짜에 가능한 시간이 없어요</div>'; return; }
+        box.innerHTML = '';
+        res.slots.forEach(function(s){
+          var b = document.createElement('button');
+          b.className = 'slot'; b.textContent = s.time; b.type = 'button';
+          // 기존 예약 시간은 선택 가능하게(같은 건이므로), 그 외 unavailable은 비활성
+          if (!s.available && !(date === RES.date && s.time === RES.time)) { b.disabled = true; }
+          b.onclick = function(){
+            box.querySelectorAll('.slot').forEach(function(x){ x.classList.remove('on'); });
+            b.classList.add('on'); pickedTime = s.time; $('r-confirm').disabled = false;
+          };
+          box.appendChild(b);
+        });
+      })
+      .catch(function(){ box.innerHTML = '<div class="slot-empty">시간을 불러오지 못했어요</div>'; });
+  }
+
+  function submitResched(){
+    var date = $('r-date').value;
+    if (!date || !pickedTime) return;
+    var btn = $('r-confirm'); btn.disabled = true; btn.textContent = '변경 중…';
+    fetch(API_BASE + '/resched', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: uid, visit_date: date, visit_time: pickedTime })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res.ok){
+        $('r-warn').textContent = res.error || '변경에 실패했어요. 다시 시도해 주세요.'; show('r-warn');
+        btn.disabled = false; btn.textContent = '이 시간으로 변경'; return;
+      }
+      closeSheet('m-resched'); hide('main');
+      $('done-resched-msg').innerHTML = '변경된 방문 일정<br><b>' + fmtWhen(date, pickedTime) + '</b>';
+      show('done-resched');
+    }).catch(function(){
+      $('r-warn').textContent = '일시적 오류입니다. 다시 시도해 주세요.'; show('r-warn');
+      btn.disabled = false; btn.textContent = '이 시간으로 변경';
+    });
+  }
+
+  // ── 취소 ──
+  function openCancel(){ show('m-cancel'); }
+  function submitCancel(){
+    var btn = $('c-confirm'); btn.disabled = true; btn.textContent = '취소 처리 중…';
+    fetch(API_BASE + '/cancel', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ uid: uid })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      closeSheet('m-cancel');
+      if (!res.ok){ btn.disabled=false; btn.textContent='취소 확정하기'; alert(res.error || '취소에 실패했어요. 매장으로 문의해 주세요.'); return; }
+      hide('main'); show('done-cancel');
+    }).catch(function(){ btn.disabled=false; btn.textContent='취소 확정하기'; alert('일시적 오류입니다. 다시 시도해 주세요.'); });
+  }
+
+  function closeSheet(id){ hide(id); }
+
+  load();
+</script>
+</body>
+</html>

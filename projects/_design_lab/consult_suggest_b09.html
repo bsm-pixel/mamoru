@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no,address=no,email=no">
+  <title>시안 B-09 · 상담 일정 제안</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      /* 캐논 토큰 (Brand Guide SSOT) */
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+      --ink: #1A1A1A; --muted: #8A8580; --line: rgba(26,26,26,0.08);
+      --primary: #1A1A1A; --accent: #1A1A1A;
+      --accent-bg: rgba(26,26,26,0.05); --accent-light: rgba(26,26,26,0.03);
+      --bg: #FAF9F7; --card: #fff; --radius: 14px;
+    }
+    html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg); color: var(--ink);
+      display: flex; justify-content: center; align-items: flex-start;
+    }
+
+    /* ── Container ── */
+    .container {
+      width: 100%; max-width: 480px; margin: 0 auto;
+      padding: 32px 20px 40px; background: var(--card);
+      min-height: 100vh;
+    }
+    @media (min-width: 480px) {
+      .container {
+        min-height: auto; border-radius: 20px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin: 20px;
+      }
+    }
+
+    /* ── Header ── */
+    .header { margin-bottom: 28px; }
+    .header h1 { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 6px; }
+    .header p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    /* ── Calendar ── */
+    .cal { margin-bottom: 24px; }
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; padding: 0 4px;
+    }
+    .cal-nav-title { font-size: 16px; font-weight: 700; }
+    .cal-nav button {
+      width: 32px; height: 32px; border: none; background: none;
+      font-size: 18px; color: var(--muted); cursor: pointer; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cal-nav button:active { background: var(--accent-light); }
+    .cal-nav button:disabled { opacity: 0.25; cursor: default; }
+    .cal-nav button:disabled:active { background: none; }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      text-align: center; gap: 2px;
+    }
+    .cal-dow {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      padding: 4px 0 8px; user-select: none;
+    }
+    .cal-day {
+      position: relative; font-size: 14px; padding: 8px 0;
+      border-radius: 10px; line-height: 1;
+      user-select: none;
+    }
+    .cal-day.outside { color: #d1d5db; }
+    .cal-day.today { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 10px; font-weight: 700; }
+    .cal-day.has-suggest { background: var(--accent-bg); font-weight: 600; cursor: pointer; }
+    .cal-day.has-suggest:active { background: rgba(26,26,26,0.12); }
+    .cal-day.has-suggest::after {
+      content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+      width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+    }
+
+    /* ── Suggest Cards ── */
+    .cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px; border: 1.5px solid var(--line);
+      border-radius: var(--radius); cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .card:active { transform: scale(0.99); }
+    .card.selected {
+      border-color: var(--accent); background: var(--accent-light);
+    }
+
+    .card-radio {
+      flex-shrink: 0; width: 22px; height: 22px;
+      border: 2px solid var(--line); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .card.selected .card-radio { border-color: var(--accent); }
+    .card.selected .card-radio::after {
+      content: ''; width: 12px; height: 12px;
+      border-radius: 50%; background: var(--accent);
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      color: var(--accent); background: var(--accent-bg);
+      padding: 2px 8px; border-radius: 8px; margin-bottom: 4px;
+    }
+    .card-datetime { font-size: 16px; font-weight: 600; line-height: 1.4; }
+    .card-time { color: var(--muted); font-size: 13px; margin-top: 1px; }
+
+    /* ── Confirm Button ── */
+    .btn-confirm {
+      width: 100%; padding: 16px; border: none; border-radius: 999px; /* Primary CTA 알약 */
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      background: var(--primary); color: #fff;
+      transition: opacity 0.15s;
+    }
+    .btn-confirm:disabled { opacity: 0.35; cursor: default; }
+    .btn-confirm:not(:disabled):active { opacity: 0.85; transform: scale(0.99); }
+
+    /* ── Divider ── */
+    .divider {
+      border: none; border-top: 1px solid var(--line);
+      margin: 28px 0 24px;
+    }
+
+    /* ── Reschedule Section ── */
+    .resched-toggle {
+      width: 100%; padding: 14px; border: 1.5px solid var(--line);
+      border-radius: var(--radius); background: none;
+      font-size: 15px; font-weight: 600; color: var(--muted);
+      cursor: pointer; text-align: center;
+      transition: border-color 0.15s;
+    }
+    .resched-toggle:active { border-color: var(--accent); }
+    .resched-toggle .arrow { display: inline-block; transition: transform 0.2s; margin-left: 6px; }
+    .resched-toggle.open .arrow { transform: rotate(180deg); }
+
+    .resched-form {
+      display: none; margin-top: 14px;
+      animation: slideDown 0.2s ease-out;
+    }
+    .resched-form.show { display: block; }
+
+    .resched-textarea {
+      width: 100%; min-height: 100px; padding: 14px;
+      border: 1.5px solid var(--line); border-radius: 12px;
+      font-family: inherit; font-size: 15px; line-height: 1.5;
+      resize: vertical; outline: none;
+      transition: border-color 0.15s;
+    }
+    .resched-textarea:focus { border-color: var(--accent); }
+    .resched-textarea::placeholder { color: #b0b0b0; }
+
+    .btn-resched {
+      width: 100%; margin-top: 12px; padding: 14px;
+      border: none; border-radius: var(--radius);
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      background: var(--muted); color: #fff;
+      transition: opacity 0.15s;
+    }
+    .btn-resched:disabled { opacity: 0.35; cursor: default; }
+    .btn-resched:not(:disabled):active { opacity: 0.85; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      display: none; align-items: center; justify-content: center;
+      z-index: 9999; backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.show { display: flex; animation: fadeIn 0.2s; }
+    .modal-content {
+      background: #fff; border-radius: 16px; padding: 28px 24px;
+      width: 88%; max-width: 320px; text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    .modal-icon { font-size: 36px; margin-bottom: 12px; }
+    .modal-content h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal-text { font-size: 14px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-actions button {
+      flex: 1; padding: 14px; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+    .btn-modal-cancel { background: #FAF9F7; color: #333; }
+    .btn-modal-ok { background: var(--primary); color: #fff; }
+    .btn-modal-ok:active, .btn-modal-cancel:active { opacity: 0.8; }
+
+    /* ── Loading / Error / Success ── */
+    .state-view {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center;
+      padding: 60px 0; min-height: 50vh;
+    }
+    .state-view h1 { font-size: 22px; margin-bottom: 8px; }
+    .state-view p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+    .state-view .btn-close {
+      margin-top: 24px; padding: 14px 32px; border: none; border-radius: var(--radius);
+      font-size: 15px; font-weight: 700; background: var(--primary); color: #fff; cursor: pointer;
+    }
+
+    .spinner { text-align: center; padding: 80px 0; color: var(--muted); font-size: 15px; }
+    .spinner::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #d1d5db; border-top-color: var(--ink);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 선택폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 출장 일정 제안표(시간표)
+     시그니처: 제안 카드 = 날짜 굵게(800) ↔ 시간 얇은 거대 숫자(Outfit 300, tabular) — 한눈에 "몇 시"가 잔상으로 남게
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(모달 4px) · 버튼·카드·입력칸 크기 유지 · 히어로 사진 없음 · 글꼴 Pretendard+Outfit만 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+:root{ --radius:2px; --card:var(--cream); --line:var(--sand); }
+body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; word-break:keep-all; -webkit-font-smoothing:antialiased; }
+@media (min-width:480px){
+  .container{ border-radius:2px; border:1px solid var(--sand); }
+}
+
+/* ── 1. 제목 — 굵은 제목(900) ↔ 얇은 안내(300) + 아래 굵은 선 ── */
+.header{ border-bottom:1px solid var(--void); padding-bottom:20px; margin-bottom:24px; }
+.header h1{ font-size:clamp(26px,7.6vw,32px); font-weight:900; line-height:1.2; letter-spacing:-.04em; margin-bottom:10px; }
+.header p{ font-size:15px; font-weight:300; color:var(--stone); }
+
+/* ── 2. 달력 — 제안 날짜 = 검정 칸, 오늘 = 테두리 ── */
+.cal-nav-title{ font-size:16px; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.cal-nav button{ border-radius:2px; color:var(--void); }
+.cal-dow{ font-size:11px; font-weight:600; letter-spacing:.08em; color:var(--warm-gray); }
+.cal-day{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.cal-day.outside{ color:var(--sand); }
+.cal-day.today{ outline:1px solid var(--void); outline-offset:-1px; border-radius:2px; }
+.cal-day.has-suggest{ background:var(--void); color:var(--cream); font-weight:700; }
+.cal-day.has-suggest:active{ background:var(--graphite); }
+.cal-day.has-suggest::after{ background:var(--cream); width:4px; height:4px; }
+
+/* ── 3. 시그니처: 제안 카드 — [라디오 | 제안 N · 날짜(굵게) | 시간(얇은 거대 숫자)] ── */
+.cards{ gap:8px; }
+.card{ border:1px solid var(--sand); border-radius:2px; padding:16px; background:var(--white); }
+.card.selected{ border-color:var(--void); background:var(--white); outline:1px solid var(--void); outline-offset:-2px; }
+.card-radio{ border:1px solid var(--mist); }
+.card-body{ display:grid; grid-template-columns:1fr auto; align-items:end; column-gap:12px; }
+.card-badge{ grid-column:1 / -1; background:transparent; color:var(--warm-gray); padding:0; border-radius:0; font-size:11px; font-weight:700; letter-spacing:.06em; margin-bottom:6px; }
+.card-datetime{ font-size:16px; font-weight:800; letter-spacing:-.02em; line-height:1.3; }
+.card-time{ margin:0; font-family:'Outfit',sans-serif; font-size:clamp(26px,7.4vw,32px); font-weight:300; line-height:.9; letter-spacing:-.04em; color:var(--void); font-variant-numeric:tabular-nums; }
+
+/* 확정 버튼 — 2px 검정 채움 (높이 그대로) */
+.btn-confirm{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+
+/* ── 4. 다른 일정 요청 — 가는 선 / 테두리 버튼 ── */
+.divider{ border-top-color:var(--sand); }
+.resched-toggle{ border:1px solid var(--sand); color:var(--stone); font-weight:700; background:transparent; }
+.resched-form > div[style]{ background:transparent !important; border-radius:0 !important; border-left:2px solid var(--void); padding:2px 0 2px 12px !important; margin-bottom:14px !important; text-wrap:balance; }  /* 스크립트가 만드는 문구라 b-nw 대신 balance로 구절 끊김 완화 */
+.resched-textarea{ border:1px solid var(--mist); border-radius:2px; background:var(--white); }
+.resched-textarea:focus{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+.btn-resched{ background:transparent; color:var(--void); border:1px solid var(--void); }
+
+/* ── 5. 모달 — 4px, 그림자 없음 → 가는 테두리 ── */
+.modal-content{ border-radius:4px; border:1px solid var(--void); }
+.modal-content h2{ font-weight:900; letter-spacing:-.03em; }
+.modal-text{ color:var(--stone); font-variant-numeric:tabular-nums; }
+#modal-confirm-text{ font-size:16px; font-weight:800; color:var(--void); }
+.modal-actions button{ border-radius:2px; }
+.btn-modal-cancel{ background:transparent; color:var(--void); border:1px solid var(--sand) !important; }
+
+/* ── 6. 상태 화면(확정 완료·재요청 완료·오류) — 왼쪽 정렬, 굵은 제목, 버튼 폭 채움 ── */
+.state-view{ align-items:stretch; justify-content:flex-start; text-align:left; border-top:1px solid var(--void); padding:40px 0; min-height:auto; }
+.state-view h1{ font-size:clamp(24px,7vw,30px); font-weight:900; letter-spacing:-.04em; line-height:1.25; margin-bottom:12px; }
+.state-view p{ color:var(--stone); text-wrap:pretty; }
+.state-view .btn-close{ width:100%; border-radius:2px; font-weight:800; }
+@media (min-width:480px){ .state-view{ border-top:0; padding-top:8px; } }  /* PC: 바깥 테두리 상자 안이라 선 중복 제거 */
+</style>
+</head>
+
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_suggest.html 에 B-09 덧입힘(문구·입력칸·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<style>/* 시안 전용(원본 반영 X): body가 가로 flex라 안내 띠가 위로 오도록 줄바꿈 */ body{flex-wrap:wrap;align-content:flex-start;}</style><div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;flex:0 0 100%;width:100%;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 출장 상담 일정 제안(알림톡 버튼). 문구·버튼은 같고 디자인만 다릅니다. 실제 링크(알림톡 버튼)로 열면 고객 데이터가 보입니다 — 이 시안 파일을 그냥 열면 빈/오류 상태입니다(정상 화면은 데모 캡처로 확인).</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_suggest.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+  <div class="container" id="root">
+    <div class="spinner" id="loader">불러오는 중</div>
+  </div>
+
+  <!-- 확정 모달 -->
+  <div id="modal-confirm" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-icon">📅</div>
+      <h2>이 일정으로 확정할까요?</h2>
+      <p class="modal-text" id="modal-confirm-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-confirm')">취소</button>
+        <button type="button" class="btn-modal-ok" id="btn-do-confirm">확정하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 재요청 모달 -->
+  <div id="modal-resched" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-icon">💬</div>
+      <h2>다른 일정을 요청할까요?</h2>
+      <p class="modal-text" id="modal-resched-text">기존 제안은 취소되고, 새로운 일정을 제안드립니다.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeModal('modal-resched')">취소</button>
+        <button type="button" class="btn-modal-ok" id="btn-do-resched">요청 보내기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Config ── */
+    var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
+    var params = new URLSearchParams(location.search);
+    var token  = params.get('t') || '';
+
+    var WEEKDAY = ['일','월','화','수','목','금','토'];
+    var suggestData = null;   // API 응답 데이터
+    var parsedSlots = [];     // { date:Date, dateStr, timeStr, dayStr, label, url, idx }
+    var selectedIdx = -1;     // 선택된 카드 index
+    var calYear = 0;
+    var calMonth = 0;         // 0-based
+    var allowedMonths = [];   // [{ y, m }] 제안이 있는 월 목록
+
+    /* ── Data Load ── */
+    fetch(API_BASE + '/suggest-data?t=' + encodeURIComponent(token))
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok || !res.data) { showError(res.error || '유효하지 않거나 만료된 링크입니다.'); return; }
+        suggestData = res.data;
+        parseSlots(res.data.buttons);
+        render(res.data);
+      })
+      .catch(function(){ showError('데이터를 불러올 수 없습니다. 잠시 후 다시 시도해주세요.'); });
+
+    /* ── Parse suggestion slots ── */
+    function parseSlots(buttons) {
+      parsedSlots = [];
+      var monthSet = {};
+      buttons.forEach(function(b, i) {
+        var m = b.label.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);
+        if (!m) return;
+        var d = new Date(m[1] + '-' + m[2] + '-' + m[3]);
+        var dateStr = m[1] + '-' + m[2] + '-' + m[3];
+        var timeStr = m[4];
+        var dayStr = WEEKDAY[d.getDay()];
+        parsedSlots.push({
+          date: d, dateStr: dateStr, timeStr: timeStr, dayStr: dayStr,
+          label: m[1] + '.' + m[2] + '.' + m[3] + ' (' + dayStr + ') ' + timeStr,
+          url: b.url, idx: i
+        });
+        var key = d.getFullYear() + '-' + d.getMonth();
+        if (!monthSet[key]) {
+          monthSet[key] = true;
+          allowedMonths.push({ y: d.getFullYear(), m: d.getMonth() });
+        }
+      });
+      // 첫 제안 월을 캘린더 초기값으로
+      if (allowedMonths.length > 0) {
+        calYear = allowedMonths[0].y;
+        calMonth = allowedMonths[0].m;
+      }
+    }
+
+    /* ── Render Main ── */
+    function render(data) {
+      var root = document.getElementById('root');
+      root.innerHTML =
+        '<div class="header">' +
+          '<h1>출장 상담 일정 제안</h1>' +
+          '<p>' + escHtml(data.name) + '님을 위한 일정입니다</p>' +
+        '</div>' +
+        '<div id="cal-wrap" class="cal"></div>' +
+        '<div id="cards" class="cards"></div>' +
+        '<button type="button" id="btn-confirm" class="btn-confirm" disabled>일정을 선택해주세요</button>' +
+        '<hr class="divider">' +
+        '<button type="button" id="resched-toggle" class="resched-toggle">' +
+          '다른 일정 요청하기 <span class="arrow">▾</span>' +
+        '</button>' +
+        '<div id="resched-form" class="resched-form">' +
+          '<div style="background:#EDEBE8;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#4A4A4A;line-height:1.5">' +
+            '스케줄 조율이 필요하여 다음 제안까지 시일이 소요될 수 있습니다' +
+          '</div>' +
+          '<textarea id="resched-reason" class="resched-textarea" placeholder="희망하시는 날짜/시간대나 요청사항을 적어주세요" maxlength="500"></textarea>' +
+          '<button type="button" id="btn-resched" class="btn-resched" disabled>재요청 보내기</button>' +
+        '</div>';
+
+      renderCalendar();
+      renderCards();
+      bindEvents();
+    }
+
+    /* ── Calendar ── */
+    function renderCalendar() {
+      var wrap = document.getElementById('cal-wrap');
+      var canPrev = canNavMonth(-1);
+      var canNext = canNavMonth(1);
+      var monthLabel = calYear + '년 ' + (calMonth + 1) + '월';
+
+      var html =
+        '<div class="cal-nav">' +
+          '<button type="button" id="cal-prev"' + (canPrev ? '' : ' disabled') + '>‹</button>' +
+          '<span class="cal-nav-title">' + monthLabel + '</span>' +
+          '<button type="button" id="cal-next"' + (canNext ? '' : ' disabled') + '>›</button>' +
+        '</div>' +
+        '<div class="cal-grid">';
+
+      // 요일 헤더
+      WEEKDAY.forEach(function(d){ html += '<div class="cal-dow">' + d + '</div>'; });
+
+      // 날짜 셀 계산
+      var firstDay = new Date(calYear, calMonth, 1).getDay();
+      var lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+      var prevLastDate = new Date(calYear, calMonth, 0).getDate();
+
+      var today = new Date();
+      var todayStr = today.getFullYear() + '-' + pad2(today.getMonth() + 1) + '-' + pad2(today.getDate());
+
+      // 제안 날짜 Set
+      var suggestDateSet = {};
+      parsedSlots.forEach(function(s){ suggestDateSet[s.dateStr] = true; });
+
+      // 이전 달 빈칸
+      for (var i = firstDay - 1; i >= 0; i--) {
+        html += '<div class="cal-day outside">' + (prevLastDate - i) + '</div>';
+      }
+      // 이번 달
+      for (var d = 1; d <= lastDate; d++) {
+        var ds = calYear + '-' + pad2(calMonth + 1) + '-' + pad2(d);
+        var cls = 'cal-day';
+        if (ds === todayStr) cls += ' today';
+        if (suggestDateSet[ds]) cls += ' has-suggest';
+        html += '<div class="' + cls + '" data-date="' + ds + '">' + d + '</div>';
+      }
+      // 다음 달 빈칸 (6줄 채우기)
+      var totalCells = firstDay + lastDate;
+      var rows = Math.ceil(totalCells / 7);
+      var remaining = rows * 7 - totalCells;
+      for (var j = 1; j <= remaining; j++) {
+        html += '<div class="cal-day outside">' + j + '</div>';
+      }
+
+      html += '</div>';
+      wrap.innerHTML = html;
+
+      // 캘린더 이벤트
+      document.getElementById('cal-prev').addEventListener('click', function(){ navMonth(-1); });
+      document.getElementById('cal-next').addEventListener('click', function(){ navMonth(1); });
+
+      // 제안 날짜 클릭 시 해당 카드 선택
+      wrap.querySelectorAll('.cal-day.has-suggest').forEach(function(el){
+        el.addEventListener('click', function(){
+          var dt = el.getAttribute('data-date');
+          // 해당 날짜의 첫 번째 슬롯 선택
+          for (var k = 0; k < parsedSlots.length; k++) {
+            if (parsedSlots[k].dateStr === dt) { selectCard(k); return; }
+          }
+        });
+      });
+    }
+
+    function canNavMonth(dir) {
+      var ny = calYear, nm = calMonth + dir;
+      if (nm < 0) { ny--; nm = 11; }
+      if (nm > 11) { ny++; nm = 0; }
+      for (var i = 0; i < allowedMonths.length; i++) {
+        if (allowedMonths[i].y === ny && allowedMonths[i].m === nm) return true;
+      }
+      return false;
+    }
+
+    function navMonth(dir) {
+      var ny = calYear, nm = calMonth + dir;
+      if (nm < 0) { ny--; nm = 11; }
+      if (nm > 11) { ny++; nm = 0; }
+      calYear = ny; calMonth = nm;
+      renderCalendar();
+    }
+
+    /* ── Cards ── */
+    function renderCards() {
+      var wrap = document.getElementById('cards');
+      var html = '';
+      parsedSlots.forEach(function(s, i) {
+        var sel = i === selectedIdx ? ' selected' : '';
+        // 날짜 표시: 2월 15일 (토)
+        var parts = s.dateStr.split('-');
+        var dateDisplay = parseInt(parts[1], 10) + '월 ' + parseInt(parts[2], 10) + '일 (' + s.dayStr + ')';
+
+        html +=
+          '<div class="card' + sel + '" data-idx="' + i + '">' +
+            '<div class="card-radio"></div>' +
+            '<div class="card-body">' +
+              '<span class="card-badge">제안 ' + (i + 1) + '</span>' +
+              '<div class="card-datetime">' + dateDisplay + '</div>' +
+              '<div class="card-time">' + s.timeStr + '</div>' +
+            '</div>' +
+          '</div>';
+      });
+      wrap.innerHTML = html;
+    }
+
+    function selectCard(idx) {
+      selectedIdx = idx;
+      // 카드 UI 업데이트
+      document.querySelectorAll('.card').forEach(function(el, i){
+        el.classList.toggle('selected', i === idx);
+      });
+      // 버튼 활성화
+      var btn = document.getElementById('btn-confirm');
+      btn.disabled = false;
+      btn.textContent = '이 일정으로 확정';
+      // 해당 월로 캘린더 이동
+      var slot = parsedSlots[idx];
+      if (slot) {
+        var sy = slot.date.getFullYear();
+        var sm = slot.date.getMonth();
+        if (sy !== calYear || sm !== calMonth) {
+          calYear = sy; calMonth = sm;
+          renderCalendar();
+        }
+      }
+    }
+
+    /* ── Bind Events ── */
+    function bindEvents() {
+      // 카드 선택
+      document.getElementById('cards').addEventListener('click', function(e){
+        var card = e.target.closest('.card');
+        if (!card) return;
+        selectCard(parseInt(card.getAttribute('data-idx'), 10));
+      });
+
+      // 확정 버튼
+      document.getElementById('btn-confirm').addEventListener('click', function(){
+        if (selectedIdx < 0) return;
+        var slot = parsedSlots[selectedIdx];
+        var parts = slot.dateStr.split('-');
+        var display = parseInt(parts[1], 10) + '월 ' + parseInt(parts[2], 10) + '일 (' + slot.dayStr + ') ' + slot.timeStr;
+        document.getElementById('modal-confirm-text').textContent = display;
+        showModal('modal-confirm');
+      });
+
+      // 재요청 토글
+      document.getElementById('resched-toggle').addEventListener('click', function(){
+        this.classList.toggle('open');
+        document.getElementById('resched-form').classList.toggle('show');
+      });
+
+      // 재요청 textarea → 버튼 활성화
+      document.getElementById('resched-reason').addEventListener('input', function(){
+        document.getElementById('btn-resched').disabled = this.value.trim().length === 0;
+      });
+
+      // 재요청 버튼
+      document.getElementById('btn-resched').addEventListener('click', function(){
+        var reason = document.getElementById('resched-reason').value.trim();
+        if (!reason) return;
+        document.getElementById('modal-resched-text').textContent =
+          '기존 제안은 취소되고,\n새로운 일정을 제안드립니다.';
+        showModal('modal-resched');
+      });
+    }
+
+    /* ── Modal Confirm Actions ── */
+    document.getElementById('btn-do-confirm').addEventListener('click', function(){
+      closeModal('modal-confirm');
+      if (selectedIdx < 0) return;
+      var slot = parsedSlots[selectedIdx];
+      showSuccess();
+      fireAndForget(slot.url);
+    });
+
+    document.getElementById('btn-do-resched').addEventListener('click', function(){
+      closeModal('modal-resched');
+      var reason = document.getElementById('resched-reason').value.trim();
+      showReschedSuccess();
+      var url = API_BASE + '/resched?t=' + encodeURIComponent(token) +
+                '&reason=' + encodeURIComponent(reason);
+      fireAndForget(url);
+    });
+
+    /* ── Modal Helpers ── */
+    function showModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    /* ── Success States ── */
+    function showSuccess() {
+      document.getElementById('root').innerHTML =
+        '<div class="state-view">' +
+          '<h1>예약 확정 완료!</h1>' +
+          '<p>일정이 확정되었습니다.</p>' +
+          '<p style="margin-top:6px;">잠시 후 알림톡을 보내드립니다.</p>' +
+          '<button class="btn-close" onclick="closeInapp()">닫기</button>' +
+        '</div>';
+    }
+
+    function showReschedSuccess() {
+      document.getElementById('root').innerHTML =
+        '<div class="state-view">' +
+          '<h1>재요청 완료</h1>' +
+          '<p>스케줄 조율하여<br>빠른 시일 내에 일정 제안드릴게요.</p>' +
+          '<button class="btn-close" onclick="closeInapp()">닫기</button>' +
+        '</div>';
+    }
+
+    function showError(msg) {
+      document.getElementById('root').innerHTML =
+        '<div class="state-view">' +
+          '<h1>오류</h1>' +
+          '<p>' + escHtml(msg) + '</p>' +
+        '</div>';
+    }
+
+    /* ── Fire & Forget (fetch만 사용 — Image 중복 제거) ── */
+    function fireAndForget(url) {
+      try { fetch(url, { mode: 'no-cors', keepalive: true }); } catch(_){}
+    }
+
+    /* ── 카카오 인앱 닫기 ── */
+    function closeInapp() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
+    }
+
+    /* ── Utilities ── */
+    function escHtml(s) {
+      var d = document.createElement('div');
+      d.textContent = s || '';
+      return d.innerHTML;
+    }
+    function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  </script>
+</body>
+</html>

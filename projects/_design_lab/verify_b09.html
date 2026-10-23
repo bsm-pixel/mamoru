@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>시안 B-09 · 정품확인</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+  <style>
+    :root{
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html{overflow-x:hidden;}
+    body{
+      font-family:'Pretendard',sans-serif;background:var(--cream);color:var(--void);
+      min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden;
+      display:flex;flex-direction:column;align-items:center;
+    }
+    .en{font-family:'Outfit',sans-serif;}
+
+    /* 헤더 */
+    .header{width:100%;padding:22px 0 18px;text-align:center;}
+    .header h1{font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;letter-spacing:.32em;padding-left:.32em;}
+    .header h1{padding-left:0;} .header h1 .mm-wordmark{display:block;height:14px;width:auto;margin:0 auto;}  /* 로고 = AGRESSIVE 워드마크(SVG) — 원본 projects/brand/img/mamoru-wordmark.svg */
+    .header p{font-family:'Outfit',sans-serif;font-size:10px;color:var(--warm-gray);margin-top:5px;letter-spacing:.28em;padding-left:.28em;font-weight:600;}
+
+    .wrap{width:100%;max-width:440px;padding:8px 20px 40px;}
+
+    /* 로딩 */
+    .loading{text-align:center;padding:80px 0;color:var(--warm-gray);font-size:13px;}
+    .spinner{width:30px;height:30px;border:2px solid var(--sand);border-top-color:var(--void);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ── 인증서 카드 ── */
+    .cert{background:var(--white);border:1px solid var(--parchment);border-radius:22px;overflow:hidden;box-shadow:0 8px 30px rgba(26,26,26,.05);}
+
+    /* 인증 씰 (상단, 몰입 다크 띠) */
+    .seal{background:var(--void);color:var(--cream);text-align:center;padding:clamp(30px,8vw,42px) 24px clamp(26px,6vw,34px);}
+    .seal-ring{width:64px;height:64px;border-radius:50%;border:1.5px solid rgba(250,249,247,.28);display:flex;align-items:center;justify-content:center;margin:0 auto clamp(16px,4vw,20px);}
+    .seal-mark{width:40px;height:40px;border-radius:50%;background:var(--cream);color:var(--void);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;}
+    .seal-title{font-size:clamp(19px,5vw,22px);font-weight:800;letter-spacing:-.01em;}
+    .seal-sub{font-size:clamp(12px,3.2vw,13px);color:rgba(250,249,247,.6);margin-top:7px;}
+
+    /* 제품 히어로 (인증의 주인공) */
+    .hero{text-align:center;padding:clamp(28px,7vw,38px) 24px clamp(22px,5vw,28px);}
+    .hero-eyebrow{font-family:'Outfit',sans-serif;font-weight:700;font-size:10px;letter-spacing:.24em;padding-left:.24em;color:var(--mist);margin-bottom:clamp(12px,3vw,16px);}
+    .hero-name{font-family:'Outfit','Pretendard',sans-serif;font-weight:800;font-size:clamp(30px,9vw,42px);letter-spacing:-.02em;line-height:1.1;color:var(--void);word-break:break-word;}
+    .hero-desc{font-size:clamp(13px,3.4vw,14px);color:var(--warm-gray);margin-top:clamp(12px,3vw,15px);line-height:1.7;max-width:320px;margin-left:auto;margin-right:auto;}
+
+    /* 상세 — hairline 로우 */
+    .rows{padding:0 24px;}
+    .rows-inner{border-top:1px solid var(--parchment);}
+    .row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:clamp(15px,3.6vw,18px) 0;border-bottom:1px solid var(--parchment);}
+    .row .k{font-size:12.5px;color:var(--warm-gray);white-space:nowrap;}
+    .row .v{font-size:clamp(14px,3.6vw,15px);font-weight:600;color:var(--graphite);text-align:right;}
+    .row .v.en{font-family:'Outfit',sans-serif;letter-spacing:.01em;}
+
+    /* 혜택 + 자가진단 */
+    .care{padding:clamp(22px,5vw,28px) 24px clamp(26px,6vw,32px);}
+    .care-box{background:var(--shell);border-radius:16px;padding:clamp(18px,4.5vw,22px);}
+    .care-h{font-family:'Outfit',sans-serif;font-weight:700;font-size:10px;letter-spacing:.18em;padding-left:.18em;color:var(--warm-gray);margin-bottom:13px;}
+    .care-item{font-size:clamp(13.5px,3.6vw,14.5px);color:var(--graphite);line-height:1.75;}
+    .care-item b{color:var(--void);font-weight:700;}
+    .self-cta{display:block;text-align:center;margin-top:16px;padding:14px;border-radius:12px;background:var(--void);color:var(--cream);font-size:14px;font-weight:700;text-decoration:none;transition:.15s;}
+    .self-cta:active{transform:scale(.99);}
+
+    /* 슬로건 푸터 */
+    .foot{text-align:center;padding:clamp(24px,6vw,32px) 0 8px;}
+    .foot .slogan{font-family:'Outfit',sans-serif;font-weight:700;font-size:11px;letter-spacing:.2em;padding-left:.2em;color:var(--mist);}
+    .foot .row2{margin-top:12px;font-size:12px;color:var(--warm-gray);}
+    .foot a{color:var(--stone);text-decoration:none;font-weight:600;}
+
+    /* ── 인증 실패 ── */
+    .fail{background:var(--white);border:1px solid var(--parchment);border-radius:22px;overflow:hidden;box-shadow:0 8px 30px rgba(26,26,26,.05);}
+    .fail-top{background:var(--shell);text-align:center;padding:clamp(32px,8vw,44px) 24px;}
+    .fail-ring{width:60px;height:60px;border-radius:50%;border:1.5px solid var(--sand);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--stone);font-size:24px;font-weight:700;}
+    .fail-title{font-size:clamp(18px,5vw,21px);font-weight:800;}
+    .fail-sub{font-size:clamp(12.5px,3.3vw,13.5px);color:var(--warm-gray);margin-top:9px;line-height:1.6;max-width:300px;margin-left:auto;margin-right:auto;}
+    .fail-foot{padding:22px 24px;text-align:center;border-top:1px solid var(--parchment);}
+    .fail-foot p{font-size:12px;color:var(--warm-gray);line-height:1.7;}
+    .fail-foot a{color:var(--stone);text-decoration:none;font-weight:600;}
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 정품 인증서 = 정밀 검사 성적서(도면 용지)
+     시그니처: 인증서 모서리의 도면 재단 표시(⌐ ⌙ hairline) + 거대 제품명 + 표제란 칸(구매일 │ 구매처)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 인증 도장(원)만 원형 유지 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ word-break:keep-all; overflow-wrap:break-word; }
+.wrap{ padding-top:14px; }
+.header p{ letter-spacing:.32em; }
+
+/* ── 1. 인증서 — 검은 hairline 용지 + 대각 모서리 재단 표시 ── */
+.cert, .fail{ position:relative; overflow:visible; border-radius:2px; border:1px solid var(--void); box-shadow:none; }
+.cert::before, .cert::after, .fail::before, .fail::after{ content:''; position:absolute; width:14px; height:14px; pointer-events:none; }
+.cert::before, .fail::before{ left:-9px; top:-9px; border-left:1px solid var(--void); border-top:1px solid var(--void); }
+.cert::after, .fail::after{ right:-9px; bottom:-9px; border-right:1px solid var(--void); border-bottom:1px solid var(--void); }
+
+/* ── 2. 인증 띠 — 가운데 도장 → 왼쪽 도장 │ 오른쪽 굵은 제목 ── */
+.seal{ display:grid; grid-template-columns:auto 1fr; column-gap:16px; align-items:center; text-align:left; padding:22px 22px; }
+.seal-ring{ grid-row:1 / span 2; width:54px; height:54px; margin:0; }
+.seal-mark{ width:34px; height:34px; font-size:17px; }
+.seal-title{ align-self:end; font-size:clamp(21px,6vw,24px); font-weight:900; letter-spacing:-.04em; line-height:1.15; }
+.seal-sub{ align-self:start; margin-top:3px; color:rgba(250,249,247,.62); }
+
+/* ── 3. 제품 — 왼쪽 정렬 거대 제품명 (Type as Image) ── */
+.hero{ text-align:left; padding:30px 22px 24px; }
+.hero-eyebrow{ display:flex; align-items:center; gap:12px; padding-left:0; color:var(--warm-gray); letter-spacing:.2em; margin-bottom:16px; }
+.hero-eyebrow::after{ content:''; flex:1; height:1px; background:var(--sand); }
+.hero-name{ font-size:clamp(36px,11vw,50px); font-weight:900; letter-spacing:-.045em; line-height:1; word-break:keep-all; overflow-wrap:break-word; }  /* 한글 제품명 단어 중간 끊김 방지 */
+.hero-desc{ margin:14px 0 0; max-width:none; color:var(--stone); text-wrap:pretty; }
+
+/* ── 4. 상세 → 표제란 칸 (1칸이면 전체 폭, 2칸이면 반반) ── */
+.rows{ padding:0 22px; }
+.rows-inner{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); }
+.row{ display:block; padding:11px 0 13px; border-bottom:0; min-width:0; }
+.row + .row{ border-left:1px solid var(--sand); padding-left:14px; }
+.row .k{ display:block; font-size:10.5px; font-weight:600; letter-spacing:.04em; }
+.row .v{ display:block; margin-top:3px; text-align:left; font-size:clamp(15px,4.2vw,17px); font-weight:700; color:var(--void); font-variant-numeric:tabular-nums; }
+
+/* ── 5. 정품 등록 고객 — 회색 상자 → 가는 선 묶음, 50%만 크게 ── */
+.care{ padding:26px 22px 26px; }
+.care-box{ background:transparent; border-radius:0; padding:0; }
+.care-h{ padding-left:0; color:var(--void); font-family:'Pretendard',sans-serif; font-size:11.5px; font-weight:800; letter-spacing:.04em; margin-bottom:10px; }
+.care-item b{ font-family:'Outfit','Pretendard',sans-serif; font-size:1.3em; font-weight:900; letter-spacing:-.02em; }
+.self-cta{ border-radius:2px; padding:16px; font-weight:800; margin-top:20px; }
+
+/* ── 6. 푸터 · 실패 ── */
+.foot .slogan{ color:var(--warm-gray); }
+.fail-top{ background:transparent; border-bottom:1px solid var(--void); }
+.fail-ring{ border-color:var(--void); color:var(--void); }
+.fail-title{ font-weight:900; letter-spacing:-.04em; }
+.fail-sub{ text-wrap:pretty; }
+.fail-foot{ border-top:0; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/verify/index.html 에 B-09 덧입힘(문구·기능·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;align-self:stretch;width:100%;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 정품확인(시리얼 QR). 글자·버튼·스크립트는 같고 디자인만 다릅니다. <b style="color:#FAF9F7;">실제 QR 링크로 열면 제품 정보가 보입니다 — 시안을 그냥 열면 「확인되지 않습니다」 화면</b>이 정상입니다.</span>
+    <a href="https://page.mamoru.kr/projects/verify/" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+
+  <div class="header">
+    <h1><svg class="mm-wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="3.19 205.21 315.73 34.01" role="img" aria-label="MAMORU"><path fill="currentColor" d="M3.21875 205.211H10.958C12.1787 205.211 13.0739 205.805 13.6436 206.993C13.8063 207.237 14.8561 209.052 16.793 212.437C19.6087 217.304 22.4652 222.244 25.3623 227.257C25.4762 227.452 25.8506 228.095 26.4854 229.185H26.5098C26.6074 229.006 27.9258 226.719 30.4648 222.325C34.2083 215.88 36.1777 212.462 36.373 212.071C36.5358 211.827 37.6182 209.963 39.6201 206.48C39.9945 205.943 40.4746 205.569 41.0605 205.357C41.3372 205.26 41.6872 205.211 42.1104 205.211H49.7764C49.7926 205.211 49.8008 205.219 49.8008 205.235V236.314C49.8008 237.437 49.3206 238.284 48.3604 238.853C47.9372 239.097 47.4977 239.219 47.042 239.219H41.0605C41.0443 239.219 41.0361 239.211 41.0361 239.195V221.568C40.7106 222.105 39.0179 225.027 35.958 230.333L32.2471 236.754C31.6611 237.584 30.8962 237.999 29.9521 237.999H23.043C22.1315 237.999 21.3828 237.608 20.7969 236.827C20.6992 236.697 19.7389 235.037 17.916 231.846C17.8021 231.667 16.443 229.324 13.8389 224.815C12.9111 223.204 12.2845 222.122 11.959 221.568V239.195C11.959 239.211 11.9508 239.219 11.9346 239.219H5.95312C5.1556 239.219 4.45573 238.886 3.85352 238.219C3.41406 237.681 3.19434 237.095 3.19434 236.461V205.235C3.19434 205.219 3.20247 205.211 3.21875 205.211ZM77.6055 205.211H84.7588C86.2074 205.211 87.4199 205.813 88.3965 207.017C88.6569 207.375 88.9824 207.929 89.373 208.677C89.4382 208.775 89.4951 208.873 89.5439 208.97C89.6904 209.198 90.9437 211.396 93.3037 215.562C93.971 216.75 94.736 218.101 95.5986 219.615C100.953 229.071 103.704 233.905 103.851 234.117L106.707 239.219H99.1875C97.2018 239.219 95.737 238.284 94.793 236.412C94.1257 235.273 93.6374 234.426 93.3281 233.873C93.0677 233.401 92.9212 233.149 92.8887 233.116H69.5488C69.5163 233.116 69.4756 233.132 69.4268 233.165C69.3942 233.197 69.3698 233.262 69.3535 233.36L67.1562 237.218C66.1634 238.552 64.8451 239.219 63.2012 239.219H55.7549C55.7223 239.219 55.7061 239.219 55.7061 239.219C55.7061 239.203 55.7061 239.187 55.7061 239.171C59.3031 232.807 62.4362 227.289 65.1055 222.618C67.2214 218.891 68.9303 215.88 70.2324 213.585C72.2507 210.02 73.3086 208.165 73.4062 208.018C73.6667 207.53 73.9434 207.099 74.2363 206.724C75.1803 205.715 76.3034 205.211 77.6055 205.211ZM81.1943 212.462L73.5527 225.914H88.8359C83.8392 217.157 81.292 212.673 81.1943 212.462ZM112.734 205.211H120.474C121.694 205.211 122.59 205.805 123.159 206.993C123.322 207.237 124.372 209.052 126.309 212.437C129.124 217.304 131.981 222.244 134.878 227.257C134.992 227.452 135.366 228.095 136.001 229.185H136.025C136.123 229.006 137.441 226.719 139.98 222.325C143.724 215.88 145.693 212.462 145.889 212.071C146.051 211.827 147.134 209.963 149.136 206.48C149.51 205.943 149.99 205.569 150.576 205.357C150.853 205.26 151.203 205.211 151.626 205.211H159.292C159.308 205.211 159.316 205.219 159.316 205.235V236.314C159.316 237.437 158.836 238.284 157.876 238.853C157.453 239.097 157.013 239.219 156.558 239.219H150.576C150.56 239.219 150.552 239.211 150.552 239.195V221.568C150.226 222.105 148.534 225.027 145.474 230.333L141.763 236.754C141.177 237.584 140.412 237.999 139.468 237.999H132.559C131.647 237.999 130.898 237.608 130.312 236.827C130.215 236.697 129.255 235.037 127.432 231.846C127.318 231.667 125.959 229.324 123.354 224.815C122.427 223.204 121.8 222.122 121.475 221.568V239.195C121.475 239.211 121.466 239.219 121.45 239.219H115.469C114.671 239.219 113.971 238.886 113.369 238.219C112.93 237.681 112.71 237.095 112.71 236.461V205.235C112.71 205.219 112.718 205.211 112.734 205.211ZM181.945 205.211H199.45C202.396 205.211 205.147 206.098 207.702 207.872C208.125 208.132 208.654 208.555 209.289 209.141C209.387 209.223 209.493 209.312 209.606 209.41C210.404 210.321 210.982 211.021 211.34 211.51C213.049 214.032 213.903 216.816 213.903 219.859V224.571C213.903 228.168 212.74 231.366 210.412 234.166C209.68 234.963 209.077 235.533 208.605 235.875C207.792 236.558 206.953 237.12 206.091 237.559C203.975 238.666 201.745 239.219 199.401 239.219H181.994C178.853 239.219 175.956 238.251 173.303 236.314C172.863 235.972 172.245 235.411 171.447 234.63C170.65 233.767 170.104 233.067 169.812 232.53C168.265 230.137 167.492 227.517 167.492 224.669V219.761C167.492 216.425 168.558 213.398 170.69 210.679C171 210.321 171.504 209.768 172.204 209.019C172.904 208.417 173.506 207.969 174.011 207.677C176.501 206.033 179.146 205.211 181.945 205.211ZM176.306 219.981V224.425C176.306 225.629 176.558 226.63 177.062 227.427C177.16 227.72 177.453 228.135 177.941 228.673C179.097 229.844 180.497 230.43 182.141 230.43H199.255C201.159 230.43 202.705 229.657 203.894 228.111C204.235 227.672 204.504 227.224 204.699 226.768C204.96 226.134 205.09 225.32 205.09 224.327V220.177C205.09 219.119 204.976 218.329 204.748 217.808C204.243 216.523 203.397 215.53 202.209 214.83C201.314 214.293 200.345 214.024 199.304 214.024H182.092C180.204 214.024 178.641 214.822 177.404 216.417C177.062 216.905 176.826 217.336 176.696 217.711C176.436 218.313 176.306 219.07 176.306 219.981ZM225.155 205.211H249.911C253.248 205.211 256.129 205.732 258.554 206.773C259.042 206.969 259.424 207.131 259.701 207.261C260.108 207.489 260.539 207.758 260.995 208.067C263.16 209.385 264.698 211.249 265.609 213.658C266.098 214.944 266.342 216.311 266.342 217.76V218.077C266.342 219.818 265.976 221.462 265.243 223.009C265.015 223.448 264.73 223.936 264.389 224.473C264.096 224.864 263.746 225.279 263.339 225.719C263.144 225.946 262.948 226.15 262.753 226.329L262.509 226.573L262.313 226.719L261.947 227.012C261.654 227.224 261.288 227.468 260.849 227.745C260.784 227.777 260.718 227.818 260.653 227.867C260.214 228.095 259.815 228.298 259.457 228.477C259.278 228.559 259.107 228.64 258.944 228.721C258.31 228.982 257.642 229.218 256.942 229.429C258.961 231.513 260.344 233.026 261.093 233.97C261.597 234.54 262.094 235.102 262.582 235.655C263.51 236.729 264.397 237.73 265.243 238.658C265.504 238.902 265.658 239.073 265.707 239.171H255.16C254.558 239.171 254.086 239.106 253.744 238.975C253.646 238.927 253.557 238.878 253.476 238.829C253.394 238.78 253.305 238.723 253.207 238.658C252.865 238.43 252.483 238.048 252.06 237.51C250.513 235.671 248.878 233.661 247.152 231.48L246.298 230.382C246.249 230.382 246.151 230.398 246.005 230.43C244.996 230.43 241.96 230.447 236.898 230.479H230.697V236.021C230.697 237.063 230.25 237.942 229.354 238.658C228.817 239.032 228.199 239.219 227.499 239.219H221.908V208.629C221.908 208.075 221.973 207.636 222.104 207.31C222.169 207.115 222.283 206.887 222.445 206.627C222.559 206.464 222.698 206.309 222.86 206.163C223.544 205.528 224.309 205.211 225.155 205.211ZM230.697 214.024V221.715H250.692C252.255 221.715 253.443 221.446 254.257 220.909C254.843 220.535 255.274 220.038 255.551 219.42C255.779 218.948 255.893 218.411 255.893 217.808C255.893 216.62 255.347 215.627 254.257 214.83C254.094 214.716 253.923 214.618 253.744 214.537C253.695 214.521 253.646 214.496 253.598 214.464C253.305 214.317 252.857 214.187 252.255 214.073C252.06 214.073 251.791 214.057 251.449 214.024H230.697ZM286.725 239.219C285.471 239.171 284.552 239.122 283.966 239.073C283.51 239.073 282.59 238.918 281.207 238.609C280.165 238.349 279.368 238.088 278.814 237.828C278.049 237.486 277.285 236.965 276.52 236.265C274.518 234.475 273.517 231.326 273.517 226.817L273.712 209.581C273.712 208.425 274.029 207.473 274.664 206.724C275.543 205.715 276.609 205.211 277.862 205.211H282.721V227.965C282.721 228.225 282.786 228.51 282.916 228.819C283.355 229.714 284.023 230.162 284.918 230.162H307.525C308.176 230.162 308.738 229.877 309.21 229.307C309.552 228.966 309.723 228.42 309.723 227.672V205.26C309.723 205.243 309.723 205.235 309.723 205.235C309.723 205.219 309.739 205.211 309.771 205.211H314.605C315.159 205.211 315.696 205.333 316.217 205.577C317.226 206 317.958 206.733 318.414 207.774C318.561 208.165 318.658 208.564 318.707 208.97C318.854 219.648 318.927 225.662 318.927 227.012C318.927 229.47 318.577 231.602 317.877 233.409C317.698 233.881 317.429 234.402 317.071 234.971C316.534 235.753 315.867 236.436 315.069 237.022C314.402 237.445 313.718 237.795 313.019 238.072C312.319 238.365 311.269 238.634 309.869 238.878C308.258 239.106 306.923 239.219 305.865 239.219H286.725Z"/></svg></h1>
+    <p>AUTHENTIC VERIFICATION</p>
+  </div>
+
+  <div class="wrap">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>정품 확인 중...</p>
+    </div>
+    <div id="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://app-eta-sandy-75.vercel.app';
+
+    function esc(s){ return String(s == null ? '' : s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+    function fmtDate(iso){ try { return new Date(iso).toLocaleDateString('ko-KR', { timeZone:'Asia/Seoul' }); } catch(e){ return ''; } }
+
+    async function verify(){
+      const loadingEl = document.getElementById('loading');
+      const resultEl = document.getElementById('result');
+
+      const path = window.location.pathname.split('/').filter(Boolean);
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = path[path.length - 1] !== 'verify' ? path[path.length - 1] : urlParams.get('t');
+
+      if (!token || token === 'index.html') {
+        loadingEl.style.display = 'none';
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = renderInvalid('QR 코드를 스캔하여 접속해주세요.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/verify/${token}`);
+        const data = await res.json();
+        loadingEl.style.display = 'none';
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = data.valid ? renderValid(data) : renderInvalid(data.message || '등록되지 않은 제품입니다.');
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = renderInvalid('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
+    }
+
+    function renderValid(data){
+      const p = data.product || {};
+      const d = data.details || {};
+
+      let rows = '';
+      if (d.sold_at)  rows += `<div class="row"><span class="k">구매일</span><span class="v en">${fmtDate(d.sold_at)}</span></div>`;
+      if (d.sold_via) rows += `<div class="row"><span class="k">구매처</span><span class="v">${esc(d.sold_via)}</span></div>`;
+
+      return `
+        <div class="cert">
+          <div class="seal">
+            <div class="seal-ring"><div class="seal-mark">&#10003;</div></div>
+            <div class="seal-title">정품 확인</div>
+            <div class="seal-sub">이 제품은 MAMORU 정품입니다</div>
+          </div>
+
+          <div class="hero">
+            <div class="hero-eyebrow">VERIFIED PRODUCT</div>
+            <div class="hero-name">${esc(p.name || '제품')}</div>
+            ${p.description ? `<div class="hero-desc">${esc(p.description)}</div>` : ''}
+          </div>
+
+          ${rows ? `<div class="rows"><div class="rows-inner">${rows}</div></div>` : ''}
+
+          <div class="care">
+            <div class="care-box">
+              <div class="care-h">정품 등록 고객</div>
+              <div class="care-item">· 복원수리 <b>50%</b> — 언제 맡겨도 반값</div>
+              <div class="care-item">· 내 가위 수리 이력 조회</div>
+              <a class="self-cta" href="../verify/self-check.html">내 가위 상태, 지금 괜찮은지 자가진단 →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <div class="slogan">CUT THE FAKE, KEEP THE REAL</div>
+          <div class="row2">필요할 때만 오시면 됩니다 · 문의 <a href="https://mamoru.kr">mamoru.kr</a></div>
+        </div>
+      `;
+    }
+
+    function renderInvalid(message){
+      return `
+        <div class="fail">
+          <div class="fail-top">
+            <div class="fail-ring">&#10007;</div>
+            <div class="fail-title">확인되지 않습니다</div>
+            <div class="fail-sub">${esc(message)}</div>
+          </div>
+          <div class="fail-foot">
+            <p>정식 구매처가 아닐 수 있습니다.<br>의심되시면 <a href="https://mamoru.kr">mamoru.kr</a> 로 문의해주세요.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    verify();
+  </script>
+</body>
+</html>

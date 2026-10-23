@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="robots" content="noindex,nofollow" />
+<!-- 🧪 시안 전용: 안내장 이미지·손 아이콘(스크립트가 'icons/…' 상대경로로 불러옴)을 원본 폴더에서 읽도록 기준 경로 지정. 원본 반영 시 이 줄은 옮기지 않는다 -->
+<base href="../event/" />
+<title>시안 B-09 · EVENT 접수</title>
+<style>
+  :root{ --void:#1A1A1A; --ink:#2A2A2A; --gray:#8A8A8A; --line:#E7E5E2; --shell:#F4F2EF; --cream:#FAF9F7; --ok:#2563EB; --warn:#B45309; }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html{ overflow-x:hidden; }
+  body{ font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif; color:var(--ink); background:var(--cream); line-height:1.55; }
+  .mm-wrap{ max-width:560px; margin:0 auto; padding:24px 18px 120px; }
+  .mm-sec{ margin-top:28px; }
+  .mm-sec__label{ font-size:15px; font-weight:800; color:var(--void); margin-bottom:12px; display:flex; align-items:center; gap:8px; letter-spacing:-.01em; }
+  .mm-sec__label::before{ content:''; width:3px; height:15px; border-radius:2px; background:var(--void); flex:0 0 auto; }
+  .mm-sec__label small{ font-weight:500; color:var(--gray); font-size:12px; }
+  .mm-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .mm-chip{ flex:1 1 auto; min-width:72px; text-align:center; padding:11px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; font-size:13px; font-weight:600; color:var(--ink); cursor:pointer; transition:.15s; }
+  .mm-chip[aria-pressed="true"]{ background:var(--void); color:#fff; border-color:var(--void); }
+  .mm-card{ border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; margin-bottom:10px; }
+  .mm-card__row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .mm-card__name{ font-size:14px; font-weight:700; color:var(--void); }
+  .mm-card__meta{ font-size:12px; color:var(--gray); margin-top:2px; }
+  .mm-card__price{ font-size:15px; font-weight:800; color:var(--void); white-space:nowrap; }
+  .mm-stock{ display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:999px; margin-top:6px; }
+  .mm-stock--low{ background:#FEF3C7; color:var(--warn); }
+  .mm-stock--ok{ background:#EEF2FF; color:var(--ok); }
+  .mm-stock--soldout{ background:#F3F4F6; color:#9CA3AF; }
+  .mm-card__ctrl{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px; }
+  .mm-qty{ display:flex; align-items:center; gap:8px; }
+  .mm-qty button{ width:34px; height:34px; border:1px solid var(--line); border-radius:9px; background:#fff; font-size:18px; cursor:pointer; }
+  .mm-qty span{ min-width:24px; text-align:center; font-weight:700; }
+  .mm-add{ flex:1; min-width:90px; height:38px; border-radius:10px; background:var(--void); color:#fff; font-size:13px; font-weight:700; border:0; cursor:pointer; }
+  .mm-add:disabled{ background:#CFCBC6; cursor:not-allowed; }
+  .mm-slice{ display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:9px 10px; background:var(--shell); border-radius:10px; font-size:12px; color:var(--ink); }
+  .mm-slice input{ margin-top:2px; width:16px; height:16px; }
+  .mm-slice b{ color:var(--void); }
+  .mm-cart{ border:1px solid var(--void); border-radius:14px; background:#fff; padding:14px; }
+  .mm-cart__item{ display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line); }
+  .mm-cart__item button{ color:#C0392B; background:none; border:0; font-size:11px; cursor:pointer; }
+  .mm-cart__total{ display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--void); padding-top:10px; }
+  .mm-field{ margin-top:12px; }
+  .mm-field label{ display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:6px; }
+  .mm-field input, .mm-field textarea{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:11px; font-size:14px; background:#fff; font-family:inherit; }
+  .mm-field textarea{ resize:none; min-height:64px; }
+  .mm-consent{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--gray); margin-top:14px; }
+  .mm-submit{ position:fixed; left:0; right:0; bottom:0; padding:14px 18px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg,rgba(250,249,247,0),var(--cream) 30%); }
+  .mm-submit__inner{ max-width:560px; margin:0 auto; }
+  .mm-submit button{ width:100%; height:52px; border-radius:999px; background:var(--void); color:#fff; font-size:15px; font-weight:800; border:0; cursor:pointer; }
+  .mm-submit button:disabled{ background:#CFCBC6; }
+  .mm-empty{ font-size:13px; color:var(--gray); text-align:center; padding:18px 0; }
+  .mm-modal{ position:fixed; inset:0; background:rgba(26,26,26,.45); display:none; align-items:center; justify-content:center; padding:24px; z-index:50; }
+  .mm-modal.on{ display:flex; }
+  /* 완료 모달 등장 — 배경 페이드 + 박스 쉭 팝인 */
+  #doneModal.on{ animation: mmFadeIn .18s ease both; }
+  #doneModal.on .mm-modal__box{ animation: mmPopIn .3s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes mmFadeIn{ from{ opacity:0 } to{ opacity:1 } }
+  @keyframes mmPopIn{ from{ opacity:0; transform:translateY(16px) scale(.92) } to{ opacity:1; transform:none } }
+  /* 완료 = 풀스크린 화면 전환 (인스타 등 자동닫힘 불가 대비 — 깔끔한 완료 상태로 머무름) */
+  #doneModal{ background:#FAF9F7; padding:24px; }
+  #doneModal .mm-modal__box{ background:transparent; max-width:420px; width:100%; padding:24px; }
+  .mm-done-check{ width:82px; height:82px; margin:0 auto 22px; display:block; }
+  .mm-done-check circle{ stroke:var(--void); stroke-width:2.5; fill:none; stroke-dasharray:172; stroke-dashoffset:172; animation:mmDraw .5s ease .15s forwards; }
+  .mm-done-check path{ stroke:var(--void); stroke-width:3.2; fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:44; stroke-dashoffset:44; animation:mmDraw .35s ease .55s forwards; }
+  @keyframes mmDraw{ to{ stroke-dashoffset:0 } }
+  .mm-modal__box{ background:#fff; border-radius:18px; padding:26px 22px; max-width:340px; text-align:center; }
+  .mm-modal__box h3{ font-size:18px; font-weight:800; color:var(--void); }
+  .mm-modal__box p{ font-size:13px; color:var(--gray); margin-top:8px; }
+  .mm-modal__box button{ margin-top:18px; width:100%; height:46px; border-radius:999px; background:var(--void); color:#fff; font-weight:700; border:0; }
+  /* 담기 확인 모달 */
+  #addModal .mm-add__ic{ width:52px; height:52px; border-radius:50%; background:var(--void); color:#fff; font-size:24px; line-height:52px; text-align:center; margin:0 auto 14px; }
+  #addModal .mm-add__btns{ display:flex; gap:9px; margin-top:20px; }
+  #addModal .mm-add__btns button{ margin-top:0; width:auto; flex:1; height:47px; border-radius:999px; font-weight:800; font-size:14px; cursor:pointer; }
+  #addModal .mm-add__more{ background:#fff; color:var(--void); border:1.5px solid rgba(26,26,26,.16); }
+  #addModal .mm-add__go{ background:var(--void); color:#fff; border:0; }
+  .mm-hide{ display:none !important; }
+  /* 주소 검색 행 + 비활성 입력 */
+  .mm-addr-search{ display:flex; gap:8px; }
+  .mm-addr-search input{ flex:1; min-width:0; }
+  .mm-addr-btn{ flex-shrink:0; padding:0 14px; border-radius:11px; background:var(--void); color:#fff; font-size:13px; font-weight:700; border:0; white-space:nowrap; cursor:pointer; }
+  .mm-field input[readonly]{ background:var(--shell); }
+  .mm-field input:disabled{ background:#F0EEEB; color:#B8B4AF; cursor:not-allowed; }
+  /* 다음 우편번호 레이어 (하단 시트) */
+  .mm-pc-layer{ position:fixed; inset:0; background:rgba(26,26,26,.5); z-index:70; display:none; align-items:flex-end; }
+  .mm-pc-layer.on{ display:flex; }
+  .mm-pc-box{ background:#fff; width:100%; max-height:82vh; border-radius:18px 18px 0 0; overflow:hidden; display:flex; flex-direction:column; }
+  .mm-pc-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); font-weight:700; font-size:14px; }
+  .mm-pc-head button{ width:30px; height:30px; border:0; background:var(--shell); border-radius:8px; font-size:15px; cursor:pointer; }
+  .mm-pc-inner{ min-height:160px; } /* 높이는 Daum onresize가 내용에 맞춰 동적 설정 (빈 흰 공간 방지) */
+  /* 안내장 '끝까지 넘겨 읽어달라' 지시 바 — 안 넘기고 바로 주문하는 이탈을 막는 장치.
+     마지막 장에 도달하면 .done 으로 톤다운(재촉 → 확인 완료) */
+  .mm-car-note{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--void); color:#fff; border-radius:12px; padding:11px 14px; margin-bottom:10px; }
+  .mm-car-note__txt{ font-size:12.5px; font-weight:600; line-height:1.45; }
+  .mm-car-note__txt b{ font-weight:800; }
+  .mm-car-note__hint{ display:flex; align-items:center; gap:2px; flex:0 0 auto;
+    font-size:11.5px; font-weight:700; color:rgba(255,255,255,.75); white-space:nowrap; }
+  .mm-car-note__arrow{ display:inline-block; font-size:16px; line-height:1; animation:mmNudge 1.1s ease-in-out infinite; }
+  @keyframes mmNudge{ 0%,100%{ transform:translateX(0); opacity:.6 } 50%{ transform:translateX(3px); opacity:1 } }
+  .mm-car-note.done{ background:var(--shell); color:var(--gray); }
+  .mm-car-note.done .mm-car-note__txt b{ color:var(--void); }
+  .mm-car-note.done .mm-car-note__hint{ display:none; }
+  @media (prefers-reduced-motion: reduce){ .mm-car-note__arrow{ animation:none; } }
+
+  /* 안내장 캐러셀 (가로 스와이프, 1000×1500=2:3, 자동재생 X)
+     = 페이지 첫 요소 → 상·좌·우 full-bleed (mm-wrap 의 padding 24/18 을 마이너스 마진으로 상쇄) */
+  .mm-car-wrap{ position:relative; margin:-24px -18px 12px; overflow:hidden; }
+  /* 슬라이드 페이지 카운터 (1/N) — 여러 장·넘기기 신호 */
+  .mm-car-count{ position:absolute; top:14px; right:14px; display:none; background:rgba(26,26,26,.55); color:#fff; font-size:11px; font-weight:700; letter-spacing:.3px; padding:4px 10px; border-radius:999px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); z-index:2; }
+  /* transform 기반 — 스와이프 1회 = 1장 (네이티브 스크롤 관성 제거) */
+  .mm-car{ display:flex; gap:0; transition:transform .32s cubic-bezier(.22,.61,.36,1); will-change:transform; touch-action:pan-y; }
+  .mm-car::-webkit-scrollbar{ display:none; }
+  .mm-slide{ flex:0 0 100%; }
+  .mm-slide img{ display:block; width:100%; aspect-ratio:1000/1500; object-fit:cover; }
+  /* 좌우 화살표 (PC·모바일 공통, 1장씩) */
+  .mm-car-nav{ position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:34px; height:34px; padding:0; border:0; border-radius:999px; background:rgba(26,26,26,.5); color:#fff; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  .mm-car-prev{ left:10px; } .mm-car-next{ right:10px; }
+  .mm-car-nav[disabled]{ opacity:0; pointer-events:none; }
+  .mm-car-dots{ display:flex; justify-content:center; gap:6px; margin-top:11px; }
+  .mm-dot{ width:6px; height:6px; border-radius:50%; background:var(--line); transition:width .2s, background .2s; }
+  .mm-dot.on{ background:var(--void); width:18px; border-radius:3px; }
+  /* SVG 아이콘 공간 (사장님 업로드 전 임시 X) */
+  .mm-chip--ico{ display:flex; flex-direction:column; align-items:center; gap:5px; padding-top:10px; padding-bottom:10px; }
+  .mm-chip__ico{ width:30px; height:30px; object-fit:contain; }
+  .mm-ico-x{ width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:8px; color:#C9C5C0; font-size:14px; }
+  .mm-chip[aria-pressed="true"] .mm-ico-x{ border-color:rgba(255,255,255,.4); color:rgba(255,255,255,.7); }
+  /* 선택(검정 배경) 시 손 아이콘 흰색 반전 */
+  .mm-chip[aria-pressed="true"] .mm-chip__ico{ filter: brightness(0) invert(1); }
+  .mm-catgroup__h{ display:flex; align-items:center; gap:9px; }
+  .mm-cat-ico{ width:24px; height:24px; object-fit:contain; }
+  .mm-cat-ico-x{ width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:1.5px dashed var(--line); border-radius:6px; color:#C9C5C0; font-size:11px; }
+  /* 분류명 — 단위(인치/감모량)는 우측, 카드별 단위 반복 제거. 페이지 제목보다 작게(위계) */
+  .mm-catgroup__name{ font-size:19px; font-weight:800; line-height:1.1; }
+  .mm-catgroup__unit{ margin-left:auto; font-size:12px; font-weight:600; color:#9A948C; white-space:nowrap; }
+  /* 카탈로그 — 종류별 섹션 + 카드(spec 상단 / 가격칩 하단) */
+  .mm-catgroup{ margin-top:22px; }
+  .mm-catgroup__h{ color:var(--void); margin-bottom:12px; padding-bottom:8px; border-bottom:1.5px solid var(--void); }
+  .mm-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  @media(min-width:460px){ .mm-grid{ grid-template-columns:repeat(3,1fr); } }
+  .mm-pcard{ border:1px solid var(--line); border-radius:16px; background:#fff; padding:14px 10px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .mm-pcard__spec{ font-size:16px; font-weight:800; color:var(--void); line-height:1.25; min-height:40px; display:flex; align-items:center; justify-content:center; text-align:center; }
+  .mm-pcard__price{ font-size:13px; font-weight:800; color:var(--void); background:#fff; border:1.5px solid var(--void); border-radius:999px; padding:5px 14px; }
+  /* 가격대별 은은한 톤 (저→고: 세이지→블루→라벤더, 부정색 X) */
+  .mm-pcard--t1{ background:#F2F6F3; border-color:#DCE8E0; }
+  .mm-pcard--t1 .mm-pcard__price{ color:#3F7A5A; border-color:#BFD9C8; }
+  .mm-pcard--t2{ background:#EEF1FB; border-color:#DBE3F5; }
+  .mm-pcard--t2 .mm-pcard__price{ color:#3A5BB0; border-color:#C5D2F0; }
+  .mm-pcard--t3{ background:#F4EFFB; border-color:#E5DBF2; }
+  .mm-pcard--t3 .mm-pcard__price{ color:#6B4BA8; border-color:#D8C8EE; }
+  /* 가격 필터 칩 — 카드와 동일 가격대 톤(미선택=은은한 틴트, 선택=진한 동일색) */
+  .mm-chip--t1{ background:#F2F6F3; border-color:#DCE8E0; color:#3F7A5A; }
+  .mm-chip--t2{ background:#EEF1FB; border-color:#DBE3F5; color:#3A5BB0; }
+  .mm-chip--t3{ background:#F4EFFB; border-color:#E5DBF2; color:#6B4BA8; }
+  .mm-chip--t1[aria-pressed="true"]{ background:#3F7A5A; border-color:#3F7A5A; color:#fff; }
+  .mm-chip--t2[aria-pressed="true"]{ background:#3A5BB0; border-color:#3A5BB0; color:#fff; }
+  .mm-chip--t3[aria-pressed="true"]{ background:#6B4BA8; border-color:#6B4BA8; color:#fff; }
+  .mm-pcard .mm-stock{ margin:0; }
+  .mm-pcard__add{ width:100%; height:34px; border-radius:10px; background:var(--void); color:#fff; font-size:12px; font-weight:700; border:0; cursor:pointer; }
+  .mm-pcard__add:disabled{ background:#CFCBC6; }
+  .mm-pcard__qty{ display:flex; align-items:center; justify-content:center; gap:10px; }
+  .mm-pcard__qty button{ width:28px; height:28px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:15px; cursor:pointer; }
+  .mm-pcard__slice{ display:flex; align-items:flex-start; gap:6px; font-size:10px; color:var(--ink); text-align:left; background:var(--shell); border-radius:8px; padding:6px 7px; }
+  .mm-pcard__slice input{ margin-top:1px; }
+
+  /* ══ 아임웹 iframe 임베드 모드 (html.mm-embed) ═══════════════════════════════
+     iframe 안의 position:fixed 는 '부모 화면'이 아니라 'iframe 박스' 기준이라
+     하단 고정 CTA·전체화면 레이어가 엉뚱한 곳에 박힌다(2026-06-19 iframe 보류 사유).
+     임베드일 때만: 고정 CTA → 문서 흐름 안 / 레이어 2종 → 트리거 위치에 absolute 앵커.
+     단독 페이지(인스타 DM 링크)에는 이 블록이 적용되지 않아 기존 동작 그대로. */
+  .mm-embed .mm-wrap{ padding-bottom:8px; }
+  .mm-embed .mm-submit{ position:static; padding:18px 0 0; background:none; }
+  .mm-embed .mm-submit__inner{ padding:0 18px 24px; }
+  .mm-embed .mm-modal, .mm-embed .mm-pc-layer{ position:absolute; left:0; right:0; bottom:auto; top:0; }
+  .mm-embed .mm-pc-layer{ background:none; padding:0 18px; }
+  .mm-embed .mm-pc-layer.on{ display:block; }
+  .mm-embed .mm-pc-box{ max-width:560px; margin:0 auto; max-height:none; border:1px solid var(--line); border-radius:14px; box-shadow:0 18px 50px rgba(26,26,26,.18); }
+  .mm-embed #doneModal{ min-height:440px; padding:36px 18px; }
+</style>
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 주문 접수폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 이벤트 주문서(전표) — 안내장 넘겨 읽고 → 1·2·3 순서대로 고르기
+     시그니처: 단계 번호 거대화(1. 2. 3. = Outfit 300 흐린 큰 숫자) + 섹션마다 검은 가는 선
+     규칙: 모노크롬(가격대 색 틴트 → 무채색 3단 명도) · 그림자/그라데이션 금지 · 모서리 2px · 칩·카드·입력칸·버튼 크기 유지 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style id="b09">
+:root{ --stone:#4A4A4A; --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; }
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+body{ font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif; word-break:keep-all; }
+
+/* ── 1. 섹션 머리말 — 세로 막대 → 검은 가는 선 + 굵은 900 ── */
+.mm-sec{ margin-top:34px; padding-top:16px; border-top:1px solid var(--void); }
+.mm-sec__label{ font-size:17px; font-weight:900; letter-spacing:-.03em; margin-bottom:14px; }
+.mm-sec__label::before{ display:none; }
+.mm-sec__label small{ font-weight:500; letter-spacing:-.01em; }
+/* 시그니처 — 번호가 붙은 1·2·3 단계: 앞 숫자("1.")만 거대·얇게 (글자는 그대로) */
+.mm-wrap > .mm-sec:not([id]) > .mm-sec__label,
+#priceSec > .mm-sec__label, #catalogSec > .mm-sec__label{ display:block; line-height:1.3; }
+.mm-wrap > .mm-sec:not([id]) > .mm-sec__label::first-letter,
+#priceSec > .mm-sec__label::first-letter, #catalogSec > .mm-sec__label::first-letter{
+  font-family:'Outfit',sans-serif; font-size:40px; font-weight:300; line-height:.8; letter-spacing:-.04em; color:var(--mist);
+  padding-right:8px; font-variant-numeric:tabular-nums; }
+
+/* ── 2. 안내장 — 넘기기 지시 바·카운터·화살표 2px ── */
+.mm-car-note{ border-radius:2px; }
+.mm-car-count{ border-radius:2px; font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+.mm-car-nav{ border-radius:2px; }
+.mm-dot.on{ border-radius:0; }
+
+/* ── 3. 칩·카드 — 12~16px → 2px (크기 그대로) ── */
+.mm-chip{ border-radius:2px; border-color:var(--sand); }
+.mm-chip[aria-pressed="true"]{ font-weight:800; }
+.mm-ico-x, .mm-cat-ico-x{ border-radius:2px; }
+.mm-catgroup{ margin-top:26px; }
+.mm-catgroup__h{ border-bottom:1px solid var(--void); }
+.mm-catgroup__name{ font-size:21px; font-weight:900; letter-spacing:-.03em; }
+.mm-pcard{ border-radius:2px; border-color:var(--sand); }
+.mm-pcard__spec{ font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.mm-pcard__price{ border-radius:2px; font-family:'Outfit','Pretendard',sans-serif; font-weight:800; font-variant-numeric:tabular-nums; }
+.mm-pcard__add{ border-radius:2px; font-weight:800; }
+.mm-pcard__qty button, .mm-qty button{ border-radius:2px; border-color:var(--sand); }
+.mm-pcard__slice{ border-radius:2px; }
+
+/* 가격대 톤 — 녹·청·보라 틴트 → 무채색 3단(흰 / 셸 / 파치먼트), 가격 칩은 검정 선 하나로 통일. 칩↔카드 대응은 그대로 */
+.mm-pcard--t1{ background:#fff; border-color:var(--sand); }
+.mm-pcard--t2{ background:var(--shell); border-color:var(--sand); }
+.mm-pcard--t3{ background:var(--parchment); border-color:var(--mist); }
+.mm-pcard--t1 .mm-pcard__price, .mm-pcard--t2 .mm-pcard__price, .mm-pcard--t3 .mm-pcard__price{ color:var(--void); border-color:var(--void); background:transparent; }
+.mm-chip--t1{ background:#fff; border-color:var(--sand); color:var(--void); }
+.mm-chip--t2{ background:var(--shell); border-color:var(--sand); color:var(--void); }
+.mm-chip--t3{ background:var(--parchment); border-color:var(--mist); color:var(--void); }
+.mm-chip--t1[aria-pressed="true"], .mm-chip--t2[aria-pressed="true"], .mm-chip--t3[aria-pressed="true"]{ background:var(--void); border-color:var(--void); color:#fff; }
+.mm-chip--t1, .mm-chip--t2, .mm-chip--t3{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; }
+
+/* 재고 배지 — 노랑·파랑 → 무채색 (적음 = 검은 선 강조) */
+.mm-stock{ border-radius:2px; }
+.mm-stock--low{ background:transparent; color:var(--void); border:1px solid var(--void); font-weight:700; }
+.mm-stock--ok{ background:var(--parchment); color:var(--stone); }
+.mm-stock--soldout{ background:transparent; color:var(--mist); border:1px solid var(--sand); }
+
+/* ── 4. 담은 목록·수령·입력 — 2px, 합계 tabular ── */
+.mm-cart{ border-radius:2px; }
+.mm-cart__total{ font-size:17px; font-weight:900; letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+.mm-cart__item{ font-variant-numeric:tabular-nums; }
+.mm-cart__item button{ color:var(--stone); text-decoration:underline; text-underline-offset:2px; }   /* 빨강 → 무채색 */
+.mm-cart__item[style*="color"]{ color:var(--void) !important; font-weight:700; }   /* 묶음 할인(스크립트 주황 인라인) → 검정 굵게 */
+#receiveSec > div:not(.mm-sec__label){ border-radius:0 !important; border:0 !important; border-left:2px solid var(--void) !important; background:transparent !important; padding:2px 0 2px 14px !important; }
+.mm-field label{ font-weight:700; color:var(--void); }
+.mm-field input, .mm-field textarea{ border-radius:2px; border-color:var(--sand); }
+.mm-field input:focus, .mm-field textarea:focus{ outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+.mm-addr-btn{ border-radius:2px; }
+
+/* ── 5. 하단 고정 접수 버튼 — 알약 → 2px (높이 52 그대로) · 그라데이션 띠 → 크림 단색 + 가는 선 ── */
+.mm-submit button{ border-radius:2px; letter-spacing:-.01em; }
+html:not(.mm-embed) .mm-submit{ background:var(--cream); border-top:1px solid var(--line); }
+
+/* ── 6. 담기 확인·완료·주소 검색 — 2~4px ── */
+.mm-modal__box{ border-radius:4px; }
+.mm-modal__box h3{ font-size:20px; font-weight:900; letter-spacing:-.03em; }
+.mm-modal__box button{ border-radius:2px; }
+#addModal .mm-add__ic{ border-radius:2px; }
+#addModal .mm-add__btns button{ border-radius:2px; }
+#addModal .mm-add__more{ border:1px solid var(--void); }
+#doneModal .mm-modal__box h3{ font-size:24px; }
+.mm-pc-box{ border-radius:4px 4px 0 0; }
+.mm-embed .mm-pc-box{ border-radius:4px; }
+.mm-pc-head button{ border-radius:2px; }
+</style>
+
+<script>
+/* 임베드 판별 — 렌더 전에 클래스를 심어야 고정 CTA가 한 프레임도 잘못 그려지지 않는다 */
+(function(){
+  var embed = false;
+  try { embed = (window.parent !== window); } catch (e) { embed = true; }
+  if (embed || /[?&]embed=1/.test(location.search)) document.documentElement.className += ' mm-embed';
+})();
+</script>
+</head>
+<body>
+<script>
+/* 🧪 시안 전용 안전장치 — 조회(GET) 외 서버 요청(접수·저장)을 막음. 원본에 옮기지 않는다 */
+(function(){var f=window.fetch;window.fetch=function(u,o){var m=((o&&o.method)||(u&&u.method)||'GET').toUpperCase();if(m!=='GET'){alert('시안 미리보기 — 실제로 접수되지 않습니다');return Promise.reject(new Error('mock-blocked'));}return f.apply(this,arguments);};var s=XMLHttpRequest.prototype.send,op=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m){this.__m=String(m).toUpperCase();return op.apply(this,arguments);};XMLHttpRequest.prototype.send=function(){if(this.__m&&this.__m!=='GET'){alert('시안 미리보기 — 실제로 접수되지 않습니다');return;}return s.apply(this,arguments);};})();
+</script>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/event/page_form.html 에 B-09 덧입힘(문구·칩·카드·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — EVENT 접수(릴스·DM 링크). 문구·칩·버튼은 같고 디자인만 다릅니다. 품목은 실제 진행 중인 캠페인에서 불러옵니다 — 시안에서는 「접수하기」를 눌러도 접수되지 않게 막아 두었습니다.</span>
+    <a href="https://page.mamoru.kr/projects/event/page_form.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="../_design_lab/redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<div class="mm-wrap">
+  <!-- 안내장 캐러셀 = 첫 화면. 제목·설명은 안내장 이미지가 대신한다(2026-07-12 헤더 블록 삭제).
+       ⚠️ 캠페인명을 넣던 #catTitle 도 함께 사라짐 — 세팅 코드는 `if(t)` 가드라 안전 -->
+  <div class="mm-car-wrap" id="mmCarWrap" style="display:none;">
+    <div class="mm-car-count" id="mmCarCount"></div>
+    <div class="mm-car" id="mmCar"></div>
+    <button class="mm-car-nav mm-car-prev" id="mmCarPrev" type="button" aria-label="이전">‹</button>
+    <button class="mm-car-nav mm-car-next" id="mmCarNext" type="button" aria-label="다음">›</button>
+    <div class="mm-car-dots" id="mmCarDots"></div>
+  </div>
+
+  <!-- 안내장을 끝까지 넘겨 읽게 하는 지시 바 — 슬라이드 아래(넘기고 나서 눈이 닿는 자리) -->
+  <div class="mm-car-note" id="mmCarNote" style="display:none;">
+    <span class="mm-car-note__txt" id="mmCarNoteTxt">주문 전 <b>안내장을 끝까지</b> 확인해 주세요</span>
+    <span class="mm-car-note__hint">옆으로 넘기기<span class="mm-car-note__arrow">›</span></span>
+  </div>
+
+  <!-- 손 -->
+  <div class="mm-sec">
+    <div class="mm-sec__label">1. 가위 종류 (손)</div>
+    <div class="mm-chips" id="handChips">
+      <button class="mm-chip mm-chip--ico" data-hand="left" aria-pressed="false">
+        <img class="mm-chip__ico" src="icons/hand-left.svg" alt="" onerror="this.outerHTML='<span class=&quot;mm-ico-x&quot;>✕</span>'"/>
+        <span>왼손</span>
+      </button>
+      <button class="mm-chip mm-chip--ico" data-hand="right" aria-pressed="false">
+        <img class="mm-chip__ico" src="icons/hand-right.svg" alt="" onerror="this.outerHTML='<span class=&quot;mm-ico-x&quot;>✕</span>'"/>
+        <span>오른손</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 가격 필터 -->
+  <div class="mm-sec mm-hide" id="priceSec">
+    <div class="mm-sec__label">2. 가격</div>
+    <div class="mm-chips" id="priceChips"></div>
+  </div>
+
+  <!-- 카탈로그 (종류별 섹션 + 카드) -->
+  <div class="mm-sec mm-hide" id="catalogSec">
+    <div class="mm-sec__label">3. 품목 선택 <small>원하는 가위를 담아주세요</small></div>
+    <div id="catalog"></div>
+  </div>
+
+  <!-- 장바구니 -->
+  <div class="mm-sec mm-hide" id="cartSec">
+    <div class="mm-sec__label">선택한 품목</div>
+    <div class="mm-cart">
+      <div id="cartItems"></div>
+      <div class="mm-cart__total"><span>합계</span><span id="cartTotal">0원</span></div>
+    </div>
+  </div>
+
+  <!-- 수령방법 (택배 발송 고정) -->
+  <div class="mm-sec mm-hide" id="receiveSec">
+    <div class="mm-sec__label">수령 방법</div>
+    <div style="background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:13px;line-height:1.75;color:var(--ink);">
+      <b style="color:var(--void);font-weight:800;">택배 발송</b><br/>
+      입금 완료일 기준 <b>2~3일 내</b> 받아보실 수 있습니다.<br/>
+      제품 출고 시 <b>송장번호와 함께 알림톡</b>으로 안내드립니다.
+    </div>
+  </div>
+
+  <!-- 접수자 정보 (성함·연락처 필수) -->
+  <div class="mm-sec mm-hide" id="contactSec">
+    <div class="mm-sec__label">접수자 정보</div>
+    <div class="mm-field"><label>성함 *</label><input id="name" placeholder="성함" /></div>
+    <div class="mm-field"><label>연락처 *</label><input id="phone" inputmode="numeric" placeholder="010-0000-0000" /></div>
+  </div>
+
+  <!-- 배송지 (택배 발송 시) -->
+  <div class="mm-sec mm-hide" id="addrSec">
+    <div class="mm-sec__label">배송지</div>
+    <div class="mm-field">
+      <label>주소</label>
+      <div class="mm-addr-search">
+        <input id="postcode" readonly placeholder="우편번호" />
+        <button type="button" id="addrSearchBtn" class="mm-addr-btn">주소 검색</button>
+      </div>
+    </div>
+    <div class="mm-field"><input id="address1" readonly placeholder="도로명 주소 (검색)" /></div>
+    <div class="mm-field"><input id="address2" disabled placeholder="상세 주소 (주소 검색 후 입력)" /></div>
+  </div>
+
+  <!-- 메모 + 동의 -->
+  <div class="mm-sec mm-hide" id="extraSec">
+    <div class="mm-field"><label>메모 (선택)</label><textarea id="memo" placeholder="요청사항이 있으면 적어주세요"></textarea></div>
+    <label class="mm-consent"><input type="checkbox" id="consent" /> 개인정보 수집·이용에 동의합니다 (접수·배송 목적)</label>
+  </div>
+</div>
+
+<!-- 다음 우편번호 검색 레이어 -->
+<div class="mm-pc-layer" id="pcLayer">
+  <div class="mm-pc-box">
+    <div class="mm-pc-head"><span>주소 검색</span><button type="button" id="pcClose">✕</button></div>
+    <div class="mm-pc-inner" id="pcInner"></div>
+  </div>
+</div>
+
+<div class="mm-submit">
+  <div class="mm-submit__inner">
+    <button id="submitBtn" disabled>품목을 선택해 주세요</button>
+  </div>
+</div>
+
+<div class="mm-modal" id="doneModal">
+  <div class="mm-modal__box">
+    <svg class="mm-done-check" viewBox="0 0 60 60" aria-hidden="true">
+      <circle cx="30" cy="30" r="27"/>
+      <path d="M18 31 l8 8 l16 -18"/>
+    </svg>
+    <h3>신청이 완료되었습니다</h3>
+    <p>곧 <b>알림톡</b>으로 접수·입금 안내를 보내드립니다.<br/>휴대폰 알림을 확인해 주세요.</p>
+    <button onclick="closeInapp()">확인</button>
+    <div id="doneHint" style="display:none; margin-top:16px;">
+      <p style="font-size:12.5px; color:var(--gray); line-height:1.6;">접수는 안전하게 저장되었어요.<br/>이 창은 그냥 닫으셔도 됩니다.</p>
+      <a href="https://mamoru.kr" style="display:inline-block; margin-top:14px; font-size:13px; font-weight:800; color:var(--void); text-decoration:none; border-bottom:2px solid var(--void); padding-bottom:2px;">MAMORU 둘러보기 →</a>
+    </div>
+  </div>
+</div>
+
+<!-- 담기 확인 모달 -->
+<div class="mm-modal" id="addModal">
+  <div class="mm-modal__box mm-addbox">
+    <div class="mm-add__ic">✓</div>
+    <h3 id="addMsg">담았습니다</h3>
+    <p>하단 <b>담은 목록</b>에서 확인할 수 있어요</p>
+    <div class="mm-add__btns">
+      <button type="button" class="mm-add__more" id="addMoreBtn">더 구경하기</button>
+      <button type="button" class="mm-add__go" id="addGoBtn">담은 곳으로 이동</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 아임웹 코드위젯 iframe 안인지 (head에서 심은 클래스) */
+var IS_EMBED = document.documentElement.classList.contains('mm-embed');
+
+/* 임베드 전용 — 전체화면 레이어를 '사용자가 방금 누른 버튼' 위치에 absolute로 앵커.
+   iframe은 부모가 콘텐츠 전체 높이만큼 늘려놔서 스크롤이 없다 → fixed/inset:0 는 화면 밖에 걸린다.
+   방금 탭한 요소는 반드시 보이는 위치이므로, 그 좌표에 얹으면 항상 눈앞에 뜬다. */
+function anchorOverlay(el, anchorEl, offset){
+  if (!IS_EMBED || !el || !anchorEl) return;
+  var top = anchorEl.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || 0) - (offset || 0);
+  el.style.top = Math.max(0, Math.round(top)) + 'px';
+}
+
+/* 접수 완료 후 인앱 브라우저 닫기 — 카톡 인앱은 scheme로 닫힘, 그 외는 뒤로가기/close 시도 후 안내 */
+function closeInapp(){
+  /* 임베드(아임웹 페이지 안)에서는 브라우저를 닫으면 안 된다 → 폼만 초기화 */
+  if (IS_EMBED) { location.reload(); return; }
+  var ua=navigator.userAgent||'';
+  var isKakao=/KAKAOTALK/i.test(ua);
+  var isIOS=/iPhone|iPad|iPod/i.test(ua);
+  if(isKakao){
+    // 카톡 인앱 — scheme으로 브라우저 닫힘
+    location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+    setTimeout(function(){ if(history.length>1) history.back(); }, 600);
+    setTimeout(function(){ try{ window.close(); }catch(e){} }, 1200);
+    // 그래도 안 닫히면 보조 안내
+    setTimeout(function(){ var h=document.getElementById('doneHint'); if(h) h.style.display='block'; }, 1400);
+  } else {
+    // 인스타/일반 인앱 — 자동 닫힘 불가. history.back(완료화면 이탈) 대신 완료 화면 유지 + 친절 안내
+    try{ window.close(); }catch(e){}
+    var h=document.getElementById('doneHint'); if(h) h.style.display='block';
+  }
+}
+
+/* 상단 안내장 캐러셀 — 존재하는 슬라이드만 순서대로 표시 + 도트 동기화 (자동재생 X) */
+(function(){
+  var track = document.getElementById('mmCar'), dots = document.getElementById('mmCarDots'), wrap = document.getElementById('mmCarWrap'), count = document.getElementById('mmCarCount');
+  if (!track) return;
+  var srcs = ['icons/1.png','icons/2.png','icons/3.png','icons/4.png','icons/5.png','icons/6.png','icons/7.png'];
+  var exists = new Array(srcs.length).fill(false), done = 0;
+  srcs.forEach(function(src, i){
+    var im = new Image();
+    im.onload = function(){ exists[i] = true; tick(); };
+    im.onerror = function(){ exists[i] = false; tick(); };
+    im.src = src;
+  });
+  function tick(){ if (++done < srcs.length) return; build(); }
+  function build(){
+    var ok = srcs.filter(function(_, i){ return exists[i]; });
+    if (ok.length === 0) { wrap.style.display = 'none'; return; }
+    ok.forEach(function(src, i){
+      var s = document.createElement('div'); s.className = 'mm-slide';
+      var im = document.createElement('img'); im.src = src; im.alt = 'EVENT 안내 ' + (i+1); s.appendChild(im);
+      track.appendChild(s);
+      var d = document.createElement('span'); d.className = 'mm-dot' + (i === 0 ? ' on' : ''); dots.appendChild(d);
+    });
+    wrap.style.display = 'block';
+    // 지시 바 — 넘길 게 2장 이상일 때만 (1장이면 이미 다 보이므로 재촉할 이유가 없다)
+    var note = document.getElementById('mmCarNote'), noteTxt = document.getElementById('mmCarNoteTxt'), readAll = false;
+    if (ok.length >= 2 && note) {
+      note.style.display = 'flex';
+      noteTxt.innerHTML = '주문 전 <b>안내장 ' + ok.length + '장</b>을 끝까지 확인해 주세요';
+    }
+    if (ok.length < 2) { dots.style.display = 'none'; }
+    else { count.style.display = 'block'; count.textContent = '1 / ' + ok.length; }
+
+    var cur = 0;
+    var prevBtn = document.getElementById('mmCarPrev'), nextBtn = document.getElementById('mmCarNext');
+    function render(){
+      track.style.transform = 'translateX(' + (-cur * 100) + '%)';
+      for (var i = 0; i < dots.children.length; i++) dots.children[i].classList.toggle('on', i === cur);
+      if (ok.length >= 2) count.textContent = (cur + 1) + ' / ' + ok.length;
+      if (prevBtn) prevBtn.disabled = (cur === 0);
+      if (nextBtn) nextBtn.disabled = (cur === ok.length - 1);
+      // 마지막 장까지 넘겼으면 재촉 → 확인 완료로 (되돌아가도 유지)
+      if (!readAll && ok.length >= 2 && cur === ok.length - 1 && note) {
+        readAll = true;
+        note.classList.add('done');
+        noteTxt.innerHTML = '안내장을 <b>모두 확인</b>하셨습니다';
+      }
+    }
+    function goTo(i){ cur = Math.max(0, Math.min(ok.length - 1, i)); render(); }
+
+    // 좌우 화살표 (PC·모바일 공통) — 1장씩
+    if (ok.length < 2) { if (prevBtn) prevBtn.style.display = 'none'; if (nextBtn) nextBtn.style.display = 'none'; }
+    else {
+      if (prevBtn) prevBtn.onclick = function(){ goTo(cur - 1); };
+      if (nextBtn) nextBtn.onclick = function(){ goTo(cur + 1); };
+    }
+
+    // 도트 클릭으로도 이동
+    for (var di = 0; di < dots.children.length; di++) {
+      (function(idx){ dots.children[idx].style.cursor = 'pointer'; dots.children[idx].addEventListener('click', function(){ goTo(idx); }); })(di);
+    }
+
+    // 스와이프(모바일) / 마우스 드래그(PC) — 한 번에 딱 1장
+    var sx = 0, sy = 0, dragging = false;
+    track.addEventListener('touchstart', function(e){ var t = e.touches[0]; sx = t.clientX; sy = t.clientY; dragging = true; }, { passive: true });
+    track.addEventListener('touchend', function(e){
+      if (!dragging) return; dragging = false;
+      var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    track.addEventListener('mousedown', function(e){ sx = e.clientX; sy = e.clientY; dragging = true; e.preventDefault(); });
+    window.addEventListener('mouseup', function(e){
+      if (!dragging) return; dragging = false;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) goTo(cur + (dx < 0 ? 1 : -1));
+    });
+
+    render();
+  }
+})();
+(function(){
+  var API = 'https://app-eta-sandy-75.vercel.app/api/event/public';
+  var SLICE = 20000;
+  var TYPES = [{k:'blunt',l:'블런트'},{k:'thinning',l:'틴닝'},{k:'long',l:'장가위'},{k:'dry',l:'DRY'}];
+  var REDUCTION = {under20:'20% 미만','21to29':'21~29%',over30:'30% 이상'};
+  var $ = function(id){ return document.getElementById(id); };
+  // 이벤트 가벼운 느낌 — 만원 단위 표기 (50000→5만, 130000→13만, 135000→13.5만)
+  var won = function(n){
+    n = n||0;
+    if(n>=10000){ var m=n/10000; return ((m%1===0)?String(m):String(Math.round(m*10)/10))+'만'; }
+    return n.toLocaleString()+'원';
+  };
+
+  var CAT_ORDER = [{k:'blunt',l:'블런트'},{k:'long',l:'장가위'},{k:'thinning',l:'틴닝'},{k:'dry',l:'DRY'}];
+  var products = [], curHand = '', curPrice = null, recv = 'delivery';
+  var cart = []; // {key, product_id, product_name, category_type, spec, slicing, qty, unit_price}
+  var CAMPAIGN_ID = (new URLSearchParams(location.search).get('campaign')) || ''; // 캠페인별 접수 구분
+  var CAMPAIGN_BASE = 'https://app-eta-sandy-75.vercel.app/api/campaigns';
+  var DISCOUNT_RULES = []; // [{unit_price,min_qty,bundle_price}] 같은 단가 묶음할인
+
+  // 로드 — 캠페인(할인규칙·기본) 먼저 → 그 캠페인 품목만 로드
+  fetch(CAMPAIGN_BASE).then(function(r){return r.json();}).then(function(j){
+    var list = j.campaigns||[];
+    var c = CAMPAIGN_ID ? list.filter(function(x){return x.id===CAMPAIGN_ID;})[0]
+                        : list.filter(function(x){return x.is_default && x.status==='active';})[0];
+    if(c){ DISCOUNT_RULES = c.discount_rules||[]; CAMPAIGN_ID=c.id; var t=$('catTitle'); if(t) t.textContent=c.name; }
+    loadProducts();
+  }).catch(function(){ loadProducts(); });
+
+  function loadProducts(){
+    var url = API+'/products'+(CAMPAIGN_ID?('?campaign='+encodeURIComponent(CAMPAIGN_ID)):'');
+    fetch(url).then(function(r){return r.json();}).then(function(j){
+      products = (j.items||[]);
+      if(curHand) renderCatalog();
+    }).catch(function(){});
+  }
+
+  // 손 선택 → 가격칩 + 카탈로그
+  [].forEach.call(document.querySelectorAll('#handChips [data-hand]'), function(b){
+    b.onclick=function(){
+      curHand=b.getAttribute('data-hand');
+      curPrice=null; // 손 바꾸면 가격필터 초기화
+      [].forEach.call($('handChips').children, function(x){ x.setAttribute('aria-pressed', x.getAttribute('data-hand')===curHand?'true':'false'); });
+      renderPriceChips();
+      $('catalogSec').classList.remove('mm-hide');
+      renderCatalog();
+    };
+  });
+
+  // 가격 필터 칩 (현재 손의 품목 중 distinct 가격, 오름차순) — 5만/10만/20만
+  function renderPriceChips(){
+    var c=$('priceChips'); c.innerHTML='';
+    var prices=[];
+    products.filter(function(p){return (p.hand||'right')===curHand;}).forEach(function(p){ if(prices.indexOf(p.price)<0) prices.push(p.price); });
+    prices.sort(function(a,b){return a-b;});
+    var all=document.createElement('button'); all.className='mm-chip'; all.textContent='전체';
+    all.setAttribute('aria-pressed', curPrice===null?'true':'false');
+    all.onclick=function(){ curPrice=null; renderPriceChips(); renderCatalog(); };
+    c.appendChild(all);
+    prices.forEach(function(pr){
+      var b=document.createElement('button'); b.className='mm-chip mm-chip--'+priceTier(pr);
+      b.setAttribute('aria-pressed', curPrice===pr?'true':'false');
+      b.textContent=won(pr);
+      b.onclick=function(){ curPrice=pr; renderPriceChips(); renderCatalog(); };
+      c.appendChild(b);
+    });
+    $('priceSec').classList.remove('mm-hide');
+  }
+
+  // 가격 계산 (서버 lib/event/pricing.ts 와 동일 로직 — 함께 수정)
+  function priceCart(){
+    var byPrice={}, slicing=0, listTotal=0;
+    cart.forEach(function(it){
+      var q=Math.max(1,it.qty||1), p=it.unit_price||0;
+      byPrice[p]=(byPrice[p]||0)+q; listTotal+=p*q;
+      if(it.slicing) slicing+=SLICE*q;
+    });
+    var base=0;
+    Object.keys(byPrice).forEach(function(ps){
+      var p=Number(ps), q=byPrice[ps];
+      var rule=(DISCOUNT_RULES||[]).filter(function(r){return Number(r.unit_price)===p && r.min_qty>0 && r.bundle_price>0 && q>=r.min_qty;})[0];
+      if(rule){ var b=Math.floor(q/rule.min_qty), rem=q%rule.min_qty; base+=b*rule.bundle_price+rem*p; }
+      else base+=q*p;
+    });
+    return { base:base, slicing:slicing, total:base+slicing, listTotal:listTotal, discount:listTotal-base };
+  }
+
+  function renderCatalog(){
+    var box=$('catalog'); box.innerHTML='';
+    var any=false;
+    CAT_ORDER.forEach(function(cat){
+      var inCat = products.filter(function(p){
+        return (p.hand||'right')===curHand && (p.event_type||'')===cat.k
+          && (curPrice===null || p.price===curPrice);
+      });
+      inCat.sort(function(a,b){ return (a.price||0)-(b.price||0); }); // 5만→10만→20만 순
+      if(!inCat.length) return;
+      any=true;
+      var g=document.createElement('div'); g.className='mm-catgroup';
+      var h=document.createElement('div'); h.className='mm-catgroup__h';
+      var ico=document.createElement('img'); ico.className='mm-cat-ico'; ico.src='icons/cat-'+cat.k+'.svg'; ico.alt='';
+      ico.onerror=function(){ var x=document.createElement('span'); x.className='mm-cat-ico-x'; x.textContent='✕'; ico.replaceWith(x); };
+      var hl=document.createElement('span'); hl.className='mm-catgroup__name'; hl.textContent=cat.l;
+      var unit=document.createElement('span'); unit.className='mm-catgroup__unit';
+      unit.textContent=(cat.k==='thinning')?'감모량으로 표기':'인치로 표기';
+      h.appendChild(ico); h.appendChild(hl); h.appendChild(unit); g.appendChild(h);
+      var grid=document.createElement('div'); grid.className='mm-grid';
+      inCat.forEach(function(p){ grid.appendChild(productCard(p)); });
+      g.appendChild(grid); box.appendChild(g);
+    });
+    if(!any){ box.innerHTML='<div class="mm-empty">해당 조건의 품목이 없습니다.</div>'; }
+  }
+
+  function priceTier(n){ return n<70000 ? 't1' : (n<150000 ? 't2' : 't3'); } // 5만/10만/20만급
+
+  var DRY_LABEL = { stroke:'스트록', slicing:'슬라이싱', curve:'커브' };
+
+  function productCard(p){
+    var card=document.createElement('div'); card.className='mm-pcard mm-pcard--'+priceTier(p.price||0);
+    // 슬라이싱 가공 추가 체크란은 'DRY 스트록'에만 (슬라이싱·커브는 미표시)
+    var isDryStroke = (p.event_type==='dry') && (p.dry_subtype==='stroke');
+    var qty=1, slicing=false;
+    var specTxt = (p.event_type==='dry') ? (p.spec || DRY_LABEL[p.dry_subtype] || 'DRY') : (p.spec||p.name||'');
+    // 옵션값에 '|' 또는 줄바꿈 넣으면 카드에서 줄바꿈 표시 (예: "슬라이싱|5.8 - 6.0 인치")
+    var spec=document.createElement('div'); spec.className='mm-pcard__spec';
+    spec.innerHTML=specTxt.split(/[|\n]/).map(function(s){return esc(s.trim());}).filter(Boolean).join('<br>');
+    var price=document.createElement('div'); price.className='mm-pcard__price'; price.textContent=won(p.price);
+    var stock=document.createElement('span'); stock.className='mm-stock mm-stock--'+(p.stock_tone||'ok'); stock.textContent=p.stock_text||'';
+    card.appendChild(spec); card.appendChild(price); card.appendChild(stock);
+    if(isDryStroke){
+      var sl=document.createElement('label'); sl.className='mm-pcard__slice';
+      sl.innerHTML='<input type="checkbox"/><span>슬라이싱 가공 +'+won(SLICE)+' (모발 밀림형, 직접 가공)</span>';
+      sl.children[0].onchange=function(e){ slicing=e.target.checked; };
+      card.appendChild(sl);
+    }
+    // 재고 상한 — 재고 수만큼만 담기 가능 (초과 방지)
+    var maxQty = (typeof p.stock==='number' && p.stock>0) ? p.stock : 1;
+    var qd=document.createElement('div'); qd.className='mm-pcard__qty';
+    qd.innerHTML='<button type="button">−</button><span>1</span><button type="button">+</button>';
+    qd.children[0].onclick=function(){ qty=Math.max(1,qty-1); qd.children[1].textContent=qty; };
+    qd.children[2].onclick=function(){ if(qty<maxQty){ qty=qty+1; qd.children[1].textContent=qty; } };
+    card.appendChild(qd);
+    var add=document.createElement('button'); add.className='mm-pcard__add'; add.textContent='담기';
+    if(p.soldout){ add.disabled=true; add.textContent='소진 완료'; }
+    add.onclick=function(){ addToCart(p, qty, slicing); };
+    card.appendChild(add);
+    return card;
+  }
+
+  function addToCart(p, qty, slicing){
+    cart.push({ key:Date.now()+'-'+Math.random().toString(36).slice(2,6),
+      product_id:p.id, product_name:p.name, category_type:(p.event_type||''), spec:(p.spec||''),
+      slicing:!!slicing, qty:qty, unit_price:p.price });
+    renderCart();
+    openAddModal(p.name, qty);   // 담기 확인 모달
+  }
+
+  // 담기 확인 모달 — "제품명 N개 담았습니다" + [더 구경하기]/[담은 곳으로 이동]
+  function openAddModal(name, qty){
+    $('addMsg').textContent = name + ' ' + qty + '개 담았습니다';
+    $('addModal').classList.add('on');
+    centerEmbedModal();   // 임베드면 현재 보이는 영역 중앙으로
+  }
+  // 임베드(아임웹 iframe)에선 position:fixed 가 iframe 전체 기준이라 모달이 맨 위에 뜸 →
+  //   부모에 현재 가시영역을 물어(MAMORU_REQUEST_VIEWPORT) 그 구간에 모달을 배치(응답 MAMORU_VIEWPORT_INFO)
+  function centerEmbedModal(){
+    if(!IS_EMBED) return;
+    try{ window.parent.postMessage({ type:'MAMORU_REQUEST_VIEWPORT' }, '*'); }catch(e){}
+  }
+  window.addEventListener('message', function(e){
+    if(!e.data || e.data.type!=='MAMORU_VIEWPORT_INFO') return;
+    var vt=e.data.visibleTop, vh=e.data.visibleHeight; if(!vh) return;
+    [].forEach.call(document.querySelectorAll('.mm-modal.on'), function(m){
+      m.style.top = vt+'px'; m.style.height = vh+'px'; m.style.bottom='auto';   // flex-center → 가시구간 중앙
+    });
+  });
+  function scrollToCart(){
+    var el=$('cartSec'); if(!el) return;
+    var y = el.getBoundingClientRect().top + (window.pageYOffset||0);   // iframe 문서 내 절대 top
+    if(IS_EMBED){ try{ window.parent.postMessage({ type:'MAMORU_IFRAME_SCROLL', id:'event-form', y:y }, '*'); }catch(e){} }
+    else { try{ el.scrollIntoView({ behavior:'smooth', block:'start' }); }catch(e){ el.scrollIntoView(); } }
+  }
+  $('addMoreBtn').onclick = function(){ $('addModal').classList.remove('on'); };            // 모달만 닫기
+  $('addGoBtn').onclick   = function(){ $('addModal').classList.remove('on'); scrollToCart(); }; // 닫고 담은 곳으로
+  $('addModal').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('on'); }); // 배경 탭 = 더 구경하기
+
+  function renderCart(){
+    var sec=$('cartSec'), items=$('cartItems'); items.innerHTML='';
+    if(!cart.length){ sec.classList.add('mm-hide'); showTail(false); updateSubmit(); return; }
+    cart.forEach(function(it){
+      var line = it.unit_price*it.qty + (it.slicing?SLICE*it.qty:0);
+      var row=document.createElement('div'); row.className='mm-cart__item';
+      row.innerHTML='<span>'+esc(it.product_name)+(it.slicing?' (슬라이싱)':'')+' ×'+it.qty+'</span><span>'+won(line)+' <button>삭제</button></span>';
+      row.querySelector('button').onclick=function(){ cart=cart.filter(function(x){return x.key!==it.key;}); renderCart(); };
+      items.appendChild(row);
+    });
+    var pr = priceCart();
+    if(pr.discount>0){
+      var d=document.createElement('div'); d.className='mm-cart__item'; d.style.color='#B45309';
+      d.innerHTML='<span>묶음 할인</span><span>-'+won(pr.discount)+'</span>';
+      items.appendChild(d);
+    }
+    $('cartTotal').textContent=won(pr.total);
+    sec.classList.remove('mm-hide'); showTail(true); updateSubmit();
+  }
+
+  function showTail(on){
+    $('receiveSec').classList.toggle('mm-hide', !on);
+    $('contactSec').classList.toggle('mm-hide', !on);
+    $('extraSec').classList.toggle('mm-hide', !on);
+    // 배송지는 택배일 때만
+    $('addrSec').classList.toggle('mm-hide', !on || recv==='visit');
+  }
+
+  // 수령방법
+  [].forEach.call(document.querySelectorAll('[data-recv]'), function(b){
+    b.onclick=function(){
+      recv=b.getAttribute('data-recv');
+      document.querySelectorAll('[data-recv]').forEach(function(x){x.setAttribute('aria-pressed','false');});
+      b.setAttribute('aria-pressed','true');
+      $('addrSec').classList.toggle('mm-hide', recv==='visit');
+    };
+  });
+
+  // 다음(Daum) 우편번호 검색 — 임베드 레이어 (인앱 안전)
+  function loadDaum(cb){
+    if(window.daum && window.daum.Postcode){ cb(); return; }
+    var s=document.createElement('script');
+    s.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.onload=cb; s.onerror=function(){ alert('주소검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); };
+    document.head.appendChild(s);
+  }
+  function openPostcode(){
+    loadDaum(function(){
+      // 레이어 먼저 표시(컨테이너 크기 확보) → display:none 상태에서 embed하면 iframe이 0높이로 빈 채 렌더됨
+      $('pcInner').innerHTML='';
+      $('pcLayer').classList.add('on');
+      anchorOverlay($('pcLayer'), $('addrSec'), 0);   // 임베드: 주소 섹션 위에 겹쳐 띄움
+      requestAnimationFrame(function(){
+        new daum.Postcode({
+          oncomplete:function(d){
+            $('postcode').value = d.zonecode || '';
+            $('address1').value = d.roadAddress || d.jibunAddress || '';
+            var a2=$('address2'); a2.disabled=false; a2.placeholder='상세 주소 (동·호수 등)';
+            $('pcLayer').classList.remove('on');
+            a2.focus();
+          },
+          // 내용 높이에 맞춰 시트 크기 조절 — 결과 적을 때 아래 빈 흰 공간 방지(최대 72vh, 넘으면 내부 스크롤)
+          // ⚠️ 임베드에서는 innerHeight = iframe 전체 콘텐츠 높이(수천 px)라 72vh 계산이 무의미 → 고정 상한
+          onresize:function(size){
+            var inner=$('pcInner');
+            var cap = IS_EMBED ? 460 : Math.round(window.innerHeight*0.72);
+            if(inner) inner.style.height = Math.min(size.height||400, cap) + 'px';
+          },
+          width:'100%'
+        }).embed($('pcInner'));
+      });
+    });
+  }
+  $('addrSearchBtn').onclick=openPostcode;
+  $('pcClose').onclick=function(){ $('pcLayer').classList.remove('on'); };
+  $('pcLayer').onclick=function(e){ if(e.target===$('pcLayer')) $('pcLayer').classList.remove('on'); };
+
+  function updateSubmit(){
+    var btn=$('submitBtn');
+    if(!cart.length){ btn.disabled=true; btn.textContent='품목을 선택해 주세요'; return; }
+    btn.disabled=false; btn.textContent='접수하기';
+  }
+
+  $('submitBtn').onclick=function(){
+    if(!cart.length) return;
+    var name=$('name').value.trim(), phone=$('phone').value.replace(/\D/g,'');
+    if(!name){ alert('성함을 입력해 주세요'); return; }
+    if(phone.length<10){ alert('연락처를 정확히 입력해 주세요'); return; }
+    if(recv==='delivery' && !$('address1').value.trim()){ alert('택배 발송은 주소가 필요합니다'); return; }
+    if(!$('consent').checked){ alert('개인정보 수집·이용에 동의해 주세요'); return; }
+
+    var payload={ name:name, phone:phone, receive_method:recv, campaign_id:CAMPAIGN_ID||undefined,
+      postcode:recv==='delivery'?$('postcode').value.trim():'',
+      address1:recv==='delivery'?$('address1').value.trim():'',
+      address2:recv==='delivery'?$('address2').value.trim():'',
+      memo:$('memo').value.trim(),
+      items:cart.map(function(it){return {product_id:it.product_id,product_name:it.product_name,category_type:it.category_type,spec:it.spec,slicing:it.slicing,qty:it.qty,unit_price:it.unit_price};}) };
+
+    anchorOverlay($('doneModal'), $('submitBtn'), 24);   // 임베드: 방금 누른 접수 버튼 위치에 완료 화면
+    $('doneModal').classList.add('on'); // fire & forget
+    fetch(API+'/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .catch(function(e){ console.error('submit error',e); });
+  };
+
+  function uniq(a){ var s={},o=[]; a.forEach(function(x){if(!s[x]){s[x]=1;o.push(x);}}); return o; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+})();
+
+/* ══ 부모(아임웹)에 높이 통지 — 표준 패턴 [reference_iframe_codewidget_pattern] ══════════
+   아임웹은 코드위젯 안의 <script>를 제거/미실행하므로, 실제 수신자는 전역 헤더의
+   banner-widget.js 리사이저(source 매칭·monotonic·REQUEST_HEIGHT 재요청)다.
+   그래서 여기서 REQUEST_HEIGHT엔 높이 변화가 없어도 무조건 회신(force)해야 한다. */
+(function(){
+  if (window.parent === window) return;
+  var lastSent = 0;
+  function getHeight(){
+    var b = document.body, d = document.documentElement;
+    return Math.max(b.scrollHeight||0, d.scrollHeight||0, b.offsetHeight||0);
+  }
+  function send(force){
+    var h = Math.ceil(getHeight());
+    if (!force && h <= lastSent + 1) return;   // monotonic — 측정 노이즈로 줄어드는 것 차단
+    lastSent = h;
+    window.parent.postMessage({ type:'MAMORU_IFRAME_SIZE', id:'event-form', height:h }, '*');
+  }
+  if (window.ResizeObserver) { try { new ResizeObserver(function(){ send(); }).observe(document.body); } catch(_){} }
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(function(){ send(); }).catch(function(){}); }
+  // 손/가격 칩·담기로 카탈로그가 늘어난 직후 재측정 (ResizeObserver 누락 대비)
+  document.addEventListener('click', function(){ setTimeout(function(){ send(); }, 80); });
+  function multi(){ send(); [50,150,400,800,1500,3000,5000].forEach(function(ms){ setTimeout(function(){ send(); }, ms); }); }
+  if (document.readyState === 'complete') multi();
+  else { window.addEventListener('load', multi); send(); }
+  var t;
+  window.addEventListener('resize', function(){ clearTimeout(t); t = setTimeout(function(){ send(); }, 200); });
+  window.addEventListener('pageshow', function(e){ if (e.persisted) multi(); });
+  window.addEventListener('message', function(e){ if (e.data && e.data.type === 'REQUEST_HEIGHT') send(true); });
+})();
+</script>
+</body>
+</html>

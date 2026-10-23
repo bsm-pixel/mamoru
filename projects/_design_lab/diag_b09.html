@@ -1,0 +1,1992 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>시안 B-09 · 가위 진단</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+<!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<script type="module" src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"></script>
+<!-- =========================================================
+   MAMORU 간편진단 페이지 v4
+
+   ★ v4 수정사항:
+   1. iframe 내 스크롤/여백 문제 해결
+   2. 아임웹 페이지 이동 (window.top 사용)
+   3. postMessage로 높이 전송
+   ========================================================= -->
+
+<style>
+/* ★ 아이콘 색상 가이드 (Brand Guide v1.0 모노크롬)
+   ─────────────────────────────────────
+   라인 아이콘 (stroke):
+     - 기본 상태: #1A1A1A (Void) — 시선 유도
+     - 비활성/보조: #8A8580 (Warm Gray)
+     - 선택 상태: #1A1A1A + 배경 틴트로 강조
+   채우기 아이콘 (fill):
+     - 기본: #1A1A1A (Void)
+     - 소프트: #B8B4AF (Mist) — 장식적 용도
+   금지:
+     - #D4613E (구 Terracotta) — 폐기된 팔레트
+     - #C9A962 (구 Gold) — 폐기된 팔레트
+   외부 SVG 파일도 동일 기준 적용
+   ───────────────────────────────────── */
+
+/* Canon tokens (Brand Guide v1.0) — 추가만, 기존 하드코딩 컬러 유지 */
+:root {
+  --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580; --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7; --white:#FFFFFF;
+}
+
+/* =========================================================
+   HTML/Body Reset (iframe 대응)
+   ========================================================= */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: hidden;
+}
+
+html::-webkit-scrollbar { display: none; }
+
+body {
+  overflow-x: hidden;
+  overflow-y: visible;
+  height: auto !important;
+  min-height: auto !important;
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: #FAF9F7;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+}
+/* =========================================================
+   기본 설정 + PC/모바일 반응형
+   ========================================================= */
+.mamoru-diagnosis {
+  background: #FAF9F7;
+  color: #1A1A1A;
+  min-height: 500px;  /* 100vh → 고정값: iframe 피드백 루프 방지 */
+  margin: 0 auto;
+  /* PC: 중앙 정렬 + 최대 너비 */
+  max-width: 800px;
+  padding: 40px 24px 60px;
+}
+
+/* 모바일: 좌우 여백 최소화 */
+@media screen and (max-width: 768px) {
+  .mamoru-diagnosis {
+    max-width: 100%;
+    padding: 16px 16px 40px;
+  }
+}
+
+/* 소형 모바일 (480px 이하) */
+@media screen and (max-width: 480px) {
+  .mamoru-diagnosis {
+    padding: 12px 12px 32px;
+  }
+}
+
+/* =========================================================
+   헤더
+   ========================================================= */
+.diag-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 24px;
+  margin-bottom: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-header {
+    padding: 8px 0 20px;
+    margin-bottom: 0;
+  }
+}
+
+.diag-back-btn {
+  width: 48px;   /* 터치 영역 확대 (접근성) */
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 26, 0.04);
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  color: #4A4A4A;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media (hover: hover) {
+  .diag-back-btn:hover {
+    background: rgba(26, 26, 26, 0.08);
+    border-color: rgba(26, 26, 26, 0.3);
+    color: #1A1A1A;
+  }
+}
+
+.diag-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-title {
+    font-size: 16px;
+  }
+}
+
+.diag-step-indicator {
+  font-size: 15px;
+  color: #1A1A1A;
+  font-weight: 600;
+  background: rgba(26, 26, 26, 0.10);
+  padding: 6px 14px;
+  border-radius: 100px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-step-indicator {
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+}
+
+/* =========================================================
+   프로그레스 바
+   ========================================================= */
+.diag-progress-container {
+  margin-bottom: 40px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-progress-container {
+    margin-bottom: 32px;
+  }
+}
+
+.diag-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(26, 26, 26, 0.06);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-progress-bar {
+    height: 6px;  /* 시인성 개선 (4px → 6px) */
+  }
+}
+
+.diag-progress-fill {
+  height: 100%;
+  background: #1A1A1A;
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+/* =========================================================
+   질문 영역
+   ========================================================= */
+.diag-content {
+  min-height: 450px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-content {
+    min-height: 400px;
+  }
+}
+
+/* ★ 수정: 선택 시 깜빡임 제거, 전환 시에만 애니메이션 */
+.diag-question-wrapper {
+  opacity: 1;
+}
+
+.diag-question-wrapper.fade-enter {
+  animation: fadeInSmooth 0.35s ease-out;
+}
+
+@keyframes fadeInSmooth {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diag-question-label {
+  display: inline-block;
+  padding: 6px 14px;
+  background: rgba(26, 26, 26, 0.10);
+  border-radius: 100px;
+  color: #1A1A1A;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-label {
+    padding: 4px 12px;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-question-text {
+  font-family: 'Outfit', sans-serif;  /* Brand Guide: 디스플레이 서체 */
+  font-size: 40px;  /* PC: 더 큰 제목 */
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 16px;
+  color: #1A1A1A;
+  white-space: pre-line;  /* 데이터의 \n을 자연 줄바꿈으로 처리 */
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-text {
+    font-size: 24px;  /* 모바일: 원래 크기 */
+    margin-bottom: 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-question-text {
+    font-size: 22px;  /* 소형 모바일 가독성 */
+  }
+}
+
+.diag-question-sub {
+  font-size: 16px;
+  color: #4A4A4A;
+  line-height: 1.5;
+  margin-bottom: 36px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-question-sub {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+}
+
+/* =========================================================
+   선택지 - 기본형
+   ========================================================= */
+.diag-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  /* PC: 2열 그리드 */
+  gap: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-options {
+    grid-template-columns: 1fr;  /* 모바일: 1열 */
+    gap: 12px;
+  }
+}
+
+.diag-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #F5F3F0;
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option {
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 12px;
+  }
+}
+
+@media (hover: hover) {
+  .diag-option:hover {
+    background: rgba(26, 26, 26, 0.04);
+    border-color: rgba(26, 26, 26, 0.2);
+  }
+}
+
+.diag-option:active {
+  transform: scale(0.98);
+}
+
+.diag-option.selected {
+  background: rgba(26, 26, 26, 0.08);
+  border-color: #1A1A1A;
+  transform: scale(1.01);
+}
+
+.diag-option-icon {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 26, 0.03);
+  border-radius: 8px;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+/* 커스텀 아이콘 이미지 지원 - 인라인 SVG와 동일 크기 */
+.diag-custom-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+    border-radius: 8px;
+  }
+}
+
+.diag-option.selected .diag-option-icon {
+  background: rgba(26, 26, 26, 0.12);
+}
+
+.diag-option-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.diag-option-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 4px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-title {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+}
+
+.diag-option-desc {
+  font-size: 14px;
+  color: #4A4A4A;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-desc {
+    font-size: 13px;
+  }
+}
+
+.diag-option-check {
+  width: 26px;
+  height: 26px;
+  border: 2px solid rgba(26, 26, 26, 0.15);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-check {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.diag-option.selected .diag-option-check {
+  background: #1A1A1A;
+  border-color: #1A1A1A;
+}
+
+.diag-option.selected .diag-option-check::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #FAF9F7;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option.selected .diag-option-check::after {
+    font-size: 12px;
+  }
+}
+
+/* =========================================================
+   선택지 - GIF 포함형
+   ========================================================= */
+.diag-options--with-gif {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-options--with-gif {
+    grid-template-columns: repeat(2, 1fr);  /* 모바일도 2열 유지 */
+    gap: 10px;
+  }
+}
+
+.diag-option--with-gif {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: #F5F3F0;
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  overflow: hidden;
+}
+
+@media (hover: hover) {
+  .diag-option--with-gif:hover {
+    background: rgba(26, 26, 26, 0.04);
+    border-color: rgba(26, 26, 26, 0.2);
+  }
+}
+
+.diag-option--with-gif:active {
+  transform: scale(0.98);
+}
+
+.diag-option--with-gif.selected {
+  background: rgba(26, 26, 26, 0.08);
+  border-color: #1A1A1A;
+  transform: scale(1.01);
+}
+
+.diag-option-gif {
+  width: 100%;
+  height: 160px;
+  background: rgba(26, 26, 26, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-gif {
+    height: 80px;  /* 모바일 컴팩트 */
+  }
+  .diag-option-gif-placeholder-icon {
+    font-size: 28px;
+    margin-bottom: 4px;
+  }
+  .diag-option-gif-placeholder {
+    font-size: 11px;
+  }
+}
+
+.diag-option-gif img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.diag-option-gif-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #B8B4AF;
+  font-size: 13px;
+}
+
+.diag-option-gif-placeholder-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+.diag-option-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-info {
+    padding: 10px 12px;
+  }
+}
+
+.diag-option-info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.diag-option-info-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin-bottom: 2px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-option-info-title {
+    font-size: 13px;
+  }
+  .diag-option-info-desc {
+    font-size: 11px;
+  }
+}
+
+.diag-option-info-desc {
+  font-size: 13px;
+  color: #4A4A4A;
+}
+
+.diag-option-info-check {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(26, 26, 26, 0.15);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.diag-option--with-gif.selected .diag-option-info-check {
+  background: #1A1A1A;
+  border-color: #1A1A1A;
+}
+
+.diag-option--with-gif.selected .diag-option-info-check::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #FAF9F7;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* =========================================================
+   복수선택 안내
+   ========================================================= */
+.diag-multiple-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(26, 26, 26, 0.06);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1A1A1A;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-multiple-hint {
+    margin-top: 16px;
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   하단 버튼 - PC: 콘텐츠 내 우측 정렬 / 모바일: 하단 고정
+   ========================================================= */
+
+/* 기본(PC): 콘텐츠 영역 내 우측 정렬 */
+.diag-footer {
+  display: flex;
+  justify-content: flex-end;  /* 우측 정렬 */
+  margin-top: 48px;  /* 선택지와 간격 */
+  padding: 0;
+  background: transparent;
+  z-index: 100;
+}
+
+.diag-footer-inner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* PC: 버튼 스타일 조정 */
+@media screen and (min-width: 769px) {
+  .diag-back-btn-bottom {
+    width: 52px;
+    height: 52px;
+  }
+  .diag-next-btn {
+    width: 180px;
+    flex: none;
+  }
+}
+
+/* 모바일: 콘텐츠 내 배치 (브라우저 UI 가림 방지) */
+@media screen and (max-width: 768px) {
+  .diag-footer {
+    justify-content: center;  /* 모바일은 중앙 정렬 */
+    margin-top: 32px;
+    padding: 0;
+    background: transparent;
+  }
+  .diag-footer-inner {
+    width: 100%;
+    max-width: 100%;
+  }
+  .diag-back-btn-bottom {
+    width: 48px;
+    height: 48px;
+  }
+  .diag-next-btn {
+    flex: 1;
+  }
+}
+
+/* 이전 버튼 - 하단으로 이동 */
+.diag-back-btn-bottom {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 26, 0.04);
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  color: #4A4A4A;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media (hover: hover) {
+  .diag-back-btn-bottom:hover {
+    background: rgba(26, 26, 26, 0.08);
+    border-color: rgba(26, 26, 26, 0.3);
+    color: #1A1A1A;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .diag-back-btn-bottom {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+.diag-next-btn {
+  flex: 1;  /* 남은 공간 채우기 */
+  height: 58px;
+  background: #1A1A1A;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  color: #FAF9F7;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-next-btn {
+    height: 54px;
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-next-btn {
+    height: 52px;
+    font-size: 15px;
+  }
+}
+
+.diag-next-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .diag-next-btn:not(:disabled):hover {
+    background: #2D2D2D;
+    transform: translateY(-2px);
+  }
+}
+
+.diag-next-btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* =========================================================
+   결과 화면
+   ========================================================= */
+.diag-result {
+  display: none;
+}
+
+.diag-result.show {
+  display: block;
+  animation: fadeInSmooth 0.4s ease-out;
+}
+
+.diag-result-card {
+  background: #F5F3F0;
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  padding: 32px 28px;
+  margin-bottom: 24px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-card {
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-result-card {
+    padding: 20px 16px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-result-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(26, 26, 26, 0.06);
+  border-radius: 100px;
+  color: #4A4A4A;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-badge {
+    padding: 6px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+}
+
+.diag-result-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.35;
+  margin-bottom: 16px;
+  color: #1A1A1A;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .diag-result-title {
+    font-size: 20px;
+  }
+}
+
+.diag-result-desc {
+  font-size: 16px;
+  color: #4A4A4A;
+  line-height: 1.7;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-desc {
+    font-size: 15px;
+  }
+}
+
+/* 진단 데이터 — 절제된 키:값 정리 (안내문구 대신 한눈에) */
+.diag-summary {
+  margin-top: 20px;
+  text-align: left;
+}
+.diag-summary__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 2px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+}
+.diag-summary__row:first-child { border-top: 1px solid rgba(26,26,26,0.08); }
+.diag-summary__k {
+  font-size: 13px;
+  color: #8A8580;
+  flex: 0 0 auto;
+  letter-spacing: -0.01em;
+}
+.diag-summary__v {
+  font-size: 14px;
+  color: #1A1A1A;
+  font-weight: 600;
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* 가위 종류별 그룹 블록 */
+.diag-result-group {
+  margin-top: 16px;
+}
+.diag-result-group-chip {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(26, 26, 26, 0.12);
+  color: #1A1A1A;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.diag-result-group-list {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0;
+}
+.diag-result-group-list li {
+  color: #4A4A4A;
+  line-height: 1.6;
+  font-size: 15px;
+  padding-left: 14px;
+  position: relative;
+}
+.diag-result-group-list li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: #B8B4AF;
+}
+/* 인사말 / 마무리 텍스트 */
+.diag-result-intro {
+  white-space: pre-line;
+  margin-bottom: 4px;
+}
+.diag-result-outro {
+  margin-top: 16px;
+  color: #8A8580;
+  font-size: 14px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-group-chip {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
+  .diag-result-group-list li {
+    font-size: 14px;
+  }
+  .diag-result-outro {
+    font-size: 13px;
+  }
+}
+
+.diag-result-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(26, 26, 26, 0.08);
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-tags {
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+}
+
+.diag-result-tag {
+  display: inline-block;
+  padding: 8px 14px;
+  background: rgba(26, 26, 26, 0.04);
+  border-radius: 100px;
+  font-size: 14px;
+  color: #4A4A4A;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-tag {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
+
+.diag-result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* PC: 중앙 정렬 */
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.diag-result-actions .diag-result-btn {
+  max-width: 480px;  /* PC: 버튼 너비 제한 */
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-actions {
+    gap: 12px;
+    margin-top: 24px;
+    padding-bottom: 32px; /* 모바일 브라우저 UI 가림 방지 */
+  }
+  .diag-result-actions .diag-result-btn {
+    max-width: 100%;  /* 모바일: 전체폭 */
+  }
+}
+
+.diag-result-btn {
+  width: 100%;
+  height: 58px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-btn {
+    height: 54px;
+    font-size: 16px;
+  }
+}
+
+.diag-result-btn-primary {
+  background: #1A1A1A;
+  border: none;
+  color: #FAF9F7;
+}
+
+@media (hover: hover) {
+  .diag-result-btn-primary:hover {
+    background: #2D2D2D;
+    transform: translateY(-2px);
+  }
+}
+
+.diag-result-btn-primary:active {
+  transform: scale(0.97);
+}
+
+.diag-result-btn-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(26, 26, 26, 0.12);
+  color: #2D2D2D;
+}
+
+@media (hover: hover) {
+  .diag-result-btn-secondary:hover {
+    border-color: rgba(26, 26, 26, 0.3);
+    background: rgba(26, 26, 26, 0.04);
+    color: #1A1A1A;
+  }
+}
+
+.diag-result-btn-hint {
+  font-size: 13px;
+  color: #8A8580;
+  text-align: center;
+  margin-top: 6px;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-btn-hint {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+}
+
+/* =========================================================
+   복원수리 안내 섹션
+   ========================================================= */
+.diag-result-restore {
+  background: rgba(26, 26, 26, 0.04);
+  border: 1px solid rgba(26, 26, 26, 0.12);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.diag-result-restore-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.diag-result-restore-icon svg {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+.diag-result-restore-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1A1A1A;
+}
+.diag-result-restore-desc {
+  font-size: 15px;
+  color: #4A4A4A;
+  line-height: 1.7;
+  margin: 0 0 16px 0;
+}
+.diag-result-youtube {
+  margin-top: 16px;
+}
+.diag-result-youtube-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: rgba(26, 26, 26, 0.03);
+  border: 1px solid rgba(26, 26, 26, 0.08);
+  border-radius: 8px;
+  text-decoration: none;
+  pointer-events: none; /* [TODO] 영상 준비 후 제거 */
+  opacity: 0.55;
+}
+.diag-result-youtube-thumb {
+  width: 72px;
+  height: 48px;
+  background: rgba(26, 26, 26, 0.04);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.diag-result-youtube-play svg {
+  width: 18px;
+  height: 18px;
+}
+.diag-result-youtube-coming {
+  font-size: 10px;
+  color: #B8B4AF;
+  margin-top: 2px;
+}
+.diag-result-youtube-text {
+  font-size: 14px;
+  color: #4A4A4A;
+  line-height: 1.5;
+}
+
+@media screen and (max-width: 768px) {
+  .diag-result-restore {
+    padding: 20px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .diag-result-restore-desc {
+    font-size: 14px;
+  }
+  .diag-result-youtube-link {
+    padding: 12px;
+    gap: 12px;
+  }
+  .diag-result-youtube-text {
+    font-size: 13px;
+  }
+}
+</style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 진단 도구라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 진단 리포트(검사지) / 시그니처: 오른쪽 위 거대 얇은 단계 번호(1/5) + 질문 제목 얇은 첫 줄 ↔ 굵은 둘째 줄
+             결과 = 번호 매긴 검사 성적서(01·02·03… hairline 행)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 선택지·버튼 크기 유지 · 히어로 사진 없음 · 아이콘 원래 색 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+body{ font-family:'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; word-break:keep-all; overflow-wrap:break-word; }
+.mamoru-diagnosis *{ box-shadow:none !important; }
+
+/* ── 1. 머리 — 왼쪽 작은 라벨 ↔ 오른쪽 거대 얇은 단계 번호 ── */
+.diag-header{ align-items:flex-end; padding:12px 0 14px; margin-bottom:0; }
+.diag-title{ font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--warm-gray); padding-bottom:6px; }
+.diag-step-indicator{ background:transparent; padding:0; border-radius:0; font-family:'Outfit',sans-serif; font-weight:300; font-size:clamp(40px,12vw,64px); line-height:.8; letter-spacing:-.05em; color:var(--void); font-variant-numeric:tabular-nums; }
+
+/* 진행 막대 — 둥근 6px → 가는 선 위 2px 검정 */
+.diag-progress-container{ margin-bottom:clamp(28px,6vw,44px); }
+.diag-progress-bar{ height:2px; border-radius:0; background:var(--sand); }
+.diag-progress-fill{ border-radius:0; }
+
+/* ── 2. 질문 — 알약 라벨 → 짧은 선 + 머리말 / 제목 얇은 첫 줄 ↔ 굵은 둘째 줄 ── */
+.diag-question-label{ background:transparent; border-radius:0; padding:0; font-size:12px; font-weight:700; letter-spacing:.06em; color:var(--warm-gray); display:inline-flex; align-items:center; gap:10px; margin-bottom:14px; }
+.diag-question-label::before{ content:''; width:24px; height:1px; background:var(--void); }
+.diag-question-text{ font-family:'Pretendard',sans-serif; font-size:clamp(26px,7.4vw,44px); font-weight:900; line-height:1.25; letter-spacing:-.04em; word-break:keep-all; }
+.diag-question-text::first-line{ font-weight:300; color:var(--stone); }
+.diag-question-sub{ font-size:clamp(14px,3.8vw,16px); color:var(--warm-gray); margin-bottom:clamp(22px,5vw,32px); }
+
+/* ── 3. 선택지 — 회색 판 → 흰 칸 + 가는 선, 2px (크기·여백 그대로) ── */
+.diag-option, .diag-option--with-gif{ background:var(--white); border:1px solid var(--sand); border-radius:2px; }
+.diag-option.selected, .diag-option--with-gif.selected{ background:var(--white); border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; transform:none; }
+@media (hover:hover){
+  .diag-option:hover, .diag-option--with-gif:hover{ background:var(--white); border-color:var(--void); }
+}
+.diag-option-icon{ background:transparent; border-radius:2px; }
+.diag-option.selected .diag-option-icon{ background:transparent; }
+.diag-option-title, .diag-option-info-title{ font-weight:700; letter-spacing:-.02em; }
+.diag-option-desc, .diag-option-info-desc{ color:var(--warm-gray); }
+.diag-option-gif{ background:var(--shell); border-bottom:1px solid var(--parchment); }
+/* 모바일: 좁은 2칸(글 끊김) → 1단 가로 행 [움직이는 그림 | 글 | 체크] */
+@media (max-width:767px){
+  .diag-options--with-gif{ grid-template-columns:1fr; gap:10px; }
+  .diag-option--with-gif{ flex-direction:row; align-items:stretch; }
+  .diag-option-gif{ flex:0 0 38%; height:auto; min-height:88px; border-bottom:0; border-right:1px solid var(--parchment); }
+  .diag-option-info{ flex:1; min-width:0; padding:12px 14px; }
+  .diag-option-info-title{ font-size:15px; }
+  .diag-option-info-desc{ font-size:13px; }
+}
+/* 체크 — 동그라미 → 2px 사각 (선택 = 검정 채움) */
+.diag-option-check, .diag-option-info-check{ border-radius:2px; border-width:1px; border-color:var(--mist); }
+
+/* 복수선택 안내 — 회색 상자 → 왼쪽 검은 선 */
+.diag-multiple-hint{ justify-content:flex-start; background:transparent; border-radius:0; border-left:2px solid var(--void); padding:2px 0 2px 12px; color:var(--stone); }
+
+/* ── 4. 하단 버튼 — 알약 → 2px 사각 (높이 그대로) ── */
+.diag-next-btn{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+@media (hover:hover){ .diag-next-btn:not(:disabled):hover{ transform:none; } }
+.diag-back-btn-bottom{ background:transparent; border:1px solid var(--sand); border-radius:2px; }
+
+/* ── 5. 결과 = 검사 성적서 — 판 제거, 검은 가는 선 시작, 행마다 번호 ── */
+.diag-result-card{ background:transparent; border:0; border-radius:0; padding:0 0 4px; }  /* 위 진행 막대(가득 참)가 곧 시작 선 — 선 2줄 겹침 방지 */
+.diag-result-badge{ background:transparent; border:1px solid var(--void); border-radius:2px; color:var(--void); padding:5px 10px; font-size:12px; font-weight:800; letter-spacing:.02em; }
+.diag-result-title{ font-family:'Pretendard',sans-serif; font-size:clamp(26px,7.4vw,40px); font-weight:900; letter-spacing:-.04em; line-height:1.2; word-break:keep-all; }
+.diag-summary{ counter-reset:b-row; margin-top:clamp(20px,5vw,28px); }
+.diag-summary__row{ counter-increment:b-row; align-items:center; padding:14px 0; border-bottom:1px solid var(--sand); }
+.diag-summary__row:first-child{ border-top:1px solid var(--void); }
+.diag-summary__k{ display:inline-flex; align-items:center; font-size:13px; font-weight:600; color:var(--stone); }
+.diag-summary__k::before{ content:counter(b-row, decimal-leading-zero); min-width:2em; margin-right:8px; font-family:'Outfit',sans-serif; font-size:clamp(22px,6vw,28px); font-weight:300; line-height:1; letter-spacing:-.05em; color:var(--mist); font-variant-numeric:tabular-nums; }
+.diag-summary__v{ font-size:15px; font-weight:800; letter-spacing:-.02em; }
+
+/* 복원수리 안내 — 판 → 왼쪽 검은 선 */
+.diag-result-restore{ background:transparent; border:0; border-left:2px solid var(--void); border-radius:0; padding:4px 0 4px 16px; margin:28px 0; }
+.diag-result-restore-title{ font-weight:800; letter-spacing:-.02em; }
+.diag-result-restore-desc{ text-wrap:pretty; }
+.diag-result-youtube-link{ border-radius:2px; background:transparent; border-color:var(--sand); }
+.diag-result-youtube-thumb{ border-radius:2px; background:var(--shell); }
+
+/* 결과 버튼 — 알약 → 2px (높이 그대로) */
+.diag-result-btn{ border-radius:2px; }
+.diag-result-btn-primary{ font-weight:800; letter-spacing:-.01em; }
+@media (hover:hover){ .diag-result-btn-primary:hover{ transform:none; } }
+.diag-result-btn-secondary{ border:1px solid var(--sand); }
+.diag-result-btn-hint{ text-wrap:pretty; }
+@media (min-width:769px){
+  .diag-result-actions{ align-items:flex-start; }
+  .diag-result-btn-hint{ text-align:left; }
+}
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_diag.html 에 B-09 덧입힘(문구·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 가위 진단(아임웹 /58). 문구·버튼은 같고 디자인만 다릅니다. 질문을 끝까지 고르면 결과(진단 정리) 화면이 나옵니다.</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_diag.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+
+<div class="mamoru-diagnosis">
+  <!-- 헤더 -->
+  <div class="diag-header">
+    <span class="diag-title">간편진단</span>
+    <span class="diag-step-indicator" id="stepIndicator">1/5</span>
+  </div>
+  
+  <!-- 프로그레스 바 -->
+  <div class="diag-progress-container">
+    <div class="diag-progress-bar">
+      <div class="diag-progress-fill" id="progressFill" style="width: 20%"></div>
+    </div>
+  </div>
+  
+  <!-- 질문 영역 -->
+  <div class="diag-content" id="questionContent">
+    <!-- 동적 렌더링 -->
+  </div>
+  
+  <!-- 결과 영역 -->
+  <div class="diag-result" id="resultContent">
+    <!-- 동적 렌더링 -->
+  </div>
+  
+  <!-- 하단 버튼 -->
+  <div class="diag-footer" id="diagFooter">
+    <div class="diag-footer-inner">
+      <button class="diag-back-btn-bottom" id="backBtn" onclick="diagGoBack()"><svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.2em;height:1.2em;vertical-align:middle"><path d="M20 12H4"/><path d="M10 6l-6 6 6 6"/></svg></button>
+      <button class="diag-next-btn" id="nextBtn" onclick="diagNextQuestion()" disabled>다음</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MAMORU 간편진단 v3
+   
+   ★ 수정 가이드:
+   - 질문 추가/수정: questionsData 배열
+   - 상담접수 URL: CONSULT_PAGE_URL 변수
+   ========================================================= */
+
+// ★★★ URL 설정 ★★★
+const IMWEB_DOMAIN = 'https://mamoru.kr';  /* [EDIT:URL] 아임웹 도메인 (자체 도메인) */
+const CONSULT_PAGE_URL = IMWEB_DOMAIN + '/52';  /* [EDIT:URL] 상담접수 페이지 */
+const RECOMMEND_PAGE_URL = IMWEB_DOMAIN + '/57';  /* [EDIT:URL] 맞춤 추천 페이지 */
+
+/* =========================================================
+   질문 데이터
+   ========================================================= */
+const questionsData = [
+  {
+    id: 'Q_STAGE',
+    label: '경력',  /* [수정문구] */
+    question: '현재 단계가\n어떻게 되시나요?',  /* [수정문구] */
+    sub: '가장 가까운 상황을 선택해주세요',  /* [수정문구] */
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'CE', label: '자격증 준비 & 취득', desc: '아직 현장 경험이 없어요', icon: '../consulting/icons/level_1.svg' },
+      { id: 'IN', label: '인턴 & 스탭', desc: '현장에서 배우며 연습해요', icon: '../consulting/icons/level2.svg' },
+      { id: 'DE', label: '디자이너', desc: '손님을 직접 담당해요', icon: '../consulting/icons/level3.svg' }
+    ]
+  },
+  {
+    id: 'Q_TYPE',
+    label: '가위 종류',  /* [수정문구] */
+    question: '어떤 종류의\n가위가 필요하신가요?',  /* [수정문구] */
+    sub: '여러 개 선택 가능해요',  /* [수정문구] */
+    multiple: true,
+    hasGif: false,
+    condition: null,
+    /*
+     * [수정아이콘] SVG 아이콘 사용 예시:
+     * icon: '../consulting/icons/blunt.svg'      ← icons 폴더에 저장된 SVG
+     * icon: '../consulting/icons/thinning.svg'
+     * icon: '✂️'                     ← 이모지 그대로 사용
+     */
+    options: [
+      { id: 'BL', label: '블런트', desc: '커트의 시작점. 메인 블런트', icon: '../consulting/icons/blunt.svg' },
+      { id: 'TH', label: '틴닝', desc: '양감 및 질감을 책임지다', icon: '../consulting/icons/thinning.svg' },
+      { id: 'LO', label: '장가위', desc: '면을 다듬다. 싱글링', icon: '../consulting/icons/long.svg' },
+      { id: 'SL', label: '슬라이싱/스트록', desc: '텍스쳐. 테크닉을 담다', icon: '../consulting/icons/slide1312.svg' }
+    ]
+  },
+  /* ════════════════════════════════════════════════════════════════════════
+     ✏️ Lottie(.json) 애니메이션 적용 가이드 — Q_FEEL / Q_STYLE / Q_HABIT 공통
+
+     ┌─ 사용 방법 ────────────────────────────────────────────────────────────┐
+     │ 1) Jitter 등에서 모션 작업 → "Lottie JSON" 으로 export                  │
+     │    캔버스 사이즈: 320×180 권장 (16:9 비율). 사이즈는 자유 (벡터)         │
+     │ 2) ./icons/ 폴더에 .json 파일 저장                                      │
+     │    예: feel_soft.json, style_go.json, habit_wet.json                   │
+     │ 3) 아래 옵션의 lottieUrl: '' 안에 경로 입력                             │
+     │    예: lottieUrl: '../consulting/icons/feel_soft.json'                              │
+     │ 4) 새로고침 → 자동재생 + 무한반복으로 표시                              │
+     └────────────────────────────────────────────────────────────────────────┘
+
+     우선순위: lottieUrl → gifUrl → "준비중" placeholder (셋 다 비면 placeholder)
+     라이브러리(@dotlottie/player-component)는 head 에 이미 로드됨 — 추가 작업 X
+     16:9 비율만 지키면 PC/모바일 모두 자동 contain 으로 표시 (cover 처리, 가운데 60% 안전 영역)
+     ════════════════════════════════════════════════════════════════════════ */
+  {
+    id: 'Q_FEEL',
+    label: '커트 느낌',  /* [수정문구] */
+    question: '선호하는 커트 느낌이\n어떻게 되시나요?',  /* [수정문구] */
+    sub: '가위를 쓸 때 원하는 느낌을 선택해주세요',  /* [수정문구] */
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => {
+      const stage = answers.Q_STAGE;
+      const types = answers.Q_TYPE || [];
+      return (stage === 'IN' || stage === 'DE') && (types.includes('BL') || types.includes('LO'));
+    },
+    options: [
+      { id: 'FEEL_SOFT', label: '부드러운 느낌', desc: '폭신한 커트감', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 19h12a4 4 0 0 0 0-8 5 5 0 0 0-9.5-2A3.5 3.5 0 0 0 6 19z"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ },
+      { id: 'FEEL_POWER', label: '힘있고 강한 느낌', desc: '시원시원한 커트감', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#1A1A1A" stroke="#1A1A1A"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ },
+      { id: 'FEEL_NONE', label: '아직 잘 모르겠어요', desc: '어떤것을 원하는지 감이안와요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9c0-3.3 2.7-6 6-6s6 2.7 6 6c0 2-1 3.5-2.5 4.5-.8.5-1.5 1.2-1.5 2v.5"/><circle cx="15" cy="19" r="0.5" fill="#1A1A1A"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ }
+    ]
+  },
+  /* ✏️ Lottie 적용: 위 Q_FEEL 상단 가이드 참조 — 각 옵션 lottieUrl: '../consulting/icons/xxx.json' 입력 */
+  {
+    id: 'Q_STYLE',
+    label: '커트 스타일',  /* [수정문구] */
+    question: '주로 어떤 스타일로\n커트하시나요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
+    options: [
+      { id: 'St_GO', label: '직진성있게 커트해요', desc: '닫으면서 뒤로 빼지 않아요', icon: '<svg ...>', gifUrl: '', lottieUrl: '../consulting/icons/style_go.json' },
+      { id: 'St_BACK', label: '뒤로 빼면서 커트해요', desc: '뒤로 빼듯 조곤조곤', icon: '<svg ...>', gifUrl: '', lottieUrl: '../consulting/icons/style_back.json' },/* [수정미디어] */ 
+      { id: 'St_NONE', label: '딱 기준이 없어요', desc: '상황에 따라 달라요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9"/><polyline points="15,18 12,21 12,17"/><path d="M3 12a9 9 0 0 1 9-9"/><polyline points="9,6 12,3 12,7"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ }
+    ]
+  },
+  /* ✏️ Lottie 적용: 위 Q_FEEL 상단 가이드 참조 — 각 옵션 lottieUrl: '../consulting/icons/xxx.json' 입력 */
+  {
+    id: 'Q_HABIT',
+    label: '커트 습관',  /* [수정문구] */
+    question: '분무를 하여 커트하는\nWET커트 비중이 어떻게 되세요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: true,
+    condition: (answers) => answers.Q_STAGE === 'DE' && (answers.Q_TYPE || []).includes('BL'),
+    options: [
+      { id: 'HAB_WET', label: 'WET 커트 위주', desc: '항상 분무하고 커트해요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 0-7 8.5-7 13a7 7 0 0 0 14 0c0-4.5-7-13-7-13z" fill="#1A1A1A"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ },
+      { id: 'HAB_DRY', label: 'DRY 커트 위주', desc: '마른 모발 커트가 많아요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7" y2="7"/><line x1="17" y1="17" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="7" y2="17"/><line x1="17" y1="7" x2="19.1" y2="4.9"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ },
+      { id: 'HAB_NONE', label: '잘 모르겠어요', desc: '그때그때 다른것 같아요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="20"/><polygon points="8,22 16,22 12,19" fill="#1A1A1A"/><line x1="3" y1="8" x2="21" y2="8"/><circle cx="12" cy="3" r="1" fill="#1A1A1A"/><line x1="2" y1="12" x2="8" y2="12"/><path d="M2 12c0 1.5 1.3 3 3 3s3-1.5 3-3"/><line x1="2" y1="8" x2="2" y2="12"/><line x1="8" y1="8" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/><path d="M16 12c0 1.5 1.3 3 3 3s3-1.5 3-3"/><line x1="16" y1="8" x2="16" y2="12"/><line x1="22" y1="8" x2="22" y2="12"/></svg>', gifUrl: '', lottieUrl: '' /* [수정미디어] */ }
+    ]
+  },
+  {
+    id: 'Q_TH_RATIO',
+    label: '틴닝 감모량',  /* [수정문구] */
+    question: '원하는 감모량이\n어떻게 되시나요?',  /* [수정문구] */
+    sub: '숱이 빠지는 정도를 선택해주세요',  /* [수정문구] */
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
+    options: [
+      { id: 'TH_25', label: '25% 전후 (메인 틴닝 적합)', desc: '가장 범용적인 메인 감모량', icon: '../consulting/icons/25.svg' },
+      { id: 'TH_15', label: '18% 이하 (적은 감모)', desc: '가위자국이 없는 & 숱이 적은분께 사용', icon: '../consulting/icons/15.svg' },
+      { id: 'TH_35', label: '38% 이상 (많은 감모)', desc: '빠른 양감조절 부터 라인정리까지 ', icon: '../consulting/icons/38.svg' }
+    ]
+  },
+  {
+    id: 'Q_TH_WHY',
+    label: '틴닝 구매목적',  /* [수정문구] */
+    question: '틴닝가위 구매 목적이\n어떻게 되시나요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('TH'),
+    options: [
+      { id: 'TH_WHY_NEW', label: '새로운 감모량 추가', desc: '없는 감모량을 채우고 싶어요', icon: '../consulting/icons/NEW12.svg' },
+      { id: 'TH_WHY_SAME', label: '기존 틴닝 교체', desc: '쓰던 틴닝이 나쁘진 않았어요', icon: '../consulting/icons/change12.svg' },
+      { id: 'TH_WHY_UP', label: '업그레이드', desc: '비슷한 감모량에 더 좋은 제품으로', icon: '../consulting/icons/up12.svg' }
+    ]
+  },
+  {
+    id: 'Q_LO_USE',
+    label: '장가위 용도',  /* [수정문구] */
+    question: '장가위 주 사용 용도가\n어떻게 될까요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('LO'),
+    options: [
+      { id: 'LO_BL', label: '블런트 겸용', desc: '커트가위처럼도 쓸 거예요', icon: '../consulting/icons/longcut.svg' },
+      { id: 'LO_SING', label: '싱글링 전용', desc: '싱글링 작업 전용이에요', icon: '../consulting/icons/longsingl.svg' }
+    ]
+  },
+  {
+    id: 'Q_SL_WHY',
+    label: '슬라이싱 구매동기',  /* [수정문구] */
+    question: '슬라이싱 가위 구매 동기가\n어떻게 되실까요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => (answers.Q_TYPE || []).includes('SL'),
+    options: [
+      { id: 'SL_NEW', label: '첫 구매', desc: '슬라이싱 가위가 처음이에요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,3 14.5,8.5 20.5,9.2 16,13.5 17.2,19.5 12,16.5 6.8,19.5 8,13.5 3.5,9.2 9.5,8.5" fill="#1A1A1A" stroke="#1A1A1A"/></svg>' },
+      { id: 'SL_SAME', label: '기존 제품 불만족', desc: '쓰던 슬라이싱이 마음에 안 들어요', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.8" fill="#1A1A1A"/><circle cx="15" cy="10" r="0.8" fill="#1A1A1A"/><path d="M8.5 16C9.5 14.5 14.5 14.5 15.5 16"/></svg>' }
+    ]
+  },
+  {
+    id: 'Q_SL_SAME_WHY',
+    label: '불만족 이유',  /* [수정문구] */
+    question: '기존 슬라이싱 가위가\n어떤 점이 불만족스러우셨나요?',  /* [수정문구] */
+    sub: '',
+    multiple: false,
+    hasGif: false,
+    condition: (answers) => answers.Q_SL_WHY === 'SL_SAME',
+    options: [
+      { id: 'SL_SAME_WHY_UNCOM', label: '밀리기만 하고 안 잘려요', desc: '커트 자체가 안 됨', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><line x1="9" y1="15.5" x2="15" y2="8"/><line x1="15" y1="15.5" x2="9" y2="8"/><line x1="8" y1="3" x2="16" y2="8" stroke-width="2"/><line x1="16" y1="3" x2="8" y2="8" stroke-width="2"/></svg>' },
+      { id: 'SL_SAME_WHY_UNCOM1', label: '너무 많이 잘려나가요', desc: '모발이 과하게 잘림', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/><line x1="8.5" y1="17.5" x2="14" y2="11"/><line x1="15.5" y1="17.5" x2="10" y2="11"/><polyline points="3 8 6.5 8"/><polyline points="1 8 4 5.5"/><polyline points="1 8 4 10.5"/><polyline points="21 8 17.5 8"/><polyline points="23 8 20 5.5"/><polyline points="23 8 20 10.5"/></svg>' },
+      { id: 'SL_SAME_WHY_HAND', label: '핸들이 불편해요', desc: '사용감은 괜찮은데...', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="9" height="7" rx="2" ry="2"/><line x1="6.5" y1="10" x2="6.5" y2="6.5"/><line x1="8.5" y1="10" x2="8.5" y2="5"/><line x1="10.5" y1="10" x2="10.5" y2="5.5"/><line x1="12.5" y1="10" x2="12.5" y2="6.5"/><path d="M5 12.5L3.5 10.5"/><path d="M17 7C18 5.5 19 8.5 20 7"/><path d="M17 11C18 9.5 19 12.5 20 11"/><path d="M17 15C18 13.5 19 16.5 20 15"/></svg>' }
+    ]
+  },
+  {
+    id: 'Q_GENDER',
+    label: '성별',  /* [수정문구] */
+    question: '성별은\n어떻게 되시나요?',  /* [수정문구] */
+    sub: '손에 맞는 가위 추천을 위해 필요해요',  /* [수정문구] */
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'FM', label: '여성', desc: '', icon: '../consulting/icons/female.svg' },
+      { id: 'M', label: '남성', desc: '', icon: '../consulting/icons/male.svg' }
+    ]
+  },
+  {
+    id: 'Q_FING',
+    label: '손가락 굵기',  /* [수정문구] */
+    question: '가위를 사용할 손가락 굵기가\n어떤 편일까요?',  /* [수정문구] */
+    sub: '핏에 맞는 가위 추천을 위해 필요해요',  /* [수정문구] */
+    multiple: false,
+    hasGif: false,
+    condition: null,
+    options: [
+      { id: 'FING_NORMAL', label: '평범한 굵기', desc: '두껍다 생각은 안해봤어요', icon: '../consulting/icons/nomal.svg' },
+      { id: 'FING_THICK', label: '두꺼운 편', desc: '주변에 비해 굵은 것 같아요', icon: '../consulting/icons/thick.svg' }
+    ]
+  }
+];
+
+/* 결과 문구 */
+const messagesData = {
+  MSG_CE: '새로운 꿈을 위한 멋진 도전!\n즐거운 여정 되실 수 있도록\n마모루가 진심으로 응원하겠습니다!',
+  MSG_IN: '실무에서 성장하시는 중이군요\n쉽지않은 상황도 많이 겪으실거예요\n미용가위만큼은 부담없이 즐기실 수 있으면 좋겠습니다',
+  MSG_DE: '많은 손님의 스타일과 자신감에 도움을 주시느라 고생많으십니다\n이젠 미용가위의 부담속에서 한결 가벼우시도록 저희가 노력하겠습니다'
+};
+
+/* 개인화 결과 메시지 생성 (HTML 반환) */
+function buildPersonalizedMessage(answers) {
+  const stage = answers.Q_STAGE;
+  const types = answers.Q_TYPE || [];
+  const parts = [];
+
+  /* 1) 경력별 인사말 */
+  const intro = messagesData['MSG_' + stage] || '진단이 완료되었습니다!';
+  parts.push(`<p class="diag-result-intro">${intro}</p>`);
+
+  /* 2) 가위 종류별 그룹 블록 */
+  /* -- 블런트 그룹 -- */
+  if (types.includes('BL')) {
+    const items = [];
+    const feelMap = { FEEL_SOFT: '부드러운 커트감을 선호하시는군요.', FEEL_POWER: '힘있고 강한 커트감을 원하시는군요.', FEEL_NONE: '커트감은 상담에서 함께 찾아보면 좋겠어요.' };
+    const styleMap = { St_GO: '직진성 커트 스타일이시네요.', St_BACK: '스트로크(뒤로 빼면서) 커트 스타일이시네요.', St_NONE: '커트 스타일은 상담에서 함께 파악해볼게요.' };
+    const habitMap = { HAB_WET: 'WET 커트 위주로 작업하시는군요.', HAB_DRY: 'DRY 커트를 주로 하시는군요.', HAB_NONE: 'WET/DRY 비율은 상담에서 함께 맞춰볼게요.' };
+    if (answers.Q_FEEL && feelMap[answers.Q_FEEL]) items.push(feelMap[answers.Q_FEEL]);
+    if (answers.Q_STYLE && styleMap[answers.Q_STYLE]) items.push(styleMap[answers.Q_STYLE]);
+    if (answers.Q_HABIT && habitMap[answers.Q_HABIT]) items.push(habitMap[answers.Q_HABIT]);
+    if (items.length > 0) {
+      parts.push(`<div class="diag-result-group"><span class="diag-result-group-chip">블런트</span><ul class="diag-result-group-list">${items.map(i => '<li>' + i + '</li>').join('')}</ul></div>`);
+    }
+  }
+
+  /* -- 틴닝 그룹 -- */
+  if (types.includes('TH')) {
+    const items = [];
+    if (answers.Q_TH_RATIO) items.push('감모량은 ' + (labelMap[answers.Q_TH_RATIO] || answers.Q_TH_RATIO) + '을 원하시는군요.');
+    const thWhyMap = { TH_WHY_NEW: '새로운 감모량을 추가하시려는 거군요.', TH_WHY_SAME: '기존 틴닝을 교체하시려는 거군요.', TH_WHY_UP: '더 좋은 틴닝으로 업그레이드를 원하시는군요.' };
+    if (answers.Q_TH_WHY && thWhyMap[answers.Q_TH_WHY]) items.push(thWhyMap[answers.Q_TH_WHY]);
+    if (items.length > 0) {
+      parts.push(`<div class="diag-result-group"><span class="diag-result-group-chip">틴닝</span><ul class="diag-result-group-list">${items.map(i => '<li>' + i + '</li>').join('')}</ul></div>`);
+    }
+  }
+
+  /* -- 장가위 그룹 -- */
+  if (types.includes('LO')) {
+    const items = [];
+    const feelMap = { FEEL_SOFT: '부드러운 커트감을 선호하시는군요.', FEEL_POWER: '힘있고 강한 커트감을 원하시는군요.', FEEL_NONE: '커트감은 상담에서 함께 찾아보면 좋겠어요.' };
+    const habitMap = { HAB_WET: 'WET 커트 위주로 작업하시는군요.', HAB_DRY: 'DRY 커트를 주로 하시는군요.', HAB_NONE: 'WET/DRY 비율은 상담에서 함께 맞춰볼게요.' };
+    /* 장가위는 블런트와 커트감/습관 공유하되, 블런트 그룹에 이미 표시했으면 중복 생략 */
+    if (!types.includes('BL')) {
+      if (answers.Q_FEEL && feelMap[answers.Q_FEEL]) items.push(feelMap[answers.Q_FEEL]);
+      if (answers.Q_HABIT && habitMap[answers.Q_HABIT]) items.push(habitMap[answers.Q_HABIT]);
+    }
+    const loMap = { LO_BL: '블런트 겸용으로 사용하실 예정이시군요.', LO_SING: '싱글링 전용 장가위를 찾고 계시군요.' };
+    if (answers.Q_LO_USE && loMap[answers.Q_LO_USE]) items.push(loMap[answers.Q_LO_USE]);
+    if (items.length > 0) {
+      parts.push(`<div class="diag-result-group"><span class="diag-result-group-chip">장가위</span><ul class="diag-result-group-list">${items.map(i => '<li>' + i + '</li>').join('')}</ul></div>`);
+    }
+  }
+
+  /* -- 슬라이싱 그룹 -- */
+  if (types.includes('SL')) {
+    const items = [];
+    const slMap = { SL_NEW: '슬라이싱 가위는 처음이시군요.', SL_SAME: '기존 슬라이싱 가위에 불만족하셨군요.' };
+    if (answers.Q_SL_WHY && slMap[answers.Q_SL_WHY]) items.push(slMap[answers.Q_SL_WHY]);
+    const slWhyMap = { SL_SAME_WHY_UNCOM: '밀리기만 하고 잘 안 잘렸군요.', SL_SAME_WHY_UNCOM1: '너무 많이 잘려나가는 문제가 있으셨군요.', SL_SAME_WHY_HAND: '핸들이 불편하셨군요.' };
+    if (answers.Q_SL_SAME_WHY && slWhyMap[answers.Q_SL_SAME_WHY]) items.push(slWhyMap[answers.Q_SL_SAME_WHY]);
+    if (items.length > 0) {
+      parts.push(`<div class="diag-result-group"><span class="diag-result-group-chip">슬라이싱</span><ul class="diag-result-group-list">${items.map(i => '<li>' + i + '</li>').join('')}</ul></div>`);
+    }
+  }
+
+  /* 3) 마무리 */
+  parts.push('<p class="diag-result-outro">이 내용을 바탕으로 맞춤 제안을 준비해드리겠습니다.</p>');
+  return parts.join('');
+}
+
+/* 복원수리 안내 섹션 (조건부 HTML 생성) */
+function buildRestorationSection(answers) {
+  const types = answers.Q_TYPE || [];
+  const showTH = types.includes('TH') && answers.Q_TH_WHY === 'TH_WHY_SAME';
+  const showSL = types.includes('SL') && answers.Q_SL_WHY === 'SL_SAME'
+    && (answers.Q_SL_SAME_WHY === 'SL_SAME_WHY_UNCOM' || answers.Q_SL_SAME_WHY === 'SL_SAME_WHY_UNCOM1');
+
+  if (!showTH && !showSL) return '';
+
+  /* 설명문 분기 */
+  let descText = '';
+  if (showTH && showSL) {
+    descText = '잘 사용하시던 틴닝·슬라이싱 가위가 갑자기 불편해졌다면, 날의 미세한 틀어짐이 원인일 수 있어요. 새 가위 구매 전에 복원수리를 먼저 확인해보시는 것도 좋은 방법입니다.';
+  } else if (showTH) {
+    descText = '잘 사용하시던 틴닝 가위가 갑자기 불편해졌다면, 날의 미세한 틀어짐이 원인일 수 있어요. 새 가위 구매 전에 복원수리를 먼저 확인해보시는 것도 좋은 방법입니다.';
+  } else {
+    descText = '슬라이싱 가위의 커트감 변화는 날 상태에 따라 복원수리로 개선될 수 있어요. 새 가위 구매 전에 한 번 확인해보시는 것을 추천드립니다.';
+  }
+
+  /* YouTube 영상 제목 */
+  const videoItems = [];
+  if (showTH) videoItems.push('틴닝 가위, 교체 전에 꼭 확인하세요');
+  if (showSL) videoItems.push('슬라이싱 가위 복원수리 안내');
+
+  const videoHtml = videoItems.map(title => `
+    <a href="#" class="diag-result-youtube-link">
+      <span class="diag-result-youtube-thumb">
+        <span class="diag-result-youtube-play"><svg viewBox="0 0 24 24" fill="#1A1A1A" stroke="none"><polygon points="8,5 20,12 8,19"/></svg></span>
+        <span class="diag-result-youtube-coming">영상 준비중</span>
+      </span>
+      <span class="diag-result-youtube-text">${title}</span>
+    </a>
+  `).join('');
+
+  return `
+    <div class="diag-result-restore">
+      <div class="diag-result-restore-header">
+        <span class="diag-result-restore-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+        <span class="diag-result-restore-title">복원수리 안내</span>
+      </div>
+      <p class="diag-result-restore-desc">${descText}</p>
+      <div class="diag-result-youtube">${videoHtml}</div>
+    </div>
+  `;
+}
+
+/* 라벨 매핑 */
+const labelMap = {
+  CE: '자격증 준비', IN: '인턴/스탭', DE: '디자이너',
+  BL: '블런트', TH: '틴닝', LO: '장가위', SL: '슬라이싱',
+  FEEL_SOFT: '부드러운 커트감', FEEL_POWER: '힘있고 강한 느낌', FEEL_NONE: '아직 모름',
+  St_GO: '직진성 커트', St_BACK: '스트로크 커트', St_NONE: '기준 없음',
+  HAB_WET: 'WET 커트', HAB_DRY: 'DRY 커트', HAB_NONE: '반반',
+  TH_25: '25%', TH_15: '15%', TH_35: '35%',
+  TH_WHY_NEW: '새 감모량', TH_WHY_SAME: '교체', TH_WHY_UP: '업그레이드',
+  LO_BL: '블런트 겸용', LO_SING: '싱글링 전용',
+  SL_NEW: '첫 구매', SL_SAME: '불만족 교체',
+  SL_SAME_WHY_UNCOM: '안 잘림', SL_SAME_WHY_UNCOM1: '과다 절삭', SL_SAME_WHY_HAND: '핸들 불편',
+  FM: '여성', M: '남성',
+  FING_NORMAL: '보통', FING_THICK: '두꺼움'
+};
+
+/* =========================================================
+   로직
+   ========================================================= */
+let diagCurrentStep = 0;
+let diagAnswers = {};
+let diagVisibleQuestions = [];
+let isTransitioning = false;  // ★ 전환 중 플래그
+
+/* ★ 아이콘 렌더링 함수: SVG/img 태그면 그대로, 경로면 img, 아니면 텍스트 */
+function renderIcon(icon) {
+  if (!icon) return '';
+  // 외부 SVG/이미지 파일만 표시 (사장님이 직접 만든 아이콘)
+  // 인라인 <svg>는 임시 placeholder이므로 빈 공간 처리 (사장님 아이콘 작업 후 경로로 교체)
+  if (/\.(svg|png|jpg|jpeg|webp)(\?|$)/i.test(icon) || icon.startsWith('../consulting/icons/') || icon.startsWith('/icons/')) {
+    return `<img src="${icon}" alt="" class="diag-custom-icon">`;
+  }
+  return ''; // 임시 인라인 SVG, 이모지 등은 비워둠
+}
+
+function diagInit() {
+  diagAnswers = {};
+  diagCurrentStep = 0;
+  diagCalculateVisible();
+  diagRenderQuestion(true);
+  document.getElementById('resultContent').classList.remove('show');
+  document.getElementById('questionContent').style.display = 'block';
+  document.getElementById('diagFooter').style.display = 'block';
+}
+
+function diagCalculateVisible() {
+  diagVisibleQuestions = questionsData.filter(q => {
+    if (q.condition === null) return true;
+    return q.condition(diagAnswers);
+  });
+}
+
+// ★ 수정: 전환 시에만 애니메이션 적용
+function diagRenderQuestion(withAnimation = false) {
+  diagCalculateVisible();
+  
+  if (diagCurrentStep >= diagVisibleQuestions.length) {
+    diagShowResult();
+    return;
+  }
+  
+  const q = diagVisibleQuestions[diagCurrentStep];
+  const totalSteps = diagVisibleQuestions.length;
+  const progress = ((diagCurrentStep + 1) / totalSteps) * 100;
+  
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('stepIndicator').textContent = `${diagCurrentStep + 1}/${totalSteps}`;
+  
+  const currentAnswers = diagAnswers[q.id] || (q.multiple ? [] : null);
+  
+  let optionsHtml = '';
+  
+  if (q.hasGif) {
+    optionsHtml = '<div class="diag-options--with-gif">';
+    optionsHtml += q.options.map(opt => {
+      const isSelected = q.multiple 
+        ? (currentAnswers || []).includes(opt.id)
+        : currentAnswers === opt.id;
+      
+      /* 우선순위: lottieUrl → gifUrl → placeholder */
+      let gifContent;
+      if (opt.lottieUrl) {
+        gifContent = `<dotlottie-player src="${opt.lottieUrl}" autoplay loop mode="normal" style="width:100%;height:100%"></dotlottie-player>`;
+      } else if (opt.gifUrl) {
+        gifContent = `<img src="${opt.gifUrl}" alt="${opt.label}">`;
+      } else {
+        gifContent = `<div class="diag-option-gif-placeholder">
+             <span class="diag-option-gif-placeholder-icon">${renderIcon(opt.icon)}</span>
+             <span>준비중</span>
+           </div>`;
+      }
+      
+      return `
+        <div class="diag-option--with-gif ${isSelected ? 'selected' : ''}" 
+             onclick="diagSelectOption('${q.id}', '${opt.id}', ${q.multiple})">
+          <div class="diag-option-gif">${gifContent}</div>
+          <div class="diag-option-info">
+            <div class="diag-option-info-content">
+              <div class="diag-option-info-title">${opt.label}</div>
+              ${opt.desc ? `<div class="diag-option-info-desc">${opt.desc}</div>` : ''}
+            </div>
+            <div class="diag-option-info-check"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    optionsHtml += '</div>';
+  } else {
+    optionsHtml = '<div class="diag-options">';
+    optionsHtml += q.options.map(opt => {
+      const isSelected = q.multiple 
+        ? (currentAnswers || []).includes(opt.id)
+        : currentAnswers === opt.id;
+      
+      return `
+        <div class="diag-option ${isSelected ? 'selected' : ''}"
+             onclick="diagSelectOption('${q.id}', '${opt.id}', ${q.multiple})">
+          <div class="diag-option-icon">${renderIcon(opt.icon)}</div>
+          <div class="diag-option-content">
+            <div class="diag-option-title">${opt.label}</div>
+            ${opt.desc ? `<div class="diag-option-desc">${opt.desc}</div>` : ''}
+          </div>
+          <div class="diag-option-check"></div>
+        </div>
+      `;
+    }).join('');
+    optionsHtml += '</div>';
+  }
+  
+  // ★ 전환 시에만 애니메이션 클래스 추가
+  const animClass = withAnimation ? 'fade-enter' : '';
+  
+  const html = `
+    <div class="diag-question-wrapper ${animClass}">
+      <span class="diag-question-label">${q.label}</span>
+      <h2 class="diag-question-text">${q.question}</h2>
+      ${q.sub ? `<p class="diag-question-sub">${q.sub}</p>` : ''}
+      ${optionsHtml}
+      ${q.multiple ? '<div class="diag-multiple-hint"><svg viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;display:inline"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/><path d="M12 2V0" stroke-width="1"/><path d="M9.5 19.5h5"/></svg> 여러 개 선택 가능</div>' : ''}
+    </div>
+  `;
+  
+  document.getElementById('questionContent').innerHTML = html;
+  diagUpdateNextButton();
+}
+
+// ★ 수정: 선택 시 깜빡임 없이 상태만 업데이트
+function diagSelectOption(qId, optId, isMultiple) {
+  if (isTransitioning) return;
+  
+  if (isMultiple) {
+    if (!diagAnswers[qId]) diagAnswers[qId] = [];
+    const idx = diagAnswers[qId].indexOf(optId);
+    if (idx > -1) {
+      diagAnswers[qId].splice(idx, 1);
+    } else {
+      diagAnswers[qId].push(optId);
+    }
+  } else {
+    diagAnswers[qId] = optId;
+  }
+  
+  // ★ 선택 상태만 업데이트 (전체 리렌더링 없이)
+  diagUpdateSelectionUI(qId, optId, isMultiple);
+  diagUpdateNextButton();
+}
+
+// ★ 새로 추가: 선택 UI만 업데이트
+function diagUpdateSelectionUI(qId, optId, isMultiple) {
+  const options = document.querySelectorAll('.diag-option, .diag-option--with-gif');
+  
+  options.forEach(opt => {
+    // onclick 속성에서 optId 추출
+    const onclickAttr = opt.getAttribute('onclick') || '';
+    const match = onclickAttr.match(/'([^']+)'/g);
+    if (match && match.length >= 2) {
+      const thisOptId = match[1].replace(/'/g, '');
+      
+      if (isMultiple) {
+        const selected = (diagAnswers[qId] || []).includes(thisOptId);
+        opt.classList.toggle('selected', selected);
+      } else {
+        opt.classList.toggle('selected', thisOptId === optId);
+      }
+    }
+  });
+}
+
+function diagUpdateNextButton() {
+  const q = diagVisibleQuestions[diagCurrentStep];
+  const btn = document.getElementById('nextBtn');
+  
+  if (!q) {
+    btn.disabled = true;
+    return;
+  }
+  
+  const ans = diagAnswers[q.id];
+  
+  if (q.multiple) {
+    btn.disabled = !ans || ans.length === 0;
+  } else {
+    btn.disabled = !ans;
+  }
+}
+
+// ★ 수정: 전환 시 애니메이션
+function diagNextQuestion() {
+  if (isTransitioning) return;
+  isTransitioning = true;
+  
+  diagCurrentStep++;
+  diagCalculateVisible();
+  
+  if (diagCurrentStep >= diagVisibleQuestions.length) {
+    diagShowResult();
+    isTransitioning = false;
+  } else {
+    diagRenderQuestion(true);  // 애니메이션 적용
+    setTimeout(() => { isTransitioning = false; }, 350);
+  }
+}
+
+function diagGoBack() {
+  if (isTransitioning) return;
+  
+  if (diagCurrentStep > 0) {
+    isTransitioning = true;
+    diagCurrentStep--;
+    diagRenderQuestion(true);
+    setTimeout(() => { isTransitioning = false; }, 350);
+  } else {
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  }
+}
+
+/* 진단 데이터 요약 — 질문 라벨 : 선택 옵션 라벨 (전체, 한눈에) */
+function buildDiagSummaryRows(answers) {
+  return questionsData
+    .filter(function(q){ var v = answers[q.id]; return v != null && (!Array.isArray(v) || v.length > 0); })
+    .map(function(q){
+      var v = answers[q.id];
+      var labels = Array.isArray(v)
+        ? v.map(function(x){ return labelMap[x]; }).filter(Boolean)
+        : (labelMap[v] ? [labelMap[v]] : []);
+      return { label: q.label, value: labels.join(', ') };
+    })
+    .filter(function(r){ return r.value; });
+}
+/* 상담접수/TMS/캘린더로 넘길 한 줄 정리 텍스트 */
+function buildDiagSummaryText(answers) {
+  return buildDiagSummaryRows(answers).map(function(r){ return r.label + ': ' + r.value; }).join(' | ');
+}
+
+function diagShowResult() {
+  document.getElementById('questionContent').style.display = 'none';
+  document.getElementById('diagFooter').style.display = 'none';
+
+  const resultEl = document.getElementById('resultContent');
+  resultEl.classList.add('show');
+
+  /* 진단 데이터 — 절제된 키:값 정리 (따뜻한 안내문구 제거) */
+  const summaryHtml = buildDiagSummaryRows(diagAnswers).map(function(r){
+    return '<div class="diag-summary__row"><span class="diag-summary__k">' + r.label + '</span><span class="diag-summary__v">' + r.value + '</span></div>';
+  }).join('');
+
+  /* 복원수리 안내 섹션 (조건부) */
+  const restoreHtml = buildRestorationSection(diagAnswers);
+
+  resultEl.innerHTML = `
+    <div class="diag-result-card">
+      <span class="diag-result-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#4A4A4A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:middle;display:inline"><path d="M4 12.5l5.5 5.5L20 6"/></svg> 진단 완료</span>
+      <h2 class="diag-result-title">진단이 정리되었습니다</h2>
+      <div class="diag-summary">${summaryHtml}</div>
+    </div>
+
+    ${restoreHtml}
+
+    <div class="diag-result-actions">
+      <button class="diag-result-btn diag-result-btn-primary" onclick="diagGoToConsult()">
+        진단첨부하여 상담접수하기
+      </button>
+      <p class="diag-result-btn-hint">작성하신 진단은 상담 시 마모루가 직접 확인하고<br>고객님께 맞는 가위를 안내해드립니다</p>
+
+      <button class="diag-result-btn diag-result-btn-secondary" onclick="diagInit()" style="margin-top: 8px;">
+        다시 진단하기
+      </button>
+    </div>
+  `;
+}
+
+/* =========================================================
+   ★★★ 상담접수 연동 (아임웹 iframe 구조 대응) ★★★
+   ========================================================= */
+
+function diagGoToConsult() {
+  // ★ URL 파라미터로 진단 데이터 전달 (도메인 간 localStorage 공유 불가)
+  const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
+  // ★ 정리된 요약 텍스트도 함께 전달 (상담접수/TMS/캘린더에서 깔끔히 표시용)
+  const diagSummary = encodeURIComponent(buildDiagSummaryText(diagAnswers));
+  const url = CONSULT_PAGE_URL + '?diagnosis=' + diagData + '&diag_summary=' + diagSummary;
+
+  // ★ postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: url }, '*');
+}
+
+// ★ 맞춤 추천 페이지로 이동
+function diagGoToRecommend() {
+  // ★ URL 파라미터로 진단 데이터 전달 (도메인 간 localStorage 공유 불가 대비)
+  const diagData = encodeURIComponent(JSON.stringify(diagAnswers));
+  const url = RECOMMEND_PAGE_URL + '?diagnosis=' + diagData;
+
+  // localStorage도 시도 (같은 도메인일 경우 대비)
+  try {
+    localStorage.setItem('MAMORU_DIAGNOSIS', JSON.stringify(diagAnswers));
+  } catch(e) {}
+
+  // ★ postMessage 방식으로 아임웹 부모 페이지 이동 (cross-origin 해결)
+  window.parent.postMessage({ type: 'MAMORU_NAVIGATE', url: url }, '*');
+}
+
+/* =========================================================
+   iframe 높이 전송 (아임웹 코드위젯 대응)
+   ========================================================= */
+(function() {
+  var lastSentHeight = 0; // 마지막 전송 높이 저장 (무한루프 방지)
+
+  function getFullHeight() {
+    var diagEl = document.querySelector('.mamoru-diagnosis');
+    if (diagEl) {
+      var rect = diagEl.getBoundingClientRect();
+      return Math.ceil(rect.height + 50);
+    }
+    return Math.ceil(document.body.scrollHeight + 50);
+  }
+
+  function notifyHeight() {
+    var height = getFullHeight();
+    // 높이가 변경되었을 때만 전송 (무한루프 방지)
+    if (window.parent && window.parent !== window && height > 0 && Math.abs(height - lastSentHeight) > 5) {
+      lastSentHeight = height;
+      window.parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: height }, '*');
+    }
+  }
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'REQUEST_HEIGHT') notifyHeight();
+  });
+
+  window.addEventListener('load', function() {
+    setTimeout(notifyHeight, 100);
+    setTimeout(notifyHeight, 500);
+    setTimeout(notifyHeight, 1000);
+  });
+
+  // resize 이벤트 debounce 적용 (무한루프 방지)
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(notifyHeight, 200);
+  });
+
+  // 질문 전환 시에도 높이 재계산
+  var origRender = window.diagRenderQuestion;
+  if (typeof origRender === 'function') {
+    window.diagRenderQuestion = function() {
+      origRender.apply(this, arguments);
+      setTimeout(notifyHeight, 100);
+    };
+  }
+
+  // ★ 결과 화면 전환 시에도 높이 재계산
+  var origShowResult = window.diagShowResult;
+  if (typeof origShowResult === 'function') {
+    window.diagShowResult = function() {
+      origShowResult.apply(this, arguments);
+      setTimeout(notifyHeight, 100);
+      setTimeout(notifyHeight, 500);
+    };
+  }
+})();
+
+// 초기화
+diagInit();
+</script>
+
+</body>
+</html>

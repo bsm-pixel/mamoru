@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>시안 B-09 · 상담 일정 확인·변경</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+  <style>
+    /* 캐논 토큰 (Brand Guide SSOT) */
+    :root {
+      --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580;
+      --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0;
+      --cream:#FAF9F7; --white:#FFFFFF;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      margin: 0; padding: 16px; background: #FAF9F7; color: #1A1A1A;
+    }
+    .container { max-width: 480px; margin: 0 auto; }
+    .card {
+      background: #fff; border-radius: 12px; padding: 24px;
+      margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 { font-size: 20px; margin: 0 0 8px; text-align: center; }
+    .subtitle { font-size: 14px; color: #8A8580; text-align: center; margin-bottom: 24px; }
+    .info-section { background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+    .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(26,26,26,0.08); font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #8A8580; }
+    .info-value { font-weight: 500; text-align: right; max-width: 60%; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: #374151; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-size: 15px; color: #1A1A1A;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: #1A1A1A; box-shadow: 0 0 0 3px rgba(26,26,26,0.08);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* 라디오 그룹 */
+    .radio-group { display: flex; gap: 12px; margin-bottom: 16px; }
+    .radio-option {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 12px; border: 2px solid rgba(26,26,26,0.08); border-radius: 10px;
+      cursor: pointer; transition: all 0.2s; font-size: 15px; font-weight: 500;
+    }
+    .radio-option:hover { border-color: #9ca3af; }
+    .radio-option.selected { border-color: #1A1A1A; background: #f9fafb; }
+    .radio-option input { display: none; }
+
+    .hint { font-size: 13px; color: #8A8580; margin-top: 4px; }
+
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-primary { background: #1A1A1A; color: #fff; border-radius: 999px; } /* Primary CTA 알약 */
+    .btn-primary:hover { background: #2C2C2C; }
+    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn-close { background: rgba(26,26,26,0.08); color: #374151; margin-top: 12px; }
+    .btn-close:hover { background: #d1d5db; }
+
+    /* 상태 카드 — 모노크롬 통일 (에러/성공/경고 모두 동일 톤, 의미는 본문 텍스트로 전달) */
+    .error-card { background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; text-align: center; padding: 40px 20px; }
+    .success-card { background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; text-align: center; padding: 40px 20px; }
+    .success-card h2 { margin: 0 0 12px; font-size: 18px; }
+    .success-card p  { margin: 0; font-size: 14px; line-height: 1.6; color: #4A4A4A; }
+
+    /* 매장방문 재예약 안내 */
+    .rebook-notice {
+      background: #EDEBE8; border: 1px solid #D4D0CB; border-radius: 10px;
+      padding: 20px; margin-bottom: 16px; text-align: center;
+    }
+    .rebook-notice p { margin: 0 0 8px; font-size: 14px; color: #4A4A4A; line-height: 1.6; }
+    .rebook-notice .highlight { font-weight: 700; color: #1A1A1A; }
+    .btn-rebook {
+      display: inline-block; margin-top: 12px; padding: 12px 24px;
+      background: #1A1A1A; color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none;
+    }
+    .btn-rebook:hover { background: #2C2C2C; }
+
+    /* 취소 완료 카드 */
+    .cancel-done-card { background: #F5F3F0; border: 1px solid #D4D0CB; color: #1A1A1A; text-align: center; padding: 40px 20px; }
+    .cancel-done-card h2 { margin: 0 0 12px; font-size: 18px; }
+    .cancel-done-card p  { margin: 0; font-size: 14px; line-height: 1.6; color: #4A4A4A; }
+
+    .loading { text-align: center; padding: 60px 20px; color: #8A8580; }
+    .loading::after {
+      content: ''; display: inline-block; width: 20px; height: 20px;
+      border: 2px solid #d1d5db; border-top-color: #1A1A1A;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin-left: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .hidden { display: none; }
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 요청폼이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 예약 정정 요청서(전표)처럼 정확하게
+     시그니처: 현재 예약 = 가는 선 원장(라벨 얇게 ↔ 값 굵게, 숫자 tabular) + 항목 거대 번호 01·02·03(보이는 항목만 셈)
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px · 입력칸·버튼 높이 유지 · 히어로 사진 없음 · 글꼴 Pretendard+Outfit만 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; word-break:keep-all; -webkit-font-smoothing:antialiased; padding:16px; }
+
+/* ── 1. 카드 → 가는 선 묶음 (흰 상자·그림자 제거) ── */
+.card{ background:transparent; border-radius:0; border-top:0; padding:28px 4px 8px; margin-bottom:16px; } /* 제목 위 외톨이 선 제거 */
+#section-field-change > div[style] + .form-group, #section-cancel > div[style] + .form-group{ margin-top:30px; } /* 안내 상자↔다음 번호 간격 */
+
+/* ── 2. 제목 — 굵은 제목(900) ↔ 얇은 설명(300), 왼쪽 정렬 ── */
+h1{ text-align:left; font-size:clamp(26px,7.6vw,32px); font-weight:900; line-height:1.2; letter-spacing:-.04em; margin:0 0 10px; }
+.subtitle{ text-align:left; font-size:15px; font-weight:300; color:var(--stone); line-height:1.55; margin-bottom:28px; text-wrap:pretty; }
+
+/* ── 3. 시그니처: 현재 예약 = 원장(가는 선) ── */
+.info-section{ background:transparent; border-radius:0; padding:0; border-top:1px solid var(--void); border-bottom:1px solid var(--void); margin-bottom:34px; }
+.info-row{ padding:13px 0; border-bottom:1px solid var(--sand); align-items:baseline; gap:16px; }
+.info-label{ flex-shrink:0; font-size:13px; font-weight:400; color:var(--warm-gray); letter-spacing:.02em; }
+.info-value{ font-size:15px; font-weight:800; letter-spacing:-.01em; font-variant-numeric:tabular-nums; }
+
+/* ── 4. 항목 거대 번호 01·02·03 (숨긴 항목은 안 셈) ── */
+#main .card{ counter-reset:b-sec; }
+.form-group > label{ counter-increment:b-sec; font-size:14px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:12px; }
+.form-group > label::before{ content:counter(b-sec, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.form-group + .form-group{ border-top:1px solid var(--sand); padding-top:20px; margin-top:22px; }
+#section-field-change, #section-cancel{ border-top:1px solid var(--sand); padding-top:20px; margin-top:6px; }
+
+/* 요청 유형 — 선택 = 검정 채움 (높이 동일: 테두리 1px + 패딩 13px) */
+.radio-option{ border:1px solid var(--sand); border-radius:2px; padding:13px; font-weight:700; }
+.radio-option:hover{ border-color:var(--warm-gray); }
+.radio-option.selected{ background:var(--void); border-color:var(--void); color:var(--cream); }
+
+/* 입력칸 — 2px, 모노크롬 테두리 (패딩·글자 크기 그대로) */
+input, select, textarea{ border-color:var(--mist); border-radius:2px; font-family:inherit; background:var(--white); }
+input:focus, select:focus, textarea:focus{ border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; }
+.hint{ font-size:13px; color:var(--warm-gray); text-wrap:pretty; }
+
+/* 안내 문구(인라인 회색 상자) → 왼쪽 검은 선 */
+#section-field-change > div[style], #cancel-field-notice{ background:transparent !important; border-radius:0 !important; border-left:2px solid var(--void); padding:2px 0 2px 12px !important; margin-bottom:18px !important; text-wrap:balance; }
+
+/* 버튼 — 2px. 주버튼 검정 채움 / 닫기·돌아가기 = 테두리 (크기 그대로) */
+.btn{ border-radius:2px; }
+.btn-primary{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+.btn-primary:disabled{ background:var(--mist); }
+.btn-close{ background:transparent; color:var(--void); border:1px solid var(--void); font-weight:700; }
+.btn-close:hover{ background:var(--parchment); }
+
+/* ── 5. 상태 화면(오류·접수·취소·완료·변경요청 중) — 가는 선 묶음, 굵은 제목, 왼쪽 정렬 ── */
+.error-card, .success-card, .cancel-done-card{ background:transparent; border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); border-radius:0; text-align:left; padding:36px 4px 28px; }
+.error-card h2, .success-card h2, .cancel-done-card h2{ margin:0 0 12px; font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; line-height:1.3; }
+.error-card p, .success-card p, .cancel-done-card p{ margin:0; font-size:14px; line-height:1.65; color:var(--stone); text-wrap:pretty; }
+.error-card .btn-close, .success-card .btn-close, .cancel-done-card .btn-close{ margin-top:24px; }
+
+/* 매장방문 재예약 안내 */
+#rebook-guide > h2{ text-align:left !important; font-size:clamp(20px,5.8vw,24px); font-weight:900; letter-spacing:-.03em; margin:0 0 18px !important; }
+.rebook-notice{ background:transparent; border:0; border-left:2px solid var(--void); border-radius:0; padding:2px 0 2px 14px; margin-bottom:22px; text-align:left; }
+.rebook-notice p{ text-wrap:pretty; }
+.btn-rebook{ border-radius:2px; }
+
+/* 로딩 */
+.loading{ border-top:1px solid var(--void); }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_change_request.html 에 B-09 덧입힘(문구·입력칸·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;margin:-16px -16px 16px;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 상담 일정 변경/취소 요청(알림톡 버튼). 문구·버튼은 같고 디자인만 다릅니다. 실제 링크(알림톡 버튼)로 열면 고객 데이터가 보입니다 — 이 시안 파일을 그냥 열면 빈/오류 상태입니다(정상 화면은 데모 캡처로 확인).</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_change_request.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+  <div class="container">
+    <!-- 로딩 -->
+    <div id="loading" class="card loading">예약 정보를 불러오는 중</div>
+
+    <!-- 에러 -->
+    <div id="error" class="card error-card hidden">
+      <h2>오류</h2>
+      <p id="error-message">예약 정보를 찾을 수 없습니다.</p>
+    </div>
+
+    <!-- 성공: 출장 일정변경 요청 접수 -->
+    <div id="success" class="card success-card hidden">
+      <h2>일정 변경 요청이 접수되었습니다</h2>
+      <p>요청사항을 확인하여 새로운 일정을 안내드리겠습니다.</p>
+      <p style="margin-top:6px;">영업시간 외 접수 시 다음 영업일에 안내드립니다.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 성공: 취소 완료 (또는 이미 취소된 건 재진입 시에도 동일 화면) -->
+    <div id="cancel-done" class="card cancel-done-card hidden">
+      <h2>예약이 취소되었습니다</h2>
+      <p>다시 예약을 원하시면 마모루 홈페이지를 방문해주세요.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 이미 완료된 상담 -->
+    <div id="already-completed" class="card cancel-done-card hidden">
+      <h2>이미 완료된 상담입니다</h2>
+      <p>또 다른 상담이 필요하시면 마모루 홈페이지에서 새로 신청해주세요.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 이미 일정 변경 요청 중 -->
+    <div id="already-rescheduled" class="card cancel-done-card hidden">
+      <h2>이미 일정 변경을 요청하셨습니다</h2>
+      <p>새로운 일정 안내를 위해 스케줄을 조율하고 있습니다.<br>안내 알림톡을 기다려주세요.</p>
+      <button class="btn btn-close" onclick="safeClose()">닫기</button>
+    </div>
+
+    <!-- 매장방문: 자동취소 + 재예약 안내 -->
+    <div id="rebook-guide" class="card hidden">
+      <h2 style="text-align:center;margin:0 0 16px">일정 변경 안내</h2>
+      <div class="rebook-notice">
+        <p>매장방문 일정 변경은 <span class="highlight">기존 예약을 취소하고 <span class="b-nw">다시 예약</span></span>해주시면 됩니다.</p>
+        <p style="font-size:13px;color:#8A8580;margin-top:8px">아래 버튼을 누르면 기존 예약이 자동 취소되고 <span class="b-nw">예약 페이지로</span> 이동합니다.</p>
+      </div>
+      <button id="btnRebook" class="btn btn-primary" onclick="doRebookCancel()">기존 예약 취소 후 재예약하기</button>
+      <button class="btn btn-close" onclick="backToMain()">돌아가기</button>
+    </div>
+
+    <!-- 메인 폼 -->
+    <div id="main" class="hidden">
+      <div class="card">
+        <h1>일정 변경/취소 요청</h1>
+        <p class="subtitle">확정된 예약에 대한 변경 또는 취소를 요청합니다</p>
+
+        <!-- 현재 예약 정보 -->
+        <div class="info-section">
+          <div class="info-row"><span class="info-label">고객명</span><span class="info-value" id="info-name">-</span></div>
+          <div class="info-row"><span class="info-label">상담유형</span><span class="info-value" id="info-type">-</span></div>
+          <div class="info-row"><span class="info-label">예약일</span><span class="info-value" id="info-date">-</span></div>
+          <div class="info-row"><span class="info-label">예약시간</span><span class="info-value" id="info-time">-</span></div>
+        </div>
+
+        <!-- 요청 유형 선택 -->
+        <div class="form-group">
+          <label>요청 유형</label>
+          <div class="radio-group">
+            <label class="radio-option" id="opt-change">
+              <input type="radio" name="reqType" value="change">
+              일정 변경
+            </label>
+            <label class="radio-option" id="opt-cancel">
+              <input type="radio" name="reqType" value="cancel">
+              예약 취소
+            </label>
+          </div>
+        </div>
+
+        <!-- 출장 일정변경: 요청사항 -->
+        <div id="section-field-change" class="hidden">
+          <div style="background:#EDEBE8;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#4A4A4A;line-height:1.6">
+            <strong style="display:block;color:#1A1A1A;margin-bottom:4px;">일정 변경 시 안내</strong>
+            출장 상담은 스케줄 조율이 필요하여, 확정된 일정을 변경하실 경우 <strong>다음 상담 제안까지 시일이 소요</strong><span class="b-nw">될 수 있습니다.</span>
+          </div>
+          <div class="form-group">
+            <label>일정 관련 요청사항</label>
+            <textarea id="fieldRequest" placeholder="예: 다음주 평일 오전으로 변경 희망합니다"></textarea>
+            <p class="hint">요청사항을 확인하여 새로운 일정을 안내드리겠습니다.</p>
+          </div>
+        </div>
+
+        <!-- 예약 취소: 사유 선택 -->
+        <div id="section-cancel" class="hidden">
+          <div id="cancel-field-notice" class="hidden" style="background:#EDEBE8;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#4A4A4A;line-height:1.6">
+            <strong style="display:block;color:#1A1A1A;margin-bottom:4px;">취소 전 참고해주세요</strong>
+            출장 상담은 스케줄 조율이 필요하여, 취소 후 다시 <span class="b-nw">예약하실 경우</span> <strong>다음 상담 제안까지 시일이 소요</strong><span class="b-nw">될 수 있습니다.</span>
+          </div>
+          <div class="form-group">
+            <label>취소 사유</label>
+            <select id="cancelReason">
+              <option value="">선택해주세요</option>
+              <option value="개인 사정">개인 사정</option>
+              <option value="다른 업체 선택">다른 업체 선택</option>
+              <option value="비용 부담">비용 부담</option>
+              <option value="일정 미정">일정 미정</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>메모 <span style="font-weight:400;color:#9ca3af">(선택)</span></label>
+            <textarea id="cancelMemo" placeholder="추가로 전달할 내용이 있으면 입력해주세요"></textarea>
+          </div>
+        </div>
+
+        <button id="btnSubmit" class="btn btn-primary" disabled>요청하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
+    var STORE_BOOKING_URL = 'https://mamoru.kr/52'; // 매장방문 접수 페이지
+
+    var params = new URLSearchParams(location.search);
+    var uid = params.get('uid') || '';
+    var selectedType = '';
+    var consultType = ''; // '매장 방문' 또는 '출장 요청'
+
+    // ── 예약 정보 로드 ──
+    function loadReservation() {
+      if (!uid) { showError('잘못된 접근입니다. URL을 확인해주세요.'); return; }
+
+      fetch(API_BASE + '/reservation?uid=' + encodeURIComponent(uid))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (!res.ok || !res.data) { showError(res.error || '예약 정보를 찾을 수 없습니다.'); return; }
+          var d = res.data;
+
+          // 이미 처리된 상태(취소/완료/변경요청 중)면 안내 화면으로 분기
+          if (res.canRequestChange === false) {
+            showAlreadyHandled(d.status);
+            return;
+          }
+
+          consultType = d.type || '';
+          document.getElementById('info-name').textContent = d.name || '-';
+          document.getElementById('info-type').textContent = d.type || '-';
+          document.getElementById('info-date').textContent = d.date || '-';
+          document.getElementById('info-time').textContent = d.time || '-';
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('main').classList.remove('hidden');
+        })
+        .catch(function() { showError('데이터 로드에 실패했습니다. 잠시 후 다시 시도해주세요.'); });
+    }
+
+    // ── 이미 처리된 상태 안내 화면 분기 ──
+    function showAlreadyHandled(status) {
+      document.getElementById('loading').classList.add('hidden');
+      var s = String(status || '').toLowerCase();
+      if (s === 'cancelled') {
+        document.getElementById('cancel-done').classList.remove('hidden');
+      } else if (s === 'completed') {
+        document.getElementById('already-completed').classList.remove('hidden');
+      } else if (s === 'reschedule_requested') {
+        document.getElementById('already-rescheduled').classList.remove('hidden');
+      } else {
+        // suggested / pending_admin 등 — 변경/취소 받을 단계 아님
+        showError('이 예약은 변경/취소 요청을 받을 수 없는 상태입니다.');
+      }
+    }
+
+    // ── 매장방문 여부 판별 ──
+    function isStoreVisit() {
+      return consultType.indexOf('매장') !== -1;
+    }
+
+    // ── 라디오 선택 ──
+    document.querySelectorAll('.radio-option').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.querySelectorAll('.radio-option').forEach(function(o) { o.classList.remove('selected'); });
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+        selectedType = el.querySelector('input').value;
+
+        // 매장방문 + 일정변경 → 재예약 안내 페이지로 전환
+        if (selectedType === 'change' && isStoreVisit()) {
+          document.getElementById('main').classList.add('hidden');
+          document.getElementById('rebook-guide').classList.remove('hidden');
+          return;
+        }
+
+        // 출장 일정변경
+        document.getElementById('section-field-change').classList.toggle('hidden', selectedType !== 'change');
+        // 취소 (매장/출장 공통)
+        document.getElementById('section-cancel').classList.toggle('hidden', selectedType !== 'cancel');
+        // 출장 취소 시 안내 문구 표시
+        var cancelNotice = document.getElementById('cancel-field-notice');
+        if (cancelNotice) cancelNotice.classList.toggle('hidden', !(selectedType === 'cancel' && !isStoreVisit()));
+        document.getElementById('btnSubmit').disabled = false;
+      });
+    });
+
+    // ── 매장방문 재예약: 기존 건 취소 후 접수 페이지 이동 ──
+    function doRebookCancel() {
+      var btn = document.getElementById('btnRebook');
+      btn.disabled = true;
+      btn.textContent = '처리 중...';
+
+      var qs = '?action=submitChangeRequest'
+        + '&uid=' + encodeURIComponent(uid)
+        + '&reqType=cancel'
+        + '&reason=' + encodeURIComponent('일정 변경을 위한 자동 취소')
+        + '&memo=&hopeDate=';
+
+      fetch(API_BASE + '/cancel?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent('일정 변경을 위한 자동 취소'))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (res.ok) {
+            location.href = STORE_BOOKING_URL; // 접수 페이지로 이동
+          } else {
+            alert('오류: ' + (res.error || '알 수 없는 오류'));
+            btn.disabled = false;
+            btn.textContent = '기존 예약 취소 후 재예약하기';
+          }
+        })
+        .catch(function(e) {
+          alert('오류: ' + (e.message || e));
+          btn.disabled = false;
+          btn.textContent = '기존 예약 취소 후 재예약하기';
+        });
+    }
+
+    // ── 요청 제출 (출장 일정변경 / 취소) ──
+    document.getElementById('btnSubmit').addEventListener('click', function() {
+      if (!selectedType) { alert('요청 유형을 선택해주세요.'); return; }
+
+      var reason = '';
+      var hopeDate = '';
+      var memo = '';
+
+      if (selectedType === 'change') {
+        // 출장 일정변경: 요청사항
+        hopeDate = document.getElementById('fieldRequest').value.trim();
+        if (!hopeDate) { alert('요청사항을 입력해주세요.'); return; }
+      } else {
+        // 취소
+        reason = document.getElementById('cancelReason').value;
+        if (!reason) { alert('취소 사유를 선택해주세요.'); return; }
+        memo = document.getElementById('cancelMemo').value.trim();
+      }
+
+      var btn = this;
+      btn.disabled = true;
+      btn.textContent = '요청 중...';
+
+      // resched/cancel 둘 다 uid(unique_id) 기준으로 조회 — 일관성 (이전엔 resched 가 ?t= 로 보내져서 shortToken 매칭 실패 → 404 버그)
+      var apiUrl = (selectedType === 'cancel')
+        ? API_BASE + '/cancel?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : ''))
+        : API_BASE + '/resched?uid=' + encodeURIComponent(uid) + '&reason=' + encodeURIComponent(reason + (memo ? ' / ' + memo : '') + (hopeDate ? ' / 희망일: ' + hopeDate : ''));
+
+      fetch(apiUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (res.ok) {
+            if (selectedType === 'cancel') {
+              showCancelDone(); // 취소 완료 화면
+            } else {
+              showSuccess(); // 출장 일정변경 접수 완료
+            }
+          } else {
+            alert('오류: ' + (res.error || '알 수 없는 오류'));
+            btn.disabled = false;
+            btn.textContent = '요청하기';
+          }
+        })
+        .catch(function(e) {
+          alert('오류: ' + (e.message || e));
+          btn.disabled = false;
+          btn.textContent = '요청하기';
+        });
+    });
+
+    // ── UI 헬퍼 ──
+    function showError(msg) {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('error').classList.remove('hidden');
+      document.getElementById('error-message').textContent = msg;
+    }
+    function showSuccess() {
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+    }
+    function showCancelDone() {
+      document.getElementById('main').classList.add('hidden');
+      document.getElementById('cancel-done').classList.remove('hidden');
+    }
+
+    // ── rebook-guide → main 복귀 ──
+    function backToMain() {
+      document.getElementById('rebook-guide').classList.add('hidden');
+      document.getElementById('main').classList.remove('hidden');
+    }
+
+    // ── 카카오 인앱 닫기 (page_suggest.html / page_result.html 동일 패턴) ──
+    function safeClose() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      try { window.close(); } catch(e) {}
+    }
+
+    // ── 초기화 ──
+    loadReservation();
+  </script>
+</body>
+</html>

@@ -1,0 +1,3363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="robots" content="noindex,nofollow">
+<title>시안 B-09 · 상담 접수</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+<style>
+/* ══════════════════════════════════════════════════════════════
+   MAMORU Brand Guide v1.0 — 상담접수 통합 (Monochrome)
+   반응형: 768px 기준 자동 PC/모바일 전환
+   ══════════════════════════════════════════════════════════════ */
+:root {
+  /* MAMORU Brand Guide v1.0 — Monochrome */
+  --mm-void: #1A1A1A;
+  --mm-graphite: #2D2D2D;
+  --mm-stone: #4A4A4A;
+  --mm-warm-gray: #8A8580;
+  --mm-mist: #B8B4AF;
+  --mm-sand: #D4D0CB;
+  --mm-parchment: #EDEBE8;
+  --mm-shell: #F5F3F0;
+  --mm-cream: #FAF9F7;
+  --mm-white: #FFFFFF;
+  --error: #1A1A1A;  /* 모노크롬 — 에러는 굵기·아이콘·테두리로 구분 */
+
+  /* Legacy alias — 기존 CSS 참조 호환 (변수명 유지, 값만 교체) */
+  --mm-bg-dark: #1A1A1A;
+  --mm-bg-cream: #FAF9F7;
+  --mm-bg-card: #FFFFFF;
+  --mm-ink: #1A1A1A;
+  --mm-ink-dark: #2D2D2D;
+  --mm-text-d: #1A1A1A;
+  --mm-text-d2: #8A8580;
+  --mm-text-cream: #FAF9F7;
+  --mm-border-l: rgba(26,26,26,0.08);
+  --mm-border-m: rgba(26,26,26,0.12);
+  --void-black: #1A1A1A;
+  --bg-dark: #1A1A1A;
+  --card-bg: var(--mm-white);
+  --card-border: var(--mm-border-l);
+  --crisp-white: #FFFFFF;
+  --trust-ink: #1A1A1A;
+  --ink-dark: #2D2D2D;
+  --text-primary: var(--mm-text-d);
+  --text-muted: var(--mm-text-d2);
+  --muted: var(--mm-text-d2);
+  --line: var(--mm-border-l);
+  --line-strong: var(--mm-border-m);
+
+  /* Canon tokens (Brand Guide v1.0) — 추가만, 기존 --mm-* 유지 */
+  --void:#1A1A1A; --graphite:#2D2D2D; --stone:#4A4A4A; --warm-gray:#8A8580; --mist:#B8B4AF; --sand:#D4D0CB; --parchment:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7; --white:#FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--mm-cream);
+  color: var(--mm-void);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* iframe 내부 스크롤 비활성화 - 외부(아임웹) 스크롤만 사용 */
+  overflow-x: hidden;
+  overflow-y: visible;  /* 모바일 렌더링 문제 해결 */
+  height: auto;
+  min-height: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   공통 Layout
+   ───────────────────────────────────────────────────────────── */
+.wrap {
+  min-height: 800px;  /* 100vh 제거 - iframe 높이 무한 증가 방지 */
+}
+
+/* 모바일 기본값 */
+.wrap {
+  max-width: 100%;
+  padding: 0 20px 32px;  /* 좌우 20px */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 24px 0 20px;
+  margin: 0 0 24px;
+  background: transparent;       /* 다크 띠 제거 — 크림 배경 흡수 */
+  border-bottom: 1px solid var(--mm-border-l);
+}
+
+.header-logo {
+  background: none;              /* 색 박스 제거 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 모바일 기본값 */
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+.header-logo svg {
+  fill: none;
+  stroke: var(--mm-ink);       /* Void 라인 아이콘 */
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* 모바일 기본값 */
+  width: 22px;
+  height: 22px;
+}
+
+.header h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--mm-text-d);       /* 인디고 블랙 */
+  /* 모바일 기본값 */
+  font-size: 18px;
+}
+
+/* PC 레이아웃 — Brand Guide ADDENDUM § 5 정합 (페이지 컨테이너 780px) */
+body.pc .wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 48px 60px;
+}
+
+body.pc .header {
+  gap: 12px;
+  padding: 32px 0 24px;
+  margin: 0 0 36px;
+}
+
+body.pc .header-logo {
+  width: 28px;
+  height: 28px;
+  margin-right: 12px;
+}
+
+body.pc .header-logo svg {
+  width: 26px;
+  height: 26px;
+}
+
+body.pc .header h1 {
+  font-size: 24px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Card
+   ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--mm-bg-card);  /* Card White */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+}
+
+.card-body {
+  /* 모바일 기본값 */
+  padding: 20px 16px;
+  display: block;  /* 명시적 block - 모바일 렌더링 보장 */
+  width: 100%;
+}
+
+body.pc .card-body {
+  padding: 40px 48px;  /* PC: 리딩형 패딩 */
+  /* PC: 2열 그리드 레이아웃 */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+}
+
+/* PC: 전체폭 차지하는 요소들 (성함·연락처만 2열, 나머지는 단일열 흐름) */
+body.pc .card-body .diagnosis-banner,  /* 진단배너도 2열 전체 차지 */
+body.pc .card-body .segment-wrap,
+body.pc .card-body .type-info,
+body.pc .card-body .store-location-card,  /* 매장위치 카드 전폭 (반쪽 칸 외톨이 방지) */
+body.pc .card-body #sec-visit,            /* 방문날짜/시간 전폭 */
+body.pc .card-body #sec-field,
+body.pc .card-body #memo-group,           /* 메모+참고사항 전폭 (좌우 높이 불균형 제거) */
+body.pc .card-body .privacy-box,
+body.pc .card-body .btn-primary {
+  grid-column: 1 / -1;  /* 2열 전체 차지 */
+}
+
+/* PC: 성함/연락처 2열, 방문날짜/메모 2열 */
+body.pc .card-body .form-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 32px;
+}
+
+body.pc .card-body .form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* (방문날짜·메모는 위 전폭 목록에서 단일열 처리 — 좌우 불균형 제거) */
+
+/* ─────────────────────────────────────────────────────────────
+   Form Elements
+   ───────────────────────────────────────────────────────────── */
+.form-group {
+  /* 모바일 기본값 */
+  margin-bottom: 20px;
+}
+
+body.pc .form-group {
+  margin-bottom: 24px;
+}
+
+.form-row {
+  display: flex;
+  /* 모바일: 세로 */
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.pc .form-row {
+  /* PC: 2열 그리드 */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* PC: 폼 그룹 간격 조정 */
+body.pc .form-group {
+  margin-bottom: 28px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-d2);  /* 라이트 라벨 */
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.required::after {
+  content: " *";
+  color: var(--error);
+}
+
+input[type="text"],
+input[type="tel"],
+textarea,
+select {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--mm-border-m);
+  background: var(--mm-bg-cream);  /* 크림 배경 */
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--mm-text-d);  /* 다크 텍스트 */
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  /* 모바일 기본값 */
+  padding: 0 14px;
+}
+
+body.pc input[type="text"],
+body.pc input[type="tel"],
+body.pc textarea,
+body.pc select {
+  padding: 0 16px;
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--mm-ink);  /* Void 포커스 */
+  box-shadow: 0 0 0 1px var(--mm-ink) inset;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(24,23,37,0.35);  /* 라이트 placeholder */
+}
+
+input[readonly] {
+  background: #E8E6DC;  /* readonly 배경 */
+  cursor: pointer;
+}
+/* 상세주소: 주소검색 전 비활성 (검색 후 활성) */
+#address2:disabled {
+  background: #E8E6DC;
+  color: #9A958C;
+  cursor: not-allowed;
+}
+
+textarea {
+  height: auto;
+  padding: 14px;
+  resize: none;
+  line-height: 1.6;
+  /* 모바일 기본값 */
+  min-height: 100px;
+}
+
+body.pc textarea {
+  min-height: 120px;
+  padding: 14px 16px;
+}
+
+.err-msg {
+  font-size: 13px;
+  color: var(--error);
+  margin-top: 6px;
+  display: none;
+}
+
+input.err,
+select.err,
+.date-picker-btn.err {
+  border-color: var(--error);
+}
+
+.form-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(24,23,37,0.45);  /* 라이트 힌트 */
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Segment Control (상담유형)
+   ───────────────────────────────────────────────────────────── */
+.segment-wrap {
+  /* 모바일 기본값 */
+  margin-bottom: 20px;
+}
+
+body.pc .segment-wrap {
+  margin-bottom: 28px;
+}
+
+.segment-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mm-text-d);  /* 다크 */
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.segment-control {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;  /* 카드 간 간격 */
+  /* 외곽 테두리 제거 - 개별 카드형 */
+  border: none;
+  width: 100%;
+}
+
+body.pc .segment-control {
+  gap: 20px;  /* PC: 더 넓은 간격 */
+}
+
+body.pc .segment-btn {
+  height: 120px;
+  padding: 20px 16px;
+  gap: 10px;
+  border-radius: 8px;  /* 리딩형 */
+}
+
+body.pc .segment-btn .seg-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 44px;  /* PC: 2배 크기 */
+}
+
+body.pc .segment-btn {
+  font-size: 15px;
+}
+
+.segment-btn {
+  /* 개별 카드 스타일 — 라이트 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mm-text-d2);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100px;
+  padding: 16px 8px;
+}
+
+.segment-btn .seg-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;  /* 2배 크기 */
+}
+
+body.pc .segment-btn {
+  flex: 1;
+  height: 80px;  /* PC: 더 큰 카드형 */
+  padding: 12px 24px;
+  gap: 8px;
+}
+
+body.pc .segment-btn .seg-icon {
+  width: 28px;
+  height: 28px;
+  font-size: 22px;
+}
+
+body.pc .segment-btn {
+  font-size: 15px;
+}
+
+/* 개별 카드형이므로 last-child 특별 처리 불필요 */
+
+.segment-btn.active {
+  background: rgba(26,26,26,0.06);  /* Void 틴트 */
+  border-color: var(--mm-ink);
+  color: var(--mm-ink);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Type Info Box
+   ───────────────────────────────────────────────────────────── */
+.type-info {
+  padding: 14px 16px;
+  background: rgba(26,26,26,0.04);    /* 옅은 다홍 틴트 — 미니멀 보조컬러 */
+  border-left: 2px solid rgba(26,26,26,0.2);  /* 다홍 보조 라인 */
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #3D3B52;  /* Neutral 700 — 가독성 확보 */
+  margin-bottom: 20px;
+}
+
+body.pc .type-info {
+  padding: 16px 20px;
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Store Location Card (매장 방문 선택 시 노출, 2026-05-23 추가)
+   page_guide.html 의 method-location-card 와 동일 톤 (Brand Guide 모노크롬)
+   ───────────────────────────────────────────────────────────── */
+.store-location-card {
+  margin-bottom: 20px;
+  padding: 18px 18px 16px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-m);
+  border-radius: 12px;
+  text-align: center;
+}
+.store-location-card.hide { display: none; }
+.store-location-label {
+  display: inline-block;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--mm-text-d2);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.store-location-address {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+  color: var(--mm-text-d);
+  margin: 0 0 14px;
+}
+.store-location-map {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: var(--mm-ink);
+  color: #FAF9F7;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.store-location-map:active { background: var(--mm-ink-dark); }
+@media (hover: hover) {
+  .store-location-map:hover { background: var(--mm-ink-dark); }
+}
+
+body.pc .store-location-card {
+  padding: 22px 24px 20px;
+  margin-bottom: 28px;
+}
+body.pc .store-location-address { font-size: 15px; }
+body.pc .store-location-map { font-size: 14px; padding: 11px 26px; }
+
+/* ─────────────────────────────────────────────────────────────
+   Date Picker Button
+   ───────────────────────────────────────────────────────────── */
+.date-picker-btn {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border: 1px solid var(--mm-border-m);
+  border-radius: 8px;
+  background: var(--mm-bg-cream);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+body.pc .date-picker-btn {
+  padding: 0 16px;
+}
+
+.date-display {
+  font-size: 15px;
+  color: var(--mm-text-d);
+}
+
+.date-display.placeholder {
+  color: rgba(24,23,37,0.35);
+}
+
+.date-picker-btn svg {
+  width: 18px;
+  height: 18px;
+  color: var(--mm-text-d2);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Address Section
+   ───────────────────────────────────────────────────────────── */
+.address-row {
+  display: flex;
+  gap: 8px;
+}
+
+body.pc .address-row {
+  gap: 12px;
+}
+
+.address-row input {
+  flex: 1;
+}
+
+.btn-search {
+  flex-shrink: 0;
+  height: 48px;
+  border: 1px solid var(--mm-border-m);
+  border-radius: 8px;
+  background: var(--mm-bg-card);  /* 라이트 */
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d);
+  cursor: pointer;
+  transition: all 0.2s;
+  /* 모바일 기본값 */
+  padding: 0 16px;
+}
+
+body.pc .btn-search {
+  padding: 0 20px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Day Chips (요일 선택)
+   ───────────────────────────────────────────────────────────── */
+.day-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-chip {
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d2);  /* 비활성 */
+  cursor: pointer;
+  transition: all 0.2s;
+  /* 모바일: 7등분 */
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.pc .day-chip {
+  /* PC: 고정폭 */
+  flex: none;
+  width: 48px;
+  height: 44px;
+}
+
+.day-chip.active {
+  background: var(--mm-ink);  /* Void solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-ink);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Time Preference (시간대 선택)
+   ───────────────────────────────────────────────────────────── */
+.time-pref-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.pc .time-pref-wrap {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.time-pref-btn {
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d2);  /* 비활성 */
+  cursor: pointer;
+  transition: all 0.2s;
+  /* 모바일: 전체폭 */
+  width: 100%;
+  height: 44px;
+}
+
+body.pc .time-pref-btn {
+  height: 44px;
+}
+
+.time-pref-btn.active {
+  background: var(--mm-ink);  /* Void solid */
+  color: var(--mm-text-cream);
+  border-color: var(--mm-ink);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Privacy Agreement
+   ───────────────────────────────────────────────────────────── */
+.privacy-box {
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: var(--mm-bg-card);
+  /* 모바일 기본값 */
+  padding: 16px;
+  margin-top: 24px;
+}
+
+body.pc .privacy-box {
+  padding: 20px;
+  margin-top: 28px;
+}
+
+.privacy-box h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mm-text-d);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.privacy-content {
+  padding: 12px;
+  background: var(--mm-bg-cream);  /* 크림 배경 */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--mm-text-d2);
+  overflow-y: auto;
+  white-space: pre-wrap;
+  /* 모바일 기본값 */
+  height: 120px;
+}
+
+body.pc .privacy-content {
+  height: 140px;
+  padding: 14px;
+  font-size: 13px;
+}
+
+.privacy-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.privacy-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--mm-ink);  /* Void 체크박스 */
+  cursor: pointer;
+}
+
+.privacy-check label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mm-text-d);
+  cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Buttons
+   ───────────────────────────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  height: 56px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 999px;  /* pill */
+  background: var(--mm-ink);  /* Void solid */
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--mm-text-cream);
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+body.pc .btn-primary {
+  margin-top: 32px;
+  max-width: 400px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Modal
+   ───────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+  /* GPU 가속 + 부드러운 페이드 */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s;
+  will-change: opacity;
+  /* 모바일: 중앙 정렬 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.pc .modal-backdrop {
+  align-items: center;
+  justify-content: center;
+}
+
+#date-picker-modal .modal-content {
+  width: calc(100% - 32px);
+  max-width: 480px;
+  max-height: 80vh;
+}
+
+.modal-content {
+  background: var(--mm-white);
+  overflow: hidden;
+  border-radius: 16px;
+  width: calc(100% - 32px);
+  max-width: 520px;
+  max-height: 85vh;
+  box-shadow: 0 16px 48px rgba(26, 26, 26, 0.18);
+  /* GPU 가속 부드러운 진입 */
+  transform: translateY(12px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+  will-change: transform, opacity;
+}
+
+.modal-backdrop.show .modal-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+body.pc .modal-content {
+  width: calc(100% - 48px);
+  max-width: 520px;
+  max-height: 80vh;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--mm-border-l);
+  background: var(--mm-cream);
+  padding: 16px 20px;
+}
+
+body.pc .modal-header {
+  padding: 18px 24px;
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mm-void);
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--mm-shell);
+  border-radius: 50%;
+  font-size: 18px;
+  color: var(--mm-stone);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+body.pc .modal-close {
+  width: 36px;
+  height: 36px;
+}
+
+body.pc .modal-close:hover {
+  background: var(--mm-parchment);
+  color: var(--mm-void);
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: 20px;
+  max-height: calc(85vh - 130px);
+}
+
+body.pc .modal-body {
+  padding: 24px;
+  max-height: calc(80vh - 140px);
+}
+
+.modal-body h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.03em;
+  color: var(--mm-void);
+}
+
+body.pc .modal-body h2 {
+  margin-bottom: 10px;
+}
+
+.modal-body p {
+  font-size: 14px;
+  color: var(--mm-warm-gray);
+  line-height: 1.6;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--mm-border-l);
+  background: var(--mm-cream);
+}
+
+body.pc .modal-footer {
+  padding: 18px 24px;
+}
+
+.modal-footer .btn-primary {
+  margin-top: 0;
+}
+
+body.pc .modal-footer .btn-primary {
+  width: auto;
+  padding: 0 40px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Calendar
+   ───────────────────────────────────────────────────────────── */
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.calendar-nav button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--mm-sand);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 18px;
+  color: var(--mm-void);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.calendar-nav button:hover:not(:disabled) {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+}
+
+/* 활성 범위(현재월~+3) 초과 시 월 이동 버튼 비활성 — TMS 달력 관리 룰과 동기 (2026-05-23 fix) */
+.calendar-nav button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.calendar-nav .month {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mm-void);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mm-warm-gray);
+  padding: 8px 0;
+}
+
+.day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  color: var(--mm-void);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.day:hover:not(.disabled) {
+  border-color: var(--mm-void);
+  background: var(--mm-shell);
+}
+
+/* 오늘 표시 — 옅은 톤 (선택된 날짜와 시각 위계 명확 분리, 2026-05-23 fix)
+   사장님 룰: 선택된 날짜와 헷갈리지 않게 비활성 가까운 톤. 단 클릭은 허용 → hover 시 약간 진해짐 */
+.day.today {
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d2);
+  font-weight: 400;
+  background: rgba(26,26,26,0.03);
+}
+.day.today:hover:not(.disabled):not(.selected) {
+  background: rgba(26,26,26,0.08);
+  color: var(--mm-text-d);
+}
+
+.day.selected {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  font-weight: 600;
+}
+
+.day.disabled {
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Time Slots
+   ───────────────────────────────────────────────────────────── */
+.time-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.time-section {
+  border-top-color: var(--mm-border-l);
+}
+
+.time-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  color: var(--mm-void);
+}
+
+.time-slots {
+  display: grid;
+  gap: 8px;
+  /* 모바일 기본값 */
+  grid-template-columns: repeat(4, 1fr);
+}
+
+body.pc .time-slots {
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.time-slot {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--mm-sand);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  color: var(--mm-void);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+body.pc .time-slot {
+  height: 42px;
+}
+
+.time-slot:hover:not(.unavailable) {
+  border-color: var(--mm-void);
+  background: var(--mm-shell);
+}
+
+.time-slot.selected {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  font-weight: 600;
+}
+
+.time-slot.unavailable {
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* 1시간 선택의 후반부 슬롯이 unavailable 이어도 어둡게+흰글씨 (selected 가 이김) */
+.time-slot.selected.unavailable {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  text-decoration: none;
+  cursor: default;
+}
+
+.time-slot.loading {
+  grid-column: 1 / -1;
+  color: var(--mm-warm-gray);
+  cursor: default;
+  border: none;
+  background: none;
+}
+
+.same-day-notice {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--mm-bg-cream);
+  border-left: 2px solid var(--error);
+  font-size: 13px;
+  color: var(--error);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Postcode Layer
+   ───────────────────────────────────────────────────────────── */
+#postcode-layer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+#postcode-layer.show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.postcode-wrap {
+  background: var(--mm-bg-card);  /* 크림 카드 배경 — 모노크롬 통일 */
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(24,23,37,0.18);  /* 부드러운 다크 섀도 */
+  /* 모바일 기본값 */
+  width: calc(100% - 32px);
+  max-width: 480px;
+  max-height: 80vh;
+}
+
+body.pc .postcode-wrap {
+  width: calc(100% - 48px);
+  max-width: 520px;
+}
+
+.postcode-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--mm-border-l);
+  background: var(--mm-bg-cream);  /* 크림 헤더 — 카드와 미세 구분 */
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mm-text-d);         /* 인디고 블랙 텍스트 */
+}
+
+body.pc .postcode-header {
+  padding: 14px 20px;
+}
+
+.postcode-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  color: var(--mm-text-d2);  /* 뮤트 다크 — 크림 배경 위 가시성 확보 */
+}
+
+body.pc .postcode-close:hover {
+  color: var(--mm-void);
+}
+
+#postcode-inner {
+  flex: 1;
+  /* 모바일 기본값 */
+  min-height: 320px;
+}
+
+body.pc #postcode-inner {
+  min-height: 400px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Success Modal
+   ───────────────────────────────────────────────────────────── */
+#success-modal {
+  z-index: 10001;
+}
+
+#success-modal .modal-content {
+  /* 모바일 기본값 */
+  width: calc(100% - 32px);
+  max-width: 400px;
+}
+
+body.pc #success-modal .modal-content {
+  width: calc(100% - 48px);
+  max-width: 440px;
+}
+
+/* ★ 모바일에서도 중앙에 표시할 모달들 (CSS 순서상 마지막에 위치) */
+#date-picker-modal,
+#success-modal {
+  align-items: center;
+  justify-content: center;
+}
+
+#success-modal.show .modal-content,
+#date-picker-modal.show .modal-content {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Utilities
+   ───────────────────────────────────────────────────────────── */
+.hide { display: none !important; }
+
+body.noscroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Boot Loader
+   ───────────────────────────────────────────────────────────── */
+#bootLoader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(72px, 22vh, 200px);
+  background: rgba(250,249,247,0.98);  /* Cream 배경 */
+  z-index: 99999;
+}
+
+#bootFallback {
+  border-radius: 50%;
+  border: 3px solid var(--mm-sand);
+  border-top-color: var(--mm-void);
+  animation: bootspin 1s linear infinite;
+  /* 모바일 기본값 */
+  width: 40px;
+  height: 40px;
+}
+
+body.pc #bootFallback {
+  width: 44px;
+  height: 44px;
+}
+
+@keyframes bootspin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ★ 진단 결과 배너
+   ───────────────────────────────────────────────────────────── */
+.diagnosis-banner {
+  background: rgba(26,26,26,0.03);  /* 모노크롬 뉴트럴 (구 Dried Sage 폐기) */
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  /* 모바일 렌더링 보장 */
+  width: 100% !important;
+  box-sizing: border-box;
+  min-height: 80px;  /* 최소 높이 강제 */
+  overflow: visible;
+  position: relative;
+}
+
+.diagnosis-banner.hide {
+  display: none !important;  /* hide 클래스 우선 적용 */
+}
+
+body.pc .diagnosis-banner {
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  border-radius: 8px;
+}
+
+body.pc .diagnosis-banner-header {
+  margin-bottom: 16px;
+}
+
+body.pc .diagnosis-banner-tags {
+  gap: 10px;
+}
+
+body.pc .diagnosis-tag {
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+.diagnosis-banner-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.diagnosis-banner-badge {
+  background: #1A1A1A;  /* Void (모노크롬) */
+  color: var(--mm-text-cream);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+}
+
+.diagnosis-banner-title {
+  color: #4A4A4A;  /* Stone (모노크롬) */
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.diagnosis-banner-tags {
+  display: block;  /* 라벨:값 행 정리 */
+}
+/* 진단 데이터 행 — 절제된 키:값 (모노크롬) */
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 11px 2px;
+  border-bottom: 1px solid rgba(26,26,26,0.08);
+}
+.diag-row:first-child { border-top: 1px solid rgba(26,26,26,0.08); }
+.diag-row__k { font-size: 13px; color: #8A8580; flex: 0 0 auto; letter-spacing: -0.01em; }
+.diag-row__v { font-size: 14px; color: #1A1A1A; font-weight: 600; text-align: right; line-height: 1.5; }
+
+.diagnosis-tag {
+  background: rgba(130,158,134,0.10);
+  border: 1px solid rgba(130,158,134,0.20);
+  border-radius: 100px;
+  color: #6E8E73;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+}
+
+.diagnosis-banner-hint {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mm-border-l);
+  font-size: 13px;
+  color: var(--mm-text-d2);
+  line-height: 1.5;
+}
+
+/* ★ 진단 미첨부 배너 (브랜드 뉴트럴) */
+.diagnosis-banner-empty {
+  background: rgba(24, 23, 37, 0.03);
+  border: 1px solid var(--mm-border-l);
+  text-align: center;
+}
+
+.diagnosis-banner-badge-empty {
+  background: rgba(24, 23, 37, 0.06);
+  color: #8A8580;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+
+.diagnosis-banner-empty .diagnosis-banner-header {
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.diagnosis-banner-desc {
+  color: #8E8CA0;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.diagnosis-banner-btn {
+  display: inline-block;
+  background: var(--mm-ink);
+  color: var(--mm-text-cream);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Memo Note (참고사항)
+   ───────────────────────────────────────────────────────────── */
+.memo-note {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--mm-bg-cream);
+  border: 1px solid var(--mm-border-l);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--mm-text-d2);
+}
+.memo-note-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8E8CA0;       /* Neutral 400 */
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.memo-note ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.memo-note li {
+  padding-left: 12px;
+  position: relative;
+}
+.memo-note li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: #B5B3C2;       /* Neutral 300 */
+  font-weight: 700;
+}
+body.pc .memo-note {
+  padding: 14px 16px;
+  font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Inline Date Picker (모달 → 인라인 전환)
+   ───────────────────────────────────────────────────────────── */
+#date-picker-modal {
+  position: static !important;
+  background: none !important;
+  display: none;
+  margin-top: 12px;
+  z-index: auto;
+}
+#date-picker-modal.show {
+  display: block;
+}
+#date-picker-modal .modal-content {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  animation: none !important;
+  background: var(--mm-bg-card);  /* Card White — 폼과 어우러짐 */
+  border-radius: 8px;
+  border: 1px solid var(--mm-border-l);
+}
+#date-picker-modal .modal-header {
+  display: none;
+}
+#date-picker-modal .modal-body {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 20px;
+}
+body.pc #date-picker-modal .modal-body {
+  padding: 24px 28px;
+}
+/* PC: 달력 그리드 최대폭 제한 — 전폭 펼침 시 셀 비대 방지 */
+body.pc #date-picker-modal .calendar-nav,
+body.pc #date-picker-modal .calendar-grid {
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
+}
+body.pc #date-picker-modal .day {
+  aspect-ratio: auto;       /* 정사각 해제 */
+  height: 38px;             /* 고정 높이로 컴팩트하게 */
+}
+#date-picker-modal .modal-footer {
+  border-top: 1px solid var(--mm-border-l);
+  padding: 14px 20px;
+  background: transparent;
+}
+/* 캘린더 라이트 오버라이드 */
+#date-picker-modal .calendar-nav button {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .calendar-nav button:hover {
+  background: rgba(26,26,26,0.05);
+  color: var(--mm-ink);
+  border-color: var(--mm-ink);
+}
+#date-picker-modal .calendar-nav .month {
+  color: var(--mm-text-d);
+}
+#date-picker-modal .weekday {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .day {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .day:hover:not(.disabled) {
+  background: rgba(26,26,26,0.04);
+  border-color: rgba(26,26,26,0.15);
+}
+/* 오늘 표시 — 옅은 톤 (선택과 위계 분리, 2026-05-23 fix) */
+#date-picker-modal .day.today {
+  border-color: rgba(26,26,26,0.08);
+  color: var(--mm-text-d2);
+  font-weight: 400;
+  background: rgba(26,26,26,0.03);
+}
+#date-picker-modal .day.today:hover:not(.disabled):not(.selected) {
+  background: rgba(26,26,26,0.08);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .day.selected {
+  background: rgba(26,26,26,0.06);  /* Void Soft 틴트 */
+  border-color: var(--mm-ink);
+  color: var(--mm-ink);
+  font-weight: 600;
+}
+#date-picker-modal .day.disabled {
+  background: #E8E6DC;  /* Warm Ivory */
+  color: #B5B3C2;       /* Neutral 300 */
+}
+/* 시간 섹션 라이트 */
+#date-picker-modal .time-section {
+  border-top-color: var(--mm-border-l);
+}
+#date-picker-modal .time-section h4 {
+  color: var(--mm-text-d);
+}
+#date-picker-modal .time-slot {
+  background: var(--mm-bg-cream);
+  border-color: var(--mm-border-l);
+  color: var(--mm-text-d);
+}
+#date-picker-modal .time-slot:hover:not(.unavailable) {
+  background: rgba(26,26,26,0.04);
+  border-color: rgba(26,26,26,0.15);
+}
+#date-picker-modal .time-slot.selected {
+  background: var(--mm-void);
+  border-color: var(--mm-void);
+  color: var(--mm-cream);
+  font-weight: 600;
+}
+#date-picker-modal .time-slot.unavailable {
+  background: var(--mm-parchment);
+  color: var(--mm-mist);
+}
+#date-picker-modal .time-slot.selected.unavailable {
+  background: var(--mm-void);
+  color: var(--mm-cream);
+  border-color: var(--mm-void);
+  text-decoration: none;
+}
+#date-picker-modal .time-slot.loading {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .time-period-label {
+  color: var(--mm-text-d2);
+  border-bottom-color: var(--mm-border-l);
+}
+#date-picker-modal .modal-selection-summary {
+  color: var(--mm-text-d2);
+}
+#date-picker-modal .modal-selection-summary.has-selection {
+  color: var(--mm-ink);
+}
+/* PC: 인라인 피커 열릴 때 sec-visit 전폭 */
+body.pc .card-body #sec-visit:has(#date-picker-modal.show) {
+  grid-column: 1 / -1;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Time Slots Section Divider (오전/오후)
+   ───────────────────────────────────────────────────────────── */
+.time-period-label {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+  padding: 6px 0 2px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 2px;
+}
+.time-period-label:first-child { padding-top: 0; }
+
+/* ─────────────────────────────────────────────────────────────
+   Footer Selection Summary
+   ───────────────────────────────────────────────────────────── */
+.modal-selection-summary {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 10px;
+  min-height: 18px;
+  transition: color 0.15s;
+}
+.modal-selection-summary.has-selection {
+  color: var(--mm-ink);
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Hover States — 터치 디바이스에서 유령 hover 방지
+   ───────────────────────────────────────────────────────────── */
+@media (hover: hover) {
+  .segment-btn:hover {
+    border-color: var(--mm-border-m);
+    background: rgba(26,26,26,0.04);
+  }
+  .date-picker-btn:hover {
+    border-color: var(--mm-ink);
+  }
+  .btn-search:hover {
+    background: var(--mm-ink);
+    color: var(--mm-text-cream);
+    border-color: var(--mm-ink);
+  }
+  .btn-primary:not(:disabled):hover {
+    background: var(--mm-ink-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26,26,26,0.15);
+  }
+  .diagnosis-banner-btn:hover {
+    background: var(--mm-ink-dark);
+  }
+}
+</style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 상담 접수폼이라 "가볍게". 마크업·스크립트 무수정 ═══════════════
+     콘셉트: 상담 예약 신청서(서식지) — 흰 카드 틀을 걷어내고 검은 가는 선 서식으로
+     시그니처: 입력 항목 거대 번호 01·02·03…(Outfit 300, 흐린 색) + 굵은 900 제목 / 숨겨진 항목은 번호에서 자동 제외
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 2px(모달 4px) · 입력칸 48·버튼 56·달력·시간 칸 크기 그대로 · 글꼴은 Pretendard+Outfit만(Plus Jakarta Sans 제외) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+html, body{ font-family:'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; word-break:keep-all; }
+
+/* ── 1. 머리 — 영문 머리말 + 굵은 900 제목, 아래 검은 가는 선 ── */
+.header{ flex-wrap:wrap; padding:32px 0 20px; margin:0 0 8px; border-bottom:1px solid var(--void); }
+.header::before{ content:'CONSULTATION'; flex-basis:100%; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); margin-bottom:10px; }
+.header h1{ font-size:clamp(26px,7.6vw,34px); font-weight:900; letter-spacing:-.04em; line-height:1.15; }
+body.pc .header{ padding:44px 0 24px; margin:0 0 12px; }
+body.pc .header h1{ font-size:36px; }
+
+/* ── 2. 카드 → 틀 제거(서식지처럼 선으로만). 입력칸은 흰색으로 띄움 ── */
+.card{ background:transparent; border:0; border-radius:0; }
+.card-body{ padding:16px 0 8px; }
+body.pc .card-body{ padding:24px 0 8px; }
+
+/* ── 3. 시그니처 — 항목 거대 번호 + 가는 선 ── */
+.card-body{ counter-reset:b-step; }
+.segment-wrap > .segment-label,
+.card-body .form-group > label,
+.card-body .form-group > .segment-label,
+.privacy-box > h4{ counter-increment:b-step; font-size:15px; font-weight:800; color:var(--void); letter-spacing:-.02em; margin-bottom:12px; }
+.segment-wrap > .segment-label::before,
+.card-body .form-group > label::before,
+.card-body .form-group > .segment-label::before,
+.privacy-box > h4::before{ content:counter(b-step, decimal-leading-zero); display:inline-block; min-width:1.5em; margin-right:10px; font-family:'Outfit',sans-serif; font-size:clamp(30px,8.6vw,38px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--mist); vertical-align:-.06em; font-variant-numeric:tabular-nums; }
+.card-body .form-group, .segment-wrap{ border-top:1px solid var(--sand); padding-top:18px; }
+.segment-wrap{ border-top:0; padding-top:4px; }
+.form-row{ gap:22px; margin-bottom:22px; }
+.form-row .form-group{ margin-bottom:0; }
+body.pc .form-row{ margin-bottom:28px; }
+#sec-field > .form-group:first-child{ margin-top:4px; }
+.required::after{ color:var(--warm-gray); font-weight:500; }
+
+/* 상담 방식 카드 — 2px, 선택 = 검은 선 2겹(크기 그대로) */
+.segment-btn{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+body.pc .segment-btn{ border-radius:2px; }
+.segment-btn.active{ background:var(--white); border-color:var(--void); outline:1px solid var(--void); outline-offset:-2px; font-weight:800; }
+
+/* 방식 안내 — 회색 상자 → 왼쪽 검은 선 */
+.type-info{ background:transparent; border-left:2px solid var(--void); border-radius:0; padding:2px 0 2px 14px; color:var(--stone); text-wrap:pretty; }
+body.pc .type-info{ padding:2px 0 2px 16px; }
+
+/* 매장 위치 — 2px 가는 선 상자, 지도 버튼 알약 → 2px */
+.store-location-card{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+.store-location-map{ border-radius:2px; font-weight:700; }
+
+/* 입력칸·날짜 버튼 — 8px → 2px, 크림 → 흰색(틀 없는 바탕 위에서 칸이 보이게). 높이 그대로 */
+input[type="text"], input[type="tel"], textarea, select, .date-picker-btn{ border-radius:2px; background:var(--white); border-color:var(--sand); }
+input[type="text"]:focus, input[type="tel"]:focus, textarea:focus, select:focus{ box-shadow:none; outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void); }
+input[readonly], #address2:disabled{ background:var(--shell); }
+.btn-search{ border-radius:2px; border-color:var(--void); font-weight:700; }
+.day-chip, .time-pref-btn{ border-radius:2px; border-color:var(--sand); background:var(--white); }
+.day-chip.active, .time-pref-btn.active{ font-weight:800; }
+.memo-note{ border-radius:2px; background:transparent; border:0; border-left:2px solid var(--sand); padding:2px 0 2px 14px; }
+body.pc .memo-note{ padding:2px 0 2px 16px; }
+
+/* 달력(인라인) — 2px, 크기 그대로 */
+#date-picker-modal .modal-content{ border-radius:2px; border-color:var(--sand); }
+.calendar-nav button, #date-picker-modal .calendar-nav button{ border-radius:2px; }
+.calendar-nav .month{ font-family:'Outfit','Pretendard',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; }
+.day, #date-picker-modal .day{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.time-slot, #date-picker-modal .time-slot{ border-radius:2px; font-variant-numeric:tabular-nums; }
+.time-section h4{ font-weight:800; }
+
+/* 진단 배너 — 2px · 가는 선 */
+.diagnosis-banner, body.pc .diagnosis-banner{ border-radius:2px; background:transparent; border-color:var(--sand); }
+.diagnosis-banner:not(.diagnosis-banner-empty){ border:0; border-top:1px solid var(--void); border-bottom:1px solid var(--sand); padding-left:0; padding-right:0; }
+.diagnosis-banner-badge, .diagnosis-banner-badge-empty{ border-radius:2px; }
+.diagnosis-banner:not(.diagnosis-banner-empty){ border-top:0; padding-top:4px; }   /* 머리 선과 2줄 겹침 방지 */
+/* (원본 버그 보정) 진단완료 배지 안 체크 아이콘 크기 미지정 → 큰 체크가 배지를 부풀림. 12px 인라인으로 */
+.diagnosis-banner-badge{ display:inline-flex; align-items:center; gap:5px; }
+.diagnosis-banner-badge svg{ width:12px; height:12px; flex:0 0 auto; }
+.diagnosis-banner-title{ font-weight:800; color:var(--void); }
+.diagnosis-banner-btn{ border-radius:2px; font-weight:700; }
+.diagnosis-banner-desc{ color:var(--stone); text-wrap:pretty; }
+.memo-note-title{ color:var(--warm-gray); }
+.memo-note li::before{ color:var(--mist); }
+.diagnosis-tag{ border-radius:2px; background:transparent; border-color:var(--sand); color:var(--stone); }
+
+/* 개인정보 동의 — 흰 상자 → 가는 선, 약관 칸 2px */
+.privacy-box, body.pc .privacy-box{ background:transparent; border:0; border-top:1px solid var(--sand); border-radius:0; padding:18px 0 0; }
+.privacy-content{ border-radius:2px; background:var(--white); border-color:var(--sand); }
+
+/* ── 4. 신청 버튼 — 알약 → 2px (높이 56 그대로), hover 들림 제거 ── */
+.btn-primary{ border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+@media (hover: hover){ .btn-primary:not(:disabled):hover{ transform:none; } }
+
+/* ── 5. 완료 모달·주소 검색 — 16px → 4px ── */
+.modal-content{ border-radius:4px; }
+.modal-body h2{ font-size:22px; font-weight:900; letter-spacing:-.03em; }
+.modal-close{ border-radius:2px; }
+.postcode-wrap{ border-radius:4px; }
+</style>
+</head>
+<body>
+<script>
+/* 🧪 시안 전용 안전장치 — 조회(GET) 외 서버 요청(접수·저장)을 막음. 원본에 옮기지 않는다 */
+(function(){var f=window.fetch;window.fetch=function(u,o){var m=((o&&o.method)||(u&&u.method)||'GET').toUpperCase();if(m!=='GET'){alert('시안 미리보기 — 실제로 접수되지 않습니다');return Promise.reject(new Error('mock-blocked'));}return f.apply(this,arguments);};var s=XMLHttpRequest.prototype.send,op=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m){this.__m=String(m).toUpperCase();return op.apply(this,arguments);};XMLHttpRequest.prototype.send=function(){if(this.__m&&this.__m!=='GET'){alert('시안 미리보기 — 실제로 접수되지 않습니다');return;}return s.apply(this,arguments);};})();
+</script>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_form.html 에 B-09 덧입힘(문구·입력칸·달력·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 상담 접수(아임웹 상담 iframe). 문구·입력칸·달력·버튼은 같고 디자인만 다릅니다. 달력은 실제 예약 가능 시간을 불러옵니다 — 시안에서는 「상담 신청하기」를 눌러도 접수되지 않게 막아 두었습니다.</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_form.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+<div id="bootLoader">
+  <div id="bootFallback" aria-hidden="true"></div>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></svg>
+    </div>
+    <h1>가위 상담 신청</h1>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <!-- ═══════════════════════════════════════════════════════════
+         진단 결과 배너 (card-body 최상단 - 모바일에서도 보이도록)
+         ═══════════════════════════════════════════════════════════ -->
+      <div id="diagnosis-banner" class="diagnosis-banner hide">
+        <div class="diagnosis-banner-header">
+          <span class="diagnosis-banner-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF9F7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6"/></svg> 진단완료</span>
+          <span class="diagnosis-banner-title">간편진단 결과가 반영됩니다</span>
+        </div>
+        <div id="diagnosis-tags" class="diagnosis-banner-tags">
+          <!-- 태그들이 여기에 동적으로 삽입됨 -->
+        </div>
+        <div class="diagnosis-banner-hint">
+          위 내용이 상담 메모에 자동으로 포함됩니다
+        </div>
+      </div>
+
+      <!-- 미첨부 상태 (진단 데이터 없을 때) -->
+      <div id="diagnosis-banner-empty" class="diagnosis-banner diagnosis-banner-empty">
+        <div class="diagnosis-banner-header">
+          <span class="diagnosis-banner-badge-empty">간편진단 미첨부</span>
+        </div>
+        <div class="diagnosis-banner-desc">
+          간편진단을 첨부하시면<br>더욱 디테일한 상담 준비가 가능합니다.<br>
+          <b>톡 상담 접수 시</b>엔 꼭 진단 내용을 첨부해 주세요!
+        </div>
+        <a href="https://mamoru.kr/58"
+           class="diagnosis-banner-btn" target="_blank">
+          간편진단 바로가기
+        </a>
+      </div>
+
+      <!-- 상담유형 선택 -->
+      <div class="segment-wrap">
+        <div class="segment-label">어떤 방식이 편하세요?</div>
+        <div class="segment-control" id="seg">
+          <button type="button" class="segment-btn active" data-v="visit">
+            <span class="seg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg></span>
+            <span>직접 방문</span>
+          </button>
+          <button type="button" class="segment-btn" data-v="field">
+            <span class="seg-icon"><svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="14.2857" stroke-linecap="round" stroke-linejoin="round"><path d="M38.1429 161.214L30.4143 160.857C27.2365 160.688 24.1928 159.521 21.7156 157.523C19.2384 155.526 17.4535 152.798 16.6143 149.729C14.6572 142.586 12.7572 135.157 12.7572 127.586C12.7572 119.543 14.9001 111.686 16.9858 104.1L17.2143 103.271C18.6429 98.0857 22.6715 93.9286 27.9001 92.6429C33.1286 91.3571 38.281 90.1619 43.3572 89.0571C44.0559 78.0825 47.1369 67.3919 52.3858 57.7286C53.2926 56.0908 54.546 54.6709 56.0586 53.5679C57.5712 52.4649 59.3064 51.7055 61.1429 51.3429C73.5715 48.7571 83.9715 47.4857 99.8143 47.4857C115.671 47.4857 125.629 48.7571 138.614 51.3571C142.471 52.1286 145.857 54.5 147.686 57.9571C152.971 68.0429 156.114 78.5286 156.657 89.3429C161.771 90.4381 166.843 91.5714 171.871 92.7429C177.214 93.9857 181.386 98.1714 182.829 103.471L183.014 104.1C185.086 111.686 187.257 119.543 187.257 127.6C187.257 135.171 185.343 142.571 183.386 149.743C181.671 156 176.071 160.571 169.586 160.857L161.857 161.214M80.8001 162.957C93.5598 163.293 106.326 163.293 119.086 162.957M100 21.7571V47.4714"/><path d="M59.6001 178.157C73.6001 178.157 81.4715 170.286 81.4715 156.286C81.4715 142.286 73.6001 134.414 59.6001 134.414C45.6001 134.414 37.7144 142.286 37.7144 156.286C37.7144 170.286 45.5715 178.157 59.5715 178.157M140.286 178.157C154.286 178.157 162.171 170.286 162.171 156.286C162.171 142.286 154.286 134.414 140.286 134.414C126.286 134.414 118.429 142.286 118.429 156.286C118.429 170.286 126.286 178.157 140.286 178.157Z"/></svg></span>
+            <span>출장 요청</span>
+          </button>
+          <button type="button" class="segment-btn" data-v="chat">
+            <span class="seg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg></span>
+            <span>톡 상담</span>
+          </button>
+        </div>
+        <input type="hidden" id="consult_type" value="매장 방문">
+      </div>
+
+      <!-- 상담유형 안내 -->
+      <div class="type-info" id="type-info">
+        방문주시는 그날 만나뵙겠습니다<br>편하신 <b>날짜와 시간</b>을 선택해주세요
+      </div>
+
+      <!-- 매장 방문 선택 시 — 매장 위치 안내 (기본 노출, segment 변경 시 toggle. SSOT: page_guide.html 동일 주소) -->
+      <div class="store-location-card" id="store-location-card">
+        <p class="store-location-label">마모루 매장 위치</p>
+        <p class="store-location-address">서울특별시 구로구 부광로 88 SKV1,<br>B동 311호 마모루</p>
+        <a href="https://naver.me/GtYtEMSh" target="_blank" rel="noopener" class="store-location-map">
+          네이버 지도로 보기 →
+        </a>
+      </div>
+
+      <!-- 기본 정보 -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="required">성함</label>
+          <input id="name" type="text" placeholder="홍길동" autocomplete="name">
+          <div id="err-name" class="err-msg">성함을 알려주세요</div>
+        </div>
+        <div class="form-group">
+          <label class="required">연락처</label>
+          <input id="phone" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="01012345678" autocomplete="tel">
+          <div id="err-phone" class="err-msg">연락처를 확인해주세요</div>
+        </div>
+      </div>
+
+      <!-- 매장 방문: 날짜/시간 선택 -->
+      <div id="sec-visit" class="form-group">
+        <label class="required">방문 날짜 및 시간</label>
+        <button type="button" class="date-picker-btn" id="btn-open-picker">
+          <span id="selected-date-display" class="date-display placeholder">날짜와 시간을 선택하세요</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </button>
+        <!-- 인라인 날짜/시간 선택 (기존 모달 → 인라인) -->
+        <div id="date-picker-modal" class="modal-backdrop">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>날짜 및 시간 선택</h3>
+              <button type="button" class="modal-close" id="btn-modal-close">×</button>
+            </div>
+            <div class="modal-body">
+              <div class="calendar-nav">
+                <button type="button" id="btn-prev-month">◀</button>
+                <span class="month" id="calendar-month"></span>
+                <button type="button" id="btn-next-month">▶</button>
+              </div>
+              <div class="calendar-grid">
+                <div class="weekday">일</div><div class="weekday">월</div><div class="weekday">화</div>
+                <div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday">토</div>
+              </div>
+              <div id="calendar-days" class="calendar-grid"></div>
+              <div class="time-section">
+                <h4>시간 선택</h4>
+                <div class="time-slots" id="time-slots">
+                  <div class="time-slot loading">날짜를 먼저 선택해주세요.</div>
+                </div>
+                <div id="loading-dates" class="time-slot loading hide" style="margin-top:8px;">예약 가능한 날짜를 불러오는 중입니다...</div>
+                <div id="same-day-notice" class="same-day-notice hide">당일 예약은 불가합니다.</div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <div id="modal-summary" class="modal-selection-summary">날짜와 시간을 선택하세요</div>
+              <button id="btn-modal-confirm" class="btn-primary">선택 완료</button>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" id="visit_date">
+        <input type="hidden" id="visit_time">
+        <div id="err-visit" class="err-msg">날짜와 시간을 선택해주세요</div>
+      </div>
+
+      <!-- 출장 요청: 활동명/직급/주소/요일/시간대 -->
+      <div id="sec-field" class="hide">
+        <div class="form-group">
+          <label>매장 사용 이름 (활동명)</label>
+          <input id="activityName" type="text" placeholder="예) 하은 · 성함과 같다면 기재 X" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>직급</label>
+          <input id="position" type="text" placeholder="예) 원장 / 디자이너 / 실장" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <div class="segment-label">주소지 입력</div>
+          <input id="postcode" type="hidden">
+          <div class="address-row">
+            <input id="address1" type="text" placeholder="주소" readonly>
+            <button type="button" class="btn-search" id="btn-post">주소검색</button>
+          </div>
+          <input id="address2" type="text" placeholder="주소검색 후 입력 가능" autocomplete="address-line2" disabled style="margin-top:8px">
+          <!-- 기존 로직과 호환을 위해 숨김 필드를 추가 -->
+          <input type="hidden" id="addrPlaceId">
+          <input type="hidden" id="addrLat">
+          <input type="hidden" id="addrLng">
+          <div id="err-addr" class="err-msg">방문할 주소를 알려주세요</div>
+        </div>
+        <div class="form-group">
+          <label>상담 가능한 요일 (복수선택 가능)</label>
+          <div class="day-chips" id="day-chips">
+            <button type="button" class="day-chip" data-d="월">월</button>
+            <button type="button" class="day-chip" data-d="화">화</button>
+            <button type="button" class="day-chip" data-d="수">수</button>
+            <button type="button" class="day-chip" data-d="목">목</button>
+            <button type="button" class="day-chip" data-d="금">금</button>
+            <button type="button" class="day-chip" data-d="토">토</button>
+            <button type="button" class="day-chip" data-d="일">일</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>선호하는 시간대 (복수선택 가능)</label>
+          <div class="time-pref-wrap" id="time-pref">
+            <button type="button" class="time-pref-btn" data-t="오전">오전</button>
+            <button type="button" class="time-pref-btn" data-t="오후">오후</button>
+            <button type="button" class="time-pref-btn" data-t="저녁">저녁</button>
+            <button type="button" class="time-pref-btn" data-t="무관">무관</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메모 -->
+      <div class="form-group" id="memo-group">
+        <label>메모</label>
+        <textarea id="memo" rows="3" placeholder="예) 특정 시간대 선호, 가위 상태, 요청사항 등"></textarea>
+        <div class="memo-note" id="memo-note"></div>
+      </div>
+
+      <!-- 개인정보 동의 -->
+      <div class="privacy-box">
+        <h4>개인정보 수집 및 이용 동의 *</h4>
+        <div class="privacy-content">마모루(이하 '회사')는 상담 예약 처리를 위해 아래와 같이 최소한의 개인정보를 수집·이용합니다.
+
+1. 처리 목적
+– 예약 확인, 상담 일정 안내, 문의 대응.
+
+2. 수집 항목
+– 필수: 성명, 연락처.
+– 선택: 주소, 선호 요일·시간대, 메모.
+
+3. 보유 기간
+– 수집일로부터 1년 또는 목적 달성 시 지체 없이 파기.
+
+4. 동의 거부 권리
+– 동의를 거부하실 수 있으나, 이 경우 상담 예약이 제한될 수 있습니다.</div>
+        <div class="privacy-check">
+          <input type="checkbox" id="agreeCk">
+          <label for="agreeCk">개인정보 수집 및 이용에 동의합니다.</label>
+        </div>
+        <div id="err-agree" class="err-msg">개인정보 수집에 동의해주세요</div>
+      </div>
+
+      <button id="btn-submit" class="btn-primary">상담 신청하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="modal-backdrop">
+  <div class="modal-content">
+    <div class="modal-body">
+      <h2 id="success-title">상담 신청 완료</h2>
+      <p id="success-msg">신청이 정상적으로 완료되었습니다.<br>곧 안내톡을 보내드릴게요!</p>
+    </div>
+    <div class="modal-footer">
+      <button id="btn-success-close" class="btn-primary">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Postcode Layer -->
+<div id="postcode-layer">
+  <div class="postcode-wrap">
+    <div class="postcode-header">
+      <span>주소 검색</span>
+      <button type="button" class="postcode-close" id="postcode-close">×</button>
+    </div>
+    <div id="postcode-inner"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   ★ 진단 데이터 파서 (클라이언트 사이드 - URL 파라미터 + localStorage)
+   ══════════════════════════════════════════════════════════════ */
+(function() {
+  // URL 파라미터 또는 localStorage에서 진단 데이터 읽기
+  var diagnosisFromServer = null;
+
+  // 방법 1: URL 파라미터에서 읽기
+  try {
+    var urlParams = new URLSearchParams(window.location.search);
+    diagnosisFromServer = urlParams.get('diagnosis');
+    if (diagnosisFromServer) {
+      console.log('[MAMORU] URL 파라미터에서 진단 데이터 읽기 성공');
+    }
+  } catch(e) { console.log('[MAMORU] URL 파라미터 접근 실패'); }
+
+  // 방법 2: localStorage에서 읽기 (모바일 fallback)
+  if (!diagnosisFromServer) {
+    try {
+      diagnosisFromServer = localStorage.getItem('MAMORU_DIAGNOSIS_DATA');
+      if (diagnosisFromServer) {
+        console.log('[MAMORU] localStorage에서 진단 데이터 읽기 성공');
+        localStorage.removeItem('MAMORU_DIAGNOSIS_DATA');  // 사용 후 삭제
+      }
+    } catch(e) { console.log('[MAMORU] localStorage 접근 실패'); }
+  }
+  
+  const labelMap = {
+    'CE': '자격증 준비', 
+    'IN': '인턴/스탭', 
+    'DE': '디자이너',
+    'BL': '블런트', 
+    'TH': '틴닝', 
+    'LO': '장가위', 
+    'SL': '슬라이싱',
+    'FEEL_SOFT': '부드러운 커트감', 
+    'FEEL_POWER': '힘있고 강한 느낌', 
+    'FEEL_NONE': '아직 모름',
+    'St_GO': '직진성 커트', 
+    'St_BACK': '스트로크 커트', 
+    'St_NONE': '기준 없음',
+    'HAB_WET': 'WET 커트', 
+    'HAB_DRY': 'DRY 커트', 
+    'HAB_NONE': '반반',
+    'TH_25': '25%', 
+    'TH_15': '15%', 
+    'TH_35': '35%',
+    'TH_WHY_NEW': '새 감모량', 
+    'TH_WHY_SAME': '교체', 
+    'TH_WHY_UP': '업그레이드',
+    'LO_BL': '블런트 겸용', 
+    'LO_SING': '싱글링 전용',
+    'SL_NEW': '첫 구매', 
+    'SL_SAME': '불만족 교체',
+    'SL_SAME_WHY_UNCOM': '안 잘림', 
+    'SL_SAME_WHY_UNCOM1': '과다 절삭', 
+    'SL_SAME_WHY_HAND': '핸들 불편',
+    'FM': '여성', 
+    'M': '남성',
+    'FING_NORMAL': '보통', 
+    'FING_THICK': '두꺼움'
+  };
+
+  const questionLabels = {
+    'Q_STAGE': '경력',
+    'Q_TYPE': '가위 종류',
+    'Q_FEEL': '커트 느낌',
+    'Q_STYLE': '커트 스타일',
+    'Q_HABIT': '커트 습관',
+    'Q_TH_RATIO': '틴닝 감모량',
+    'Q_TH_WHY': '틴닝 구매목적',
+    'Q_LO_USE': '장가위 용도',
+    'Q_SL_WHY': '슬라이싱 구매동기',
+    'Q_SL_SAME_WHY': '불만족 이유',
+    'Q_GENDER': '성별',
+    'Q_FING': '손가락 굵기'
+  };
+
+  function formatDiagnosisText(diagData) {
+    if (!diagData || Object.keys(diagData).length === 0) return '';
+    var lines = [];
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    lines.push('📋 간편진단 작성내역');
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    Object.keys(diagData).forEach(function(key) {
+      var val = diagData[key];
+      var qLabel = questionLabels[key] || key;
+      if (Array.isArray(val)) {
+        var labels = val.map(function(v) { return labelMap[v] || v; }).join(', ');
+        lines.push('• ' + qLabel + ': ' + labels);
+      } else if (val) {
+        lines.push('• ' + qLabel + ': ' + (labelMap[val] || val));
+      }
+    });
+    lines.push('━━━━━━━━━━━━━━━━━━━━');
+    return lines.join('\n');
+  }
+
+  function getDiagnosisTags(diagData) {
+    if (!diagData) return [];
+    var tags = [];
+    Object.keys(diagData).forEach(function(key) {
+      var val = diagData[key];
+      if (Array.isArray(val)) {
+        val.forEach(function(v) {
+          if (labelMap[v]) tags.push(labelMap[v]);
+        });
+      } else if (val && labelMap[val]) {
+        tags.push(labelMap[val]);
+      }
+    });
+    return tags;
+  }
+
+  // 진단 데이터 → 라벨:값 행 (정리된 형태)
+  function getDiagnosisRows(diagData) {
+    if (!diagData) return [];
+    var rows = [];
+    Object.keys(diagData).forEach(function(key) {
+      var val = diagData[key];
+      var qLabel = questionLabels[key] || key;
+      var v = Array.isArray(val)
+        ? val.map(function(x){ return labelMap[x] || x; }).filter(Boolean).join(', ')
+        : (val ? (labelMap[val] || val) : '');
+      if (v) rows.push({ label: qLabel, value: v });
+    });
+    return rows;
+  }
+
+  function showDiagnosisBanner(diagData) {
+    var banner = document.getElementById('diagnosis-banner');
+    var tagsContainer = document.getElementById('diagnosis-tags');
+    if (!banner || !tagsContainer) {
+      console.log('[MAMORU] 배너 요소를 찾을 수 없음');
+      return;
+    }
+    var rows = getDiagnosisRows(diagData);
+    if (rows.length === 0) return;
+    tagsContainer.innerHTML = rows.map(function(r) {
+      return '<div class="diag-row"><span class="diag-row__k">' + r.label + '</span><span class="diag-row__v">' + r.value + '</span></div>';
+    }).join('');
+    banner.classList.remove('hide');
+    // 모바일 렌더링 문제 해결: 인라인 스타일로 강제 표시
+    banner.style.display = 'block';
+    banner.style.width = '100%';
+    banner.style.visibility = 'visible';
+    banner.style.opacity = '1';
+    console.log('[MAMORU] 배너 표시 완료');
+  }
+
+  function injectDiagnosisToMemo(diagData) {
+    var memoEl = document.getElementById('memo');
+    if (!memoEl) return;
+    var diagText = formatDiagnosisText(diagData);
+    if (!diagText) return;
+    var existingMemo = memoEl.value.trim();
+    if (existingMemo) {
+      memoEl.value = diagText + '\n\n[고객 메모]\n' + existingMemo;
+    } else {
+      memoEl.value = diagText;
+    }
+    console.log('[MAMORU] memo에 진단 내용 삽입 완료');
+  }
+
+  // 전역 변수 초기화
+  window.__MAMORU_DIAGNOSIS__ = null;
+  window.__injectDiagnosisToMemo__ = injectDiagnosisToMemo;
+
+  // 서버에서 주입된 데이터 처리
+  var emptyBanner = document.getElementById('diagnosis-banner-empty');
+
+  if (diagnosisFromServer && diagnosisFromServer.length > 0) {
+    // 진단 데이터 있음 → 진단완료 배너 표시, 미첨부 배너 숨김
+    if (emptyBanner) {
+      emptyBanner.classList.add('hide');
+      emptyBanner.style.display = 'none';
+    }
+    try {
+      var decoded = decodeURIComponent(diagnosisFromServer);
+      window.__MAMORU_DIAGNOSIS__ = JSON.parse(decoded);
+      console.log('[MAMORU] 서버에서 진단 데이터 수신:', window.__MAMORU_DIAGNOSIS__);
+
+      // DOM 로드 후 배너 표시
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+          showDiagnosisBanner(window.__MAMORU_DIAGNOSIS__);
+        });
+      } else {
+        showDiagnosisBanner(window.__MAMORU_DIAGNOSIS__);
+      }
+    } catch (err) {
+      console.error('[MAMORU] 진단 데이터 파싱 오류:', err);
+    }
+  } else {
+    // 진단 데이터 없음 → 미첨부 배너 표시 (기본 상태)
+    console.log('[MAMORU] 진단 데이터 없음 - 미첨부 배너 표시');
+  }
+})();
+</script>
+
+<script>
+// 화면 크기에 따라 자동으로 PC/모바일 모드 전환 (반응형)
+(function() {
+  var PC_BREAKPOINT = 768;  // 768px 이상이면 PC 레이아웃
+
+  function updateLayout() {
+    if (window.innerWidth > PC_BREAKPOINT) {
+      document.body.classList.add('pc');
+    } else {
+      document.body.classList.remove('pc');
+    }
+  }
+
+  // 초기 실행
+  updateLayout();
+
+  // 화면 크기 변경 시 재적용
+  window.addEventListener('resize', updateLayout);
+})();
+</script>
+
+<script>
+(function() {
+  // Postcode SDK 로드
+  if (!(window.daum && window.daum.Postcode)) {
+    var s = document.createElement('script');
+    s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  // 카카오 Maps SDK 로드 (Geocoder용 — 주소→좌표 변환)
+  if (!window.kakao || !window.kakao.maps) {
+    var k = document.createElement('script');
+    k.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=a2f66fb456dd6a3808f42b649bbfee94&libraries=services&autoload=false';
+    k.async = true;
+    document.head.appendChild(k);
+  }
+})();
+</script>
+
+<script>
+
+(function() {
+  const $ = id => document.getElementById(id);
+  const $$ = (sel, el = document) => el.querySelectorAll(sel);
+
+  // ─────────────────────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────────────────────
+  const state = {
+    type: '매장 방문',        // 상담 유형
+    visitDate: null,          // 확정된 방문 날짜 (YYYY-MM-DD)
+    visitTime: null,          // 확정된 방문 시간 (HH:MM)
+    prefDays: [],             // 출장 요청 시 선호 요일 목록
+    prefTimes: [],            // 출장 요청 시 선호 시간대 목록
+    modal: { currentDate: new Date(), selectedDate: null, selectedTime: null },
+    serverSettings: {         // 서버에서 내려오는 설정값들
+      disabledWeekdays: [],   // 휴무 요일 (0=일 ~ 6=토)
+      closedDates: new Set(), // 휴무일 (YYYY-MM-DD 형식)
+      business: {}            // 영업시간: { startHour, endHour, stepMin }
+    },
+    slotsCache: new Map()     // 날짜별 슬롯 캐시
+  };
+  // 전역 플래그: 날짜 및 시간 데이터를 불러오는 중인지 표시합니다.
+// 로딩 중에는 날짜 클릭, 시간 클릭, 월 이동이 제한됩니다.
+  let isLoadingDates = false;
+  let isFetchingSlots = false;
+  let monthNavTimer = null;
+
+  // ─────────────────────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────────────────────
+  function fmt(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function todayStr() { return fmt(new Date()); }
+
+  function setErr(id, on) {
+    const el = $(id);
+    if (el) el.style.display = on ? 'block' : 'none';
+  }
+
+  function markCtl(el, on) {
+    if (!el) return;
+    el.classList.toggle('err', !!on);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Vercel API (Supabase 직접 — GAS 완전 대체)
+  // ─────────────────────────────────────────────────────────────
+  const API_BASE = 'https://app-eta-sandy-75.vercel.app/api/consultation/public';
+
+  async function gasRun(fn, ...args) {
+    try {
+      if (fn === 'getSettings') {
+        const resp = await fetch(API_BASE + '/settings');
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'getSettings failed');
+        return json.data;
+      }
+
+      if (fn === 'getSlotsRange') {
+        const [dates, consultType] = args;
+        const datesParam = Array.isArray(dates) ? dates.join(',') : dates;
+        const url = `${API_BASE}/slots?dates=${encodeURIComponent(datesParam)}&type=${encodeURIComponent(consultType || '매장 방문')}`;
+        const resp = await fetch(url);
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'getSlotsRange failed');
+        return json.data;
+      }
+
+      if (fn === 'submitConsultation') {
+        const [formData] = args;
+        const resp = await fetch(API_BASE + '/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.error || 'submitConsultation failed');
+        return json.data;
+      }
+
+      console.warn('gasRun: unknown function', fn);
+      return {};
+    } catch (err) {
+      console.error('gasRun error:', fn, err);
+      throw err;
+    }
+  }
+
+  async function loadSettings() {
+    try {
+      const s = await gasRun('getSettings');
+      if (s) {
+        // 서버가 closedWeekdays/disabledWeekdays 등 다양한 키를 반환할 수 있으므로 병합 처리
+        const dw = s.CLOSED_WEEKDAYS || s.disabledWeekdays || [];
+        state.serverSettings.disabledWeekdays = Array.isArray(dw) ? dw : [];
+
+        const cd = s.CLOSED_DATES || s.disabledDates || [];
+        // 휴무일을 Set으로 저장, YYYY-MM-DD 형식으로 정규화
+        const norm = (v) => String(v || '').slice(0, 10).replace(
+          /^(\d{4})-(\d{1,2})-(\d{1,2}).*$/,
+          (_, y, m, d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+        );
+        state.serverSettings.closedDates = new Set((cd || []).map(norm));
+
+        // 영업시간 정보: BUSINESS 객체 또는 startHour/endHour/stepMin 값으로 초기화
+        const biz = s.BUSINESS || { startHour: s.startHour || 10, endHour: s.endHour || 19 };
+        biz.stepMin = 30;  // 고객 달력은 항상 30분 단위 (서버값 무시)
+        state.serverSettings.business = biz;
+
+        /*
+         * 서버 설정 로드 후 초기 캘린더와 시간 슬롯을 준비합니다.
+         * 1) 캘린더를 현재 날짜 기준으로 렌더링하고,
+         * 2) 현재 달과 다음 두 달에 대해 예약 가능 슬롯을 선조회(prefetch)합니다.
+         *    이렇게 하면 사용자가 모달을 열 때 즉시 최신 상태의 선택 가능/불가능 정보가 반영됩니다.
+         */
+        // 캘린더 렌더링 (state.modal.currentDate는 기본값으로 오늘입니다)
+        renderCalendar();
+        // 오늘 기준으로 연속 3개월의 슬롯을 선조회
+        (function prefetchInit() {
+          const backupDate = state.modal.currentDate;
+          // 이번 달
+          state.modal.currentDate = new Date();
+          prefetchVisibleMonth();
+          // 다음 달
+          const next1 = new Date(state.modal.currentDate.getTime());
+          next1.setMonth(next1.getMonth() + 1);
+          state.modal.currentDate = next1;
+          prefetchVisibleMonth();
+          // 다다음 달
+          const next2 = new Date(backupDate.getTime());
+          next2.setMonth(next2.getMonth() + 2);
+          state.modal.currentDate = next2;
+          prefetchVisibleMonth();
+          // 원래 날짜로 복원
+          state.modal.currentDate = backupDate;
+        })();
+      }
+    } catch (e) {
+      console.error('loadSettings error', e);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Slots Cache
+  // ─────────────────────────────────────────────────────────────
+function getCachedSlots(dateStr) {
+    const c = state.slotsCache.get(dateStr);
+    // 캐시 유효시간: 30초 (시트 기반이라 서버 조회가 빠름)
+    if (c && Date.now() - c.ts < 30 * 1000) return c.data;
+    return null;
+  }
+
+  function setCachedSlots(dateStr, data) {
+    state.slotsCache.set(dateStr, { ts: Date.now(), data });
+    // 과거 날짜 정리
+    const today = todayStr();
+    for (const k of state.slotsCache.keys()) {
+      if (k < today) state.slotsCache.delete(k);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Calendar
+  // ─────────────────────────────────────────────────────────────
+  function renderCalendar() {
+    if (!state.modal.currentDate) state.modal.currentDate = new Date();
+    const date = state.modal.currentDate;
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    $('calendar-month').textContent = `${year}년 ${month + 1}월`;
+
+    const calendarDays = $('calendar-days');
+    calendarDays.innerHTML = '';
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const today = todayStr();
+
+    for (let i = 0; i < firstDay; i++) { calendarDays.insertAdjacentHTML('beforeend', '<div></div>'); }
+
+    for (let d = 1; d <= lastDate; d++) {
+      const dt = new Date(year, month, d);
+      const ymd = fmt(dt);
+      const disabled = isDateDisabled(ymd);
+      const el = document.createElement('div');
+      el.className = 'day' + (disabled ? ' disabled' : '') + (ymd === today ? ' today' : '');
+      el.textContent = (ymd === today) ? '오늘' : d;
+      el.dataset.date = ymd;
+      if (!disabled) el.addEventListener('click', () => onDateClick(ymd));
+      if (ymd === state.modal.selectedDate) el.classList.add('selected');
+      calendarDays.appendChild(el);
+    }
+    // 월 이동 버튼 활성/비활성 갱신 (활성 범위: 현재월~+3개월)
+    updateMonthNavBtns();
+  }
+
+  /**
+   * 특정 날짜가 비활성화(선택 불가)인지 판단합니다.
+   * 인자로 YYYY-MM-DD 문자열 또는 Date 객체를 허용합니다.
+   */
+  function isDateDisabled(input) {
+    let ymd;
+    let dow;
+    if (typeof input === 'string') {
+      ymd = input;
+      const d = new Date(input + 'T00:00:00');
+      dow = d.getDay();
+    } else if (input instanceof Date) {
+      ymd = fmt(input);
+      dow = input.getDay();
+    } else {
+      return true;
+    }
+    const today = todayStr();
+    // 과거일만 선택 불가 (오늘은 클릭 허용 → 안내 표시)
+    if (ymd < today) return true;
+    // 서버에서 내려온 휴무 요일 체크
+    if (state.serverSettings.disabledWeekdays.includes(dow)) return true;
+    // 휴무일 체크
+    if (state.serverSettings.closedDates.has(ymd)) return true;
+    return false;
+  }
+
+  /** 오늘 날짜와 같은지 판단 */
+  function isTodayYMD(ymd) {
+    if (!ymd) return false;
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const d = new Date(ymd + 'T00:00:00');
+    return d.getTime() === t.getTime();
+  }
+
+  /** 현재 달에서 선택 가능한 날짜 목록(휴무/과거 제외)을 수집합니다. */
+  function collectSelectableDatesOfCurrentMonth() {
+    const date = state.modal.currentDate;
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const dates = [];
+    for (let i = 1; i <= lastDate; i++) {
+      const d = new Date(year, month, i);
+      const ymd = fmt(d);
+      // 과거일 제외
+      if (d.getTime() < today.getTime()) continue;
+      // 휴무 요일 제외
+      if (state.serverSettings.disabledWeekdays.includes(d.getDay())) continue;
+      // 휴무일 제외
+      if (state.serverSettings.closedDates.has(ymd)) continue;
+      dates.push(ymd);
+    }
+    return dates;
+  }
+
+  /**
+   * 현재 달에 보이는 날짜 중 캐시에 없는 날짜의 슬롯을 선조회합니다.
+   * 서버에서 날짜-슬롯 맵을 받아 캐시에 저장합니다.
+   */
+  function prefetchVisibleMonth() {
+    const dates = collectSelectableDatesOfCurrentMonth().filter(d => !getCachedSlots(d));
+    if (dates.length === 0) {
+      finishLoadingDates();
+      return;
+    }
+    // ★ [수정] '매장 방문' 타입을 명시적으로 전달
+    gasRun('getSlotsRange', dates, '매장 방문').then(map => {
+      if (map && typeof map === 'object') {
+        Object.keys(map).forEach(d => {
+          let avail = [];
+          const v = map[d];
+          if (Array.isArray(v)) {
+            avail = v;
+          } else if (v) {
+            if (Array.isArray(v.slots)) {
+              avail = v.slots;
+            } else if (Array.isArray(v.available)) {
+              avail = v.available;
+            } else if (Array.isArray(v.unavailable)) {
+              const timeline = generateTimeSlots();
+              const unSet = new Set(v.unavailable);
+              avail = timeline.filter(t => !unSet.has(t));
+            }
+          }
+          setCachedSlots(d, avail);
+        });
+
+        finishLoadingDates();
+
+        if (state.modal.selectedDate) {
+          const slots = getCachedSlots(state.modal.selectedDate);
+          if (slots) renderTimeSlots(slots);
+        }
+      }
+    }).catch(() => {
+      finishLoadingDates();
+    });
+  }
+
+  /** month navigation에서 연속 호출을 줄이기 위한 디바운스 */
+  function prefetchDebounced() {
+    clearTimeout(monthNavTimer);
+    monthNavTimer = setTimeout(prefetchVisibleMonth, 200);
+  }
+
+  /**
+   * 내부 유틸: 달력 데이터 로딩 후 호출되어 로딩 메시지를 숨기고
+   * 실제 시간 슬롯 영역을 보여줍니다. 이 함수를 호출하면
+   * '예약 가능한 날짜를 불러오는 중입니다...' 문구가 사라지고
+   * 시간 슬롯 컨테이너가 다시 표시됩니다.
+   */
+  function finishLoadingDates() {
+    const ld = $('loading-dates');
+    const ts = $('time-slots');
+    if (ld) ld.classList.add('hide');
+    if (ts) ts.classList.remove('hide');
+    // 로딩 완료 플래그 해제
+    isLoadingDates = false;
+}
+
+
+  // ─────────────────────────────────────────────────────────────
+  // Time Slots
+  // ─────────────────────────────────────────────────────────────
+  function generateTimeSlots() {
+    const slots = [];
+    // 영업시간 정보는 serverSettings.business에 저장됨
+    const biz = state.serverSettings.business || {};
+    const startHour = Number(biz.startHour || 10);
+    const endHour   = Number(biz.endHour   || 19);
+    const stepMin   = 30;  // 고객 달력 30분 고정
+    for (let h = startHour; h < endHour; h++) {
+      for (let m = 0; m < 60; m += stepMin) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+      }
+    }
+    return slots;
+  }
+
+  /**
+   * 시간 슬롯을 렌더링합니다.
+   * 인자로 예약 가능한 시간 목록(availableSlots)을 넘기면 그 목록에 포함되지 않은 시간은 비활성화로 표시합니다.
+   * availableSlots가 null이면 로딩 중 메시지를 표시합니다.
+   */
+  /** 24h → 12h 변환 (슬롯 라벨용, 섹션 헤더가 오전/오후 맥락 제공) */
+  function to12h(t24) {
+    const [h, m] = t24.split(':').map(Number);
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${String(m).padStart(2, '0')}`;
+  }
+  /** 24h → "오후 1시" / "오후 1시 30분" (요약용) */
+  function to12hFull(t24) {
+    const [h, m] = t24.split(':').map(Number);
+    const period = h < 12 ? '오전' : '오후';
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return m === 0 ? `${period} ${h12}시` : `${period} ${h12}시 ${m}분`;
+  }
+
+  function renderTimeSlots(availableSlots) {
+    const box = $('time-slots');
+    const timeline = generateTimeSlots();
+
+    if (availableSlots == null) {
+      box.innerHTML = '<div class="time-slot loading">로딩 중...</div>';
+      return;
+    }
+
+    const okSet = new Set(Array.isArray(availableSlots) ? availableSlots : []);
+    box.innerHTML = '';
+    let currentPeriod = '';
+    timeline.forEach(t => {
+      const hour = parseInt(t.split(':')[0], 10);
+      const period = hour < 12 ? '오전' : '오후';
+      if (period !== currentPeriod) {
+        currentPeriod = period;
+        const label = document.createElement('div');
+        label.className = 'time-period-label';
+        label.textContent = period;
+        box.appendChild(label);
+      }
+      const el = document.createElement('div');
+      el.className = 'time-slot';
+      el.textContent = to12h(t);  /* 12h 표기 */
+      el.dataset.time = t;        /* data-time은 24h 유지 */
+      if (!okSet.has(t)) {
+        el.classList.add('unavailable');
+      } else {
+        if (state.modal.selectedTime === t) {
+          el.classList.add('selected');
+        }
+        el.addEventListener('click', () => onTimeClick(t, el));
+      }
+      box.appendChild(el);
+    });
+    // 예약 가능한 슬롯이 하나도 없는 경우 안내 표시
+    if (!okSet.size) {
+      box.innerHTML = '<div class="time-slot unavailable">예약 가능한 시간이 없습니다.</div>';
+    }
+  }
+
+  // D. Footer 실시간 요약 갱신
+  function updateModalSummary() {
+    const el = $('modal-summary');
+    if (!el) return;
+    const d = state.modal.selectedDate;
+    const t = state.modal.selectedTime;
+    if (!d) {
+      el.textContent = '날짜와 시간을 선택하세요';
+      el.classList.remove('has-selection');
+      return;
+    }
+    const dt = new Date(d + 'T00:00:00');
+    const dayNames = ['일','월','화','수','목','금','토'];
+    const label = `${dt.getMonth()+1}월 ${dt.getDate()}일 (${dayNames[dt.getDay()]})`;
+    if (t) {
+      const biz = state.serverSettings.business || {};
+      const step = 30;  // 30분 고정
+      const durH = 1;  // 1시간 단위 표시
+      el.textContent = `${label} · ${to12hFull(t)} (${durH}시간)`;
+      el.classList.add('has-selection');
+    } else {
+      el.textContent = `${label} · 시간을 선택하세요`;
+      el.classList.remove('has-selection');
+    }
+  }
+
+  async function onDateClick(dateStr) {
+    // 로딩 중에는 날짜 선택을 무시합니다.
+    if (isLoadingDates) return;
+
+    // ★ 당일 클릭: 선택 상태 변경 없이 안내만 표시
+    if (isTodayYMD(dateStr)) {
+      const notice = $('same-day-notice');
+      if (notice) notice.classList.remove('hide');
+      // 시간 슬롯 영역 숨김
+      const slotsBox = $('time-slots');
+      if (slotsBox) { slotsBox.innerHTML = ''; slotsBox.classList.add('hide'); }
+      return;
+    }
+
+    // 당일 안내 숨김
+    const notice = $('same-day-notice');
+    if (notice) notice.classList.add('hide');
+
+    // 날짜를 클릭했을 때 처리: 선택 상태 갱신 후 시간 슬롯을 불러옵니다.
+    // 캘린더에서 선택 표시 처리
+    document.querySelectorAll('#calendar-days .day').forEach(el => {
+      el.classList.toggle('selected', el.dataset.date === dateStr);
+    });
+    // 비동기적으로 시간 슬롯 로딩
+    fetchAndRenderTimes(dateStr);
+    // D. 요약 갱신 (시간은 리셋됨)
+    updateModalSummary();
+  }
+
+  /**
+   * 특정 날짜의 예약 가능 시간을 불러와 렌더링합니다.
+   * 캐시를 우선 활용하고, 필요 시 서버를 호출합니다.
+   */
+  async function fetchAndRenderTimes(dateStr) {
+    if (isFetchingSlots) return;
+    isFetchingSlots = true;
+    const modalBox = document.querySelector('#date-picker-modal .modal-body');
+    const keepScroll = modalBox ? modalBox.scrollTop : 0;
+
+    state.modal.selectedDate = dateStr;
+    state.modal.selectedTime = null;
+    const confirmBtn = document.getElementById('btn-modal-confirm');
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    const notice    = $('same-day-notice');
+    const slotsBox  = $('time-slots');
+    if (isTodayYMD(dateStr)) {
+      if (notice) notice.classList.remove('hide');
+      if (slotsBox) {
+        slotsBox.innerHTML = '';
+        slotsBox.classList.add('hide');
+      }
+      isFetchingSlots = false;
+      return;
+    } else {
+      if (notice) notice.classList.add('hide');
+      if (slotsBox) slotsBox.classList.remove('hide');
+    }
+
+    // 캐시 확인: 캐시가 있으면 바로 표시하고 서버 재호출 안함
+    const cached = getCachedSlots(dateStr);
+    if (cached) {
+      renderTimeSlots(cached);
+      if (modalBox) modalBox.scrollTop = keepScroll;
+      isFetchingSlots = false;
+      return;
+    }
+
+    // 캐시 없으면 로딩 표시 후 서버 호출
+    renderTimeSlots(null);
+    if (modalBox) modalBox.scrollTop = keepScroll;
+
+    try {
+      // ★ [수정] '매장 방문' 타입을 명시적으로 전달
+      const map = await gasRun('getSlotsRange', [dateStr], '매장 방문');
+      const avail = (map && Array.isArray(map[dateStr])) ? map[dateStr] : [];
+
+      setCachedSlots(dateStr, avail);
+      renderTimeSlots(avail);
+      if (modalBox) modalBox.scrollTop = keepScroll;
+      finishLoadingDates();
+
+    } catch (e) {
+      console.error('fetchAndRenderTimes error', e);
+      renderTimeSlots([]);
+      if (modalBox) modalBox.scrollTop = keepScroll;
+    } finally {
+      isFetchingSlots = false;
+    }
+  }
+
+  function onTimeClick(time, el) {
+    // 로딩 중에는 시간 선택을 무시합니다.
+if (isLoadingDates) return;
+
+  // 1시간 선택 = 시작 슬롯 + 다음 30분 슬롯을 "둘 다" 어둡게(selected) 표시.
+  //   ※ 다음 슬롯(5:30)이 'unavailable'(그 시각엔 1시간 시작 불가)로 그려져 있어도,
+  //     지금 선택한 1시간(5:00~6:00)의 후반부이므로 함께 어둡게 보여야 맞음.
+  //     → CSS에서 .selected.unavailable 이 어둡게+흰글씨로 이기도록 override 처리(아래).
+  document.querySelectorAll('#time-slots .time-slot').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.modal.selectedTime = time;
+
+  // 다음 30분 슬롯도 함께 어둡게 (가용성 무관 — 1시간의 후반부)
+  const _p = time.split(':');
+  const _nextM = Number(_p[0]) * 60 + Number(_p[1]) + 30;
+  const _nextTime = `${String(Math.floor(_nextM / 60)).padStart(2, '0')}:${String(_nextM % 60).padStart(2, '0')}`;
+  const _nextEl = document.querySelector(`#time-slots .time-slot[data-time="${_nextTime}"]`);
+  if (_nextEl) _nextEl.classList.add('selected');
+
+  // "선택 완료" 버튼 활성화
+  const confirmBtn = document.getElementById('btn-modal-confirm');
+  if (confirmBtn) confirmBtn.disabled = false;
+  // D. 요약 갱신
+  updateModalSummary();
+}
+
+
+  // ─────────────────────────────────────────────────────────────
+  // Date Picker Modal
+  // ─────────────────────────────────────────────────────────────
+  const datePickerModal = $('date-picker-modal');
+  const successModal = $('success-modal');
+
+  function openDatePickerModal() {
+    // ★ 모달 열 때마다 캐시 초기화 (항상 최신 데이터 조회)
+    state.slotsCache.clear();
+
+    // 모달을 열 때 현재 달 설정 및 선택값 복원
+    state.modal.currentDate = state.visitDate ? new Date(state.visitDate + 'T00:00:00') : new Date();
+    state.modal.selectedDate = state.visitDate;
+    state.modal.selectedTime = state.visitTime;
+
+    // ★ 이전 선택값 없으면 첫 번째 예약 가능일 자동 선택
+    if (!state.modal.selectedDate) {
+      const today = todayStr();
+      const selectable = collectSelectableDatesOfCurrentMonth();
+      const firstAvail = selectable.find(function(d) { return d > today; });
+      if (firstAvail) {
+        state.modal.selectedDate = firstAvail;
+        state.modal.currentDate = new Date(firstAvail + 'T00:00:00');
+      }
+    }
+
+    renderCalendar();
+    // D. 요약 초기화
+    updateModalSummary();
+    // 현재 보이는 달에 대해 시간 슬롯을 선조회
+    prefetchVisibleMonth();
+    if (state.modal.selectedDate) {
+      // 선택된 날짜의 시간 슬롯을 즉시 로딩
+      fetchAndRenderTimes(state.modal.selectedDate);
+    } else {
+      // 선택된 날짜가 없으면 안내 문구 출력
+      $('time-slots').innerHTML = '<div class="time-slot loading">날짜를 먼저 선택해주세요.</div>';
+    }
+    // 모달 오픈 시 로딩 메시지, 당일 안내는 숨김 (자동 선택일이 오늘이 아님)
+    const ld = $('loading-dates');
+    const tl = $('time-slots');
+    const sd = $('same-day-notice');
+    if (ld) ld.classList.remove('hide');
+    if (tl) tl.classList.add('hide');
+    if (sd) sd.classList.add('hide');
+    // 로딩 중 상태로 설정하여 날짜/시간/월 이동을 임시 차단합니다.
+    isLoadingDates = true;
+    datePickerModal.classList.add('show');
+    // 인라인: noscroll 불필요, iframe 높이 재계산
+    requestAnimationFrame(function() {
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
+    });
+  }
+
+
+  function closeDatePickerModal() {
+    datePickerModal.classList.remove('show');
+    // 인라인: iframe 높이 재계산
+    requestAnimationFrame(function() {
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
+    });
+  }
+
+  function confirmSelection() {
+    if (state.modal.selectedDate && state.modal.selectedTime) {
+      state.visitDate = state.modal.selectedDate;
+      state.visitTime = state.modal.selectedTime;
+      $('visit_date').value = state.visitDate;
+      $('visit_time').value = state.visitTime;
+      const displayEl = $('selected-date-display');
+      const dt = new Date(state.visitDate + 'T00:00:00');
+      const dn = ['일','월','화','수','목','금','토'];
+      displayEl.textContent = `${dt.getMonth()+1}월 ${dt.getDate()}일 (${dn[dt.getDay()]}) ${to12hFull(state.visitTime)}`;
+      displayEl.classList.remove('placeholder');
+      closeDatePickerModal();
+    } else { alert('날짜와 시간을 모두 선택해주세요.'); }
+  }
+
+  function clearVisitSelection() {
+    state.visitDate = null;
+    state.visitTime = null;
+    $('visit_date').value = '';
+    $('visit_time').value = '';
+    const displayEl = $('selected-date-display');
+    displayEl.innerHTML = '날짜와 시간을 선택하세요';
+    displayEl.classList.add('placeholder');
+  }
+
+  // Event Listeners
+  $('btn-open-picker').addEventListener('click', function() {
+    // 토글: 이미 열려있으면 닫기
+    if (datePickerModal.classList.contains('show')) {
+      closeDatePickerModal();
+    } else {
+      openDatePickerModal();
+    }
+  });
+  $('btn-modal-close').addEventListener('click', closeDatePickerModal);
+
+  // 월 이동 활성 범위 — TMS 달력 관리(/consultations/calendar) 룰과 동기.
+  //   TMS calendar 는 현재월~+3 (4개월) 표시하지만 +3 (마지막 1개월) 은 "사장님 전용 — 고객 예약 불가"
+  //   (calendar page.tsx:227: month - getMonth() === 3 → 사장님 전용 라벨).
+  //   따라서 고객 페이지에서 실제 예약 가능한 범위는 현재월~+2 (3개월).
+  // ⚠️ TMS calendar page.tsx 의 룰(전용 달 위치) 변경 시 양쪽 동시 수정 (2026-05-23 fix)
+  var MAX_ADVANCE_MONTHS = 2;
+  function isPastMaxMonth(date) {
+    var t = new Date();
+    var maxMonth = new Date(t.getFullYear(), t.getMonth() + MAX_ADVANCE_MONTHS, 1);
+    var target = new Date(date.getFullYear(), date.getMonth(), 1);
+    return target > maxMonth;
+  }
+  function isBeforeCurMonth(date) {
+    var t = new Date();
+    var curMonth = new Date(t.getFullYear(), t.getMonth(), 1);
+    var target = new Date(date.getFullYear(), date.getMonth(), 1);
+    return target < curMonth;
+  }
+  function updateMonthNavBtns() {
+    var cur = state.modal.currentDate;
+    var prev = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
+    var next = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    $('btn-prev-month').disabled = isBeforeCurMonth(prev);
+    $('btn-next-month').disabled = isPastMaxMonth(next);
+  }
+
+  $('btn-prev-month').addEventListener('click', function() {
+    // 월 이동 — 1일 기준으로 전환 (31일→4월31일=5월1일 방지)
+    var cur = state.modal.currentDate;
+    var prev = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
+    if (isBeforeCurMonth(prev)) return; // 현재월보다 이전 차단
+    state.modal.currentDate = prev;
+    isLoadingDates = false;
+    renderCalendar();
+    prefetchDebounced();
+  });
+
+  $('btn-next-month').addEventListener('click', function() {
+    var cur = state.modal.currentDate;
+    var next = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    if (isPastMaxMonth(next)) return; // 활성 범위(현재월+3) 초과 차단
+    state.modal.currentDate = next;
+    isLoadingDates = false;
+    renderCalendar();
+    prefetchDebounced();
+  });
+
+  $('btn-modal-confirm').addEventListener('click', confirmSelection);
+
+  // C. 모바일 스와이프 월 이동
+  (function() {
+    const modalBody = document.querySelector('#date-picker-modal .modal-body');
+    if (!modalBody) return;
+    let sx = 0;
+    modalBody.addEventListener('touchstart', function(e) { sx = e.touches[0].clientX; }, { passive: true });
+    modalBody.addEventListener('touchend', function(e) {
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) < 50) return;
+      isLoadingDates = false; // 이전 요청 무시
+      var cur = state.modal.currentDate;
+      if (dx < 0) { // 왼쪽 스와이프 → 다음 달
+        state.modal.currentDate = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+      } else { // 오른쪽 스와이프 → 이전 달
+        state.modal.currentDate = new Date(cur.getFullYear(), cur.getMonth() - 1, 1);
+      }
+      renderCalendar();
+      prefetchDebounced();
+    }, { passive: true });
+  })();
+
+  // ─────────────────────────────────────────────────────────────
+  // Segment Control (상담유형)
+  // ─────────────────────────────────────────────────────────────
+  const seg = $('seg');
+  const secVisit = $('sec-visit');
+  const secField = $('sec-field');
+  const typeInfo = $('type-info');
+  const storeLocationCard = $('store-location-card');
+
+  const typeMessages = {
+    '매장 방문': '마모루 매장에서 직접 만나뵙겠습니다.<br>편하신 <b>날짜와 시간</b>을 알려주세요.',
+    '출장 요청': '원하시는 장소로 찾아뵙겠습니다.<br>지역에 따라 <b>1~2주 내외</b>로 일정을 조율해드려요.',
+    '톡 상담': '카카오톡으로 편하게 문의해주세요.<br><b>영업시간 내</b> 순차적으로 답변드리겠습니다.'
+  };
+
+  const memoNotes = {
+    '매장 방문': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담 인원이 2명 이상인 경우 메모란에 기재해 주세요</li>'
+      + '<li>왼손가위가 필요하신 경우 메모란에 기재해 주세요</li></ul>',
+    '출장 요청': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담 인원이 2명 이상인 경우 메모란에 기재해 주세요</li>'
+      + '<li>주차가 복잡한 경우 미리 메모에 안내해 주시면 감사합니다</li>'
+      + '<li>교통 상황에 따라 방문 시간이 앞뒤 15분 정도 차이 날 수 있으며, 지연 시 사전 연락드리겠습니다</li></ul>',
+    '톡 상담': '<span class="memo-note-title">참고사항</span><ul>'
+      + '<li>상담사 스케줄과 고객님의 시간에 맞춰 진행되므로 답변이 다소 지연될 수 있습니다</li>'
+      + '<li>꼼꼼한 정보 확인을 통해 맞춤 컨설팅에 도움드리겠습니다</li>'
+      + '<li>고객님도 일정에 맞춰 편하게 답변·질문해 주시면 됩니다</li>'
+      + '<li>3일 이상 응답이 없을 경우 상담 종료 처리될 수 있습니다</li></ul>'
+  };
+
+  seg.addEventListener('click', function(e) {
+    const btn = e.target.closest('.segment-btn');
+    if (!btn) return;
+    [...this.querySelectorAll('.segment-btn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.v;
+    if (v === 'visit') {
+      state.type = '매장 방문';
+      secVisit.classList.remove('hide');
+      secField.classList.add('hide');
+      storeLocationCard && storeLocationCard.classList.remove('hide');
+      // 매장 방문 선택 시 다음 달 슬롯을 미리 조회
+      prefetchVisibleMonth();
+    } else if (v === 'field') {
+      state.type = '출장 요청';
+      secVisit.classList.add('hide');
+      secField.classList.remove('hide');
+      storeLocationCard && storeLocationCard.classList.add('hide');
+    } else {
+      state.type = '톡 상담';
+      secVisit.classList.add('hide');
+      secField.classList.add('hide');
+      storeLocationCard && storeLocationCard.classList.add('hide');
+    }
+    $('consult_type').value = state.type;
+    typeInfo.innerHTML = typeMessages[state.type];
+    $('memo-note').innerHTML = memoNotes[state.type];
+    // 레이아웃 재계산 후 높이 알림 - 1회만 호출 (과다 호출 제거)
+    requestAnimationFrame(function() {
+      setTimeout(function() { window.__notifyHeight && window.__notifyHeight(true); }, 100);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Day Chips / Time Preference
+  // ─────────────────────────────────────────────────────────────
+  $('day-chips').addEventListener('click', function(e) {
+    if (e.target.tagName !== 'BUTTON') return;
+    e.target.classList.toggle('active');
+    state.prefDays = [...this.querySelectorAll('.active')].map(b => b.dataset.d);
+  });
+
+  $('time-pref').addEventListener('click', function(e) {
+    if (e.target.tagName !== 'BUTTON') return;
+    e.target.classList.toggle('active');
+    state.prefTimes = [...this.querySelectorAll('.active')].map(b => b.dataset.t);
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Postcode
+  // ─────────────────────────────────────────────────────────────
+  function closePostcodeLayer() {
+    const layer = $('postcode-layer');
+    if (layer) layer.classList.remove('show');
+    document.body.classList.remove('noscroll');
+  }
+
+  function openPostcodeLayer() {
+    if (!(window.daum && window.daum.Postcode)) {
+      alert('주소검색 스크립트를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    const layer = $('postcode-layer');
+    const inner = $('postcode-inner');
+    layer.classList.add('show');
+    document.body.classList.add('noscroll');
+
+    new daum.Postcode({
+      oncomplete: function(d) {
+        // 우편번호와 도로명 주소 설정
+        $('postcode').value = d.zonecode || '';
+        var roadAddr = d.roadAddress || d.jibunAddress || '';
+        $('address1').value = roadAddr;
+        $('address2').disabled = false;  // 주소검색 완료 → 상세주소 입력 활성화
+        $('address2').focus();
+        // PlaceId 초기화
+        var pIdEl = $('addrPlaceId');
+        if (pIdEl) pIdEl.value = '';
+        // 카카오 Geocoder로 주소→좌표 변환 (GAS geocodeAddress_ 대체)
+        var latEl = $('addrLat');
+        var lngEl = $('addrLng');
+        if (latEl) latEl.value = '';
+        if (lngEl) lngEl.value = '';
+        if (roadAddr && window.kakao && window.kakao.maps && window.kakao.maps.services) {
+          var geocoder = new kakao.maps.services.Geocoder();
+          geocoder.addressSearch(roadAddr, function(result, status) {
+            if (status === kakao.maps.services.Status.OK && result[0]) {
+              if (latEl) latEl.value = result[0].y;
+              if (lngEl) lngEl.value = result[0].x;
+            }
+          });
+        } else if (roadAddr && window.kakao && window.kakao.maps) {
+          // SDK autoload=false인 경우 load 후 재시도
+          kakao.maps.load(function() {
+            var geocoder = new kakao.maps.services.Geocoder();
+            geocoder.addressSearch(roadAddr, function(result, status) {
+              if (status === kakao.maps.services.Status.OK && result[0]) {
+                if (latEl) latEl.value = result[0].y;
+                if (lngEl) lngEl.value = result[0].x;
+              }
+            });
+          });
+        }
+        closePostcodeLayer();
+      },
+      onclose: closePostcodeLayer
+    }).embed(inner);
+  }
+
+  $('btn-post').addEventListener('click', openPostcodeLayer);
+  $('postcode-close').addEventListener('click', closePostcodeLayer);
+
+  // ─────────────────────────────────────────────────────────────
+  // Validation
+  // ─────────────────────────────────────────────────────────────
+  function validate() {
+    let ok = true, focus = false;
+
+    const nameEl = $('name');
+    const phoneEl = $('phone');
+
+    const nameOk = !!nameEl.value.trim();
+    markCtl(nameEl, !nameOk);
+    setErr('err-name', !nameOk);
+    ok &= nameOk;
+    if (!nameOk && !focus) { nameEl.focus(); focus = true; }
+
+    const phoneOk = /^01[016789]\d{7,8}$/.test(phoneEl.value.replace(/\D/g, ''));
+    markCtl(phoneEl, !phoneOk);
+    setErr('err-phone', !phoneOk);
+    ok &= phoneOk;
+    if (!phoneOk && !focus) { phoneEl.focus(); focus = true; }
+
+    if (state.type === '매장 방문') {
+      const visitOk = !!(state.visitDate && state.visitTime);
+      markCtl($('btn-open-picker'), !visitOk);
+      setErr('err-visit', !visitOk);
+      ok &= visitOk;
+    } else {
+      setErr('err-visit', false);
+      markCtl($('btn-open-picker'), false);
+    }
+
+    if (state.type === '출장 요청') {
+      const addrOk = !!($('postcode').value && $('address1').value.trim());
+      markCtl($('address1'), !addrOk);
+      setErr('err-addr', !addrOk);
+      ok &= addrOk;
+    } else {
+      setErr('err-addr', false);
+      markCtl($('address1'), false);
+    }
+
+    const agree = $('agreeCk').checked;
+    setErr('err-agree', !agree);
+    ok &= agree;
+
+    return !!ok;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Submit
+  // ─────────────────────────────────────────────────────────────
+  // 동의 여부에 따라 제출 버튼 활성화/비활성화
+  (function() {
+    const btnSubmitEl = $('btn-submit');
+    const agreeEl = $('agreeCk');
+    function toggleSubmitButton() {
+      if (!btnSubmitEl || !agreeEl) return;
+      btnSubmitEl.disabled = !agreeEl.checked;
+    }
+    if (agreeEl) {
+      agreeEl.addEventListener('change', toggleSubmitButton);
+      // 초기 상태 반영
+      toggleSubmitButton();
+    }
+  })();
+  $('btn-submit').addEventListener('click', function() {
+    // 유효성 검사를 먼저 실행
+    if (!validate()) return;
+    if (window.__MAMORU_DIAGNOSIS__ && window.__injectDiagnosisToMemo__) {
+    window.__injectDiagnosisToMemo__(window.__MAMORU_DIAGNOSIS__);
+  }
+    const btn = this;
+    btn.disabled = true;
+    // 데이터 구성: 원본 코드와 동일한 구조로 조립
+    const data = {
+      name: $('name').value.trim(),
+      phone: $('phone').value.replace(/\D/g, ''),
+      type: state.type,
+      memo: $('memo').value.trim()
+    };
+    if (state.type === '매장 방문') {
+      // 방문 예약일/시간 설정
+      if (!state.visitDate || !state.visitTime) {
+        alert('방문 날짜/시간을 선택해주세요.');
+        btn.disabled = false;
+        return;
+      }
+      data.visitDate = state.visitDate;
+      data.visitTime = state.visitTime;
+    }
+    if (state.type === '출장 요청') {
+      const zip = $('postcode').value.trim();
+      const road = $('address1').value.trim();
+      const detail = $('address2').value.trim();
+      if (!road) {
+        alert('주소를 검색해 도로명 주소를 입력해주세요.');
+        btn.disabled = false;
+        return;
+      }
+      data.address = (road + ' ' + detail).trim();
+      data.addressZip = zip;
+      data.addressRoad = road;
+      data.addressDetail = detail;
+      // 활동명·직급 (출장 식별용)
+      data.activityName = $('activityName') ? $('activityName').value.trim() : '';
+      data.position = $('position') ? $('position').value.trim() : '';
+      // 숨김 필드에서 Place ID 및 좌표 정보 가져오기
+      data.addressPlaceId = $('addrPlaceId') ? $('addrPlaceId').value.trim() : '';
+      data.addressLat = $('addrLat') ? $('addrLat').value.trim() : '';
+      data.addressLng = $('addrLng') ? $('addrLng').value.trim() : '';
+      // 요일 선택 (복수)
+      data.days = state.prefDays.slice();
+      // 시간대 선택 (복수), '무관'이 선택되어 있으면 그 하나만 전달
+      if (state.prefTimes.includes('무관')) {
+        data.timePrefs = ['무관'];
+      } else {
+        data.timePrefs = state.prefTimes.slice();
+      }
+    }
+    // 모달 표시 + iframe 환경에서 화면 중앙 배치 요청
+    var mc = successModal.querySelector('.modal-content');
+    if (mc) mc.removeAttribute('style');
+    successModal.classList.add('show');
+    if (window !== window.parent) {
+      try { parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(e) {}
+    }
+    // 서버 전송: 반환값을 기다리지 않고 실패만 로그합니다.
+    gasRun('submitConsultation', data)
+      .catch(err => {
+        console.error('Submission failed:', err);
+      });
+  });
+
+  // iframe 뷰포트 정보 수신 → 모달을 현재 화면 중앙에 배치
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'MAMORU_VIEWPORT_INFO') return;
+    var vt = e.data.visibleTop, vh = e.data.visibleHeight;
+    if (!vh) return;
+    document.querySelectorAll('.modal-backdrop.show .modal-content').forEach(function(mc) {
+      mc.style.position = 'absolute';
+      mc.style.top = (vt + vh / 2) + 'px';
+      mc.style.left = '50%';
+      mc.style.transform = 'translate(-50%, -50%)';
+    });
+  });
+
+  // Success Modal Close
+  $('btn-success-close').addEventListener('click', function() {
+    var mc = successModal.querySelector('.modal-content');
+    if (mc) mc.removeAttribute('style'); // 인라인 스타일 정리
+    successModal.classList.remove('show');
+    // 폼 초기화
+    $('name').value = '';
+    $('phone').value = '';
+    $('memo').value = '';
+    $('agreeCk').checked = false;
+    clearVisitSelection();
+    $('postcode').value = '';
+    $('address1').value = '';
+    $('address2').value = '';
+    $('address2').disabled = true;  // 다시 주소검색부터 하도록 비활성
+    state.prefDays = [];
+    state.prefTimes = [];
+    document.querySelectorAll('.day-chip.active, .time-pref-btn.active').forEach(el => el.classList.remove('active'));
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Height notify (for iframe) - 최적화: 디바운스 강화, 호출 최소화
+  // ─────────────────────────────────────────────────────────────
+  (function() {
+    let debounceTimer = null;
+    let lastH = 0;
+    let isThrottled = false;
+
+    function notify(force) {
+      // 스로틀링: 100ms 내 중복 호출 방지
+      if (!force && isThrottled) return;
+
+      const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+      // 높이 변화가 10px 미만이면 무시 (미세 변동 방지)
+      if (!force && Math.abs(h - lastH) < 10) return;
+
+      lastH = h;
+      try { parent.postMessage({ type: 'MAMORU_IFRAME_SIZE', height: h }, '*'); } catch (e) {}
+
+      // 100ms 스로틀
+      isThrottled = true;
+      setTimeout(function() { isThrottled = false; }, 100);
+    }
+
+    function debouncedNotify() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(notify, 200);  // 200ms 디바운스
+    }
+
+    // MutationObserver: childList만 감시
+    new MutationObserver(debouncedNotify).observe(document.body, { subtree: true, childList: true });
+
+    // ResizeObserver: 디바운스 적용
+    new ResizeObserver(debouncedNotify).observe(document.documentElement);
+
+    window.addEventListener('load', function() { notify(true); });
+    window.addEventListener('resize', debouncedNotify);
+    document.fonts && document.fonts.ready.then(function() { notify(true); });
+    window.__notifyHeight = notify;
+  })();
+
+  // ─────────────────────────────────────────────────────────────
+  // Init
+  // ─────────────────────────────────────────────────────────────
+  $('memo-note').innerHTML = memoNotes[state.type];  // 초기 참고사항 표시
+  loadSettings();
+})();
+
+// Boot loader hide
+(function() {
+  function hideLoader() {
+    var b = document.getElementById('bootLoader');
+    if (b) b.style.display = 'none';
+  }
+  if (document.readyState === 'complete') {
+    setTimeout(hideLoader, 150);
+  } else {
+    window.addEventListener('load', function() { setTimeout(hideLoader, 150); });
+  }
+})();
+</script>
+</body>
+</html>

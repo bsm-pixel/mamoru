@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>시안 B-09 · 상담 처리 결과</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- MAMORU: 한글 본문 서체 Pretendard (Google Fonts 미제공 → jsDelivr) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css">
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    :root{--ink:#1A1A1A;--muted:#8A8580}
+    html,body{margin:0;padding:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    body{font-family:'Plus Jakarta Sans','Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#FAF9F7}
+    .container{background:#fff;padding:32px 24px;margin:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
+    h1{margin:0 0 16px;font-size:48px;color:#1A1A1A}
+    p{color:var(--muted);font-size:24px;line-height:1.8;margin:0 0 28px;white-space:pre-line}
+
+    .kakao .container{max-width:none;width:96vw;padding:28px 12px 40px;border-radius:16px;box-shadow:none;margin:0 auto;background:#fff}
+    .kakao h1{font-size:48px}
+    .kakao p{font-size:48px;line-height:1.85}
+    .kakao .btn{font-size:36px;min-height:120px;padding:26px 24px;border-radius:999px}
+
+    .btn{display:inline-block;padding:18px 28px;border-radius:999px;font-size:18px;font-weight:700;background:#1A1A1A;color:#fff;border:none;cursor:pointer;min-height:64px}
+  </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 한 줄 알림이라 "가볍게". 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 처리 결과 전표 한 장
+     시그니처: 굵은 선 위 굵은 결과 제목(900) ↔ 얇은 메시지, 왼쪽 정렬 + 폭을 채운 확인 버튼
+     규칙: 모노크롬 · 그림자 금지 · 모서리 2px · 버튼 높이 유지
+     🚨 카톡 인앱(.kakao) 글자·버튼 크기(48px/36px·120px)는 원본 값 그대로 둔다 — 여기선 정렬·선·모서리만 바꿈 -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style id="b09">
+.b-nw{ white-space:nowrap; }
+*{ box-shadow:none !important; }
+:root{ --void:#1A1A1A; --stone:#4A4A4A; --warm-gray:#8A8580; --sand:#D4D0CB; --parchment:#EDEBE8; --cream:#FAF9F7; }
+body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif; word-break:keep-all; -webkit-font-smoothing:antialiased; }
+
+/* ── 1. 흰 상자·그림자 → 굵은 선 한 줄 + 왼쪽 정렬 ── */
+.container{ background:transparent; border-radius:0; border-top:1px solid var(--void); text-align:left; }
+html:not(.kakao) .container{ max-width:560px; margin:24px auto; padding:36px 20px 32px; }
+.kakao .container{ background:transparent; border-radius:0; }
+
+/* ── 2. 결과 제목 굵게(900) ↔ 메시지 (일반 브라우저만 크기 조정 — 카톡은 원본 크기) ── */
+h1{ font-weight:900; letter-spacing:-.04em; line-height:1.2; color:var(--void); }
+p{ color:var(--stone); text-wrap:pretty; }
+html:not(.kakao) h1{ font-size:clamp(28px,8vw,40px); margin:0 0 14px; }
+html:not(.kakao) p{ font-size:clamp(17px,4.6vw,20px); line-height:1.7; margin:0 0 32px; }
+
+/* ── 3. 확인 버튼 — 2px, 폭 채움 (높이 그대로) ── */
+.btn{ display:block; width:100%; border-radius:2px; font-weight:800; letter-spacing:-.01em; }
+.kakao .btn{ border-radius:2px; }
+.btn:active{ background:#2D2D2D; }
+</style>
+</head>
+<body>
+<!-- 🧪 디자인 작업실 시안 — 고객 미노출. 원본 projects/consulting/page_result.html 에 B-09 덧입힘(문구·입력칸·버튼·스크립트 동일). OK → 원본 반영 / 별로 → 삭제 -->
+<div style="position:sticky;top:0;z-index:9999;background:#1A1A1A;color:#FAF9F7;font-family:Pretendard,sans-serif;">
+  <div style="max-width:760px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:12px;line-height:1.5;">
+    <span style="flex:1 1 240px;color:#D4D0CB;"><b style="color:#FAF9F7;">🧪 작업실 시안 · B 개편안(B-09)</b> — 알림톡 버튼 처리 결과(주소에 붙은 제목·메시지를 그대로 표시). 문구·버튼은 같고 디자인만 다릅니다. 실제 링크(알림톡 버튼)로 열면 고객 데이터가 보입니다 — 이 시안 파일을 그냥 열면 빈/오류 상태입니다(정상 화면은 데모 캡처로 확인).</span>
+    <a href="https://page.mamoru.kr/projects/consulting/page_result.html" target="_blank" style="color:#FAF9F7;font-weight:700;border:1px solid #4A4A4A;border-radius:2px;padding:8px 12px;text-decoration:none;white-space:nowrap;">A 지금 페이지 보기 ↗</a>
+    <a href="redesign.html" style="color:#B8B4AF;text-decoration:underline;white-space:nowrap;">현황판</a>
+  </div>
+</div>
+
+  <div class="container">
+    <h1 id="page-title">알림</h1>
+    <p id="page-message"></p>
+    <button class="btn" onclick="closeInapp()">확인</button>
+  </div>
+
+  <script>
+    // Kakao 인앱 감지 + 뷰포트 보정
+    (function () {
+      var isKakao = /KAKAOTALK/i.test(navigator.userAgent || '');
+      if (isKakao) {
+        document.documentElement.classList.add('kakao');
+        var m = document.querySelector('meta[name="viewport"]');
+        if (m) {
+          var dw = Math.min(screen.width, screen.height);
+          m.setAttribute('content',
+            'width=' + dw + ',initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover');
+        }
+      }
+    })();
+
+    // URL 파라미터로 title/msg 렌더링
+    var params = new URLSearchParams(location.search);
+    var title  = params.get('title') || '알림';
+    var msg    = params.get('msg')   || '';
+
+    document.getElementById('page-title').textContent   = title;
+    document.getElementById('page-message').textContent = msg;
+
+    // "예약이 확정되었습니다" 뒤에 시각적 분리 (margin 사용 — <br> 대신)
+    document.addEventListener('DOMContentLoaded', function(){
+      var el = document.getElementById('page-message');
+      if (!el) return;
+      var t = el.textContent.trim();
+      if (/예약이 확정되었습니다/.test(t) && !/\n/.test(t)) {
+        var match = t.match(/^(예약이 확정되었습니다\.?)(.*)$/);
+        if (match && match[2].trim()) {
+          el.innerHTML =
+            '<span style="display:block;margin-bottom:6px;">' + match[1] + '</span>' +
+            '<span style="display:block;">' + match[2].trim() + '</span>';
+        }
+      }
+    });
+
+    function closeInapp() {
+      var ua = navigator.userAgent || '';
+      var isKakao = /KAKAOTALK/i.test(ua);
+      var isIOS   = /iPhone|iPad|iPod/i.test(ua);
+      if (isKakao) {
+        location.href = isIOS ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+        setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+        setTimeout(function(){ window.close(); }, 1200);
+        return;
+      }
+      if (history.length > 1) { history.back(); return; }
+      window.close();
+    }
+  </script>
+</body>
+</html>
