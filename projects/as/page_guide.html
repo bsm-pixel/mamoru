@@ -1983,17 +1983,215 @@ img[src=""], video[src=""] {
 .intro-why > :not(.intro-why__photo){ position:relative; z-index:1; }
 .intro-why .intro-why__title, .intro-why .intro-why__atitle{ text-shadow:0 1px 12px rgba(0,0,0,.6); }
 </style>
+
+<!-- ═══════════════ B-09 개성 레이어 (2026-10-23) — 기존 스타일 위에 덧입힘. 마크업·스크립트 무수정 원칙 ═══════════════
+     콘셉트: 정밀 기술 도면 · 작업 기록 / 시그니처: 히어로 사진 위 치수선 주석 / 연출 순간: 히어로 진입 1곳
+     규칙: 모노크롬 · 그림자/그라데이션 금지 · 모서리 0/2/4px · 새 글꼴 없음(Outfit+Pretendard) -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+<style id="b09">
+/* ── 0. 공통: 그림자 제거 · 모서리 2px (원형 요소는 유지) ── */
+.mamoru-as-page *{ box-shadow:none !important; }
+.mamoru-as-page [class*="as-"], .mamoru-as-page [class*="intro-"]{ border-radius:2px; }
+.mamoru-as-page .intro-ba-dot, .mamoru-as-page .intro-ba-nav-btn{ border-radius:50%; }
+.mamoru-as-page video, .mamoru-as-page img{ border-radius:2px; }
+.b-num{ font-family:'Outfit',sans-serif; font-variant-numeric:tabular-nums; }
+/* 한글 줄바꿈은 단어 단위 ("드 / 립니다" 방지) */
+.mamoru-as-page{ word-break:keep-all; overflow-wrap:break-word; }
+
+/* ── 1. 히어로 — 흑백 확대 사진 + 정밀 주석 + 거대 RESTORE ── */
+.b-hero{ position:relative; background:var(--void); color:var(--cream); overflow:hidden; text-align:left; padding:0 !important; }
+.b-hero__stage{ position:relative; }
+/* 사진은 항상 원본 비율(1:1) — 주석 좌표가 어느 폭에서도 날 위에 고정. PC는 오른쪽 + 왼쪽 도면 표제란 */
+.b-hero__photo{ position:relative; aspect-ratio:1/1; width:100%; }
+.b-hero__photo img{ width:100%; height:100%; object-fit:cover; filter:grayscale(1) contrast(1.12) brightness(.82); border-radius:0 !important; }
+.b-hero__plate{ display:none; }
+@media(min-width:640px){
+  .b-hero__stage{ padding:40px 32px 0; }
+  .b-hero__photo{ width:60%; margin-left:auto; }
+  .b-hero__plate{ display:block; position:absolute; left:32px; top:40px; width:calc(40% - 56px); border-top:1px solid rgba(250,249,247,.18); padding-top:14px; }
+  .b-hero__plate p{ font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--mist); line-height:2; }
+  .b-hero__plate b{ color:var(--cream); font-weight:700; }
+  .b-hero__word{ left:24px; font-size:clamp(110px,17vw,150px); }
+}
+.b-anno{ position:absolute; inset:0; pointer-events:none; }
+.b-anno svg{ position:absolute; inset:0; width:100%; height:100%; }
+.b-anno line, .b-anno circle{ stroke:rgba(250,249,247,.8); stroke-width:1; fill:none; vector-effect:non-scaling-stroke; }
+.b-tag{ position:absolute; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--cream); white-space:nowrap; }
+.b-tag small{ display:block; font-family:'Pretendard',sans-serif; font-size:11px; letter-spacing:0; text-transform:none; color:var(--mist); font-weight:500; margin-top:2px; }
+.b-hero__word{ position:absolute; left:14px; bottom:-0.17em; font-family:'Outfit',sans-serif; font-weight:900; font-size:clamp(66px,20.5vw,156px); line-height:.8; letter-spacing:-.05em; color:var(--cream); white-space:nowrap; }
+.b-hero__body{ background:var(--cream); color:var(--void); padding:clamp(36px,8vw,56px) 20px clamp(36px,8vw,52px); }
+@media(min-width:640px){ .b-hero__body{ padding-left:32px; padding-right:32px; } }
+.b-hero__body .as-hero-label{ display:block; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--warm-gray); background:none; padding:0; border:0; }
+.b-hero__body .as-hero-title{ margin-top:12px; font-family:'Pretendard',sans-serif; font-size:clamp(30px,8.6vw,48px); line-height:1.1; letter-spacing:-.04em; font-weight:900; color:var(--void); text-align:left; }
+.b-hero__body .as-hero-title .lt{ display:block; font-weight:300; color:var(--warm-gray); font-size:.62em; letter-spacing:-.03em; margin-bottom:4px; }
+.b-hero__body .as-hero-sub{ margin-top:12px; font-size:clamp(14px,3.8vw,16px); color:var(--stone); text-align:left; }
+.b-spec{ display:grid; grid-template-columns:repeat(3,1fr); margin-top:28px; border-top:1px solid var(--sand); }
+.b-spec div{ padding:14px 8px 0 0; }
+.b-spec dt{ font-family:'Outfit','Pretendard',sans-serif; font-size:clamp(26px,7vw,38px); font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--void); font-variant-numeric:tabular-nums; }
+.b-spec dt span{ font-size:.5em; font-family:'Pretendard',sans-serif; }
+.b-spec dd{ margin-top:6px; font-size:12px; color:var(--warm-gray); line-height:1.5; }
+/* 연출된 순간 1곳 — 히어로 진입 */
+@keyframes b-rise{ from{ opacity:0; transform:translateY(20px); } to{ opacity:1; transform:none; } }
+@keyframes b-draw{ from{ stroke-dashoffset:120; } to{ stroke-dashoffset:0; } }
+.b-seq{ animation:b-rise .85s cubic-bezier(.2,.7,.2,1) both; }
+.b-seq:nth-child(2){ animation-delay:.1s; } .b-seq:nth-child(3){ animation-delay:.2s; } .b-seq:nth-child(4){ animation-delay:.3s; }
+.b-anno line{ stroke-dasharray:120; animation:b-draw 1.1s .35s ease-out both; }
+@media (prefers-reduced-motion: reduce){ .b-seq, .b-anno line{ animation:none !important; stroke-dasharray:none; } }
+
+/* ── 2. 탭 — 글자 탭 + 굵은 밑줄(2px) ── */
+.mamoru-as-page .as-tabs-container{ background:var(--cream) !important; border-bottom:1px solid var(--sand) !important; }
+.mamoru-as-page .as-tab{ background:transparent !important; border:0 !important; border-radius:0 !important; color:var(--warm-gray) !important; font-weight:600 !important; position:relative; }
+.mamoru-as-page .as-tab.active{ color:var(--void) !important; font-weight:800 !important; }
+.mamoru-as-page .as-tab.active::after{ content:''; position:absolute; left:10%; right:10%; bottom:-1px; height:2px; background:var(--void); }
+
+/* ── 3. 탭 제목 — 거대 번호 + 왼쪽 정렬 (에디토리얼 인덱스) ── */
+.mamoru-as-page .as-section-head{ background:var(--cream) !important; text-align:left !important; padding:clamp(40px,9vw,64px) 20px 0 !important; border-bottom:0 !important; display:grid; grid-template-columns:auto 1fr; column-gap:clamp(14px,4vw,28px); align-items:end; }
+@media(min-width:640px){ .mamoru-as-page .as-section-head{ padding-left:32px !important; padding-right:32px !important; } }
+.mamoru-as-page .as-section-head::before{ grid-row:1 / span 2; font-family:'Outfit',sans-serif; font-weight:300; font-size:clamp(64px,19vw,120px); line-height:.78; letter-spacing:-.06em; color:var(--sand); font-variant-numeric:tabular-nums; }
+#tab-process .as-section-head::before{ content:'02'; } #tab-duration .as-section-head::before{ content:'03'; }
+#tab-price .as-section-head::before{ content:'04'; } #tab-packing .as-section-head::before{ content:'05'; } #tab-qna .as-section-head::before{ content:'06'; }
+.mamoru-as-page .as-section-title{ text-align:left !important; font-family:'Pretendard',sans-serif !important; font-size:clamp(24px,6.6vw,34px) !important; font-weight:900 !important; letter-spacing:-.04em !important; line-height:1.15 !important; }
+.mamoru-as-page .as-section-subtitle{ text-align:left !important; margin-top:6px !important; color:var(--warm-gray) !important; font-size:clamp(13px,3.6vw,15px) !important; }
+.mamoru-as-page .as-section{ padding-left:20px; padding-right:20px; }
+@media(min-width:640px){ .mamoru-as-page .as-section{ padding-left:32px; padding-right:32px; } }
+
+/* ── 4. 탭1 — 선언 · 왜 마모루인가 · 작업내용 ── */
+#tab-intro .intro-appeal{ text-align:left !important; padding-left:20px; padding-right:20px; }
+#tab-intro .intro-appeal h2{ font-size:clamp(30px,8.4vw,46px) !important; font-weight:900 !important; letter-spacing:-.045em !important; line-height:1.12 !important; }
+#tab-intro .intro-appeal p{ font-family:'Outfit','Pretendard',sans-serif; font-size:12px !important; letter-spacing:.12em; color:var(--mist) !important; }
+/* 왜 마모루인가: 왼쪽 거대 번호 / 오른쪽 문제(취소선) → 답(굵게) */
+#tab-intro .intro-why__item{ display:grid !important; grid-template-columns:clamp(64px,19vw,128px) 1fr; column-gap:clamp(12px,4vw,28px); align-items:start; text-align:left !important; border-top:1px solid rgba(255,255,255,.10); padding-top:clamp(24px,6vw,36px) !important; }
+#tab-intro .intro-why__item > *{ grid-column:2; }
+#tab-intro .intro-why__idx{ grid-column:1 !important; grid-row:1 / span 4; font-family:'Outfit',sans-serif !important; font-size:0 !important; color:transparent; }
+#tab-intro .intro-why__idx b{ font-size:clamp(56px,16vw,104px); font-weight:300; line-height:.8; letter-spacing:-.06em; color:var(--stone); font-variant-numeric:tabular-nums; }
+#tab-intro .intro-why__problem{ text-decoration:line-through; text-decoration-color:rgba(138,133,128,.55); text-decoration-thickness:1px; font-size:13px !important; color:var(--warm-gray) !important; }
+#tab-intro .intro-why__cue{ display:none !important; }
+#tab-intro .intro-why__atitle{ margin-top:12px !important; font-size:clamp(21px,5.8vw,30px) !important; font-weight:900 !important; letter-spacing:-.04em !important; line-height:1.15 !important; color:var(--cream) !important; }
+#tab-intro .intro-why__answer{ color:var(--sand) !important; }
+#tab-intro .intro-why__title{ font-size:clamp(30px,8.4vw,46px) !important; font-weight:900 !important; letter-spacing:-.045em !important; text-align:left !important; }
+#tab-intro .intro-why__kicker, #tab-intro .intro-why__legend{ text-align:left !important; }
+#tab-intro .intro-why__rule{ margin-left:0 !important; }
+/* 작업내용 타임라인: 번호를 크게(도면 번호) */
+.intro-timeline-step{ font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(30px,8vw,44px) !important; letter-spacing:-.05em !important; line-height:1 !important; color:var(--mist) !important; font-variant-numeric:tabular-nums; }
+.intro-process-story-title{ font-size:clamp(26px,7vw,38px) !important; font-weight:900 !important; letter-spacing:-.04em !important; }
+
+/* ── 5. 진행과정 — 공정표 3칸: 거대 번호 | 글 | 일러스트(원래 색) ── */
+.mamoru-as-page .as-step-item{ display:grid !important; grid-template-columns:clamp(48px,13vw,76px) 1fr clamp(64px,18vw,96px); column-gap:clamp(12px,3.6vw,22px); align-items:start; text-align:left !important; }
+.mamoru-as-page .as-step-item > *{ grid-column:2 / span 2; }
+.mamoru-as-page .as-step-item > .as-step-num{ grid-column:1; grid-row:1 / span 6; }
+.mamoru-as-page .as-step-item > .as-step-icon{ grid-column:3; grid-row:1 / span 3; width:100% !important; margin:0 !important; }
+.mamoru-as-page .as-step-item:has(> .as-step-icon) > .as-step-title,
+.mamoru-as-page .as-step-item:has(> .as-step-icon) > .as-step-desc{ grid-column:2; }
+.mamoru-as-page .as-step-num{ background:none !important; border:0 !important; border-radius:0 !important; padding:0 !important; width:auto !important; height:auto !important; color:var(--sand) !important; font-family:'Outfit',sans-serif !important; font-weight:300 !important; font-size:clamp(48px,13vw,72px) !important; line-height:.85 !important; letter-spacing:-.06em; display:block !important; margin:0 !important; font-variant-numeric:tabular-nums; }
+.mamoru-as-page .as-step-title{ margin-top:2px; font-size:clamp(17px,4.8vw,21px) !important; font-weight:900 !important; letter-spacing:-.03em !important; text-align:left !important; }
+.mamoru-as-page .as-step-desc, .mamoru-as-page .as-method-label{ text-align:left !important; }
+.mamoru-as-page .as-step-divider{ height:1px !important; background:var(--sand) !important; width:100% !important; margin:28px 0 !important; }
+.mamoru-as-page .as-step-note{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 12px !important; text-align:left !important; color:var(--stone) !important; }
+/* 방문수거·직접발송 카드: 아이콘 3개는 카드 폭에 고르게 / 1개는 글 오른쪽 */
+.mamoru-as-page .as-method-group{ background:var(--white) !important; border:1px solid var(--sand) !important; }
+.mamoru-as-page .as-icon-row{ display:grid !important; grid-template-columns:repeat(3,1fr); justify-items:center; gap:8px !important; margin-top:16px !important; }
+.mamoru-as-page .as-icon-circle{ width:clamp(60px,17vw,84px) !important; height:clamp(60px,17vw,84px) !important; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child){ display:grid; grid-template-columns:1fr clamp(64px,18vw,96px); column-gap:12px; align-items:center; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child) > .as-icon-row{ grid-column:2; grid-row:1 / span 2; grid-template-columns:1fr; margin-top:0 !important; }
+.mamoru-as-page .as-method-group:has(.as-icon-item:only-child) .as-icon-circle{ width:100% !important; height:auto !important; }
+
+/* ── 6. 소요시간 — 문제(7~15일, 흐림·취소선) ↔ 답(2~3일, 크게) ── */
+.mamoru-as-page .as-dur-heading{ text-align:left !important; font-size:clamp(21px,5.8vw,28px) !important; font-weight:900 !important; letter-spacing:-.035em !important; line-height:1.25 !important; }
+.mamoru-as-page .as-dur-section, .mamoru-as-page .as-dur-sub, .mamoru-as-page .as-dur-footnote{ text-align:left !important; }
+.mamoru-as-page .as-dur-divider{ height:1px !important; background:var(--sand) !important; width:100% !important; }
+.mamoru-as-page .as-dur-compare{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 !important; border-top:1px solid var(--void); margin-top:20px; }
+.mamoru-as-page .as-dur-compare-item{ background:transparent !important; border:0 !important; text-align:left !important; padding:14px 8px 0 0 !important; }
+.mamoru-as-page .as-dur-compare-label{ font-size:12px !important; color:var(--warm-gray) !important; }
+.mamoru-as-page .as-dur-compare-value{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; letter-spacing:-.04em !important; line-height:1 !important; margin-top:6px; }
+.mamoru-as-page .as-dur-compare-item.other .as-dur-compare-value{ font-size:clamp(24px,7vw,34px) !important; font-weight:300 !important; color:var(--mist) !important; text-decoration:line-through; text-decoration-thickness:1px; }
+.mamoru-as-page .as-dur-compare-item.mamoru .as-dur-compare-value{ font-size:clamp(40px,12vw,64px) !important; font-weight:900 !important; color:var(--void) !important; }
+
+/* ── 7. 비용 — 거대 숫자 + 가는 선 표 ── */
+.mamoru-as-page .as-price-cards{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 !important; border-top:1px solid var(--void); }
+.mamoru-as-page .as-price-card{ background:transparent !important; border:0 !important; text-align:left !important; padding:16px 8px 0 0 !important; }
+.mamoru-as-page .as-price-card + .as-price-card{ border-left:1px solid var(--sand) !important; padding-left:16px !important; }
+.mamoru-as-page .as-price-card-label{ font-size:13px !important; font-weight:700 !important; color:var(--stone) !important; }
+.mamoru-as-page .as-price-card-value{ font-family:'Outfit',sans-serif !important; font-size:clamp(64px,19vw,104px) !important; font-weight:900 !important; letter-spacing:-.06em !important; line-height:.9 !important; color:var(--void) !important; margin-top:8px; font-variant-numeric:tabular-nums; }
+.mamoru-as-page .as-price-card-value span{ font-family:'Pretendard',sans-serif; font-size:clamp(16px,4.4vw,20px) !important; font-weight:700 !important; letter-spacing:-.02em; margin-left:2px; }
+.mamoru-as-page .as-price-card-unit{ color:var(--warm-gray) !important; font-size:12px !important; }
+.mamoru-as-page .as-shipping-header h3{ text-align:left !important; font-size:clamp(18px,5vw,22px) !important; font-weight:900 !important; letter-spacing:-.03em; }
+.mamoru-as-page .as-shipping-card{ background:transparent !important; border:0 !important; border-top:1px solid var(--void) !important; padding:12px 0 0 !important; text-align:left !important; }
+.mamoru-as-page .as-shipping-card-title{ text-align:left !important; font-weight:800 !important; }
+.mamoru-as-page .as-shipping-row{ border-bottom:1px solid var(--sand) !important; background:transparent !important; border-radius:0 !important; padding:10px 0 !important; }
+.mamoru-as-page .as-shipping-row .price{ font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; font-weight:700; }
+.mamoru-as-page .as-shipping-row.highlight .qty, .mamoru-as-page .as-shipping-row.highlight .price{ color:var(--void) !important; }
+.mamoru-as-page .as-shipping-row.highlight .price{ font-weight:900; }
+.mamoru-as-page .as-shipping-original{ text-align:left !important; }
+.mamoru-as-page .as-shipping-note{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 12px !important; text-align:left !important; }
+
+/* ── 8. 포장 — 단계 라벨을 도면 번호처럼 ── */
+.mamoru-as-page .as-packing-summary p{ font-size:clamp(20px,5.6vw,26px) !important; font-weight:900 !important; letter-spacing:-.03em; text-align:left !important; }
+.mamoru-as-page .as-packing-summary{ background:transparent !important; border:0 !important; text-align:left !important; padding:0 !important; }
+.mamoru-as-page .as-packing-item{ background:transparent !important; border:0 !important; border-top:1px solid var(--sand) !important; border-radius:0 !important; padding-top:20px !important; }
+.mamoru-as-page .as-packing-step{ background:none !important; padding:0 !important; color:var(--warm-gray) !important; font-family:'Outfit',sans-serif !important; font-size:12px !important; font-weight:600 !important; letter-spacing:.16em !important; text-transform:uppercase; }
+.mamoru-as-page .as-packing-step.star{ color:var(--void) !important; font-weight:800 !important; }
+.mamoru-as-page .as-packing-title{ font-weight:900 !important; letter-spacing:-.03em !important; text-align:left !important; }
+.mamoru-as-page .as-packing-content, .mamoru-as-page .as-packing-desc{ text-align:left !important; }
+.mamoru-as-page .as-packing-image{ background:var(--shell) !important; }
+.mamoru-as-page .as-packing-note{ background:transparent !important; border:0 !important; border-left:2px solid var(--void) !important; border-radius:0 !important; padding:4px 0 4px 12px !important; text-align:left !important; }
+#tab-packing button[onclick], .mamoru-as-page .as-hero-cta-primary, .mamoru-as-page .as-floating-cta-btn{ border-radius:2px !important; }
+
+/* ── 9. QnA — 가는 선 목록 ── */
+.mamoru-as-page .as-faq-list{ margin:clamp(28px,7vw,40px) 20px 0; border-top:1px solid var(--void); padding:0; }
+@media(min-width:640px){ .mamoru-as-page .as-faq-list{ margin-left:32px; margin-right:32px; } }
+.mamoru-as-page .as-faq-item{ background:transparent !important; border:0 !important; border-bottom:1px solid var(--sand) !important; border-radius:0 !important; margin:0 !important; }
+.mamoru-as-page .as-faq-question{ padding:18px 0 !important; font-weight:800 !important; letter-spacing:-.02em; background:transparent !important; }
+.mamoru-as-page .as-faq-icon{ font-family:'Outfit',sans-serif; font-weight:300 !important; font-size:22px !important; }
+.mamoru-as-page .as-faq-answer p{ padding-left:0 !important; padding-right:0 !important; color:var(--stone); }
+#tab-qna a[href*="kakao"]{ border-radius:2px !important; }
+
+/* ── 10. 하단 플로팅 CTA — 그림자 대신 가는 선 ── */
+.mamoru-as-page .as-floating-cta{ border-top:1px solid rgba(0,0,0,.08); }
+.mamoru-as-page .as-floating-cta.dark{ border-top-color:rgba(255,255,255,.10); }
+</style>
+
 </head>
 <body>
 
 <div class="mamoru-as-page">
 
   <!-- [1] 히어로 — 축소형 (브랜드 라벨 + 한줄 제목) -->
-  <section class="as-hero">
-    <span class="as-hero-label">MAMORU RESTORATION</span>
-    <!-- [TEXT] 메인 타이틀 -->
-    <h1 class="as-hero-title">복원수리 안내</h1>
-    <p class="as-hero-sub">첫 날의 커트감을 되찾아 드립니다</p>
+  <!-- B-09 히어로: 흑백 확대 사진 + 정밀 주석(시그니처) + 거대 RESTORE + 숫자 스펙 -->
+  <section class="as-hero b-hero">
+    <div class="b-hero__stage">
+    <div class="b-hero__plate" aria-hidden="true">
+      <p><b>DWG. RESTORATION</b></p>
+      <p>SUBJECT — SHEARS / BLADE · PIVOT</p>
+      <p>PROCESS — 5 STEPS · 2–3 DAYS</p>
+      <p>BY — MAMORU, DIRECT</p>
+    </div>
+    <div class="b-hero__photo">
+      <!-- [IMG] 히어로 사진 — 날·손 매크로 크롭(흑백 처리는 CSS) -->
+      <img src="images/날등.jpg" alt="연마 중인 가위 날 확대">
+      <div class="b-anno" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line x1="43.2" y1="14.5" x2="50.6" y2="51"/>
+          <line x1="41.6" y1="14.8" x2="44.8" y2="14.2"/><line x1="49" y1="51.3" x2="52.2" y2="50.7"/>
+          <circle cx="51" cy="53.5" r="1.3"/><line x1="52.3" y1="53.5" x2="68" y2="53.5"/>
+          <circle cx="47.6" cy="58.5" r="1.3"/><line x1="46.3" y1="58.5" x2="24" y2="58.5"/>
+        </svg>
+        <span class="b-tag" style="left:27%;top:6%">BLADE LINE<small>날끝 정렬 확인</small></span>
+        <span class="b-tag" style="left:69%;top:51%">01 EDGE<small>날 각도 복원</small></span>
+        <span class="b-tag" style="left:5%;top:60.5%">02 PIVOT<small>밸런스·장력</small></span>
+      </div>
+    </div>
+      <p class="b-hero__word" aria-hidden="true">RESTORE</p>
+    </div>
+    <div class="b-hero__body">
+      <span class="as-hero-label b-seq">MAMORU RESTORATION</span>
+      <!-- [TEXT] 메인 타이틀 -->
+      <h1 class="as-hero-title b-seq"><span class="lt">복원수리 안내</span>첫 날의 커트감을 되찾아 드립니다</h1>
+      <dl class="b-spec b-seq">
+        <div><dt>2~3<span>일</span></dt><dd>보내주신 날 기준<br>받아보시는 기간</dd></div>
+        <div><dt>5<span>단계</span></dt><dd>접수부터<br>발송까지</dd></div>
+        <div><dt>직접</dt><dd>대표 책임자가<br>진단·작업·책임</dd></div>
+      </dl>
+    </div>
   </section>
 
   <!-- [2] 카테고리 탭 — 6탭 + PC용 CTA -->
