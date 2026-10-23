@@ -5,3 +5,14 @@ notion-config.json
 # 청첩장 RSVP 응답(하객 개인정보) — 로컬 전용, 절대 배포/커밋 금지
 BSMKHJ/_rsvp_responses.html
 BSMKHJ/_rsvp_responses.csv
+
+# 2026-10-22 정리 — 생성물·잠금·백업은 추적하지 않음
+__pycache__/
+*.pyc
+*.log
+*.bak
+.claude/scheduled_tasks.lock
+.DS_Store
+Thumbs.db
+node_modules/
+.next/
