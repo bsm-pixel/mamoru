@@ -162,8 +162,7 @@ export type NotifyTemplate =
   | 'event_shipped'           // EVENT 출고완료 (판매전환분 출고 시 자동, sales_shipped 대체)
   | 'review_event_won'        // 리뷰 이벤트 당첨 안내 + 배송지 입력 링크 (TMS 당첨자 배송 [당첨 안내 보내기])
   | 'review_event_shipped'    // 리뷰 이벤트 당첨 상품 출고 (집하 감지 시 자동)
-  // 재고판매(LS) — webhook_consultation 시나리오 사용
-  | 'stock_received'          // 재고판매 접수 확인 + 입금 안내(계좌+금액) (자동)
+  // 재고판매(LS) — webhook_consultation 시나리오 사용 (2026-10-22 공개 접수폼 폐기 → stock_received 삭제, 기존 건 입금 안내·확인만 유지)
   | 'stock_payment_notice'    // 재고판매 입금 안내 재발송 (어드민)
   | 'stock_payment_confirmed'  // 재고판매 입금 확인 (→ 판매 자동전환)
   // 반품·교환수거 (2026-08-25) — webhook_consultation 폴백
@@ -220,7 +219,6 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   review_event_won: 'REVIEW_EVENT_WON',           // 2026-10-02 리뷰 이벤트 당첨 안내
   review_event_shipped: 'REVIEW_EVENT_SHIPPED',   // 2026-10-02 리뷰 이벤트 당첨 상품 출고
   // 재고판매(LS)
-  stock_received: 'STOCK_RECEIVED',
   stock_payment_notice: 'STOCK_PAYMENT_NOTICE',
   stock_payment_confirmed: 'STOCK_PAYMENT_CONFIRMED',
   // 반품·교환수거
@@ -277,8 +275,6 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
     cancelled: { title: '⚠️ 상담 예약 취소', body: `${payload.name}님 상담 예약 취소`, url: '/consultations' },
     // 이벤트 접수(고객) — 2026-07-01 추가
     event_received: { title: '새 이벤트 접수', body: `${payload.name}님 이벤트 접수`, url: '/events' },
-    // 재고판매 접수(고객) — 2026-07-21 추가
-    stock_received: { title: '새 재고판매 접수', body: `${payload.name}님 재고판매 주문`, url: '/stock-sale' },
     // 반품·교환수거 접수 — 2026-08-25 추가 (사장님 푸시)
     return_received: { title: '새 반품·교환수거 접수', body: `${payload.name}님 반품수거 접수`, url: '/returns' },
     // 아임웹 주문 취소·반품 요청(고객) — 사장님이 아임웹에서 승인/거절 처리해야 함 (2026-09-14)
