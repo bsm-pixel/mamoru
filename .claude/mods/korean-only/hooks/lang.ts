@@ -8,6 +8,6 @@ export function englishHeavy(text: string): boolean {
     .replace(/[A-Za-z]:[\/][^\s)]*/g, ' ') // 윈도우 경로
   const hangul = (prose.match(/[가-힣]/g) ?? []).length
   const latin = (prose.match(/[A-Za-z]/g) ?? []).length
-  if (latin < 120) return false // 짧은 영어(메뉴명·약어)는 허용
-  return hangul / (hangul + latin) < 0.35
+  if (latin < 60) return false // 짧은 영어(메뉴명·약어)는 허용
+  return hangul / (hangul + latin) < 0.5
 }

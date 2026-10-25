@@ -18,6 +18,9 @@ export const register: Register = on => {
     return { ...composed, sections: [...composed.sections, { id: 'korean-only:rule', text: RULE, scope: 'session' as const }] }
   })
 
+  // 사장님 메시지마다 바로 옆에 한국어 규칙을 한 번 더 붙인다 (시스템 프롬프트보다 가까워 가장 잘 지켜짐)
+  on('prompt.submit', async ($, e, next) => next({ ...e, context: [...(e.context ?? []), RULE] }))
+
   // 답변이 끝나면 영어 위주인지 검사 → 경고 + 한국어 재작성 자동 요청
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
