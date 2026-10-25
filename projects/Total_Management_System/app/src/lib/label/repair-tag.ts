@@ -7,7 +7,7 @@
  * 패드 1장 = 위/아래 반(가운데 접는선). 위 반 = "김보금 님", 아래 반 = "01 / 03" + 접수번호(짧게).
  *
  * 좌표는 2026-10-25 ZT231(203dpi) 실물 눈금 출력·스캔으로 실측:
- *   왼쪽 패드 중심 x≈9.6mm(77dot) · 오른쪽 패드 중심 x≈55.5mm(444dot) · 접는선(세로 중심) y≈11.75mm(94dot)
+ *   왼쪽 패드 중심 x≈11.5mm(92dot) · 오른쪽 패드 중심 x≈56.5mm(452dot) (10-25 실사용 출력 사진으로 재보정) · 접는선(세로 중심) y≈11.75mm(94dot)
  *   패드 폭 ≈15.4mm → 글자 영역은 13mm(104dot)×17.5mm(140dot)로 여유를 둔다.
  * 위치를 고칠 땐 이 숫자만 바꾼다(실물 출력 → 스캔 확인).
  */
@@ -20,8 +20,8 @@ const DPI = 203;
 const W = 528; // 66mm
 const H = 166; // 20.75mm (프린터 실측 라벨 길이)
 const CY = 94; // 접는선
-const CX = [77, 444] as const; // 왼쪽·오른쪽 패드 중심
-const BOX_W = 104;
+const CX = [92, 452] as const; // 왼쪽·오른쪽 패드 중심 — 10-25 실사용 사진 실측으로 왼쪽 +1.9mm·오른쪽 +1mm 보정
+const BOX_W = 98; // 패드(≈15.4mm)보다 넉넉히 좁게 — 좌우 여백 확보
 const BOX_H = 140;
 const FONT = "'Pretendard Variable', Pretendard, 'Noto Sans KR', sans-serif";
 
@@ -60,7 +60,7 @@ function drawTag(ctx: CanvasRenderingContext2D, item: RepairTagItem, cx: number,
   const honor = ' 님';
   ctx.font = `400 21px ${FONT}`;
   const honorW = ctx.measureText(honor).width;
-  let size = 32; // 이름이 가장 크게(사장님 기준) — 넘치면 아래에서 자동 축소
+  let size = 30; // 이름이 가장 크게(사장님 기준) — 넘치면 아래에서 자동 축소
   ctx.font = `700 ${size}px ${FONT}`;
   let nameW = ctx.measureText(item.name).width;
   while (nameW + honorW > BOX_W - 4 && size > 14) {
@@ -106,7 +106,7 @@ function pairs(items: RepairTagItem[]): [RepairTagItem, RepairTagItem | undefine
 async function ensureTagFonts() {
   await ensureLabelFonts(); // Noto Sans KR 폴백 보장
   try {
-    await Promise.all([document.fonts.load(`700 32px ${FONT}`), document.fonts.load(`400 21px ${FONT}`)]);
+    await Promise.all([document.fonts.load(`700 30px ${FONT}`), document.fonts.load(`400 21px ${FONT}`)]);
   } catch { /* 폴백 글꼴로 진행 */ }
 }
 
