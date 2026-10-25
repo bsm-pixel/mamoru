@@ -9,8 +9,9 @@ import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
+import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
-import { Printer } from 'lucide-react';
+import { Printer, Tag } from 'lucide-react';
 import {
   useRepair,
   useUpdateRepairFields,
@@ -28,6 +29,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
   const { data, isLoading, refetch } = useRepair(repairId);
   const updateFields = useUpdateRepairFields();
   const [showPrep, setShowPrep] = useState(false);
+  const [showTag, setShowTag] = useState(false); // 복원수리 꼬리표(가위별 라벨) 출력
 
   if (isLoading) {
     return (
@@ -92,10 +94,25 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
           >
             <Printer size={12} /> 준비표
           </button>
+          {/* 꼬리표 — 입고 때 가위마다 1장 출력해 손잡이에 감는다(가위 뒤바뀜 방지) */}
+          <button
+            onClick={() => setShowTag(true)}
+            className="flex items-center gap-1 text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2.5 py-1.5 hover:bg-neutral-50 transition"
+          >
+            <Tag size={12} /> 꼬리표
+          </button>
         </div>
       </div>
 
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
+      {showTag && (
+        <RepairTagPrintModal
+          name={r.name}
+          asId={r.as_id}
+          defaultCount={inspections.length || (r.qty_mamoru || 0) + (r.qty_other || 0)}
+          onClose={() => setShowTag(false)}
+        />
+      )}
 
       {/* 진행 흐름 — 복원수리 흐름 스테퍼. 배송추적은 아래 출고 섹션에 합침(송장번호 중복 방지) */}
       <div className="rounded-lg border border-neutral-100 p-3">

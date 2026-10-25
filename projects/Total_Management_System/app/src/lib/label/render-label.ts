@@ -132,8 +132,8 @@ export async function composeLabelCanvas(tpl: LabelTemplate, data: LabelData, dp
   return canvas;
 }
 
-/** 캔버스 → ZPL ^GFA (1비트 패킹, 1=흑) */
-function canvasToGfaField(canvas: HTMLCanvasElement): string {
+/** 캔버스 → ZPL ^GFA (1비트 패킹, 1=흑) — 복원수리 꼬리표(repair-tag.ts)도 공용 */
+export function canvasToGfaField(canvas: HTMLCanvasElement): string {
   const W = canvas.width, H = canvas.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';

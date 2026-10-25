@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,13 +9,14 @@ import { RepairDetailCard } from '@/components/repairs/repair-detail-card';
 import { InspectionSummary } from '@/components/repairs/inspection-summary';
 import { SidebarActionCard } from '@/components/repairs/sidebar-action-card';
 import { RepairTimeline } from '@/components/repairs/repair-timeline';
+import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
 import {
   useRepair,
   useUpdateRepairFields,
 } from '@/hooks/use-repairs';
 import { formatDateTime } from '@/lib/utils/format';
 import type { RepairStatus } from '@/lib/supabase/types';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Tag } from 'lucide-react';
 
 export default function RepairDetailPage() {
   const params = useParams();
@@ -22,6 +24,7 @@ export default function RepairDetailPage() {
   const id = params.id as string;
   const { data, isLoading } = useRepair(id);
   const updateFields = useUpdateRepairFields();
+  const [showTag, setShowTag] = useState(false); // 복원수리 꼬리표 출력
 
   if (isLoading) {
     return (
@@ -77,8 +80,25 @@ export default function RepairDetailPage() {
               {r.as_id} &middot; {formatDateTime(r.received_at)}
             </p>
           </div>
-          <RepairStatusBadge status={r.status} proceedType={proceedType} />
+          <div className="flex items-center gap-2 shrink-0">
+            {/* 꼬리표 — 가위마다 1장 (PC 상세 패널과 동일) */}
+            <button
+              onClick={() => setShowTag(true)}
+              className="flex items-center gap-1 text-xs font-semibold text-neutral-600 border border-neutral-200 rounded-md px-2.5 py-1.5 hover:bg-neutral-50 transition"
+            >
+              <Tag size={12} /> 꼬리표
+            </button>
+            <RepairStatusBadge status={r.status} proceedType={proceedType} />
+          </div>
         </div>
+        {showTag && (
+          <RepairTagPrintModal
+            name={r.name}
+            asId={r.as_id}
+            defaultCount={inspections.length || (r.qty_mamoru || 0) + (r.qty_other || 0)}
+            onClose={() => setShowTag(false)}
+          />
+        )}
 
         {/* 2026-10-15 수리내역서 버튼(모바일·PC 2벌)은 액션 카드로 통합 */}
 

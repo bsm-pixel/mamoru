@@ -135,6 +135,8 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
   const addScissor = () => { setItems((prev) => [...prev, newInspectionItem(prev.length + 1)]); setActiveIdx(items.length); };
   const removeScissor = (idx: number) => {
     if (items.length <= 1) return;
+    // 중간 가위를 지우면 뒤 번호가 당겨져 이미 붙인 꼬리표(01/03 등)와 어긋난다 → 확인 후 진행
+    if (idx < items.length - 1 && !window.confirm(`#${idx + 1} 가위를 지우면 뒤 가위 번호가 하나씩 당겨집니다.\n꼬리표를 이미 붙였다면 지운 뒤 꼬리표를 다시 출력해 주세요.\n\n지울까요?`)) return;
     setItems((prev) => prev.filter((_, i) => i !== idx).map((it, i) => ({ ...it, scissor_number: i + 1 })));
     setActiveIdx(Math.max(0, activeIdx - 1));
   };

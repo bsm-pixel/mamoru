@@ -8,6 +8,8 @@
  * 좌표·크기 단위는 dots. mmToDots로 mm→dots 변환. (203dpi=8dots/mm, 300dpi≈11.8)
  */
 
+import { mediaFormat, mediaPrefix, type MediaProfile } from './media';
+
 export interface LabelSize {
   widthMm: number;
   heightMm: number;
@@ -47,15 +49,17 @@ export function fGfa(field: string): string {
  * 라벨 1장 ZPL 조립. fields = 위 f* 들이 만든 문자열 배열. copies = 매수.
  * ^MNY = 갭(간극) 라벨 가정(현 운영 라벨). ^LH0,0 원점.
  */
-export function buildLabel(size: LabelSize, fields: string[], copies = 1): string {
+export function buildLabel(size: LabelSize, fields: string[], copies = 1, media?: MediaProfile): string {
   const pw = mmToDots(size.widthMm, size.dpi);
   const ll = mmToDots(size.heightMm, size.dpi);
   return [
+    ...mediaPrefix(media), // 라벨지 설정 묶음(진하기) — media 없으면 기존과 동일
     '^XA',
     `^PW${pw}`,
     `^LL${ll}`,
     '^LH0,0',
     '^MNY',
+    ...mediaFormat(media), // 인쇄 방식(감열/리본)·속도
     ...fields.filter(Boolean),
     `^PQ${Math.max(1, Math.round(copies))}`,
     '^XZ',
