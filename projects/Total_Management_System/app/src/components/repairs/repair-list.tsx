@@ -12,10 +12,11 @@ import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/h
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
-  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff, CalendarPlus,
+  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff, CalendarPlus, Tag,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
+import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RepairBlockedDatesModal } from './repair-blocked-dates-modal';
 import type { Repair } from '@/lib/supabase/types';
@@ -99,6 +100,12 @@ function matchSearch(r: Repair, q: string): boolean {
   );
 }
 
+/** 여러 탭에 같은 건이 겹칠 수 있어 id 기준 중복 제거(처음 나온 순서 유지) */
+function uniqueRepairs(list: Repair[]): Repair[] {
+  const seen = new Set<string>();
+  return list.filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+}
+
 export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, staleOnly, onClearFilter, gridMode, onBookVisit }: RepairListProps = {}) {
   const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
@@ -107,6 +114,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrep, setShowPrep] = useState(false);
+  const [showTags, setShowTags] = useState(false); // 선택한 여러 건 꼬리표를 빈칸 없이 이어서 출력
   const [showUnified, setShowUnified] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
   const toggleCheck = (id: string) => setCheckedIds((prev) => {
@@ -263,7 +271,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
             }`}
           >
-            <ClipboardList size={14} /> {prepMode ? '선택 취소' : '준비표 뽑기'}
+            <ClipboardList size={14} /> {prepMode ? '선택 취소' : '여러 건 선택'}
           </button>
           {prepMode && checkedIds.size > 0 && (
             <button
@@ -273,9 +281,17 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               <Printer size={14} /> 준비표 인쇄 ({checkedIds.size}건)
             </button>
           )}
+          {prepMode && checkedIds.size > 0 && (
+            <button
+              onClick={() => setShowTags(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition"
+            >
+              <Tag size={14} /> 꼬리표 출력 ({checkedIds.size}건)
+            </button>
+          )}
         </div>
       </div>
-      {prepMode && <p className="text-[11px] text-neutral-400 -mt-1">체크한 건이 A4 1장에 2개씩 (가운데 절취) 나옵니다. 행을 눌러 선택하세요.</p>}
+      {prepMode && <p className="text-[11px] text-neutral-400 -mt-1">행을 눌러 선택하세요. 준비표 = A4 1장에 2건씩 / 꼬리표 = 선택한 건 순서대로 빈칸 없이 이어서.</p>}
 
       {/* 목록 */}
       {isLoading ? (
@@ -322,6 +338,15 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       )}
 
       {showPrep && <RepairPrepSheetModal repairIds={[...checkedIds]} onClose={() => setShowPrep(false)} />}
+      {showTags && (
+        <RepairTagPrintModal
+          // 화면에 보이는 순서대로(탭을 옮겨 고른 건도 포함). 수량 기본값 = 접수 수량(마모루+타사), 창에서 건별 조정
+          entries={uniqueRepairs(Object.values(tabData).flat())
+            .filter((x) => checkedIds.has(x.id))
+            .map((x) => ({ id: x.id, name: x.name, asId: x.as_id, defaultCount: (x.qty_mamoru || 0) + (x.qty_other || 0) }))}
+          onClose={() => setShowTags(false)}
+        />
+      )}
       {showUnified && <UnifiedPrepModal initialTab="repair" onClose={() => setShowUnified(false)} />}
       {showBlocked && <RepairBlockedDatesModal onClose={() => setShowBlocked(false)} />}
     </div>

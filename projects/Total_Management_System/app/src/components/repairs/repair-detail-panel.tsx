@@ -107,9 +107,7 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
       {showPrep && <RepairPrepSheetModal repairIds={[r.id]} onClose={() => setShowPrep(false)} />}
       {showTag && (
         <RepairTagPrintModal
-          name={r.name}
-          asId={r.as_id}
-          defaultCount={inspections.length || (r.qty_mamoru || 0) + (r.qty_other || 0)}
+          entries={[{ id: r.id, name: r.name, asId: r.as_id, defaultCount: inspections.length || (r.qty_mamoru || 0) + (r.qty_other || 0) }]}
           onClose={() => setShowTag(false)}
         />
       )}
