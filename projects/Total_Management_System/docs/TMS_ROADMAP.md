@@ -208,6 +208,7 @@
 
 사무실 재고를 아임웹 커스텀 카탈로그로 판매. **EVENT 접수 허브를 재활용**(백엔드 80~90%)해 신규 코드 최소화.
 접수 → 입금안내 알림톡 → 입금확인 시 자동 판매전환 → 송장·발송 → 제품구매 후기. 매뉴얼: `docs/STOCK_SALE_MANUAL.md`.
+- [x] **복원수리 꼬리표 라벨 + 라벨지 설정 묶음** (2026-10-25) — 상세 [🏷 꼬리표] → 가위 수만큼 유포 꼬리표(MAMORU 로고·이름 님·01/03·접수번호) 원클릭 출력, 한 칸 2개(오른쪽 180°), 위치 실물 실측 확정. 모든 라벨 리본 표준(`lib/label/media.ts`). 커밋 0307ed76·7fbacae5·4d19de90·b82f35bd. 상세: `docs/MANUAL_LABEL.md` §8
 - [x] 단계0 LS 카테고리(시스템 고정) — 제품등록/재고/SKU(LS001)/정위치/아임웹동기화 자동 상속
 - [x] 단계1 공개 카탈로그 API(`/api/stock-sale/public/products`) + 고객 폼(`projects/stock_sale/page_form.html`, 사진 있는 범용 카탈로그)
 - [x] 단계2 접수 API(`/submit`) — 서버 가격 재조회(위변조 방지)·고객 자동병합(전화)·event_submissions(kind='stock_sale')·`stock_received` 알림톡
