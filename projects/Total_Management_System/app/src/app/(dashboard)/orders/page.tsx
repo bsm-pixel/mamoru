@@ -21,6 +21,7 @@ import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
+import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
@@ -56,6 +57,9 @@ export default function OrdersPage() {
   const { data: counts } = useOrderCounts();
 
   const isLg = useIsLg();
+  // 2026-10-25 IA 통일: PC = 체크박스 칸 항상(행 클릭은 상세) / 모바일 = [선택] 모드에서 행을 눌러 고름
+  const showChecks = isLg || prepMode;
+  const rowToggles = !isLg && prepMode;
 
   useEscapeKey(() => setSelectedId(null), !!selectedId);
   const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
@@ -145,8 +149,8 @@ export default function OrdersPage() {
                     <button type="button" disabled={sync.isPending} onClick={() => { setMobileMenu(false); sync.mutate(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 disabled:opacity-40">
                       {sync.isPending ? '동기화 중...' : '아임웹 동기화'}
                     </button>
-                    <button type="button" onClick={() => { setMobileMenu(false); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">통합 준비표</button>
-                    <button type="button" onClick={() => { setMobileMenu(false); if (!prepMode) togglePrepMode(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">준비표 뽑기 (선택)</button>
+                    <button type="button" onClick={() => { setMobileMenu(false); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">전체 출고 준비표</button>
+                    <button type="button" onClick={() => { setMobileMenu(false); if (!prepMode) togglePrepMode(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">선택</button>
                   </div>
                 )}
               </div>
@@ -156,7 +160,7 @@ export default function OrdersPage() {
             {prepMode && (
               <div className="flex items-center gap-2">
                 <Button size="sm" className="flex-1" disabled={checkedIds.size === 0} onClick={() => setShowPrepSheet(true)}>
-                  <Printer size={14} />준비표 인쇄 ({checkedIds.size})
+                  <Printer size={14} />준비표 ({checkedIds.size})
                 </Button>
                 <Button variant="ghost" size="sm" className="shrink-0" onClick={togglePrepMode}>
                   <X size={14} />취소
@@ -193,27 +197,20 @@ export default function OrdersPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
-          <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setShowUnified(true)}>
-            <Printer size={14} />통합 준비표
+          <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setShowUnified(true)} title="복원수리·주문·판매의 출고 준비를 한 장에">
+            <Printer size={14} />전체 출고 준비표
           </Button>
-          {/* 준비표 뽑기 (판매관리와 동일 UX) */}
-          {!prepMode ? (
-            <Button variant="secondary" size="sm" className="shrink-0" onClick={togglePrepMode}>
-              <Printer size={14} />준비표 뽑기
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2 shrink-0">
-              <Button size="sm" disabled={checkedIds.size === 0} onClick={() => setShowPrepSheet(true)}>
-                <Printer size={14} />준비표 인쇄 ({checkedIds.size})
-              </Button>
-              <Button variant="ghost" size="sm" onClick={togglePrepMode}>
-                <X size={14} />취소
-              </Button>
-            </div>
-          )}
         </div>
         )}
-        {prepMode && (
+        {/* PC 선택 막대 — 체크박스로 고르면 나타남(상세와 같은 이름) */}
+        {isLg && (
+          <SelectionBar
+            count={checkedIds.size}
+            onClear={() => setCheckedIds(new Set())}
+            actions={[{ key: 'prep', label: '준비표', icon: <Printer size={13} />, onClick: () => setShowPrepSheet(true) }]}
+          />
+        )}
+        {rowToggles && (
           <p className="text-[11px] text-stone-500">출고할 주문을 클릭해 선택하세요. 선택 후 <b>준비표 인쇄</b>를 누르면 리스트형·트레이형으로 출력됩니다.</p>
         )}
 
@@ -255,17 +252,16 @@ export default function OrdersPage() {
                   <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
                 ) : (
                   <DataGrid
-                    columns={prepMode
+                    columns={showChecks
                       ? [{ key: '_check', label: '', render: (o: Order) => (
-                          <input type="checkbox" readOnly checked={checkedIds.has(o.id)}
-                            className="w-4 h-4 rounded border-stone-300 pointer-events-none accent-stone-900" />
+                          <RowCheck checked={checkedIds.has(o.id)} onToggle={() => toggleCheck(o.id)} />
                         ) } as GridColumn<Order>, ...orderColumns]
                       : orderColumns}
                     rows={orders}
                     getRowKey={(o) => o.id}
-                    selectedKey={prepMode ? undefined : (selectedId ?? undefined)}
-                    onSelect={(o) => (prepMode ? toggleCheck(o.id) : setSelectedId(o.id))}
-                    rowClassName={(o) => `${o.status === 'cancelled' ? 'opacity-50' : ''} ${prepMode && checkedIds.has(o.id) ? 'bg-stone-100' : ''}`}
+                    selectedKey={rowToggles ? undefined : (selectedId ?? undefined)}
+                    onSelect={(o) => (rowToggles ? toggleCheck(o.id) : setSelectedId(o.id))}
+                    rowClassName={(o) => `${o.status === 'cancelled' ? 'opacity-50' : ''} ${checkedIds.has(o.id) ? 'bg-stone-100' : ''}`}
                     emptyMessage="주문이 없습니다"
                   />
                 )}

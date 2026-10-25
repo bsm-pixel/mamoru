@@ -25,6 +25,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
+import { SelectionBar } from '@/components/ui/selection-bar';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import { StageGrid } from '@/components/ui/stage-grid';
 import type { OfflineSale } from '@/lib/supabase/types';
@@ -258,6 +259,9 @@ export default function SalesPage() {
     setCheckedDeliveryIds((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
   const totalChecked = checkedIds.size + checkedDeliveryIds.size;
+  // 2026-10-25 IA 통일: PC = 체크박스 칸 항상(행 클릭은 상세) / 모바일 = [선택] 모드에서 행을 눌러 고름
+  const showChecks = isLg || prepMode;
+  const rowToggles = !isLg && prepMode;
   const handleDateRangeChange = (d: SalesDateRange) => { setDateRange(d); setPage(1); };
 
   /** 영역 칩 변경 — 데이터 분기는 unifiedItems useMemo 가 처리 */
@@ -422,8 +426,8 @@ export default function SalesPage() {
           </button>
           {mobileMenu === 'more' && (
             <div className="absolute right-0 top-11 z-40 w-40 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
-              <button type="button" onClick={() => { setMobileMenu(null); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">통합 준비표</button>
-              <button type="button" onClick={() => { setMobileMenu(null); setPrepMode(true); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">준비표 뽑기 (선택)</button>
+              <button type="button" onClick={() => { setMobileMenu(null); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">전체 출고 준비표</button>
+              <button type="button" onClick={() => { setMobileMenu(null); setPrepMode(true); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">선택</button>
             </div>
           )}
         </div>
@@ -525,39 +529,11 @@ export default function SalesPage() {
       {isLg && <div className="flex items-center gap-2">
         <button
           onClick={() => setShowUnified(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition shrink-0"
+          title="복원수리·주문·판매의 출고 준비를 한 장에"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition shrink-0"
         >
-          <ClipboardList size={14} /> 통합 준비표
+          <ClipboardList size={14} /> 전체 출고 준비표
         </button>
-        <button
-          onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
-            prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-          }`}
-        >
-          <ClipboardList size={14} />
-          {prepMode ? '선택 취소' : '준비표 뽑기'}
-        </button>
-        {prepMode && totalChecked > 0 && (
-          <button
-            onClick={() => setShowPrepSheet(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition shrink-0"
-          >
-            <Receipt size={14} />
-            준비표 인쇄 ({totalChecked}건)
-          </button>
-        )}
-        {/* 일괄 포장완료 — 2026-07-18. 판매 건만 대상(B2B 납품은 별도 흐름) */}
-        {prepMode && checkedIds.size > 0 && (
-          <button
-            onClick={() => { markPacked.mutate({ ids: [...checkedIds], packed: true }); setCheckedIds(new Set()); }}
-            disabled={markPacked.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition shrink-0 disabled:opacity-50"
-          >
-            <Package size={14} />
-            {markPacked.isPending ? '처리 중…' : `포장완료 (${checkedIds.size}건)`}
-          </button>
-        )}
         {/* 2026-07-14 PC 그리드(베타) 토글 — 상단바에서 이동 */}
         <button onClick={toggleGrid} title="목록을 밀집 표로 보기"
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-600 border border-neutral-200 bg-white hover:bg-neutral-50 transition shrink-0">
@@ -565,6 +541,22 @@ export default function SalesPage() {
           {gridMode ? '카드 보기' : 'PC 그리드'}
         </button>
       </div>}
+
+      {/* PC 선택 막대 — 체크박스로 고르면 나타남(상세와 같은 이름). 포장완료는 판매 건만(B2B 납품은 별도 흐름, 2026-07-18) */}
+      {isLg && (
+        <SelectionBar
+          count={totalChecked}
+          onClear={() => { setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }}
+          actions={[
+            { key: 'prep', label: '준비표', icon: <Receipt size={13} />, onClick: () => setShowPrepSheet(true) },
+            ...(checkedIds.size > 0 ? [{
+              key: 'packed', label: markPacked.isPending ? '처리 중…' : `포장완료 (판매 ${checkedIds.size}건)`, icon: <Package size={13} />,
+              disabled: markPacked.isPending,
+              onClick: () => { markPacked.mutate({ ids: [...checkedIds], packed: true }); setCheckedIds(new Set()); },
+            }] : []),
+          ]}
+        />
+      )}
 
       {/* 탭 바 — 상태 필터 (PC — 모바일은 위 상태 버튼판) */}
       {isLg && <div className="flex items-end gap-1 border-b border-neutral-200">
@@ -687,11 +679,12 @@ export default function SalesPage() {
               items={unifiedItems}
               selectedId={selected?.id}
               onSelect={(id, type) => setSelected({ id, sourceType: type })}
-              prepMode={prepMode}
+              prepMode={showChecks}
               checkedSale={checkedIds}
               checkedDelivery={checkedDeliveryIds}
               onCheckSale={toggleCheck}
               onCheckDelivery={toggleCheckDelivery}
+              toggleOnRow={rowToggles}
               actLookup={salesActTypes}
             />
           </div>
@@ -706,7 +699,8 @@ export default function SalesPage() {
                     note={item.data.customer_id ? noteMap?.[item.data.customer_id] : undefined}
                     selected={selected?.sourceType === 'sale' && selected.id === item.id}
                     onClick={() => setSelected({ id: item.id, sourceType: 'sale' })}
-                    prepMode={prepMode}
+                    prepMode={showChecks}
+                    toggleOnRow={rowToggles}
                     checked={checkedIds.has(item.id)}
                     onCheck={() => toggleCheck(item.id)}
                     actTypes={salesActTypes(item.data.customer_phone)}
@@ -719,7 +713,8 @@ export default function SalesPage() {
                   delivery={item.data}
                   selected={selected?.sourceType === 'delivery' && selected.id === item.id}
                   onClick={() => setSelected({ id: item.id, sourceType: 'delivery' })}
-                  prepMode={prepMode}
+                  prepMode={showChecks}
+                  toggleOnRow={rowToggles}
                   checked={checkedDeliveryIds.has(item.id)}
                   onCheck={() => toggleCheckDelivery(item.id)}
                 />
@@ -786,7 +781,7 @@ export default function SalesPage() {
           )}
           {totalChecked > 0 && (
             <button type="button" onClick={() => setShowPrepSheet(true)} className="h-9 px-3 rounded-lg bg-white text-stone-900 text-xs font-bold whitespace-nowrap">
-              준비표 인쇄
+              준비표
             </button>
           )}
           <button type="button" onClick={() => { setPrepMode(false); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="h-9 px-2 text-xs font-semibold text-white/70 whitespace-nowrap">
@@ -840,7 +835,7 @@ const SHIP_BADGE: Record<ShipStatus['tone'], string> = {
 };
 
 const SalesGridTable = memo(function SalesGridTable({
-  items, selectedId, onSelect, prepMode, checkedSale, checkedDelivery, onCheckSale, onCheckDelivery, actLookup,
+  items, selectedId, onSelect, prepMode, checkedSale, checkedDelivery, onCheckSale, onCheckDelivery, toggleOnRow, actLookup,
 }: {
   items: UnifiedItem[];
   selectedId?: string;
@@ -850,6 +845,7 @@ const SalesGridTable = memo(function SalesGridTable({
   checkedDelivery: Set<string>;
   onCheckSale: (id: string) => void;
   onCheckDelivery: (id: string) => void;
+  toggleOnRow?: boolean; // 모바일 선택 모드 — 행을 눌러도 선택
   actLookup?: (phone?: string | null) => ActivityTypes | undefined;
 }) {
   return (
@@ -884,7 +880,7 @@ const SalesGridTable = memo(function SalesGridTable({
           return (
             <tr
               key={`${item.sourceType}-${item.id}`}
-              onClick={prepMode ? onCheck : () => onSelect(item.id, item.sourceType)}
+              onClick={toggleOnRow ? onCheck : () => onSelect(item.id, item.sourceType)}
               className={`border-b border-neutral-100 cursor-pointer transition ${
                 sel ? 'bg-[#F4F0EA] shadow-[inset_3px_0_0_#1A1A1A]' : 'hover:bg-warm-ivory/50'
               } ${checked ? 'bg-blue-50' : ''} ${cancelled ? 'opacity-50' : ''}`}
@@ -925,9 +921,9 @@ const SalesGridTable = memo(function SalesGridTable({
   );
 });
 
-const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode, checked, onCheck, actTypes }: {
+const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode, checked, onCheck, toggleOnRow, actTypes }: {
   sale: OfflineSale; note?: LatestNote; selected?: boolean; onClick: () => void;
-  prepMode?: boolean; checked?: boolean; onCheck?: () => void; actTypes?: ActivityTypes;
+  prepMode?: boolean; checked?: boolean; onCheck?: () => void; toggleOnRow?: boolean; actTypes?: ActivityTypes;
 }) {
   const state = getRowStateSale(sale);
   const isCancelled = state === 'cancelled';
@@ -936,7 +932,7 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
 
   return (
     <div
-      onClick={prepMode ? onCheck : onClick}
+      onClick={toggleOnRow ? onCheck : onClick}
       className={`flex items-stretch gap-3 px-4 py-3 cursor-pointer transition ${
         selected ? 'bg-neutral-50' : 'hover:bg-warm-ivory/40'
       } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50' : ''}`}
@@ -988,9 +984,9 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DeliveryRowData = any;
 
-const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, prepMode, checked, onCheck }: {
+const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, prepMode, checked, onCheck, toggleOnRow }: {
   delivery: DeliveryRowData; selected?: boolean; onClick: () => void;
-  prepMode?: boolean; checked?: boolean; onCheck?: () => void;
+  prepMode?: boolean; checked?: boolean; onCheck?: () => void; toggleOnRow?: boolean;
 }) {
   const state = getRowStateDelivery(delivery);
   const isCancelled = state === 'cancelled';
@@ -999,7 +995,7 @@ const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, pre
 
   return (
     <div
-      onClick={prepMode ? onCheck : onClick}
+      onClick={toggleOnRow ? onCheck : onClick}
       className={`flex items-stretch gap-3 px-4 py-3 cursor-pointer transition ${
         selected ? 'bg-neutral-50' : 'hover:bg-warm-ivory/40'
       } ${isCancelled ? 'opacity-50' : ''} ${checked ? 'bg-blue-50' : ''}`}

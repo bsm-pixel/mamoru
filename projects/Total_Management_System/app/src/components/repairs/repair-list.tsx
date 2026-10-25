@@ -17,6 +17,8 @@ import {
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
+import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
+import { useIsLg } from '@/hooks/use-grid-mode';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RepairBlockedDatesModal } from './repair-blocked-dates-modal';
 import type { Repair } from '@/lib/supabase/types';
@@ -120,7 +122,12 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const toggleCheck = (id: string) => setCheckedIds((prev) => {
     const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next;
   });
-  const rowClick = (id: string) => { if (prepMode) toggleCheck(id); else onSelect?.(id); };
+  // 2026-10-25 IA 통일: PC = 체크박스 칸 항상(행 클릭은 상세 열기) / 모바일 = [선택] 모드에서 행을 눌러 고름
+  const isLg = useIsLg();
+  const showChecks = isLg || prepMode;
+  const rowToggles = !isLg && prepMode;
+  const clearChecks = () => { setCheckedIds(new Set()); setPrepMode(false); };
+  const rowClick = (id: string) => { if (rowToggles) toggleCheck(id); else onSelect?.(id); };
 
   // initialTab 변경 시 탭 전환
   useEffect(() => {
@@ -255,43 +262,40 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         })}
       </div>}
 
-      {/* 건수 + 준비표(트레이형) 뽑기 */}
+      {/* 건수 + 출력 도구 — 검은 버튼은 [방문 예약] 하나만(전체 출고 준비표는 테두리 버튼) */}
       <div className="flex items-center gap-2 flex-wrap">
         <p className="text-xs text-neutral-500">{filteredRepairs.length}건</p>
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowUnified(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition"
+            title="복원수리·주문·판매의 출고 준비를 한 장에"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition"
           >
-            <ClipboardList size={14} /> 통합 준비표
+            <ClipboardList size={14} /> 전체 출고 준비표
           </button>
-          <button
-            onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-            }`}
-          >
-            <ClipboardList size={14} /> {prepMode ? '선택 취소' : '여러 건 선택'}
-          </button>
-          {prepMode && checkedIds.size > 0 && (
+          {/* 모바일만 — PC는 체크박스 칸이 항상 있음 */}
+          {!isLg && (
             <button
-              onClick={() => setShowPrep(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition"
+              onClick={() => { setPrepMode(!prepMode); setCheckedIds(new Set()); }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                prepMode ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+              }`}
             >
-              <Printer size={14} /> 준비표 인쇄 ({checkedIds.size}건)
-            </button>
-          )}
-          {prepMode && checkedIds.size > 0 && (
-            <button
-              onClick={() => setShowTags(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 transition"
-            >
-              <Tag size={14} /> 꼬리표 출력 ({checkedIds.size}건)
+              {prepMode ? '선택 취소' : '선택'}
             </button>
           )}
         </div>
       </div>
-      {prepMode && <p className="text-[11px] text-neutral-400 -mt-1">행을 눌러 선택하세요. 준비표 = A4 1장에 2건씩 / 꼬리표 = 선택한 건 순서대로 빈칸 없이 이어서.</p>}
+      {/* 선택 막대 — 상세 화면과 같은 이름(준비표·꼬리표) */}
+      <SelectionBar
+        count={checkedIds.size}
+        onClear={clearChecks}
+        actions={[
+          { key: 'prep', label: '준비표', icon: <Printer size={13} />, onClick: () => setShowPrep(true) },
+          { key: 'tag', label: '꼬리표', icon: <Tag size={13} />, onClick: () => setShowTags(true) },
+        ]}
+      />
+      {rowToggles && checkedIds.size === 0 && <p className="text-[11px] text-neutral-400 -mt-1">행을 눌러 선택하세요.</p>}
 
       {/* 목록 */}
       {isLoading ? (
@@ -308,16 +312,16 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       ) : gridMode ? (
         <Card padding={false}>
           <DataGrid
-            columns={prepMode ? [{
+            columns={showChecks ? [{
               key: '_chk', label: '', render: (r: Repair) => (
-                <input type="checkbox" readOnly checked={checkedIds.has(r.id)} className="w-4 h-4 pointer-events-none" />
+                <RowCheck checked={checkedIds.has(r.id)} onToggle={() => toggleCheck(r.id)} />
               ),
             } as GridColumn<Repair>, ...gridColumns] : gridColumns}
             rows={filteredRepairs}
             getRowKey={(r) => r.id}
-            selectedKey={prepMode ? undefined : (selectedId ?? undefined)}
+            selectedKey={rowToggles ? undefined : (selectedId ?? undefined)}
             onSelect={(r) => rowClick(r.id)}
-            rowClassName={(r) => `${r.status === 'cancelled' ? 'opacity-60' : ''} ${prepMode && checkedIds.has(r.id) ? 'bg-blue-50' : ''}`}
+            rowClassName={(r) => `${r.status === 'cancelled' ? 'opacity-60' : ''} ${checkedIds.has(r.id) ? 'bg-neutral-100' : ''}`}
           />
         </Card>
       ) : (
@@ -327,9 +331,10 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
               key={r.id}
               repair={r}
               tab={activeTab}
-              isSelected={prepMode ? checkedIds.has(r.id) : selectedId === r.id}
-              prepMode={prepMode}
+              isSelected={rowToggles ? checkedIds.has(r.id) : selectedId === r.id}
+              prepMode={showChecks}
               checked={checkedIds.has(r.id)}
+              onToggle={() => toggleCheck(r.id)}
               onSelect={rowClick}
               actTypes={repairActTypes(r.phone)}
             />
@@ -366,10 +371,11 @@ interface RepairCardProps {
   onSelect?: (id: string) => void;
   prepMode?: boolean;
   checked?: boolean;
+  onToggle?: () => void;
   actTypes?: import('@/hooks/use-activity-types').ActivityTypes;
 }
 
-function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, checked = false, actTypes }: RepairCardProps) {
+function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, checked = false, onToggle, actTypes }: RepairCardProps) {
   const days = getDaysElapsed(r.received_at);
   const isCancelled = r.status === 'cancelled';
   const isCompleted = r.status === 'completed';
@@ -391,11 +397,9 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
       onClick={() => onSelect?.(r.id)}
       className="cursor-pointer"
     >
-      <Card className={`hover:bg-neutral-50 transition ${isSelected ? (prepMode ? 'ring-2 ring-blue-500 bg-blue-50' : 'ring-2 ring-terracotta bg-terracotta/5') : ''} ${borderClass} ${isCancelled ? 'opacity-60' : ''}`}>
+      <Card className={`hover:bg-neutral-50 transition ${checked ? 'ring-2 ring-neutral-900 bg-neutral-50' : isSelected ? 'ring-2 ring-terracotta bg-terracotta/5' : ''} ${borderClass} ${isCancelled ? 'opacity-60' : ''}`}>
         <div className="flex items-start justify-between gap-2">
-          {prepMode && (
-            <input type="checkbox" readOnly checked={checked} className="w-4 h-4 mt-1 shrink-0 pointer-events-none" />
-          )}
+          {prepMode && <RowCheck checked={checked} onToggle={() => onToggle?.()} className="mt-1" />}
           <div className="flex-1 min-w-0">
             {/* 상단: 접수일 + 상태 + 진행방식 */}
             <div className="flex items-center gap-2 mb-1 flex-wrap">
