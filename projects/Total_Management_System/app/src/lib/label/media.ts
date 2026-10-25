@@ -17,6 +17,19 @@ export interface MediaProfile {
   speedIps: number;
 }
 
+/**
+ * 표준 — 제품·시리얼·직접 만든 라벨·정품 QR 등 꼬리표 외 모든 라벨.
+ * 2026-10-25 사장님 결정: 앞으로 모든 출력물은 리본(열전사)으로. 진하기·속도는 첫 출력 후 실물 보고 조정.
+ * (출력마다 진하기를 같이 보내므로, 꼬리표의 진하기 25가 다음 라벨에 남지 않는다)
+ */
+export const MEDIA_RIBBON_STANDARD: MediaProfile = {
+  id: 'ribbon_standard',
+  name: '표준 라벨 (리본)',
+  method: 'transfer',
+  darkness: 22,
+  speedIps: 4,
+};
+
 /** 유포 꼬리표 66mm(2열 엇갈림) + 레진 리본 — 실측 진하기 25·속도 3에서 선명 */
 export const MEDIA_YUPO_TAG: MediaProfile = {
   id: 'yupo_tag_66',

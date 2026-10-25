@@ -7,6 +7,7 @@
 
 import JsBarcode from 'jsbarcode';
 import { mmToDots, buildLabel } from './zpl';
+import { MEDIA_RIBBON_STANDARD } from './media';
 import type { LabelTemplate, LabelData } from './templates';
 
 const FONT_LINK_ID = 'mamoru-label-fonts';
@@ -165,7 +166,7 @@ export function canvasToGfaField(canvas: HTMLCanvasElement): string {
 /** 라벨 1종 ZPL (전체 래스터). copies = 매수 */
 export async function renderLabelZpl(tpl: LabelTemplate, data: LabelData, dpi: number, copies = 1): Promise<string> {
   const canvas = await composeLabelCanvas(tpl, data, dpi);
-  return buildLabel({ widthMm: tpl.widthMm, heightMm: tpl.heightMm, dpi }, [canvasToGfaField(canvas)], copies);
+  return buildLabel({ widthMm: tpl.widthMm, heightMm: tpl.heightMm, dpi }, [canvasToGfaField(canvas)], copies, MEDIA_RIBBON_STANDARD); // 모든 라벨 리본 출력(2026-10-25)
 }
 
 /** 미리보기 PNG dataURL */

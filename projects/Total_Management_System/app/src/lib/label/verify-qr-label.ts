@@ -1,4 +1,5 @@
 import { mmToDots, fQR, fText, buildLabel } from './zpl';
+import { MEDIA_RIBBON_STANDARD } from './media';
 
 /**
  * 20×20mm 정품인증 QR 라벨 (실버 라벨지 부착용).
@@ -31,5 +32,5 @@ export function buildVerifyQrZpl(verifyUrl: string, model: string, dpi = 203, co
     fQR(qrX, qrY, verifyUrl, mag),
     cleanModel ? fText(txtX, txtY, cleanModel, txtH, txtW) : '',
   ];
-  return buildLabel({ widthMm: sizeMm, heightMm: sizeMm, dpi }, fields, copies);
+  return buildLabel({ widthMm: sizeMm, heightMm: sizeMm, dpi }, fields, copies, MEDIA_RIBBON_STANDARD); // 리본 출력(2026-10-25)
 }
