@@ -2,14 +2,19 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { ResumeItem } from '../types'
-import { kst, markDone, parse } from './parse'
+import { countMalformed, kst, markDone, markUndone, parse } from './parse'
 
 // 멈춘 작업 목록 — 구글 드라이브 폴더라 PC 2대가 자동 동기화된다 (git 불필요)
-const FILE = 'C:/마모루드라이브/ClaudeWork/작업이어하기.md'
+const DIR = 'C:/마모루드라이브/ClaudeWork'
+const FILE = `${DIR}/작업이어하기.md`
 const PANE = 'work-resume'
 
 const items = atom({ plugin: 'work-resume', key: 'items' } as const, [] as ResumeItem[])
 const error = atom({ plugin: 'work-resume', key: 'error' } as const, '')
+const warn = atom({ plugin: 'work-resume', key: 'warn' } as const, '')
+const checkedAt = atom({ plugin: 'work-resume', key: 'checkedAt' } as const, '')
+const sent = atom({ plugin: 'work-resume', key: 'sent' } as const, '')
+const confirm = atom({ plugin: 'work-resume', key: 'confirm' } as const, '')
 
 const TEMPLATE = `# 작업 이어하기
 
@@ -39,14 +44,24 @@ ${FILE} 파일(없으면 만든다)의 설명 줄 바로 아래, 기존 항목�
 const resumeGuide = () => `[작업 이어하기 목록 — work-resume mod]
 하다가 멈춘 작업 기록 = ${FILE}. 사장님이 예전에 멈춘 작업을 이어가자는 뜻이면, 이 파일에서 해당 [진행중] 항목을 찾아 끝난 것·남은 것·주의를 읽고 이어서 진행한다. 이어간 작업이 끝나면 그 항목 머리줄을 [완료]로 바꾸고 "- 완료 시각:" 줄을 덧붙인다.`
 
-// 파일을 읽어 목록을 새로 그린다. 없으면 빈 틀을 만든다.
+// 파일을 읽어 목록을 새로 그린다. 없으면 빈 틀을 만든다. 형식 오류·드라이브 충돌 사본도 함께 점검.
 async function load($: EngineInterface) {
   try {
     const has = await $.fs.exists(FILE)
     if (!has) await $.fs.write(FILE, TEMPLATE)
     const text = has ? ((await $.fs.read(FILE)) as string) : TEMPLATE
+    const notes: string[] = []
+    const bad = countMalformed(text)
+    if (bad > 0) notes.push(`형식이 안 맞는 항목 ${bad}개는 목록에 안 보입니다("## [진행중] 제목" 형식)`)
+    // 구글 드라이브가 PC 2대 동시 수정 때 만드는 충돌 사본(예: 작업이어하기 (1).md)
+    const copies = (await $.fs.list(DIR).catch(() => []))
+      .map(f => f.name)
+      .filter(n => /^작업이어하기.+\.md$/.test(n) && n !== '작업이어하기.md')
+    if (copies.length > 0) notes.push(`드라이브 충돌 사본이 있습니다: ${copies.join(', ')} — 클로드에게 합쳐 달라고 하세요`)
     await update($, items, () => parse(text))
+    await update($, warn, () => notes.join(' / '))
     await update($, error, () => '')
+    await update($, checkedAt, () => kst(Date.now()).slice(11))
   } catch (err) {
     await update($, error, () => `작업 목록 파일을 읽지 못했습니다: ${String(err).slice(0, 160)}`)
   }
@@ -95,45 +110,98 @@ export const register: Register = on => {
     const { Box, Text, Button } = $.ui.resolve(e)
     const list = await read($, items)
     const problem = await read($, error)
-    const open = list.filter(one => one.status === '진행중')
-    const doneCount = list.length - open.length
+    const note = await read($, warn)
+    const at = await read($, checkedAt)
+    const sentKey = await read($, sent)
+    const confirmKey = await read($, confirm)
+    // 최근에 멈춘 작업이 위로
+    const open = list.filter(one => one.status === '진행중').sort((a, b) => b.when.localeCompare(a.when))
+    const done = list.filter(one => one.status === '완료').sort((a, b) => b.doneAt.localeCompare(a.doneAt))
 
+    // 이어하기: 클로드에게 "이 항목 기록 읽고 이어서" 요청을 보낸다. 5초 안 재클릭은 무시(중복 전송 방지)
     const resume = (one: ResumeItem) => async () => {
+      if ((await read($, sent)) === one.key) return
+      await update($, sent, () => one.key)
+      $.clock.after(5000, () => void update($, sent, cur => (cur === one.key ? '' : cur)))
       await $.prompt.submit({
-        text: `작업 이어하기: "${one.title}" (id ${one.key}). ${FILE} 에서 이 항목 기록(끝난 것·남은 것·주의)을 읽고 이어서 진행해줘.`,
+        text: `작업 이어하기: "${one.title}" (id ${one.key}). ${FILE} 에서 이 항목 기록(끝난 것·남은 것·주의)을 읽고 이어서 진행해줘. 진행하면서 큰 단계가 끝날 때마다 이 항목의 "다음·끝난 것·남은 것"을 갱신해줘.`,
       })
     }
+    // 완료: 실수 방지로 두 번 눌러야 완료(5초 안). 되돌리기는 아래 "최근 완료"에서
     const finish = (one: ResumeItem) => async () => {
+      if ((await read($, confirm)) !== one.key) {
+        await update($, confirm, () => one.key)
+        $.clock.after(5000, () => void update($, confirm, cur => (cur === one.key ? '' : cur)))
+        return
+      }
+      await update($, confirm, () => '')
       try {
         const text = (await $.fs.read(FILE)) as string
-        await $.fs.write(FILE, markDone(text, one.key, kst(await $.clock.now())))
+        await $.fs.write(FILE, markDone(text, one.key, kst(Date.now())))
         $.ui.toast(`완료 처리: ${one.title}`)
       } catch (err) {
         $.ui.toast(`완료 처리 실패: ${String(err).slice(0, 120)}`)
       }
       await load($)
     }
+    const undo = (one: ResumeItem) => async () => {
+      try {
+        const text = (await $.fs.read(FILE)) as string
+        await $.fs.write(FILE, markUndone(text, one.key))
+        $.ui.toast(`다시 진행중으로: ${one.title}`)
+      } catch (err) {
+        $.ui.toast(`되돌리기 실패: ${String(err).slice(0, 120)}`)
+      }
+      await load($)
+    }
 
     return (
       <Box flexDirection="column">
-        {problem !== '' && <Text>{problem}</Text>}
+        <Text dimColor>
+          진행중 {open.length}건{at !== '' ? ` · 마지막 확인 ${at}` : ''}
+        </Text>
+        {problem !== '' && <Text>⚠ {problem}</Text>}
+        {note !== '' && <Text>⚠ {note}</Text>}
         {problem === '' && open.length === 0 && (
           <Text dimColor>멈춘 작업이 없습니다. 작업 중에 "여기서 멈추자" 또는 /pause 라고 하면 여기에 쌓입니다.</Text>
         )}
         {open.map((one, i) => (
-          <Box key={one.key} flexDirection="column" marginBottom={1}>
+          <Box key={one.key} flexDirection="column" marginTop={1}>
             <Text bold>
               {i + 1}. {one.title}
             </Text>
             {one.when !== '' && <Text dimColor>멈춘 시각 {one.when}</Text>}
             {one.next !== '' && <Text>다음: {one.next}</Text>}
             <Box flexDirection="row">
-              <Button key={`resume-${one.key}`} label="이어하기" variant="primary" onPress={resume(one)} />
-              <Button key={`done-${one.key}`} label="완료" dimColor onPress={finish(one)} />
+              <Button
+                key={`resume-${one.key}`}
+                label={sentKey === one.key ? '보냈습니다 ✓' : '이어하기'}
+                variant="primary"
+                onPress={resume(one)}
+              />
+              <Button
+                key={`done-${one.key}`}
+                label={confirmKey === one.key ? '한 번 더 누르면 완료' : '완료'}
+                dimColor={confirmKey !== one.key}
+                onPress={finish(one)}
+              />
             </Box>
           </Box>
         ))}
-        {doneCount > 0 && <Text dimColor>완료 {doneCount}건은 파일에 이력으로 남아 있습니다.</Text>}
+        {done.length > 0 && (
+          <Box flexDirection="column" marginTop={1}>
+            <Text dimColor>최근 완료 (잘못 눌렀으면 되돌리기)</Text>
+            {done.slice(0, 3).map(one => (
+              <Box key={`d-${one.key}`} flexDirection="row">
+                <Text dimColor>
+                  {one.title}
+                  {one.doneAt !== '' ? ` · ${one.doneAt}` : ''}
+                </Text>
+                <Button key={`undo-${one.key}`} label="되돌리기" dimColor onPress={undo(one)} />
+              </Box>
+            ))}
+          </Box>
+        )}
       </Box>
     )
   })
