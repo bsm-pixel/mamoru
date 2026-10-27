@@ -375,7 +375,8 @@ export async function GET(req: NextRequest) {
       .not('paid_at', 'is', null)
       .gte('paid_at', `${fromDate}T00:00:00`)
       .lte('paid_at', `${toDate}T23:59:59`)
-      .not('status', 'eq', 'cancelled');
+      .not('status', 'eq', 'cancelled')
+      .is('sale_id', null); // 165: 판매와 연결된 출장 맡김 건은 판매 RS(B)·판매 결제에 이미 포함
     const repairSales = repairSalesRaw || [];
     const repairAIntake = repairSales.reduce((s: number, r: { total_amount: number }) => s + (r.total_amount || 0), 0);
     const repairServiceCost = repairSales.reduce((s: number, r: { service_cost: number }) => s + (r.service_cost || 0), 0);

@@ -102,6 +102,7 @@ export const REPAIR_ACTION_LABEL: Record<string, string> = {
 export function getRepairDisplayLabel(status: RepairStatus, proceedType?: string | null): string {
   if (status === 'intake' && proceedType === '방문수거') return '수거접수 필요';
   if (status === 'intake' && proceedType === '직접방문') return '방문예정';
+  if (status === 'intake' && proceedType === '출장수거') return '입고대기'; // 165: 출장 현장에서 맡아 옴 — 사무실 입고만 남음
   return REPAIR_STATUS_LABEL[status] || status;
 }
 

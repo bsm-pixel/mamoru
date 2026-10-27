@@ -236,7 +236,8 @@ export function useHubStats() {
         // 075: 복원수리 매출 A — 옵션 A "발생 기준" 적용 (paid_at 조건 제거 → 미입금도 매출 발생으로 카운트)
         db.from('repairs').select('total_amount, qty_mamoru, qty_other')
           .gte('created_at', monthISO)
-          .not('status', 'eq', 'cancelled'),
+          .not('status', 'eq', 'cancelled')
+          .is('sale_id', null), // 165: 판매와 연결된 출장 맡김 건은 판매 RS(B)에 이미 포함
         // 075: 복원수리 매출 B — 판매시스템 (category=RS, 취소 제외, 0원 무상 제외) + 고객유형으로 B2B 구분
         db.from('offline_sale_items').select('total_price, quantity, product_name, category, offline_sales!inner(sale_date, cancelled_at, customer_type)')
           .eq('category', 'RS')
@@ -573,7 +574,8 @@ export function useRepairDashboardStats() {
           .from('repairs')
           .select('total_amount, qty_mamoru, qty_other')
           .gte('created_at', monthISO)
-          .not('status', 'eq', 'cancelled'),
+          .not('status', 'eq', 'cancelled')
+          .is('sale_id', null), // 165: 판매 연결 건은 판매 RS(B)에 이미 포함 — 이중 집계 방지
         // 복원수리 매출 B: 판매시스템 (이번달, category=RS, 취소 제외)
         (supabase as any)
           .from('offline_sale_items')

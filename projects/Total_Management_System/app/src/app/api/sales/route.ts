@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
+import { createFieldRepairFromSale } from '@/lib/repair/intake';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -85,6 +86,15 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    // 165: 출장 현장 맡김 — 판매 저장 후 연결된 복원수리 건을 만든다. 연락처 없으면 판매 전에 거부(반쪽 저장 방지)
+    const fieldRepair = (body as { field_repair?: { qty_mamoru?: number; qty_other?: number } }).field_repair;
+    const frQtyM = Math.max(0, Math.floor(Number(fieldRepair?.qty_mamoru) || 0));
+    const frQtyO = Math.max(0, Math.floor(Number(fieldRepair?.qty_other) || 0));
+    const wantsFieldRepair = !!fieldRepair && frQtyM + frQtyO > 0;
+    if (wantsFieldRepair && !sale.customer_phone?.trim()) {
+      return NextResponse.json({ error: '가위를 맡아 가려면 고객 연락처가 필요합니다' }, { status: 400 });
+    }
 
     // 무결성 가드 — 같은 판매 안에서 동일 시리얼이 두 품목에 중복 배정되면 거부
     //   (한 물리 시리얼 = 한 품목. 자동생성/수동입력 중복 시 한쪽이 덮어써지는 손상 방지) 2026-06-11
@@ -378,7 +388,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ sale: created, saleNumber: created.sale_number });
+    // 165: 출장 현장 맡김 → 복원수리 건 생성 (판매는 이미 저장됨 — 실패해도 판매는 유지하고 화면에 알린다)
+    let repairAsId: string | undefined;
+    let repairError: string | undefined;
+    if (wantsFieldRepair) {
+      try {
+        const rsItems = items.filter((i) => i.category === 'RS');
+        const shippingFee = rsItems.filter((i) => i.product_name === '배송비').reduce((s, i) => s + (i.total_price || 0), 0);
+        const serviceCost = rsItems.filter((i) => i.product_name !== '배송비').reduce((s, i) => s + (i.total_price || 0), 0);
+        const r = await createFieldRepairFromSale(db, {
+          saleId: created.id,
+          saleNumber: created.sale_number,
+          customerId: sale.customer_id || null,
+          name: sale.customer_name,
+          phone: sale.customer_phone!.trim(),
+          qtyMamoru: frQtyM,
+          qtyOther: frQtyO,
+          serviceCost,
+          shippingFee,
+          paid: paymentStatus === 'paid',
+          paymentMethod: sale.payment_method || null,
+        });
+        repairAsId = r.asId;
+      } catch (e) {
+        repairError = e instanceof Error ? e.message : JSON.stringify(e);
+        console.error('[sales POST] 출장 맡김 복원수리 생성 실패 (판매는 저장됨):', repairError);
+      }
+    }
+
+    return NextResponse.json({ sale: created, saleNumber: created.sale_number, repairAsId, repairError });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
     console.error('[sales POST] error:', message);

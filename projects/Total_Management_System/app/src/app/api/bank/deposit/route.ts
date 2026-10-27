@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       .select('id, as_id, name, phone, status, service_cost, shipping_fee, total_amount, invoice_number')
       .is('paid_at', null)
       .neq('status', 'cancelled')
+      .is('sale_id', null) // 165: 판매 연결 건의 결제는 판매에서 관리
       .eq('total_amount', parsed.amount);
     if (cErr) throw cErr;
     const amountMatches: Array<{ id: string; as_id: string; name: string; status: string } & Record<string, unknown>> = cands || [];

@@ -103,6 +103,8 @@ function NewSaleContent() {
   // 복원수리 입력 (제품과 한 장바구니에 함께 — 2026-06-09 통합). deliveries 모달과 대칭.
   const [rep, setRep] = useState({ mamoruQty: 0, mamoruPrice: 10000, otherQty: 0, otherPrice: 20000 });
   const [repShipping, setRepShipping] = useState(false); // 복원수리 배송비 3,000원 포함 여부
+  // 165: 가위를 맡아 감(출장 현장 수거) → 저장 시 복원수리 건 자동 생성 + 맡김 확인 알림톡. 끄면 매출 줄만 남는다(현장 즉시 수리 등)
+  const [repTakeAway, setRepTakeAway] = useState(true);
 
   // 073/074: B2B 납품처 catalog (customer별 납품명 + 단가 자동 입력용)
   const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
@@ -318,6 +320,10 @@ function NewSaleContent() {
     ];
 
     if (cart.length === 0 && !hasRepair) { toast.error('제품 또는 복원수리를 입력해주세요'); return; }
+    // 165: 맡김 접수는 연락처가 있어야 한다(알림톡·출고 안내·고객 매칭)
+    const phoneForRepair = selectedCustomer?.phone || customerPhone.trim();
+    const takeAway = hasRepair && repTakeAway;
+    if (takeAway && !phoneForRepair) { toast.error('가위를 맡아 가려면 고객 연락처가 필요합니다'); return; }
 
     await createSale.mutateAsync({
       sale: {
@@ -357,6 +363,8 @@ function NewSaleContent() {
         ...repairItems, // 복원수리(category='RS') 라인 결합
       ],
       allow_serial_transfer: allowSerialTransfer, // Phase A — 사장님 명시 동의 시 서버 강탈 허용
+      // 165: 가위를 맡아 감 → 서버가 판매와 연결된 복원수리 건(출장수거·결제는 이 판매)을 만든다
+      ...(takeAway ? { field_repair: { qty_mamoru: rep.mamoruQty, qty_other: rep.otherQty } } : {}),
     });
 
     router.push('/sales');
@@ -619,6 +627,21 @@ function NewSaleContent() {
                   <span>복원수리 소계 ({rep.mamoruQty + rep.otherQty}자루{repShipping ? ' + 배송비' : ''})</span>
                   <span className="text-stone-900">{formatKRW(repairTotal)}</span>
                 </div>
+                {/* 165: 출장 현장에서 가위를 맡아 감 → 복원수리 접수 자동 생성 (결제는 이 판매로 끝) */}
+                {hasRepair && (
+                  <label className="flex items-start gap-2 p-3 rounded-lg border border-neutral-200 bg-white cursor-pointer">
+                    <input type="checkbox" checked={repTakeAway} onChange={(e) => setRepTakeAway(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-neutral-900 shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold text-neutral-800">가위를 맡아 가요 — 복원수리 접수 함께 만들기</span>
+                      <span className="block text-[11px] text-neutral-500 leading-relaxed mt-0.5">
+                        {repTakeAway
+                          ? '저장하면 복원수리 목록에 출장수거 건이 생기고, 고객에게 맡김 확인 알림톡이 갑니다. 결제는 이 판매로 끝나 비용안내·입금확인은 건너뜁니다.'
+                          : '현장에서 바로 수리해 건넨 경우 등 — 매출만 기록하고 복원수리 접수는 만들지 않습니다.'}
+                      </span>
+                    </span>
+                  </label>
+                )}
               </div>
             </Card>
           </div>

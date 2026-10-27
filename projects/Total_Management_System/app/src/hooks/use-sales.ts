@@ -431,6 +431,8 @@ export function useCreateSale() {
       }>;
       /** Phase A — 시리얼 다른 판매에서 이전 명시 동의 (2026-05-18) */
       allow_serial_transfer?: boolean;
+      /** 165: 출장 현장에서 가위를 맡아 감 → 복원수리 건 자동 생성(판매와 연결) */
+      field_repair?: { qty_mamoru: number; qty_other: number };
     }) => {
       const res = await fetch('/api/sales', {
         method: 'POST',
@@ -445,7 +447,11 @@ export function useCreateSale() {
     },
     onSuccess: (data) => {
       toast.success(`판매 등록 완료: ${data.saleNumber}`);
+      // 165: 출장 맡김 → 복원수리 건 자동 생성 결과 (실패해도 판매는 저장됨)
+      if (data.repairAsId) toast.success(`복원수리 접수 ${data.repairAsId} 생성 · 맡김 확인 알림톡`);
+      if (data.repairError) toast.error(`복원수리 접수 생성 실패 — 복원수리 목록에서 직접 확인하세요: ${data.repairError}`, { duration: 8000 });
       invalidateFinancialQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
     },
     onError: (err) => {
       toast.error('판매 등록 실패: ' + (err instanceof Error ? err.message : String(err)));

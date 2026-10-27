@@ -15,6 +15,7 @@ const ENV_WEBHOOK_AS_RECEIVED = process.env.MAKE_AS_RECEIVED_WEBHOOK_URL || '';
 const ENV_WEBHOOK_REPAIR_STATUS = process.env.MAKE_REPAIR_WEBHOOK_URL || '';
 const ENV_WEBHOOK_EVENT = process.env.MAKE_EVENT_WEBHOOK_URL || '';
 const ENV_WEBHOOK_IMWEB = process.env.MAKE_IMWEB_WEBHOOK_URL || '';
+const ENV_WEBHOOK_FIELD_REPAIR = process.env.MAKE_FIELD_REPAIR_WEBHOOK_URL || '';
 const VERSION = 'tms-2.3';
 
 /**
@@ -28,15 +29,17 @@ const VERSION = 'tms-2.3';
  *                    미설정 시 consultation 로 폴백 → 전환기(웹훅 세팅 전)에도 메시지 유실 방지
  * 5. imweb         — 아임웹 주문 취소·반품 안내 (2026-09-14). **폴백 없음**: 미설정이면 발송하지 않음
  *                    (Make 분기·솔라피 승인 전 오발송 방지 — URL 입력이 곧 가동 시점)
+ * 6. field_repair  — 출장 맡김 확인 + 제품·복원수리 함께 출고 (165, 2026-10-27). **폴백 없음** — URL 입력이 곧 가동.
+ *                    미설정이면 맡김 확인은 미발송, 함께 출고는 지금처럼 2통(as_shipped + sales_shipped)으로 나간다
  */
-async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string; imweb: string; sales: string; returns: string }> {
+async function getWebhookUrls(): Promise<{ consultation: string; as_received: string; repair_status: string; event: string; imweb: string; sales: string; returns: string; field_repair: string }> {
   try {
     const { createServiceClient } = await import('@/lib/supabase/server');
     const db = createServiceClient();
     const { data: rows } = await db
       .from('system_settings')
       .select('key, value')
-      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event', 'notifications.webhook_imweb', 'notifications.webhook_sales', 'notifications.webhook_returns']);
+      .in('key', ['notifications.webhook_consultation', 'notifications.webhook_as_received', 'notifications.webhook_repair', 'notifications.webhook_event', 'notifications.webhook_imweb', 'notifications.webhook_sales', 'notifications.webhook_returns', 'notifications.webhook_field_repair']);
 
     const map: Record<string, string> = {};
     (rows || []).forEach((r: { key: string; value: string }) => { if (r.value) map[r.key] = String(r.value).replace(/^"|"$/g, ''); });
@@ -53,9 +56,11 @@ async function getWebhookUrls(): Promise<{ consultation: string; as_received: st
       // 2026-09-20 신설 — 미설정이면 consultation 으로(= 지금과 동일). 새 시나리오 URL 넣으면 전환
       sales: map['notifications.webhook_sales'] || consultation,
       returns: map['notifications.webhook_returns'] || consultation,
+      // 165: 폴백 없음 — 솔라피 검수·Make 분기 전 오발송 방지
+      field_repair: map['notifications.webhook_field_repair'] || ENV_WEBHOOK_FIELD_REPAIR,
     };
   } catch {
-    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION, imweb: ENV_WEBHOOK_IMWEB, sales: ENV_WEBHOOK_CONSULTATION, returns: ENV_WEBHOOK_CONSULTATION };
+    return { consultation: ENV_WEBHOOK_CONSULTATION, as_received: ENV_WEBHOOK_AS_RECEIVED, repair_status: ENV_WEBHOOK_REPAIR_STATUS, event: ENV_WEBHOOK_EVENT || ENV_WEBHOOK_CONSULTATION, imweb: ENV_WEBHOOK_IMWEB, sales: ENV_WEBHOOK_CONSULTATION, returns: ENV_WEBHOOK_CONSULTATION, field_repair: ENV_WEBHOOK_FIELD_REPAIR };
   }
 }
 
@@ -112,6 +117,17 @@ const RETURN_TEMPLATES = new Set<NotifyTemplate>([
   'exchange_shipped',
 ]);
 
+/** 165 출장 맡김·함께 출고 (전용 Make 시나리오 → webhook_field_repair, 폴백 없음) */
+const FIELD_REPAIR_TEMPLATES = new Set<NotifyTemplate>([
+  'as_field_received',
+  'combined_shipped',
+]);
+
+/** 함께 출고 알림톡을 쓸 수 있는가 — 웹훅 URL 이 들어가 있어야 가동(검수 전엔 기존 2통 그대로) */
+export async function isFieldRepairWebhookReady(): Promise<boolean> {
+  return !!(await getWebhookUrls()).field_repair;
+}
+
 /** EVENT 전용 템플릿 (전용 Make 시나리오 → webhook_event) — 2026-07-31 consultation 에서 분리 */
 const EVENT_TEMPLATES = new Set<NotifyTemplate>([
   'event_received',
@@ -152,6 +168,9 @@ export type NotifyTemplate =
   | 'as_visit_remind_2h'  // 직접방문 당일 2h 리마인드 → webhook_repair
   | 'as_visit_rescheduled' // 직접방문 예약 변경 안내 → webhook_repair
   | 'as_visit_cancelled'  // 직접방문 예약 취소 완료 → webhook_repair
+  // 165: 출장 현장 맡김(판매 입력에서 접수) — webhook_field_repair 전용
+  | 'as_field_received'   // 출장 맡김 확인 (접수번호·자루 수·결제 완료)
+  | 'combined_shipped'    // 제품·복원수리 함께 출고 (같은 송장) — as_shipped + sales_shipped 대체
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
   | 'purchase_review_request' // 제품구매 리뷰 요청 → webhook_consultation
   | 'sales_shipped'           // 판매 출고 안내 → webhook_consultation
@@ -208,6 +227,8 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_visit_remind_2h: 'AS_VISIT_REMIND_2H',
   as_visit_rescheduled: 'AS_VISIT_RESCHEDULED',
   as_visit_cancelled: 'AS_VISIT_CANCELLED',
+  as_field_received: 'AS_FIELD_RECEIVED',
+  combined_shipped: 'COMBINED_SHIPPED',
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL
   purchase_review_request: 'PURCHASE_REVIEW_REQUEST', // 제품구매 리뷰 요청 → MAKE_WEBHOOK_URL
   sales_shipped: 'SALES_SHIPPED',            // 판매 출고 안내 → MAKE_WEBHOOK_URL
@@ -324,6 +345,10 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   } else if (RETURN_TEMPLATES.has(payload.template)) {
     webhookUrl = urls.returns;
     urlSource = 'webhook_returns';
+  } else if (FIELD_REPAIR_TEMPLATES.has(payload.template)) {
+    // 출장 맡김·함께 출고 → 전용 시나리오 (폴백 없음)
+    webhookUrl = urls.field_repair;
+    urlSource = 'webhook_field_repair';
   } else if (IMWEB_ORDER_TEMPLATES.has(payload.template)) {
     // 아임웹 주문 취소·반품 → 전용 시나리오 (폴백 없음)
     webhookUrl = urls.imweb;

@@ -1,7 +1,30 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-10-22 — 입고 단계 주 버튼 = [입고 & 비용안내], 내역서 경고는 출고 단계로
+> 최종 업데이트: 2026-10-27 — 출장 현장 맡김(판매 입력에서 접수) + 제품·복원수리 함께 출고 알림톡
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-10-27 — 출장 현장 맡김 (마이그 165 · 알림톡 문안 [FIELD_REPAIR_ALIMTALK.md](FIELD_REPAIR_ALIMTALK.md))
+```
+출장 상담 → 계약서 + 현장 결제(카드/입금)
+  → /sales/new  제품 + 복원수리(마모루 N · 타사 M) + ☑ 가위를 맡아 가요(기본 켬)
+       [저장] 1번
+        ├ 판매 offline_sales + RS 줄(category='RS')   ← 돈은 여기만 (매출 B)
+        └ repairs 자동 생성: proceed_type='출장수거', sale_id=판매, confirmed_at=지금,
+                              판매가 결제완료면 paid_at·payment_method 채움
+              → as_field_received 맡김 확인 알림톡 (webhook_field_repair · 미설정이면 미발송)
+  → 복원수리 목록 「입고대기」 → 상세 ② [입고 확인 · 작업 시작] (알림톡 없음 = 비용안내·입금확인 단계 없음)
+  → 수리 · 내역서 · [작업완료] · [송장 생성 / 다른 송장에 합포장]
+  → 롯데 집하 (크론 [2-A])
+       같은 송장에 B2C 판매(미출고) + webhook_field_repair 설정됨
+         → 판매도 같은 자리에서 출고 처리(shipped_at CAS, 동기) + combined_shipped 1통
+           (발송 실패 시 as_shipped + sales_shipped 2통으로 되돌림)
+       그 외 → 기존 as_shipped (판매는 [3-A] 에서 sales_shipped)
+```
+- **이중 집계 방지**: 연결 건(sale_id 있음)은 A(접수) 매출·자루 합산에서 뺀다 — `get_hub_stats`(165) · `use-dashboard-stats` A 쿼리 2곳 · `reports/summary` A · `bank/deposit` 후보. 건수·작업중 같은 운영 카운트는 그대로.
+- 비용안내·입금확인 서버 가드: `api/repair/[id]/notify` 가 sale_id 건의 `as_cost_notice`·`as_payment_confirmed` 를 400 으로 거부.
+- 체크 해제 = 지금과 같음(RS 매출 줄만, 복원수리 건 없음) — 현장에서 바로 수리해 건넨 경우.
+- 판매 저장 후 복원수리 생성이 실패하면 판매는 유지하고 화면에 오류 토스트(복원수리 목록에서 직접 확인).
+- 아직 안 한 것: 아임웹 주문(orders)과 합포장한 가위는 지금처럼 2통 / 롯데 외 택배사·수동 출고는 개별 알림톡.
 
 ## 2026-10-22 — 운영 순서에 맞춤: 비용안내 먼저, 내역서는 출고 전까지 (아래 10-15 의 버튼 순서·경고를 대체)
 ```

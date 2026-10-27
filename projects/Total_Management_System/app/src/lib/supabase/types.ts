@@ -498,6 +498,7 @@ export interface Database {
           // 093: Google Calendar 단방향 동기화 (Phase 3-B) — consultations 052 와 동일 패턴
           google_event_id: string | null;        // Google Calendar 이벤트 ID (NULL=미동기화)
           google_event_updated_at: string | null; // 마지막 동기화 시각
+          sale_id: string | null;                // 165: 출장 현장 맡김 — 결제한 판매(offline_sales). 금액은 판매 RS 줄, A 매출 합산 제외
           received_at: string;
           created_at: string;
           updated_at: string;

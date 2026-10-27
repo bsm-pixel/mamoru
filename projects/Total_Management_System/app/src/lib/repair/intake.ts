@@ -232,3 +232,101 @@ export async function createRepairIntake(db: Db, input: RepairIntakeInput, actor
 
   return { repair, asId, serviceCost, shippingFee, totalAmount, notified };
 }
+
+/**
+ * 165 출장 현장 맡김 — 판매 입력에서 가위를 맡아 갈 때 판매와 연결된 복원수리 건을 만든다 (2026-10-27)
+ *
+ * 돈은 판매(offline_sale_items RS 줄)에만 있다. 이 건은 작업 흐름(꼬리표·검수·내역서·출고) 전용이라
+ *   금액은 판매 RS 줄을 그대로 옮겨 표시만 하고, 매출·자루 집계는 sale_id IS NOT NULL 을 빼서 이중 집계를 막는다
+ *   (get_hub_stats 165 · use-dashboard-stats · reports/summary · bank/deposit).
+ * 결제는 현장에서 끝났다 → 판매가 결제완료면 paid_at 을 바로 채운다(비용안내·입금확인 단계 없음).
+ * 가위는 사장님이 들고 오므로 접수확인까지 된 상태(confirmed_at) = 목록의 '입고대기'.
+ */
+export interface FieldRepairFromSaleInput {
+  saleId: string;
+  saleNumber: string;
+  customerId: string | null;
+  name: string;
+  phone: string;
+  qtyMamoru: number;
+  qtyOther: number;
+  serviceCost: number;      // 판매 RS 줄 중 수리비 합 (배송비 제외)
+  shippingFee: number;      // 판매 RS 줄의 '배송비'
+  paid: boolean;            // 판매 결제 상태가 paid 인가
+  paymentMethod: string | null;
+}
+
+export async function createFieldRepairFromSale(db: Db, input: FieldRepairFromSaleInput) {
+  const name = input.name.trim();
+  const phone = input.phone.trim();
+  const phoneNorm = phone.replace(/\D/g, '');
+  const asId = await generateAsId(db);
+  const now = new Date().toISOString();
+
+  // 고객 — 판매에서 고른 고객이 있으면 그대로, 없으면 phone 기준 매칭/생성 (SSOT)
+  let customerId = input.customerId;
+  if (!customerId) {
+    ({ customerId } = await matchOrCreateCustomer(db, { phone, name, source: 'manual' }));
+  }
+  // 단독 송장 발급 대비 — 고객 주소를 복사해 둔다(합포장이면 쓰지 않음)
+  let addr: { postcode: string | null; address_road: string | null; address_detail: string | null } | null = null;
+  if (customerId) {
+    const { data } = await db.from('customers').select('postcode, address_road, address_detail').eq('id', customerId).maybeSingle();
+    addr = data || null;
+  }
+
+  const { data: repair, error } = await db.from('repairs').insert({
+    customer_id: customerId,
+    as_id: asId,
+    name,
+    phone,
+    proceed_type: '출장수거',
+    postcode: addr?.postcode || null,
+    address: addr?.address_road || null,
+    address_detail: addr?.address_detail || null,
+    qty_mamoru: input.qtyMamoru,
+    qty_other: input.qtyOther,
+    service_cost: input.serviceCost,
+    shipping_fee: input.shippingFee,
+    total_amount: input.serviceCost + input.shippingFee,
+    status: 'intake',
+    received_at: now,
+    confirmed_at: now,
+    sale_id: input.saleId,
+    ...(input.paid ? { paid_at: now, payment_method: input.paymentMethod } : {}),
+  }).select().single();
+  if (error) throw error;
+
+  await db.from('repair_history').insert({
+    repair_id: repair.id,
+    to_status: 'intake',
+    note: `출장 현장 맡김 — 판매 ${input.saleNumber} 에서 접수${input.paid ? ' (현장 결제 완료)' : ''}`,
+  });
+
+  // 맡김 확인 알림톡 — 사장님 본인 등록이라 앱 푸시 없음. 웹훅 미설정(검수 전)이면 sendNotification 이 건너뛴다
+  let notified = false;
+  try {
+    const r = await sendNotification({
+      template: 'as_field_received',
+      phone: phoneNorm,
+      name,
+      skipAdminPush: true,
+      data: {
+        id: asId,
+        as_id: asId,
+        as_uid: asId,
+        qty: String(input.qtyMamoru + input.qtyOther),
+        qty_mamoru: String(input.qtyMamoru),
+        qty_other: String(input.qtyOther),
+        pay_status: input.paid ? '결제 완료' : '판매 건에서 결제 예정',
+        // KST 날짜 (UTC slice 금지 — 오전 9시 전 접수가 전날로 찍힌다)
+        received_date: formatKoreanDate(new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10)),
+      },
+    });
+    notified = !!r?.success;
+  } catch (e) {
+    console.error('[repair/field-intake] 알림톡 실패 (접수는 완료):', e);
+  }
+
+  return { repair, asId, notified };
+}

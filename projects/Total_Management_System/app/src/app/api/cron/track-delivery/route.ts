@@ -8,6 +8,7 @@ import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { shipImwebOrder } from '@/lib/imweb/client';
+import { claimSaleForCombined, sendCombinedShipped } from '@/lib/notification/combined-shipped';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
 
 /**
@@ -16,6 +17,7 @@ import { isAlpsTrackable } from '@/lib/shipping/couriers';
  * [1] 아임웹 orders   : shipping → delivered (queryStatus)
  * [2] 복원수리 repairs : shipped → delivered (ALPS 41/45 인수자등록) + 후기요청 (109 추가)
  * [2-A] 복원수리 집하 : 송장 있는 작업중·작업완료 → shipped (ALPS 10 집하) + as_shipped 알림톡  ← 109 신규 / 2026-10-19 상태 확대
+ *        165: 같은 송장에 B2C 판매가 있으면 판매도 여기서 출고 처리 + 함께 출고 알림톡 1통 (웹훅 설정 시)
  * [3-A] 판매 집하     : 송장O·미출고 → shipped_at 자동 기록 + B2C 출고 알림톡      ← 109 신규
  * [3] 판매 offline_sales: shipped_at → delivered_at + 후기요청
  * [4] B2B 납품 deliveries: → delivered_at
@@ -212,7 +214,7 @@ export async function GET(request: NextRequest) {
     const PICKUP_WATCH = ['cost_notified', 'repairing', 'ready_to_ship'];
     const { data: repairPickups, error: repairPickupErr } = await db
       .from('repairs')
-      .select('id, as_id, invoice_number, name, phone, courier_name, status')
+      .select('id, as_id, invoice_number, name, phone, courier_name, status, qty_mamoru, qty_other')
       .in('status', PICKUP_WATCH)
       .not('invoice_number', 'is', null)
       .limit(50);
@@ -258,6 +260,25 @@ export async function GET(request: NextRequest) {
           continue;
         }
         if (!repair.phone) continue;
+
+        // 165: 같은 송장의 판매를 **지금(동기로)** 선점 — 아래 [3-A] 가 같은 사이클에 sales_shipped 를 따로 보내지 않게
+        const combinedSale = await claimSaleForCombined(db, repair.invoice_number, r.pickedUpAt || new Date().toISOString());
+        if (combinedSale) {
+          after(async () => {
+            try {
+              const res = await sendCombinedShipped(db, {
+                as_id: repair.as_id, name: repair.name, phone: repair.phone,
+                qty: (repair.qty_mamoru || 0) + (repair.qty_other || 0),
+                courier_name: repair.courier_name, invoice_number: repair.invoice_number,
+              }, combinedSale);
+              console.log(`[track-delivery/repairs pickup] ${repair.as_id} + ${combinedSale.sale_number} 함께 출고 ${res.combined ? '1통 발송' : '2통으로 되돌림'}`);
+            } catch (e) {
+              console.error(`[track-delivery/repairs pickup] ${repair.as_id} 함께 출고 예외:`, e);
+            }
+          });
+          continue;
+        }
+
         after(async () => {
           try {
             const sent = await sendNotification({

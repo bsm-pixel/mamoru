@@ -645,6 +645,9 @@ body{ word-break:keep-all; overflow-wrap:break-word; }
       if (hasV3) {
         document.getElementById('scissor-title').textContent = '가위별 복원 내역';
         mmBuildCarousel(cardsEl, scissors);
+      } else if (scissors.length === 0) {
+        // 2026-10-27 검수 전(출장 맡김 확인 알림톡 버튼 등) — 빈 영역 대신 진행 안내
+        cardsEl.innerHTML = '<div class="comment-section"><div class="comment-header">작업 준비 중</div><div class="content">맡겨 주신 가위의 상태를 한 자루씩 기록하고 있어요. 수리가 끝나면 이곳에 가위별 복원 내역이 채워집니다</div></div>';
       } else {
         for (var i = 0; i < scissors.length; i++) {
           cardsEl.appendChild(buildScissorCard(scissors[i]));

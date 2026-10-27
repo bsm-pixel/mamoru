@@ -77,6 +77,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const [visitPaid, setVisitPaid] = useState(true); // 직접방문 현장결제 시 입금완료 처리 여부
   const [showInspection, setShowInspection] = useState(false);
   const isDirectVisit = r.proceed_type === '직접방문';
+  // 165 출장 현장 맡김 — 판매와 연결된 건. 결제는 판매에서 끝났으므로 비용안내·입금확인 단계가 없다.
+  //   입고 단계 주 버튼 = [입고 확인 · 작업 시작](알림톡 없음). 그 뒤는 택배 건과 같은 흐름(작업완료·송장/합포장)
+  const isFieldTake = !!r.sale_id;
 
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
@@ -92,7 +95,8 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const canVisitHandover = isVisitFlow && ['repairing', 'ready_to_ship'].includes(currentStatus);
 
   // 비용안내 발송 가능 상태
-  const canSendCostNotice = ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
+  const canSendCostNotice = !isFieldTake && ['intake', 'pickup_scheduled', 'picked_up', 'inspecting', 'cost_notified'].includes(currentStatus);
+  const canFieldInbound = isFieldTake && ['intake', 'pickup_scheduled', 'cost_notified'].includes(currentStatus);
   const isCostResend = currentStatus === 'cost_notified';
 
   // 2026-10-22 사장님 운영 순서: 입고 → (수량·수리 전 상태 확인) → [입고 & 비용안내] 먼저(빠른 입금) → 수리 → 수리내역 작성 → 포장·발송
@@ -103,7 +107,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const totalQty = (r.qty_mamoru || 0) + (r.qty_other || 0);
   // 입금확인 독립 버튼 표시 조건 — 미입금이면 배송완료/완료 이후에도 가능
   //   (ALPS 자동추적으로 shipped→delivered→completed 전이 후 입금확인 길이 막히던 버그 fix 2026-06-11)
-  const canMarkPaid = !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus);
+  const canMarkPaid = !isFieldTake && !r.paid_at && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped', 'delivered', 'completed'].includes(currentStatus);
 
   // 2026-10-19 택배 건 작업 단계 재설계 (사장님: 송장을 미리 뽑기도 하고, 작업완료가 먼저일 수도 있다)
   //   [작업완료] 와 [송장 생성 / 합포장] 은 서로 독립 — 순서 없이 나란히. 송장은 상태를 바꾸지 않는다.
@@ -187,6 +191,14 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         total_amount: String(r.total_amount),
       },
     });
+  };
+
+  // 165 출장 맡김 입고: 비용확정→작업시작 (알림톡 없음 — 결제는 판매에서 끝남, 맡김 확인은 접수 때 이미 발송)
+  const handleFieldInbound = async () => {
+    if (currentStatus !== 'cost_notified') {
+      await updateStatus.mutateAsync({ id: r.id, status: 'cost_notified', note: '출장 맡김 입고 확인 (판매에서 결제)' });
+    }
+    await updateStatus.mutateAsync({ id: r.id, status: 'repairing', note: '출장 맡김 작업시작' });
   };
 
   // 입금확인 처리 (paid_at 설정 — 상태 변경 없음) + 결제수단 기록
@@ -286,6 +298,13 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         </ActionNote>
       );
     }
+    if (canFieldInbound) {
+      return (
+        <ActionNote tone="wait" title="입고대기 · 출장 맡김">
+          출장 현장에서 맡아 온 가위입니다. 사무실에서 수량을 확인하고 [입고 확인 · 작업 시작]을 눌러주세요. 고객 알림톡은 나가지 않습니다.
+        </ActionNote>
+      );
+    }
     if (currentStatus === 'cost_notified') {
       // 방문 건은 [방문 확정]이 비용안내→수리중을 한 번에 넘긴다. 여기 머물러 있으면 중간에 끊긴 것
       return isDirectVisit
@@ -330,6 +349,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
           </div>
         </div>
 
+        {/* 165 출장 맡김 — 결제는 판매 건에서 (이 금액은 표시용, 매출은 판매에 잡힌다) */}
+        {isFieldTake && (
+          <p className="mt-3 pt-3 border-t border-neutral-100 text-xs text-neutral-500">
+            출장 현장 판매와 함께 결제한 건입니다{r.paid_at ? '' : ' · 결제는 판매 목록에서 확인하세요'}. 매출은 판매에 잡힙니다.
+          </p>
+        )}
         {/* 입금 상태 — 처리 버튼은 액션 카드(③)로 옮겼다 */}
         {r.paid_at && (
           <div className="mt-3 pt-3 border-t border-neutral-100">
@@ -416,7 +441,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
             )}
 
             {/* ② 주 액션 — 딱 하나 */}
-            {canSendCostNotice && isDirectVisit ? (
+            {canFieldInbound ? (
+              <Button className="w-full" onClick={handleFieldInbound} loading={updateStatus.isPending}>
+                <CheckCircle size={14} />
+                입고 확인 · 작업 시작
+              </Button>
+            ) : canSendCostNotice && isDirectVisit ? (
               <Button
                 className="w-full"
                 onClick={() => setConfirmAction('visit_checkout')}
