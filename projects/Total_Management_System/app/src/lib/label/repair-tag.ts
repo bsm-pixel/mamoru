@@ -34,7 +34,7 @@ export interface RepairTagItem {
   code: string; // 접수번호(짧게) AS-1025-003
 }
 
-/** AS-20261025-003 → AS-1025-003 (꼬리표용 짧은 표기, 한 해 안에서 유일) */
+/** AS-20261025-003 → AS-1025-003 · AS-20261028-4827 → AS-1028-4827 (꼬리표용 짧은 표기, 한 해 안에서 유일) */
 export function shortAsId(asId: string): string {
   const m = /^AS-\d{4}(\d{4})-(\d+)$/.exec(asId || '');
   return m ? `AS-${m[1]}-${m[2]}` : asId || '';
@@ -98,7 +98,13 @@ function drawTag(ctx: CanvasRenderingContext2D, item: RepairTagItem, cx: number,
   ctx.textAlign = 'center';
   ctx.font = `700 26px ${FONT}`;
   ctx.fillText(`${pad2(item.no)} / ${pad2(item.total)}`, 0, top + 109); // 사장님 요청 1mm(8dot) 아래로
-  ctx.font = `400 14px ${FONT}`;
+  // 접수번호 — 2026-10-28 뒤 4자리 임의(AS-1028-8888 ≈ 95px)로 길어져, 칸을 넘으면 한 단계씩 줄인다
+  let codeSize = 14;
+  ctx.font = `400 ${codeSize}px ${FONT}`;
+  while (ctx.measureText(item.code).width > BOX_W - 4 && codeSize > 11) {
+    codeSize -= 1;
+    ctx.font = `400 ${codeSize}px ${FONT}`;
+  }
   ctx.fillText(item.code, 0, top + 134);
   ctx.restore();
 }

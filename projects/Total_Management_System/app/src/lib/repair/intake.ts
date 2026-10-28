@@ -19,23 +19,21 @@ import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
 
-/** AS-YYYYMMDD-NNN 자동 채번 */
+/**
+ * 접수번호 AS-YYYYMMDD-NNNN 자동 채번 (2026-10-28 변경)
+ *   날짜 = KST (UTC 로 자르면 오전 9시 전 접수가 전날로 찍혔다)
+ *   뒤 4자리 = 임의(1000~9999) — 순번(001·002)이면 그날 몇 번째인지 드러나고,
+ *   수리내역서 링크(uid=접수번호)에서 끝자리만 바꿔 남의 내역서를 열 수 있었다.
+ *   옛 번호(AS-…-001)는 그대로 유효. as_id UNIQUE(repairs_as_id_key)라 겹치면 다시 뽑는다.
+ */
 export async function generateAsId(db: Db): Promise<string> {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const prefix = `AS-${today}-`;
-  const { data } = await db
-    .from('repairs')
-    .select('as_id')
-    .like('as_id', `${prefix}%`)
-    .order('as_id', { ascending: false })
-    .limit(1);
-
-  let seq = 1;
-  if (data && data.length > 0) {
-    const last = data[0].as_id as string;
-    seq = parseInt(last.split('-').pop() || '0', 10) + 1;
+  const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+  for (let i = 0; i < 20; i++) {
+    const asId = `AS-${today}-${1000 + Math.floor(Math.random() * 9000)}`;
+    const { data } = await db.from('repairs').select('id').eq('as_id', asId).limit(1);
+    if (!data || data.length === 0) return asId;
   }
-  return `${prefix}${String(seq).padStart(3, '0')}`;
+  throw new Error('접수번호 생성 실패 — 다시 시도해 주세요');
 }
 
 /** 비용 자동 계산 (GAS Code.js 로직 이전) */

@@ -1,7 +1,13 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-10-27 — 출장 현장 맡김(판매 입력에서 접수) + 제품·복원수리 함께 출고 알림톡
+> 최종 업데이트: 2026-10-28 — 접수번호 뒤 4자리 임의 + KST 날짜
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-10-28 — 접수번호 형식 `AS-YYYYMMDD-NNNN`
+- 뒤 4자리 = 임의(1000~9999), 순번 아님. 이유: ① 그날 몇 번째 고객인지 드러남 ② 수리내역서 링크(`uid=접수번호`)에서 끝자리만 바꿔 남의 내역서를 열 수 있었음(순번 001·002 → 9천 개 중 하나)
+- 날짜 = KST (전엔 UTC 로 잘라 오전 9시 전 접수가 전날로 찍힘)
+- SSOT `lib/repair/intake.ts generateAsId` (모든 접수 경로가 이 함수만 씀). 겹치면 다시 뽑음(as_id UNIQUE)
+- 옛 번호(AS-…-001)는 그대로 유효 · 꼬리표 짧은 표기 AS-1028-4827 (칸 넘치면 글자 자동 축소)
 
 ## 2026-10-27 — 출장 현장 맡김 (마이그 165 · 알림톡 문안 [FIELD_REPAIR_ALIMTALK.md](FIELD_REPAIR_ALIMTALK.md))
 ```
@@ -229,7 +235,7 @@ B·C는 두 화면 완전 동일. **A채널만 화면 목적에 따라 기준이
 ### 방문수거 흐름
 ```
 고객 접수 (page_form.html)
-  → Vercel API: /api/repair/public/submit → Supabase 저장 + as_id 채번(AS-YYYYMMDD-NNN)
+  → Vercel API: /api/repair/public/submit → Supabase 저장 + as_id 채번(AS-YYYYMMDD-NNNN, 뒤 4자리 임의 — 2026-10-28)
   → Make 알림톡 (as_received) + TMS 동기화
   → [status: intake] (신규접수)
   → (관리자) 접수확인 → confirmed_at 기록
@@ -399,7 +405,7 @@ cancelled → (terminal)
 ### 웹훅 payload 주요 필드
 | 필드 | 값 | 용도 |
 |------|-----|------|
-| `id` | repair.as_id (AS-YYYYMMDD-NNN) | Make `#{as_uid}` → 수리내역서 링크 |
+| `id` | repair.as_id (AS-YYYYMMDD-NNNN) | Make `#{as_uid}` → 수리내역서 링크 |
 | `tracking` | 송장번호 | 배송조회 |
 | `courier` | 롯데택배 (고정) | 배송조회 버튼 활성화 |
 | `as_amount` / `shipping_amount` / `total_amount` | 금액 | 비용 안내 |

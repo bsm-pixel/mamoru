@@ -15,7 +15,7 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** GET /api/repair/report?as_id=AS-XXXXXX-NNN — 공개 API (수리내역 페이지용) */
+/** GET /api/repair/report?as_id=AS-YYYYMMDD-NNNN — 공개 API (수리내역 페이지용) */
 export async function GET(req: NextRequest) {
   try {
     const asId = req.nextUrl.searchParams.get('as_id');
