@@ -77,7 +77,7 @@
 
 **버튼**
 1. 웹링크 [수리내역서 보기] → `https://page.mamoru.kr/projects/as/page_as_report.html?uid=#{as_uid}`
-2. 웹링크 [배송 조회] → 기존 판매 출고(`sales_shipped`) 템플릿의 배송조회 버튼과 같은 롯데 조회 링크 (송장 변수 `#{tracking}`)
+2. 버튼 종류 **「배송조회」** — 링크 없음 (카카오 자동 배송조회. 기존 「복원수리 출고」 템플릿과 같은 방식)
 
 **배너**
 - 파일명: `shipped_combined.png`
@@ -96,7 +96,9 @@
 
 ---
 
-## Make 시나리오
-- 새 시나리오 1개(웹훅 1개) → 라우터 분기 2개(`template` 값) → 솔라피 알림톡.
+## Make 시나리오 — `07 출장 맡김·함께 출고` (id 10056000 · 웹훅 id 4469625) — 2026-10-28 구축, **꺼짐**
+- 웹훅 → 라우터 → 분기 2개(`TMS-출장맡김확인`=as_field_received · `TMS-함께출고`=combined_shipped) → 솔라피 알림톡. 변수 매핑 완료, **templateId 만 비어 있음**.
+- 가동: 검수 승인 → templateId 2개 입력 → 시험 발송 → 시나리오 켜기 → TMS 설정에 웹훅 URL 입력.
+- 등록 안내(복사 버튼·배너 PNG): `C:\마모루드라이브\ClaudeWork\알림톡등록_출장맡김\등록안내.html`
 - 새 시나리오마다 `Store incomplete executions` = **Yes** 확인 (솔라피 순단 1회로 시나리오가 꺼지는 사고 예방).
 - 웹훅 URL 을 TMS 설정 → 알림·연동 → 「Make 웹훅 URL (출장 맡김·함께 출고)」에 넣고 저장.
