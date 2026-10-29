@@ -179,6 +179,11 @@ export function SaleDetailPanel({ saleId }: Props) {
   const canCreateInvoice = notClosed && !s.invoice_number && !s.delivered_at;
   const canMarkShipped = notClosed && !!s.invoice_number && !s.shipped_at;
   const hasPrimaryAction = showPayDone || canCreateInvoice || canMarkShipped;
+  // 2026-10-29 검은 버튼 1개 원칙: 롯데 송장은 기사님 수거 시 자동 출고완료라 수동 버튼은 보조로 내린다.
+  // 발송 쪽 검은 버튼이 있으면 [결제완료]는 회색(입금은 자동확인·미수금 화면에서도 처리됨)
+  const lotteAwaitPickup = canMarkShipped && isAlpsTrackable(s.courier_name);
+  const shipIsPrimary = canCreateInvoice || (canMarkShipped && !lotteAwaitPickup);
+  const payIsPrimary = showPayDone && !shipIsPrimary;
   // 162 합포장 상태
   const mergedInto = mergeInfo?.mergedInto || null;
   const mergedChildren = mergeInfo?.mergedChildren || [];
@@ -336,7 +341,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       {/* ⚡ 다음 할 일 — 상태별 주 액션(상단 고정). 파괴/부차 액션(반품·취소·송장취소·교환)은 하단 유지 */}
       {hasPrimaryAction && (
         <PrimaryActionBar>
-          {showPayDone && (
+          {payIsPrimary && (
             <Button size="sm" className="w-full" onClick={() => setShowPaidConfirm(true)} disabled={updatePayment.isPending}>
               <CheckCircle size={14} />
               {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
@@ -361,10 +366,28 @@ export function SaleDetailPanel({ saleId }: Props) {
               </Button>
             </>
           )}
-          {canMarkShipped && (
+          {canMarkShipped && lotteAwaitPickup && (
+            <>
+              {/* 롯데: 누를 일 없음을 먼저 알려준다 — 수동은 기사님이 스캔을 빠뜨린 예외용 */}
+              <p className="px-0.5 text-xs text-neutral-600 leading-relaxed break-keep">
+                기사님 수거 기다리는 중 — 수거되면 자동으로 출고완료{!isB2BCustomerType(s.customer_type) && '·출고 알림톡 발송'}
+              </p>
+              <Button variant="secondary" size="sm" className="w-full" onClick={() => { setShipNotify(true); setShowShipConfirm(true); }} disabled={markShipped.isPending}>
+                <Truck size={14} />
+                {markShipped.isPending ? '처리 중...' : '직접 출고완료'}
+              </Button>
+            </>
+          )}
+          {canMarkShipped && !lotteAwaitPickup && (
             <Button size="sm" className="w-full" onClick={() => { setShipNotify(true); setShowShipConfirm(true); }} disabled={markShipped.isPending}>
               <Truck size={14} />
               {markShipped.isPending ? '처리 중...' : '출고완료'}
+            </Button>
+          )}
+          {showPayDone && !payIsPrimary && (
+            <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPaidConfirm(true)} disabled={updatePayment.isPending}>
+              <CheckCircle size={14} />
+              {updatePayment.isPending ? '처리 중...' : '결제완료로 변경'}
             </Button>
           )}
         </PrimaryActionBar>
@@ -749,14 +772,17 @@ export function SaleDetailPanel({ saleId }: Props) {
                     </p>
                   ) : (
                     <div className="space-y-1 pt-1">
+                      {/* 2026-10-29 시스템 용어(ALPS 인수자등록) 대신 쉬운 말. 롯데 외 택배사는 자동이 아니라고 정확히 안내 */}
                       <p className="text-xs text-neutral-400 leading-relaxed">
-                        ALPS 인수자등록 자동 감지 시 배송완료 전환됩니다 (1시간마다 자동 확인)
+                        {isAlpsTrackable(s.courier_name)
+                          ? '고객이 받으면 자동으로 배송완료로 바뀝니다'
+                          : '자동 추적이 안 되는 택배사 — 고객이 받으면 직접 눌러주세요'}
                       </p>
                       <SubtleButton
                         onClick={() => markDelivered.mutate({ id: saleId, mode: 'delivery' })}
                         disabled={markDelivered.isPending}
                       >
-                        수동 배송완료 처리
+                        직접 배송완료 처리
                       </SubtleButton>
                     </div>
                   )}
@@ -765,10 +791,13 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <>
                   {/* 109: 자동 감지 안내 — "왜 버튼 안 눌렀는데 됐지?" 를 막는 문구. 150: 롯데 건에만 해당 */}
                   {isAlpsTrackable(s.courier_name) ? (
-                    <p className="text-[11px] text-neutral-400 leading-relaxed">
-                      롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다 (1시간마다 확인)
-                      {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
-                    </p>
+                    // 상단 「다음 할 일」에 같은 안내가 뜨는 경우엔 중복이라 숨김
+                    !lotteAwaitPickup && (
+                      <p className="text-[11px] text-neutral-400 leading-relaxed">
+                        롯데 기사님이 수거하면 자동으로 출고완료 처리됩니다
+                        {!isB2BCustomerType(s.customer_type) && ' · 출고 알림톡도 자동 발송'}
+                      </p>
+                    )
                   ) : (
                     <p className="text-[11px] text-neutral-400 leading-relaxed">
                       {courierLabel(s.courier_name)}는 자동 감지가 되지 않습니다. 보내셨으면 위 [출고완료]를 눌러주세요.
