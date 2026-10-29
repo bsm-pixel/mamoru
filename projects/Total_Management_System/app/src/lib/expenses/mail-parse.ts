@@ -30,6 +30,14 @@ export interface ParsedExpense {
   // 처음 보는 거래처일 때의 기본값 — 사장님이 [확인] 때 고른 값이 거래처 규칙으로 저장되면 그쪽이 이긴다
   category: string;
   kind: ExpenseKind;
+  billingCycle: 'annual' | null;  // 167 — 연간 구독이면 'annual' (월 환산 고정비 = 금액 ÷ 12), 나머지 null(매달)
+}
+
+/** 연간 결제 표시 — "annual subscription"(Make) · "Oct 1, 2026–Oct 1, 2027"(Stripe 1년 기간) · "연간 구독" */
+export function isAnnualBilling(text: string): boolean {
+  if (/annual(ly)?\s+(subscription|plan|billing)|yearly\s+(subscription|plan)|billed\s+(annually|yearly)|연간\s*(구독|결제|요금제|플랜)|1년\s*(구독|이용권)/i.test(text)) return true;
+  const p = /([A-Z][a-z]{2})\s+(\d{1,2}),\s+(\d{4})\s*[–—-]\s*([A-Z][a-z]{2})\s+(\d{1,2}),\s+(\d{4})/.exec(text);
+  return !!p && p[1] === p[4] && p[2] === p[5] && Number(p[6]) - Number(p[3]) === 1;
 }
 
 export interface MailInput {
@@ -199,6 +207,7 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
 
   if (!vendor) vendor = addr.split('@')[1] || addr;
   const d = defaultsFor(vendor, memo);
+  const annual = isAnnualBilling(t);
   return {
     vendor,
     docType,
@@ -208,7 +217,8 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
     expenseDate: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : received,
     memo,
     category: d.category,
-    kind: d.kind,
+    kind: annual ? 'fixed' : d.kind, // 연간 구독은 고정비
+    billingCycle: annual ? 'annual' : null,
   };
 }
 

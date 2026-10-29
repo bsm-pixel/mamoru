@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
 import { useSetting } from '@/hooks/use-settings';
 import { ExpenseInbox } from '@/components/expenses/expense-inbox';
+import { PLAN_OPTIONS, fromPlan, planLabel, type ExpensePlan } from '@/lib/expenses/plan';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -36,7 +37,7 @@ export default function ExpensesPage() {
   const [category, setCategory] = useState<string>(CATEGORIES[0] || '기타');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
-  const [kind, setKind] = useState<'fixed' | 'variable'>('variable'); // 166 고정/사용량
+  const [plan, setPlan] = useState<ExpensePlan>('variable'); // 166 고정/사용량 + 167 연간
 
   const { data, isLoading } = useQuery({
     queryKey: ['expenses', from, to],
@@ -44,10 +45,12 @@ export default function ExpensesPage() {
       const res = await fetch(`/api/expenses?from=${from}&to=${to}`);
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<{
-        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; source_ref: string | null }>;
+        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; billing_cycle: 'annual' | 'monthly' | null; source_ref: string | null }>;
         total: number;
         byCategory: Record<string, number>;
-        byKind: { fixed: number; variable: number; none: number };
+        byKind: { fixed: number; variable: number; none: number; annual: number };
+        fixedMonthly: number; // 167 월 환산 고정비 (연간 ÷ 12 반영, 참고값)
+        fixedMonths: number;
       }>;
     },
   });
@@ -57,7 +60,7 @@ export default function ExpensesPage() {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expense_date: expenseDate, category, amount: parseInt(amount), memo: memo.trim() || undefined, kind }),
+        body: JSON.stringify({ expense_date: expenseDate, category, amount: parseInt(amount), memo: memo.trim() || undefined, ...fromPlan(plan) }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
@@ -148,7 +151,12 @@ export default function ExpensesPage() {
             <Card>
               <p className="text-xs text-neutral-500 mb-1">고정 지출</p>
               <p className="text-base font-bold text-neutral-800">{formatKRW(data.byKind?.fixed || 0)}</p>
-              <p className="text-[11px] text-neutral-400">구독·임대 등 매달 나가는 돈</p>
+              {/* 167: 연간 결제가 결제한 달에만 크게 잡히는 것 보정 — 월 환산은 참고값, 장부는 결제일 전액 */}
+              <p className="text-[11px] text-neutral-400">
+                {data.fixedMonthly !== undefined && data.fixedMonthly !== (data.byKind?.fixed || 0)
+                  ? `월 환산 ${formatKRW(data.fixedMonthly)}${data.fixedMonths > 1 ? ` (${data.fixedMonths}개월)` : ''}`
+                  : '구독·임대 등 매달 나가는 돈'}
+              </p>
             </Card>
             <Card>
               <p className="text-xs text-neutral-500 mb-1">사용량 지출</p>
@@ -194,10 +202,10 @@ export default function ExpensesPage() {
               <div>
                 <label className="text-xs text-neutral-500 mb-1 block">구분</label>
                 <div className="flex rounded-md border border-neutral-200 overflow-hidden h-8 text-xs">
-                  {(['variable', 'fixed'] as const).map((k) => (
-                    <button key={k} onClick={() => setKind(k)}
-                      className={`flex-1 ${kind === k ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500'}`}>
-                      {k === 'fixed' ? '고정 (매달)' : '사용량 (쓴 만큼)'}
+                  {PLAN_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setPlan(o.value)}
+                      className={`flex-1 ${plan === o.value ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500'}`}>
+                      {o.long}
                     </button>
                   ))}
                 </div>
@@ -253,7 +261,7 @@ export default function ExpensesPage() {
                         </div>
                         <p className="text-xs text-neutral-400 mt-0.5">
                           {formatDate(e.expense_date)}
-                          {e.kind && <span className="ml-1.5">· {e.kind === 'fixed' ? '고정' : '사용량'}</span>}
+                          {e.kind && <span className="ml-1.5">· {planLabel(e.kind, e.billing_cycle)}</span>}
                           {e.source_ref?.startsWith('mail:') && <span className="ml-1.5">· 메일</span>}
                         </p>
                       </div>

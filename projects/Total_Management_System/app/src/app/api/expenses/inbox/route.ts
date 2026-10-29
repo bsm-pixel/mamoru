@@ -6,7 +6,7 @@ import { runExpenseMailScan } from '@/lib/expenses/mail-scan';
  * 메일에서 찾은 영수증 — 확인 대기함 (2026-10-29, 마이그 166)
  *
  * GET  /api/expenses/inbox            → 확인 대기 목록 (+ 같은 금액·가까운 날짜의 기존 경비 = 중복 의심)
- * POST { action:'confirm', id, amount, expense_date, category, kind, memo }
+ * POST { action:'confirm', id, amount, expense_date, category, kind, billing_cycle(167 'annual'|null), memo }
  *        → expenses 1건 생성 + 거래처 기억(분류·고정/사용량) 저장
  * POST { action:'ignore', id, always? }   → 무시 (always=true 면 그 거래처는 다음부터 자동 무시)
  * POST { action:'scan', days? }           → 지금 메일 다시 확인 (처음엔 days=120 으로 과거분)
@@ -29,6 +29,7 @@ export interface ExpenseInboxItem {
   expense_date: string | null;
   category: string | null;
   kind: 'fixed' | 'variable' | null;
+  billing_cycle: 'annual' | 'monthly' | null; // 167 연간 구독
   memo: string | null;
   dup_hint?: string | null; // 이미 같은 금액 경비가 근처 날짜에 있으면 그 설명
 }
@@ -41,7 +42,7 @@ export async function GET() {
     const db = supabase as Db;
 
     const { data, error } = await db.from('expense_inbox')
-      .select('id, gmail_id, received_at, sender, subject, vendor, doc_type, amount, currency, amount_original, expense_date, category, kind, memo')
+      .select('id, gmail_id, received_at, sender, subject, vendor, doc_type, amount, currency, amount_original, expense_date, category, kind, billing_cycle, memo')
       .eq('status', 'pending')
       .order('received_at', { ascending: false })
       .limit(200);
@@ -104,6 +105,8 @@ export async function POST(req: NextRequest) {
       if (!amount) return NextResponse.json({ error: '금액을 입력해 주세요' }, { status: 400 });
       const kind = body.kind === 'fixed' ? 'fixed' : 'variable';
       const category = String(body.category || item.category || '기타');
+      // 167 연간 — 고정일 때만. 화면 [연간] 선택 = billing_cycle 'annual'
+      const cycle = kind === 'fixed' && (body.billing_cycle ?? item.billing_cycle) === 'annual' ? 'annual' : null;
 
       // 먼저 대기함을 선점(CAS) → 경비 생성. 생성 실패 시 대기로 되돌린다(이중 생성 방지)
       const { data: claimed } = await db.from('expense_inbox')
@@ -118,6 +121,7 @@ export async function POST(req: NextRequest) {
         category,
         amount,
         kind,
+        billing_cycle: cycle,
         vendor: item.vendor,
         memo: (String(body.memo ?? '').trim() || [item.vendor, item.memo].filter(Boolean).join(' · ')) + usd || null,
         source_ref: `mail:${item.gmail_id}`,
@@ -127,10 +131,10 @@ export async function POST(req: NextRequest) {
         await db.from('expense_inbox').update({ status: 'pending', decided_at: null }).eq('id', id);
         throw insErr;
       }
-      await db.from('expense_inbox').update({ expense_id: expense.id, amount, category, kind }).eq('id', id);
+      await db.from('expense_inbox').update({ expense_id: expense.id, amount, category, kind, billing_cycle: cycle }).eq('id', id);
       // 거래처 기억 — 다음 메일부터 같은 분류·고정/사용량으로 올라온다
       if (item.vendor) {
-        await db.from('expense_vendor_rules').upsert({ vendor: item.vendor, category, kind, auto_ignore: false, updated_at: now });
+        await db.from('expense_vendor_rules').upsert({ vendor: item.vendor, category, kind, billing_cycle: kind === 'fixed' ? (cycle || 'monthly') : null, auto_ignore: false, updated_at: now });
       }
       return NextResponse.json({ ok: true, expense_id: expense.id });
     }

@@ -13,8 +13,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { Mail, RefreshCw, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ExpenseInboxItem } from '@/app/api/expenses/inbox/route';
-
-type Kind = 'fixed' | 'variable';
+import { PLAN_OPTIONS, toPlan, fromPlan, type ExpensePlan } from '@/lib/expenses/plan';
 
 const DOC_LABEL: Record<ExpenseInboxItem['doc_type'], string> = {
   card: '카드결제',
@@ -103,7 +102,8 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
   const [amount, setAmount] = useState(item.amount != null ? String(item.amount) : '');
   const [date, setDate] = useState(item.expense_date || '');
   const [category, setCategory] = useState(item.category || '기타');
-  const [kind, setKind] = useState<Kind>(item.kind || 'variable');
+  // 167 고정 · 연간 · 사용량 (kind + billing_cycle)
+  const [plan, setPlan] = useState<ExpensePlan>(item.kind ? toPlan(item.kind, item.billing_cycle) : 'variable');
   const cats = categories.includes(category) ? categories : [...categories, category];
 
   const act = useMutation({
@@ -152,6 +152,9 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
           <p className="text-[11px] text-neutral-600">금액이 첨부 PDF에만 있습니다 — 메일을 열어 확인 후 입력</p>
         )}
         {item.dup_hint && <p className="text-[11px] text-amber-700">이미 비슷한 경비가 있어요: {item.dup_hint}</p>}
+        {plan === 'annual' && amountNum > 0 && (
+          <p className="text-[11px] text-neutral-600">연간 결제 · 월 환산 {formatKRW(Math.round(amountNum / 12))} (장부엔 결제일 전액)</p>
+        )}
       </div>
 
       {/* 2) 날짜 · 금액 · 분류 · 고정/사용량 */}
@@ -165,10 +168,10 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
           {cats.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <div className="flex rounded-md border border-neutral-200 overflow-hidden h-8 text-xs shrink-0">
-          {(['fixed', 'variable'] as const).map((k) => (
-            <button key={k} onClick={() => setKind(k)}
-              className={`flex-1 px-2.5 whitespace-nowrap ${kind === k ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500'}`}>
-              {k === 'fixed' ? '고정' : '사용량'}
+          {PLAN_OPTIONS.map((o) => (
+            <button key={o.value} onClick={() => setPlan(o.value)}
+              className={`flex-1 px-2.5 whitespace-nowrap ${plan === o.value ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500'}`}>
+              {o.short}
             </button>
           ))}
         </div>
@@ -177,7 +180,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
       {/* 3) 확인 / 무시 */}
       <div className="flex items-center gap-1 shrink-0">
         <button
-          onClick={() => act.mutate({ action: 'confirm', amount: amountNum, expense_date: date, category, kind })}
+          onClick={() => act.mutate({ action: 'confirm', amount: amountNum, expense_date: date, category, ...fromPlan(plan) })}
           disabled={!amountNum || act.isPending}
           className="h-8 px-3 rounded-md bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-700 disabled:opacity-40 flex-1 lg:flex-none"
         >확인 {amountNum ? formatKRW(amountNum) : ''}</button>
