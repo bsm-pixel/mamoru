@@ -25,6 +25,33 @@ import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { useCampaigns } from '@/hooks/use-events';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 
+// 2026-10-29 아임웹 연동 매칭 코드 안내 — 상품 동기화는 ①아임웹 상품번호 ②SKU = 아임웹 「자체 상품코드」 순으로 연결한다
+// (lib/imweb/product-sync.ts). 둘 다 안 맞으면 IW-번호 제품이 새로 생겨 중복되므로 어떤 코드를 맞춰야 하는지 보여준다.
+const IMWEB_MATCH_SKIP = new Set(['RS', 'SVC', 'EVENT']); // 아임웹에 올리지 않는 품목
+function ImwebMatchCode({ sku, imwebNo, category }: { sku: string; imwebNo?: string | null; category?: string | null }) {
+  if (!sku || (category && IMWEB_MATCH_SKIP.has(category))) return null;
+  const copy = () => { navigator.clipboard?.writeText(sku).then(() => toast.success(`복사: ${sku}`)).catch(() => {}); };
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-stone-50 px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-neutral-500">아임웹 연동 매칭 코드</span>
+        {imwebNo
+          ? <span className="text-[11px] font-semibold text-emerald-700">아임웹 #{imwebNo} 연결됨</span>
+          : <span className="text-[11px] font-semibold text-amber-700">아임웹 미연결</span>}
+      </div>
+      <div className="flex items-center gap-2 mt-0.5">
+        <span className="text-sm font-mono font-semibold text-stone-900 break-all">{sku}</span>
+        <button type="button" onClick={copy} title="코드 복사" className="shrink-0 p-1 rounded hover:bg-neutral-200 text-neutral-500"><Copy size={12} /></button>
+      </div>
+      <p className="text-[11px] text-neutral-500 leading-relaxed break-keep mt-0.5">
+        {imwebNo
+          ? '이미 연결된 제품입니다. 따로 맞출 필요 없음.'
+          : '아임웹 상품의 「자체 상품코드」에 이 코드를 똑같이 입력 → 설정 › 시스템 › [상품 동기화]. 다르면 제품이 하나 더 생깁니다(중복).'}
+      </p>
+    </div>
+  );
+}
+
 interface Props {
   productId?: string;
   mode?: 'view' | 'create' | 'duplicate';
@@ -332,9 +359,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-neutral-500">SKU (자동)</label>
+                <label className="text-xs text-neutral-500">SKU (자동) · <b className="text-stone-700">아임웹 연동 매칭 코드</b></label>
                 <input type="text" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })}
                   placeholder="자동 채번" className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-stone-400" />
+                <p className="text-[10px] text-neutral-400 mt-0.5 leading-snug break-keep">아임웹 「자체 상품코드」에 똑같이 입력해야 연결됩니다</p>
               </div>
               <div>
                 <label className="text-xs text-neutral-500">카테고리</label>
@@ -508,8 +536,9 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         </div>
       </div>
 
-      {/* SKU 접두어 ≠ 카테고리 코드 → 재채번 안내 (카테고리 오지정 교정) */}
-      {!editing && p.sku && p.category && !p.sku.startsWith(p.category) && (
+      {/* SKU 접두어 ≠ 카테고리 코드 → 재채번 안내 (카테고리 오지정 교정)
+          2026-10-29: 아임웹에서 가져온 IW-번호 제품은 제외 — 재채번해도 상품 동기화가 IW-번호로 되돌린다(product-sync.ts) */}
+      {!editing && p.sku && p.category && !p.sku.startsWith(p.category) && !(p.imweb_product_no && p.sku.startsWith('IW-')) && (
         <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-800">
           <span className="min-w-0 truncate">
             SKU <b>{p.sku}</b> · 카테고리 <b>{CATEGORY_LABEL[p.category] || p.category}</b> 접두어 불일치
@@ -529,6 +558,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       {editing ? (
         <Card>
           <div className="space-y-3">
+            <ImwebMatchCode sku={p.sku} imwebNo={p.imweb_product_no} category={form.category} />
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">제품명</label>
@@ -693,12 +723,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
                 <p className="text-sm"><Badge className="bg-blue-50 text-blue-700">{p.product_group}</Badge></p>
               </div>
             )}
-            {p.imweb_product_no && (
-              <div className="mb-3">
-                <span className="text-xs text-neutral-500">아임웹</span>
-                <p className="text-sm font-mono">#{p.imweb_product_no}</p>
-              </div>
-            )}
+            {/* 2026-10-29: 아임웹 #번호만 보이던 것 → 연동 매칭 코드·연결 상태 안내 */}
+            <div className="mb-3">
+              <ImwebMatchCode sku={p.sku} imwebNo={p.imweb_product_no} category={p.category} />
+            </div>
             {p.description && (
               <div>
                 <span className="text-xs text-neutral-500">설명</span>
