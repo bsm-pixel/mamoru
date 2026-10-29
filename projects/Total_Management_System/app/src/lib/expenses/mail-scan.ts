@@ -10,6 +10,7 @@
  */
 import { listMails } from '@/lib/google/gmail-client';
 import { parseExpenseMail, expenseMailQuery } from './mail-parse';
+import { estimateKrw } from './fx';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
@@ -53,6 +54,10 @@ export async function runExpenseMailScan(db: Db, days = 3): Promise<ExpenseScanR
 
     const rule = rules.get(p.vendor);
     const status = rule?.auto_ignore ? 'ignored' : 'pending';
+    // 외화 영수증 — 결제일 환율로 원화 추정 (lib/expenses/fx.ts). 실패하면 빈칸 → 아래 fillFxEstimates 가 다음 스캔에 재시도
+    if (p.amount === null && p.amountOriginal !== null && p.currency !== 'KRW') {
+      p.amount = await estimateKrw(p.currency, p.amountOriginal, p.expenseDate);
+    }
     const { error } = await db.from('expense_inbox').insert({
       gmail_id: m.id,
       received_at: m.receivedAt,
@@ -75,5 +80,20 @@ export async function runExpenseMailScan(db: Db, days = 3): Promise<ExpenseScanR
     if (error && error.code !== '23505') throw error;
     if (!error) { if (status === 'ignored') out.ignored++; else out.added++; }
   }
+  await fillFxEstimates(db);
   return { ok: true, ...out };
+}
+
+/** 확인 대기 중인 외화 영수증 중 원화가 빈 것 → 환율 추정으로 채움 (환율 실패분·기능 이전에 들어온 건 재시도) */
+async function fillFxEstimates(db: Db): Promise<void> {
+  const { data } = await db.from('expense_inbox')
+    .select('id, currency, amount_original, expense_date, received_at')
+    .eq('status', 'pending').is('amount', null).neq('currency', 'KRW').not('amount_original', 'is', null);
+  for (const r of (data || []) as Array<{ id: string; currency: string; amount_original: number; expense_date: string | null; received_at: string | null }>) {
+    const date = r.expense_date || (r.received_at || '').slice(0, 10);
+    if (!date) continue;
+    const krw = await estimateKrw(r.currency, Number(r.amount_original), date);
+    // amount 가 아직 비어 있을 때만 (사장님이 그 사이 입력·확인했으면 건드리지 않음)
+    if (krw !== null) await db.from('expense_inbox').update({ amount: krw }).eq('id', r.id).eq('status', 'pending').is('amount', null);
+  }
 }

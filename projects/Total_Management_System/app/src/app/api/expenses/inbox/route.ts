@@ -110,7 +110,9 @@ export async function POST(req: NextRequest) {
         .update({ status: 'confirmed', decided_at: now }).eq('id', id).eq('status', 'pending').select('id');
       if (!claimed?.length) return NextResponse.json({ error: '이미 처리된 항목입니다' }, { status: 409 });
 
-      const usd = item.currency !== 'KRW' && item.amount_original ? ` (${item.currency} ${item.amount_original})` : '';
+      // 외화: 환율 추정액(대기함 금액)을 그대로 확인하면 "환율 추정" 표시 — 명세서 금액으로 고쳤으면 원금만 남김
+      const fxEst = item.currency !== 'KRW' && item.amount === amount ? ' · 환율 추정' : '';
+      const usd = item.currency !== 'KRW' && item.amount_original ? ` (${item.currency} ${item.amount_original}${fxEst})` : '';
       const { data: expense, error: insErr } = await db.from('expenses').insert({
         expense_date: body.expense_date || item.expense_date || now.slice(0, 10),
         category,

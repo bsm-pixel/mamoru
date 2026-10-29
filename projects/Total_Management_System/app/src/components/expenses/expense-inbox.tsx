@@ -139,7 +139,14 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
         </div>
         <p className="text-[11px] text-neutral-400 truncate">{item.memo || item.subject}</p>
         {item.currency !== 'KRW' && item.amount_original != null && (
-          <p className="text-[11px] text-neutral-600">{item.currency} {item.amount_original} — 카드 청구 원화 금액을 넣어 주세요</p>
+          // 2026-10-29 결제일 환율로 원화 추정(lib/expenses/fx.ts) — 환율 = 원화 ÷ 원금 (별도 칸 없이 역산)
+          item.amount != null ? (
+            <p className="text-[11px] text-neutral-600">
+              {item.currency} {item.amount_original} × {Math.round(item.amount / Number(item.amount_original)).toLocaleString()}원 · 환율 추정 (명세서와 다르면 수정)
+            </p>
+          ) : (
+            <p className="text-[11px] text-neutral-600">{item.currency} {item.amount_original} — 카드 청구 원화 금액을 넣어 주세요</p>
+          )
         )}
         {item.amount == null && item.currency === 'KRW' && (
           <p className="text-[11px] text-neutral-600">금액이 첨부 PDF에만 있습니다 — 메일을 열어 확인 후 입력</p>
