@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 
 /**
@@ -8,6 +9,7 @@ import { createServiceClient } from '@/lib/supabase/server';
  * '분류 만들기' = 새 이름 타이핑, '삭제' = 그 분류의 제품을 다른 데로 옮기면 자동 소멸.
  */
 export async function GET() {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = createServiceClient() as any;
