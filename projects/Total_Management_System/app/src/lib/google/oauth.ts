@@ -33,6 +33,8 @@ export const SCOPES = [
   'https://www.googleapis.com/auth/tasks',
   // 2026-09-29: 앱 푸시 미수신 시 사장님께 알림 메일(bsm@mamoru.kr) — 스코프 추가분이라 재연결 1회 필요
   'https://www.googleapis.com/auth/gmail.send',
+  // 2026-10-29: 영수증·세금계산서 메일 → 경비 확인 대기 (lib/expenses/mail-scan.ts) — 읽기 전용, 재연결 1회 필요
+  'https://www.googleapis.com/auth/gmail.readonly',
 ];
 
 /* 구글은 허용 결과를 **정규형**으로 돌려준다: 'email' → 'https://www.googleapis.com/auth/userinfo.email'.

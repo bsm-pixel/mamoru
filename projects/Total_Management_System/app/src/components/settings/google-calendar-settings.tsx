@@ -32,6 +32,7 @@ const SCOPE_LABEL: Record<string, string> = {
   'https://www.googleapis.com/auth/calendar.events': '캘린더 일정',
   'https://www.googleapis.com/auth/tasks': '할 일(Tasks)',
   'https://www.googleapis.com/auth/gmail.send': '알림 메일 발송',
+  'https://www.googleapis.com/auth/gmail.readonly': '영수증 메일 읽기(경비)',
 };
 
 export default function GoogleCalendarSettings() {

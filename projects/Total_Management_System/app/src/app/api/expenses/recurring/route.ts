@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         category: item.category,
         amount: item.amount,
         memo: `[고정] ${item.memo || item.category}`,
+        kind: 'fixed', // 166
         created_by: user.id,
       }));
 
