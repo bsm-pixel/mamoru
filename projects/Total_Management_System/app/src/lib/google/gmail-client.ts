@@ -91,7 +91,7 @@ export function htmlToText(html: string): string {
 }
 
 /** 메일 미리보기 채움 글자(Stripe 등이 본문 앞에 수백 개 넣음) — 남기면 저장 미리보기(앞 300자)가 이것만으로 채워진다 */
-const INVISIBLE = /[͏­​-‍⁠﻿]/g;
+const INVISIBLE = /[͏­​-‏⁠﻿]/g; // 200E·200F = Paddle 방향 표시 문자(10-29)
 
 function extractText(part: Part | undefined | null): { plain: string; html: string } {
   const out = { plain: '', html: '' };

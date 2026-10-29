@@ -153,7 +153,8 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
   } else if (/publr?\.co/.test(addr)) {
     // publ(디지털 콘텐츠 판매) — "사이트 | 유튜브 에디" · "결제 금액 | 129,000 KRW" · "주문일시 | 2026-07-27 13:36:07 (UTC)"
     docType = 'receipt';
-    vendor = clean(/사이트[\s|]*([^|\n\[]+)/.exec(t)?.[1] || '') || 'publ';
+    // 표 칸 "| 사이트 | 유튜브 에디 |" 만 — 본문 첫 문장 "…유튜브 에디 사이트에서 주문하신 내역입니다" 의 "사이트"를 잡지 않게 (10-29 실데이터)
+    vendor = clean(/\|\s*사이트\s*\|\s*([^|\n\[]+)/.exec(t)?.[1] || '') || 'publ';
     memo = clean(/상품 명칭[\s|]*([^|\n]+)/.exec(t)?.[1] || '');
     amount = amountAfter(t, '결제\\s*금액');
     date = dateAfter(t, '주문일시');
