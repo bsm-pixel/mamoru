@@ -9,6 +9,7 @@ const SAMPLE = `# 작업 이어하기
 ## [진행중] B-09 12~22번 개편
 - id: 20261023-2140
 - 멈춘 시각: 2026-10-23 21:40
+- 왜: 고객 페이지 22개를 새 디자인으로 — 브랜드 통일
 - 다음: 시험 접수 확인
 - 끝난 것: 시안 11개
 
@@ -24,7 +25,7 @@ describe('작업 목록 파일 읽기·완료 처리', () => {
   test('진행중·완료 항목과 필드를 읽는다', async () => {
     const list = parse(SAMPLE)
     expect(list.length).toBe(3)
-    expect(list[0]).toEqual({ key: '20261023-2140', status: '진행중', title: 'B-09 12~22번 개편', when: '2026-10-23 21:40', next: '시험 접수 확인', doneAt: '' })
+    expect(list[0]).toEqual({ key: '20261023-2140', status: '진행중', title: 'B-09 12~22번 개편', when: '2026-10-23 21:40', next: '시험 접수 확인', why: '고객 페이지 22개를 새 디자인으로 — 브랜드 통일', doneAt: '' })
     expect(list[1].doneAt).toBe('2026-10-22 20:00')
     expect(list[1].status).toBe('완료')
     expect(list[2].key).toBe('제목만 있는 작업')

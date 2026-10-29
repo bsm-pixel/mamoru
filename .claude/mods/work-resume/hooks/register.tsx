@@ -33,6 +33,7 @@ ${FILE} 파일(없으면 만든다)의 설명 줄 바로 아래, 기존 항목�
 ## [진행중] <작업 제목 — 15자 안팎, 한국어>
 - id: <YYYYMMDD-HHMM, 지금 KST>
 - 멈춘 시각: <YYYY-MM-DD HH:MM KST>
+- 왜: <어느 화면·업무의 무슨 일인지 + 끝나면 사장님께 뭐가 좋아지는지, 전문용어 없이 한 줄>
 - 다음: <바로 다음에 할 일 한 줄>
 - 끝난 것: <한두 줄>
 - 남은 것: <한두 줄>
@@ -170,8 +171,9 @@ export const register: Register = on => {
             <Text bold>
               {i + 1}. {one.title}
             </Text>
-            {one.when !== '' && <Text dimColor>멈춘 시각 {one.when}</Text>}
+            {one.why !== '' && <Text>왜: {one.why}</Text>}
             {one.next !== '' && <Text>다음: {one.next}</Text>}
+            {one.when !== '' && <Text dimColor>멈춘 시각 {one.when}</Text>}
             <Box flexDirection="row">
               <Button
                 key={`resume-${one.key}`}

@@ -11,7 +11,7 @@ export function parse(text: string): ResumeItem[] {
   for (const line of text.split(/\r?\n/)) {
     const head = line.match(HEAD)
     if (head) {
-      cur = { key: '', status: head[1] === '완료' ? '완료' : '진행중', title: head[2] ?? '', when: '', next: '', doneAt: '' }
+      cur = { key: '', status: head[1] === '완료' ? '완료' : '진행중', title: head[2] ?? '', when: '', next: '', why: '', doneAt: '' }
       out.push(cur)
       continue
     }
@@ -20,10 +20,11 @@ export function parse(text: string): ResumeItem[] {
       continue
     }
     if (!cur) continue
-    const field = line.match(/^-\s*(id|멈춘 시각|다음|완료 시각)\s*:\s*(.*?)\s*$/)
+    const field = line.match(/^-\s*(id|멈춘 시각|다음|완료 시각|왜)\s*:\s*(.*?)\s*$/)
     if (!field) continue
     const value = field[2] ?? ''
     if (field[1] === 'id') cur.key = value
+    else if (field[1] === '왜') cur.why = value
     else if (field[1] === '멈춘 시각') cur.when = value
     else if (field[1] === '완료 시각') cur.doneAt = value
     else cur.next = value

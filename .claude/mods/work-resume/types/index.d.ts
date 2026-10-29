@@ -4,6 +4,8 @@ export type ResumeItem = {
   title: string
   when: string
   next: string
+  /** 어느 화면의 무슨 일인지 + 끝나면 뭐가 좋아지는지 (사장님이 한눈에 의도를 알게) */
+  why: string
   doneAt: string
 }
 
