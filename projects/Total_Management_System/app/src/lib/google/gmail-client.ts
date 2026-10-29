@@ -143,3 +143,56 @@ export async function listMails(query: string, max = 100, exclude?: Set<string>)
     return { ok: false, error: msg, needsReauth: isScopeError(msg), apiDisabled: isApiDisabled(msg), messages: [] };
   }
 }
+
+/* ── 영수증 원본 꺼내기 (2026-10-29) — 경비 영수증 보관(lib/expenses/receipt-archive.ts) ──
+   PDF 첨부(Stripe 영수증·인보이스 등)는 그대로, 없으면 HTML 본문. `gmail.readonly` 로 충분(추가 권한 없음). */
+
+type FilePart = Part & { filename?: string | null; body?: { data?: string | null; attachmentId?: string | null } | null; parts?: FilePart[] | null };
+
+export interface MailFiles extends Omit<MailResult, 'ok'> {
+  ok: boolean;
+  from?: string;
+  subject?: string;
+  receivedAt?: string;
+  pdfs: Array<{ filename: string; data: Buffer }>;
+  html: string | null;
+}
+
+export async function getMailFiles(id: string): Promise<MailFiles> {
+  try {
+    const auth = await getAuthorizedClient();
+    if (!auth) return { ok: false, notConnected: true, error: 'not_connected', pdfs: [], html: null };
+    const gmail = google.gmail({ version: 'v1', auth });
+    const { data } = await gmail.users.messages.get({ userId: 'me', id, format: 'full' });
+    const headers = data.payload?.headers || [];
+    const h = (name: string) => headers.find((x) => (x.name || '').toLowerCase() === name)?.value || '';
+
+    const pdfs: Array<{ filename: string; data: Buffer }> = [];
+    const walk = async (p: FilePart | undefined | null) => {
+      if (!p) return;
+      const isPdf = p.mimeType === 'application/pdf' || /\.pdf$/i.test(p.filename || '');
+      if (isPdf && p.filename) {
+        let b64 = p.body?.data || '';
+        if (!b64 && p.body?.attachmentId) {
+          const att = await gmail.users.messages.attachments.get({ userId: 'me', messageId: id, id: p.body.attachmentId });
+          b64 = att.data.data || '';
+        }
+        if (b64) pdfs.push({ filename: p.filename, data: Buffer.from(b64.replace(/-/g, '+').replace(/_/g, '/'), 'base64') });
+      }
+      for (const c of p.parts || []) await walk(c);
+    };
+    await walk(data.payload as FilePart);
+    const { html, plain } = extractText(data.payload as Part);
+    return {
+      ok: true,
+      from: h('from'),
+      subject: h('subject'),
+      receivedAt: new Date(Number(data.internalDate || Date.now())).toISOString(),
+      pdfs,
+      html: html || (plain ? `<pre style="white-space:pre-wrap">${plain.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>` : null),
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: msg, needsReauth: isScopeError(msg), apiDisabled: isApiDisabled(msg), pdfs: [], html: null };
+  }
+}

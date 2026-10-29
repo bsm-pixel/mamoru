@@ -362,3 +362,14 @@
 - 중복 의심: 경비와 같은 금액 ±7일 **또는 같은 거래처(첫 단어) ±5일**(외화 메일 ↔ 카드 원화) / 카드 줄 ↔ 대기 메일 같은 금액 ±3일
 - `confirm_known`: 거래처 기억 있음 + 금액 있음 + 중복 의심 없음 → 기억값 그대로 한 번에 확인 (화면 [N건 한 번에 확인])
 - [늘 무시] = 같은 거래처의 다른 대기 건도 함께 무시. 목록 최대 1000건, 화면 15건씩 [더 보기]
+
+## 2026-10-29 메일 영수증 원본 자동 보관 (마이그 없음)
+
+- `lib/expenses/receipt-archive.ts` — 메일에서 확인한 경비(source_ref 'mail:…') 중 증빙 영수증만·없음·미정 + receipt_url 없음
+- 원본: Gmail 첨부 PDF 전부(Stripe = Invoice+Receipt 2개, `gmail-client.getMailFiles`), 없으면 본문 HTML(보낸 곳·제목·시각 머리말)
+- 저장: Supabase Storage **비공개** 버킷 `expense-receipts` (없으면 자동 생성), 경로 `YYYY/MM/날짜_거래처_금액_메일id[_n].pdf|html`
+- 기록: `expenses.receipt_url = 'storage:경로|경로'` (044 의 안 쓰던 칸, 기존 값 전부 NULL 이었음)
+- 시점: 대기함 [확인]·[한 번에 확인] 직후 `after()` + 매일 크론(회당 30건, 구글 오류면 즉시 멈춤)
+- 보기: `GET /api/expenses/receipt?id=&i=` 로그인 → PDF = 60초 서명 주소 / HTML = TMS 가 직접(CSP sandbox, 스크립트 차단 — 저장소는 HTML 을 text/plain 으로 내줌)
+- 경비 목록 「· 영수증」 링크, 간편장부 「증빙 챙길 것」 = 「원본 TMS에 보관됨 — 따로 할 일 없음」 + 「영수증 원본」 열기 링크
+- 구글 드라이브 대신 쓴 이유: 드라이브는 콘솔 API 켜기 + 재연결 필요(사장님 손). 이 방식은 기존 gmail.readonly 로 충분

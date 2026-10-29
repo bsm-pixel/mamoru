@@ -14,6 +14,7 @@
 import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
 import { proofLabel, proofNeedsKeeping } from '@/lib/expenses/proof';
 import { planLabel } from '@/lib/expenses/plan';
+import { receiptPaths } from '@/lib/expenses/receipt-archive';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
@@ -28,6 +29,7 @@ export interface LedgerRow {
   proof: string;         // 결제·증빙
   note: string;          // 비고
   keep?: string;         // 「증빙 챙길 것」 사유 (있으면 그 시트에 올라감)
+  receipt?: string;      // TMS 에 보관한 영수증 원본 링크 (로그인 필요)
 }
 
 export interface Ledger {
@@ -75,7 +77,7 @@ async function itemsBy(db: Db, table: string, key: string, ids: string[]): Promi
   return out;
 }
 
-export async function buildLedger(db: Db, year: number): Promise<Ledger> {
+export async function buildLedger(db: Db, year: number, origin = ''): Promise<Ledger> {
   const from = `${year}-01-01`;
   const to = `${year}-12-31`;
   const tsFrom = `${year}-01-01T00:00:00+09:00`;
@@ -188,19 +190,21 @@ export async function buildLedger(db: Db, year: number): Promise<Ledger> {
 
   // ── 6) 경비 ──
   const { data: exps, error: e7 } = await db.from('expenses')
-    .select('expense_date, category, amount, memo, vendor, kind, billing_cycle, proof_type, source_ref')
+    .select('id, expense_date, category, amount, memo, vendor, kind, billing_cycle, proof_type, source_ref, receipt_url')
     .gte('expense_date', from).lte('expense_date', to);
   if (e7) throw e7;
   for (const e of exps || []) {
     const plan = planLabel(e.kind, e.billing_cycle);
+    const kept = receiptPaths(e.receipt_url).length > 0;
     rows.push({
       date: e.expense_date, kind: '경비',
       content: [e.category, e.memo && e.memo !== e.vendor ? e.memo : ''].filter(Boolean).join(' · '),
       party: e.vendor || '', income: 0, cost: e.amount || 0,
       proof: e.proof_type ? proofLabel(e.proof_type) : '미정',
       note: [plan ? `${plan}${plan === '연간' ? ' (결제일 전액)' : ''}` : '', e.source_ref?.startsWith('mail:') ? '메일 영수증' : e.source_ref?.startsWith('card:') ? '카드 내역' : ''].filter(Boolean).join(' · '),
+      receipt: kept && origin ? `${origin}/api/expenses/receipt?id=${e.id}` : undefined,
       keep: proofNeedsKeeping(e.proof_type)
-        ? (!e.proof_type ? '증빙 미정 — 경비 화면에서 골라 주세요' : e.proof_type === 'receipt' ? (e.source_ref?.startsWith('mail:') ? '영수증만 — 메일 원본 보관' : '영수증만 — 원본 보관') : '증빙 없음 — 이체 내역 등 보관')
+        ? kept ? '원본 TMS에 보관됨 — 따로 할 일 없음' : (!e.proof_type ? '증빙 미정 — 경비 화면에서 골라 주세요' : e.proof_type === 'receipt' ? (e.source_ref?.startsWith('mail:') ? '영수증만 — 메일 원본 보관' : '영수증만 — 원본 보관') : '증빙 없음 — 이체 내역 등 보관')
         : undefined,
     });
   }

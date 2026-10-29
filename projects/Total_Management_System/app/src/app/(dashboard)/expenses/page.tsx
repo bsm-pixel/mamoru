@@ -47,7 +47,7 @@ export default function ExpensesPage() {
       const res = await fetch(`/api/expenses?from=${from}&to=${to}`);
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<{
-        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; billing_cycle: 'annual' | 'monthly' | null; proof_type: ProofType | null; source_ref: string | null }>;
+        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; billing_cycle: 'annual' | 'monthly' | null; proof_type: ProofType | null; source_ref: string | null; receipt_url: string | null }>;
         total: number;
         byCategory: Record<string, number>;
         byKind: { fixed: number; variable: number; none: number; annual: number };
@@ -299,6 +299,8 @@ export default function ExpensesPage() {
                           {e.kind && <span className="ml-1.5">· {planLabel(e.kind, e.billing_cycle)}</span>}
                           {e.source_ref?.startsWith('mail:') && <span className="ml-1.5">· 메일</span>}
                           {e.source_ref?.startsWith('card:') && <span className="ml-1.5">· 카드 내역</span>}
+                          {/* 보관한 영수증 원본 (lib/expenses/receipt-archive) — 여러 개면 첫 번째 */}
+                          {e.receipt_url && <a href={`/api/expenses/receipt?id=${e.id}`} target="_blank" rel="noreferrer" className="ml-1.5 underline hover:text-neutral-700">· 영수증</a>}
                           {/* 168 증빙 — 바로 고침. 홈택스 자동이 아닌 것(영수증만·없음·미정)은 진하게 */}
                           <span className="ml-1.5">·</span>
                           <select value={e.proof_type ?? ''} aria-label="증빙"

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { runExpenseMailScan } from '@/lib/expenses/mail-scan';
 import { toProof } from '@/lib/expenses/proof';
+import { archivePendingReceipts } from '@/lib/expenses/receipt-archive';
 
 /**
  * 메일·카드 내역에서 찾은 경비 — 확인 대기함 (2026-10-29, 마이그 166)
@@ -172,6 +173,8 @@ export async function POST(req: NextRequest) {
         const r = await confirmItem(db, { ...it, status: 'pending' }, {}, user.id);
         if (r.expense_id) confirmed++;
       }
+      // 영수증 원본 보관 — 응답 후 백그라운드 (못 한 건 매일 크론이 재시도)
+      if (confirmed) after(async () => { try { await archivePendingReceipts(createServiceClient() as Db, 30); } catch (e) { console.error('[receipt-archive]', e); } });
       return NextResponse.json({ ok: true, confirmed });
     }
 
@@ -198,6 +201,8 @@ export async function POST(req: NextRequest) {
     if (body.action === 'confirm') {
       const r = await confirmItem(db, item, body, user.id);
       if (r.error) return NextResponse.json({ error: r.error }, { status: r.status || 400 });
+      const expenseId = r.expense_id!;
+      after(async () => { try { await archivePendingReceipts(createServiceClient() as Db, 1, expenseId); } catch (e) { console.error('[receipt-archive]', e); } });
       return NextResponse.json({ ok: true, expense_id: r.expense_id });
     }
 

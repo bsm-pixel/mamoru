@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (year < 2020 || year > 2100) return NextResponse.json({ error: 'year 범위 오류' }, { status: 400 });
 
   try {
-    const ledger = await buildLedger(createServiceClient(), year);
+    const ledger = await buildLedger(createServiceClient(), year, req.nextUrl.origin);
     if (req.nextUrl.searchParams.get('format') === 'json') return NextResponse.json(ledger);
 
     const wb = XLSX.utils.book_new();
@@ -44,11 +44,13 @@ export async function GET(req: NextRequest) {
     // 3) 증빙 챙길 것 — 홈택스에 자동으로 안 잡히는 비용
     const keep = rows.filter((r) => r.keep);
     const keepSheet = XLSX.utils.aoa_to_sheet([
-      ['일자', '구분', '거래처', '거래내용', '금액', '챙길 것'],
-      ...keep.map((r) => [r.date, r.kind, r.party, r.content, r.cost, r.keep]),
-      ...(keep.length ? [] : [['', '', '', '따로 챙길 증빙이 없습니다', '', '']]),
+      ['일자', '구분', '거래처', '거래내용', '금액', '챙길 것', '영수증 원본'],
+      ...keep.map((r) => [r.date, r.kind, r.party, r.content, r.cost, r.keep, r.receipt ? '열기 (TMS 로그인)' : '']),
+      ...(keep.length ? [] : [['', '', '', '따로 챙길 증빙이 없습니다', '', '', '']]),
     ]);
-    keepSheet['!cols'] = [12, 8, 22, 30, 12, 40].map((wch) => ({ wch }));
+    // 보관한 영수증 = 누르면 열리는 링크 (lib/expenses/receipt-archive)
+    keep.forEach((r, i) => { if (r.receipt) keepSheet[XLSX.utils.encode_cell({ r: i + 1, c: 6 })].l = { Target: r.receipt }; });
+    keepSheet['!cols'] = [12, 8, 22, 30, 12, 40, 18].map((wch) => ({ wch }));
     XLSX.utils.book_append_sheet(wb, keepSheet, '증빙 챙길 것');
 
     // 4) 안내
