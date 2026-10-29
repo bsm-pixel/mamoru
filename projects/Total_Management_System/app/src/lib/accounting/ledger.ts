@@ -198,7 +198,7 @@ export async function buildLedger(db: Db, year: number): Promise<Ledger> {
       content: [e.category, e.memo && e.memo !== e.vendor ? e.memo : ''].filter(Boolean).join(' · '),
       party: e.vendor || '', income: 0, cost: e.amount || 0,
       proof: e.proof_type ? proofLabel(e.proof_type) : '미정',
-      note: [plan ? `${plan}${plan === '연간' ? ' (결제일 전액)' : ''}` : '', e.source_ref?.startsWith('mail:') ? '메일 영수증' : ''].filter(Boolean).join(' · '),
+      note: [plan ? `${plan}${plan === '연간' ? ' (결제일 전액)' : ''}` : '', e.source_ref?.startsWith('mail:') ? '메일 영수증' : e.source_ref?.startsWith('card:') ? '카드 내역' : ''].filter(Boolean).join(' · '),
       keep: proofNeedsKeeping(e.proof_type)
         ? (!e.proof_type ? '증빙 미정 — 경비 화면에서 골라 주세요' : e.proof_type === 'receipt' ? (e.source_ref?.startsWith('mail:') ? '영수증만 — 메일 원본 보관' : '영수증만 — 원본 보관') : '증빙 없음 — 이체 내역 등 보관')
         : undefined,

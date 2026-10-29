@@ -63,6 +63,10 @@ const VENDOR_DEFAULTS: Array<{ re: RegExp; category: string; kind: ExpenseKind }
   { re: /롯데|lotte|택배|우체국|cj대한통운|postteam|프로스퍼글로벌|배송비/i, category: '택배비', kind: 'variable' },
   { re: /쿠팡|coupang|1688|알리|aliexpress|타오바오|포장|박스/i, category: '포장재', kind: 'variable' },
   { re: /임대|관리비|건물/i, category: '임대료', kind: 'fixed' },
+  // 2026-10-29 카드 이용내역 엑셀(card-import) — 가맹점·업종 글자로 첫 분류 (확인 때 고르면 거래처 기억이 우선)
+  { re: /주유|충전소|주차|하이패스|도로공사|택시|카카오\s*T|코레일|ktx|srt|고속버스|교통/i, category: '교통비', kind: 'variable' },
+  { re: /다이소|문구|오피스|알파|모닝글로리/i, category: '사무용품', kind: 'variable' },
+  { re: /음식|식당|한식|중식|일식|양식|분식|카페|커피|제과|베이커리|스타벅스|배달의민족|요기요|편의점/i, category: '식대', kind: 'variable' },
 ];
 
 export function defaultsFor(vendor: string, memo = ''): { category: string; kind: ExpenseKind } {

@@ -113,16 +113,25 @@ export default function ExpensesPage() {
   const [recCategory, setRecCategory] = useState<string>(CATEGORIES.find((c) => c === '임대료') || CATEGORIES[0] || '기타');
   const [recAmount, setRecAmount] = useState('');
   const [recMemo, setRecMemo] = useState('');
+  // 169 시작 월 — 그 달부터 이번 달까지 빠진 달을 한 번에 채움 (기본: 올해 1월)
+  const [recFrom, setRecFrom] = useState(`${now.getFullYear()}-01`);
+  const [recProof, setRecProof] = useState<ProofType>('none');
 
   const createRecurring = useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/expenses/recurring', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', category: recCategory, amount: parseInt(recAmount), memo: recMemo.trim() || undefined }),
+        body: JSON.stringify({ action: 'create', category: recCategory, amount: parseInt(recAmount), memo: recMemo.trim() || undefined, from: recFrom, proof_type: recProof }),
       });
       if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ generated: number; skipped: number }>;
     },
-    onSuccess: () => { toast.success('고정 경비 등록'); setRecAmount(''); setRecMemo(''); queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] }); },
+    onSuccess: (r) => {
+      toast.success(`고정 경비 등록 — ${r.generated}개월치 경비 생성${r.skipped ? ` (이미 있던 ${r.skipped}개월 건너뜀)` : ''}`, { duration: 6000 });
+      setRecAmount(''); setRecMemo('');
+      queryClient.invalidateQueries({ queryKey: ['recurring-expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
 
@@ -289,6 +298,7 @@ export default function ExpensesPage() {
                           {formatDate(e.expense_date)}
                           {e.kind && <span className="ml-1.5">· {planLabel(e.kind, e.billing_cycle)}</span>}
                           {e.source_ref?.startsWith('mail:') && <span className="ml-1.5">· 메일</span>}
+                          {e.source_ref?.startsWith('card:') && <span className="ml-1.5">· 카드 내역</span>}
                           {/* 168 증빙 — 바로 고침. 홈택스 자동이 아닌 것(영수증만·없음·미정)은 진하게 */}
                           <span className="ml-1.5">·</span>
                           <select value={e.proof_type ?? ''} aria-label="증빙"
@@ -316,10 +326,15 @@ export default function ExpensesPage() {
         {/* 고정 경비 */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold text-indigo-black">고정 경비 (매월 반복)</h3>
+            <div>
+              <h3 className="text-sm font-bold text-indigo-black">고정 경비 (매월 반복)</h3>
+              {/* 169 매일 크론이 이번 달 분을 자동 등록 — 버튼은 지금 바로 넣고 싶을 때만 */}
+              <p className="text-[11px] text-neutral-400 mt-0.5">매달 1일자로 자동 등록됩니다 · 추가할 때 시작 월부터 빠진 달도 채웁니다</p>
+            </div>
             <Button
               size="sm"
               variant="secondary"
+              className="shrink-0 whitespace-nowrap"
               onClick={() => generateMonthly.mutate()}
               disabled={generateMonthly.isPending || !recurringData?.items.length}
             >
@@ -367,6 +382,15 @@ export default function ExpensesPage() {
             <input type="text" value={recMemo} placeholder="메모"
               onChange={(e) => setRecMemo(e.target.value)}
               className="col-span-2 w-full sm:w-auto sm:flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
+            <label className="flex items-center gap-1.5 min-w-0 text-[11px] text-neutral-500 whitespace-nowrap">
+              시작
+              <input type="month" value={recFrom} max={toLocalDateString(now).slice(0, 7)} onChange={(e) => setRecFrom(e.target.value)}
+                aria-label="시작 월" className="w-full sm:w-36 min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-xs text-neutral-800" />
+            </label>
+            <select value={recProof} onChange={(e) => setRecProof(e.target.value as ProofType)} aria-label="고정 경비 증빙"
+              className="w-full sm:w-auto min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-xs">
+              {PROOF_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
             <Button size="sm" variant="secondary" className="col-span-2 h-9 sm:h-8 shrink-0"
               onClick={() => createRecurring.mutate()}
               disabled={!recAmount || parseInt(recAmount) <= 0}>

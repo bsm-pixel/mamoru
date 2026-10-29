@@ -4,13 +4,14 @@
  * 메일에서 찾은 영수증 — 확인 대기 (2026-10-29, 마이그 166)
  * 매일 08시 크론이 bsm@mamoru.kr 영수증·세금계산서 메일을 읽어 올린다. 사장님은 금액·분류만 보고 [확인] 1번.
  * [확인] 때 고른 분류·고정/사용량은 거래처별로 기억 → 다음 메일부터 그 값으로 올라온다.
+ * 2026-10-29 카드 이용내역 엑셀도 같은 대기함으로 (api/expenses/card-import) + 기억된 거래처 한 번에 확인.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatKRW } from '@/lib/utils/format';
-import { Mail, RefreshCw, ExternalLink } from 'lucide-react';
+import { Mail, RefreshCw, ExternalLink, Upload, CheckCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ExpenseInboxItem } from '@/app/api/expenses/inbox/route';
 import { PLAN_OPTIONS, toPlan, fromPlan, type ExpensePlan } from '@/lib/expenses/plan';
@@ -42,7 +43,7 @@ export function ExpenseInbox({ categories }: { categories: string[] }) {
     queryFn: async () => {
       const res = await fetch('/api/expenses/inbox');
       if (!res.ok) throw new Error(await res.text());
-      return res.json() as Promise<{ items: ExpenseInboxItem[] }>;
+      return res.json() as Promise<{ items: ExpenseInboxItem[]; knownCount?: number }>;
     },
   });
 
@@ -61,17 +62,63 @@ export function ExpenseInbox({ categories }: { categories: string[] }) {
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
 
+  // 카드 이용내역 엑셀 올리기
+  const fileRef = useRef<HTMLInputElement>(null);
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/expenses/card-import', { method: 'POST', body: fd });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || '올리기 실패');
+      return j as { rows: number; added: number; ignored: number; existed: number; cancelled: number };
+    },
+    onSuccess: (r) => {
+      const extra = [r.existed ? `이미 올린 ${r.existed}건` : '', r.ignored ? `늘 무시 ${r.ignored}건` : '', r.cancelled ? `취소 ${r.cancelled}건` : ''].filter(Boolean).join(' · ');
+      toast.success(`카드 내역 ${r.added}건을 올렸습니다${extra ? ` (${extra} 제외)` : ''}`, { duration: 6000 });
+      queryClient.invalidateQueries({ queryKey: ['expense-inbox'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err), { duration: 6000 }),
+  });
+
+  // 기억된 거래처 한 번에 확인
+  const confirmKnown = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/expenses/inbox', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'confirm_known' }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error || '실패');
+      return j as { confirmed: number };
+    },
+    onSuccess: (r) => {
+      toast.success(`${r.confirmed}건을 경비로 등록했습니다`);
+      queryClient.invalidateQueries({ queryKey: ['expense-inbox'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+
+  const [shown, setShown] = useState(15); // 카드 1년치 수백 건 — 15건씩
   const items = data?.items || [];
+  const knownCount = data?.knownCount || 0;
 
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="text-sm font-bold text-indigo-black flex items-center gap-2">
           <Mail size={16} />
-          메일에서 찾은 영수증
+          메일·카드에서 찾은 경비
           {items.length > 0 && <span className="px-1.5 py-0.5 rounded bg-neutral-900 text-white text-[11px]">확인 대기 {items.length}</span>}
         </h3>
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) upload.mutate(f); e.target.value = ''; }} />
+          <Button size="sm" variant="secondary" onClick={() => fileRef.current?.click()} disabled={upload.isPending}
+            title="홈택스 「사업용 신용카드 사용내역」 또는 카드사 이용내역 엑셀">
+            <Upload size={13} />
+            <span className="ml-1">{upload.isPending ? '올리는 중...' : '카드 내역 올리기'}</span>
+          </Button>
           <button
             onClick={() => scan.mutate(120)}
             disabled={scan.isPending}
@@ -85,13 +132,30 @@ export function ExpenseInbox({ categories }: { categories: string[] }) {
         </div>
       </div>
 
+      {knownCount > 0 && (
+        // 기억된 거래처 = 한 번 [확인]해서 분류를 정한 곳. 중복 의심 건은 빼고 한 번에
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-3 py-2 rounded-md bg-neutral-50">
+          <p className="text-xs text-neutral-600">전에 확인한 거래처 <b>{knownCount}건</b>은 같은 분류로 한 번에 등록할 수 있어요</p>
+          <Button size="sm" onClick={() => { if (confirm(`${knownCount}건을 기억된 분류 그대로 경비로 등록할까요?`)) confirmKnown.mutate(); }} disabled={confirmKnown.isPending}>
+            <CheckCheck size={13} />
+            <span className="ml-1">{confirmKnown.isPending ? '등록 중...' : `${knownCount}건 한 번에 확인`}</span>
+          </Button>
+        </div>
+      )}
+
       {items.length === 0 ? (
         <p className="text-xs text-neutral-400">
-          확인할 영수증이 없습니다. 매일 아침 8시에 메일함(bsm@mamoru.kr)을 자동으로 확인합니다.
+          확인할 경비가 없습니다. 매일 아침 8시에 메일함(bsm@mamoru.kr)을 자동으로 확인합니다.
+          카드로 쓴 것은 홈택스 「사업용 신용카드 사용내역」 엑셀을 [카드 내역 올리기]로 올려 주세요.
         </p>
       ) : (
         <div className="divide-y divide-neutral-100 -mx-1">
-          {items.map((it) => <InboxRow key={it.id} item={it} categories={categories} />)}
+          {items.slice(0, shown).map((it) => <InboxRow key={it.id} item={it} categories={categories} />)}
+          {items.length > shown && (
+            <button onClick={() => setShown((n) => n + 15)} className="w-full py-2.5 text-xs text-neutral-500 hover:bg-neutral-50">
+              더 보기 ({items.length - shown}건 남음)
+            </button>
+          )}
         </div>
       )}
     </Card>
@@ -128,6 +192,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
 
   const amountNum = parseInt(amount, 10);
   const mailUrl = `https://mail.google.com/mail/u/0/#all/${item.gmail_id}`;
+  const isCardRow = item.gmail_id.startsWith('card:'); // 카드 이용내역 엑셀 줄 — 열 메일이 없음
 
   return (
     <div className="px-1 py-3 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
@@ -136,11 +201,15 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-semibold text-neutral-800 break-all">{item.vendor || '거래처 미상'}</span>
           <span className="px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 text-[10px] shrink-0">{DOC_LABEL[item.doc_type]}</span>
-          <a href={mailUrl} target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-neutral-700 shrink-0" title="메일 열기">
-            <ExternalLink size={12} />
-          </a>
+          {isCardRow ? (
+            <span className="text-[10px] text-neutral-400 shrink-0">카드 내역</span>
+          ) : (
+            <a href={mailUrl} target="_blank" rel="noreferrer" className="text-neutral-400 hover:text-neutral-700 shrink-0" title="메일 열기">
+              <ExternalLink size={12} />
+            </a>
+          )}
         </div>
-        <p className="text-[11px] text-neutral-400 truncate">{item.memo || item.subject}</p>
+        <p className="text-[11px] text-neutral-400 truncate">{isCardRow ? (item.memo || '') : (item.memo || item.subject)}</p>
         {item.currency !== 'KRW' && item.amount_original != null && (
           // 2026-10-29 결제일 환율로 원화 추정(lib/expenses/fx.ts) — 환율 = 원화 ÷ 원금 (별도 칸 없이 역산)
           item.amount != null ? (
@@ -195,7 +264,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
         <button onClick={() => act.mutate({ action: 'ignore' })} disabled={act.isPending}
           className="h-8 px-2 rounded-md text-xs text-neutral-500 hover:bg-neutral-100">무시</button>
         <button
-          onClick={() => { if (confirm(`「${item.vendor}」 메일은 앞으로 목록에 올리지 않을까요?`)) act.mutate({ action: 'ignore', always: true }); }}
+          onClick={() => { if (confirm(`「${item.vendor}」은(는) 앞으로 목록에 올리지 않을까요? (지금 대기 중인 같은 거래처 건도 함께 무시)`)) act.mutate({ action: 'ignore', always: true }); }}
           disabled={act.isPending}
           className="h-8 px-2 rounded-md text-[11px] text-neutral-400 hover:bg-neutral-100"
           title="이 거래처 메일은 앞으로 자동 무시"
