@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, downloadExcel } from '@/hooks/use-reports';
 import { formatKRW, toLocalDateString } from '@/lib/utils/format';
-import { Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText, BarChart3, Truck, Wallet, Users } from 'lucide-react';
+import { BookOpen, Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText, BarChart3, Truck, Wallet, Users } from 'lucide-react';
 
 const METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -350,6 +350,16 @@ export default function ReportsPage() {
               >
                 <BarChart3 size={14} />
                 마진 분석
+                <Download size={12} />
+              </Button>
+              {/* 2026-10-29 종소세 간편장부 — 선택 기간의 연도 1년치 (장부·월별 요약·증빙 챙길 것) */}
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.open(`/api/accounting/ledger?year=${period.from.slice(0, 4)}`, '_blank')}
+              >
+                <BookOpen size={14} />
+                {period.from.slice(0, 4)}년 간편장부
                 <Download size={12} />
               </Button>
               <Link href="/reports/transaction">

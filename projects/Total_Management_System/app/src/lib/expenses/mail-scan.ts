@@ -11,6 +11,7 @@
 import { listMails } from '@/lib/google/gmail-client';
 import { parseExpenseMail, expenseMailQuery } from './mail-parse';
 import { estimateKrw } from './fx';
+import { proofFromDocType } from './proof';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = any;
@@ -40,9 +41,9 @@ export async function runExpenseMailScan(db: Db, days = 3): Promise<ExpenseScanR
     return { ok: false, ...base, needsReauth: res.needsReauth, notConnected: res.notConnected, apiDisabled: res.apiDisabled, error: res.error };
   }
 
-  const { data: ruleRows } = await db.from('expense_vendor_rules').select('vendor, category, kind, billing_cycle, auto_ignore');
-  const rules = new Map<string, { category: string | null; kind: string | null; billing_cycle: string | null; auto_ignore: boolean }>(
-    (ruleRows || []).map((r: { vendor: string; category: string | null; kind: string | null; billing_cycle: string | null; auto_ignore: boolean }) => [r.vendor, r]),
+  const { data: ruleRows } = await db.from('expense_vendor_rules').select('vendor, category, kind, billing_cycle, proof_type, auto_ignore');
+  const rules = new Map<string, { category: string | null; kind: string | null; billing_cycle: string | null; proof_type: string | null; auto_ignore: boolean }>(
+    (ruleRows || []).map((r: { vendor: string; category: string | null; kind: string | null; billing_cycle: string | null; proof_type: string | null; auto_ignore: boolean }) => [r.vendor, r]),
   );
 
   const out = { ...base };
@@ -73,6 +74,8 @@ export async function runExpenseMailScan(db: Db, days = 3): Promise<ExpenseScanR
       kind: rule?.kind || p.kind,
       // 167 연간: 사장님이 고른 값(annual/monthly)이 우선, 기억이 없으면 메일 판독값
       billing_cycle: (rule?.billing_cycle === 'annual' || (!rule?.billing_cycle && p.billingCycle === 'annual')) && (rule?.kind || p.kind) === 'fixed' ? 'annual' : null,
+      // 168 증빙: 사장님이 그 거래처에 고른 값 → 없으면 메일 종류 기본값
+      proof_type: rule?.proof_type || proofFromDocType(p.docType),
       memo: p.memo || null,
       snippet: m.text.replace(/\s+/g, ' ').slice(0, 300),
       status,

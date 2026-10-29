@@ -14,6 +14,7 @@ import { Mail, RefreshCw, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ExpenseInboxItem } from '@/app/api/expenses/inbox/route';
 import { PLAN_OPTIONS, toPlan, fromPlan, type ExpensePlan } from '@/lib/expenses/plan';
+import { PROOF_OPTIONS, proofFromDocType, toProof, type ProofType } from '@/lib/expenses/proof';
 
 const DOC_LABEL: Record<ExpenseInboxItem['doc_type'], string> = {
   card: '카드결제',
@@ -104,6 +105,8 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
   const [category, setCategory] = useState(item.category || '기타');
   // 167 고정 · 연간 · 사용량 (kind + billing_cycle)
   const [plan, setPlan] = useState<ExpensePlan>(item.kind ? toPlan(item.kind, item.billing_cycle) : 'variable');
+  // 168 증빙 — 거래처 기억·메일 종류로 채워져 옴 (마이그 전 행은 메일 종류 기본값)
+  const [proof, setProof] = useState<ProofType>(toProof(item.proof_type) ?? proofFromDocType(item.doc_type));
   const cats = categories.includes(category) ? categories : [...categories, category];
 
   const act = useMutation({
@@ -157,7 +160,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
         )}
       </div>
 
-      {/* 2) 날짜 · 금액 · 분류 · 고정/사용량 */}
+      {/* 2) 날짜 · 금액 · 분류 · 증빙 · 고정/사용량 */}
       <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 shrink-0">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
           className="h-8 px-2 rounded-md border border-neutral-200 text-xs min-w-0" />
@@ -167,7 +170,12 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
           className="h-8 px-1.5 rounded-md border border-neutral-200 text-xs min-w-0">
           {cats.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <div className="flex rounded-md border border-neutral-200 overflow-hidden h-8 text-xs shrink-0">
+        <select value={proof} onChange={(e) => setProof(e.target.value as ProofType)} aria-label="증빙"
+          title={PROOF_OPTIONS.find((o) => o.value === proof)?.hint}
+          className="h-8 px-1.5 rounded-md border border-neutral-200 text-xs min-w-0">
+          {PROOF_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <div className="col-span-2 sm:col-auto flex rounded-md border border-neutral-200 overflow-hidden h-8 text-xs shrink-0">
           {PLAN_OPTIONS.map((o) => (
             <button key={o.value} onClick={() => setPlan(o.value)}
               className={`flex-1 px-2.5 whitespace-nowrap ${plan === o.value ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500'}`}>
@@ -180,7 +188,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
       {/* 3) 확인 / 무시 */}
       <div className="flex items-center gap-1 shrink-0">
         <button
-          onClick={() => act.mutate({ action: 'confirm', amount: amountNum, expense_date: date, category, ...fromPlan(plan) })}
+          onClick={() => act.mutate({ action: 'confirm', amount: amountNum, expense_date: date, category, ...fromPlan(plan), proof_type: proof })}
           disabled={!amountNum || act.isPending}
           className="h-8 px-3 rounded-md bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-700 disabled:opacity-40 flex-1 lg:flex-none"
         >확인 {amountNum ? formatKRW(amountNum) : ''}</button>

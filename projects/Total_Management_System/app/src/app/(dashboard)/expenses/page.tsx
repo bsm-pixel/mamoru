@@ -13,6 +13,7 @@ import { DEFAULT_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
 import { useSetting } from '@/hooks/use-settings';
 import { ExpenseInbox } from '@/components/expenses/expense-inbox';
 import { PLAN_OPTIONS, fromPlan, planLabel, type ExpensePlan } from '@/lib/expenses/plan';
+import { PROOF_OPTIONS, proofNeedsKeeping, type ProofType } from '@/lib/expenses/proof';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -38,6 +39,7 @@ export default function ExpensesPage() {
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');
   const [plan, setPlan] = useState<ExpensePlan>('variable'); // 166 고정/사용량 + 167 연간
+  const [proof, setProof] = useState<ProofType>('card'); // 168 증빙 — 사업자카드(7620)가 기본
 
   const { data, isLoading } = useQuery({
     queryKey: ['expenses', from, to],
@@ -45,7 +47,7 @@ export default function ExpensesPage() {
       const res = await fetch(`/api/expenses?from=${from}&to=${to}`);
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<{
-        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; billing_cycle: 'annual' | 'monthly' | null; source_ref: string | null }>;
+        expenses: Array<{ id: string; expense_date: string; category: string; amount: number; memo: string | null; created_at: string; kind: 'fixed' | 'variable' | null; billing_cycle: 'annual' | 'monthly' | null; proof_type: ProofType | null; source_ref: string | null }>;
         total: number;
         byCategory: Record<string, number>;
         byKind: { fixed: number; variable: number; none: number; annual: number };
@@ -60,7 +62,7 @@ export default function ExpensesPage() {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expense_date: expenseDate, category, amount: parseInt(amount), memo: memo.trim() || undefined, ...fromPlan(plan) }),
+        body: JSON.stringify({ expense_date: expenseDate, category, amount: parseInt(amount), memo: memo.trim() || undefined, ...fromPlan(plan), proof_type: proof }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
@@ -72,6 +74,19 @@ export default function ExpensesPage() {
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
     },
     onError: (err) => toast.error('등록 실패: ' + (err instanceof Error ? err.message : String(err))),
+  });
+
+  // 168 증빙 — 목록에서 바로 고침 (메일로 들어온 옛 건·미정 정리용)
+  const updateProof = useMutation({
+    mutationFn: async ({ id, proof_type }: { id: string; proof_type: ProofType | null }) => {
+      const res = await fetch('/api/expenses', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, proof_type }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+    onError: (err) => toast.error('증빙 저장 실패: ' + (err instanceof Error ? err.message : String(err))),
   });
 
   const deleteExpense = useMutation({
@@ -211,6 +226,17 @@ export default function ExpensesPage() {
                 </div>
               </div>
               <div>
+                {/* 168 증빙 — 종소세 간편장부 「결제·증빙」 칸. 영수증만·없음은 「증빙 챙길 것」에 올라감 */}
+                <label className="text-xs text-neutral-500 mb-1 block">증빙</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {PROOF_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setProof(o.value)} title={o.hint}
+                      className={`h-8 lg:h-auto px-2.5 py-1 text-xs rounded-md border transition ${proof === o.value ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-500 border-neutral-200'}`}
+                    >{o.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
                 <label className="text-xs text-neutral-500 mb-1 block">금액</label>
                 <input type="number" value={amount} placeholder="0"
                   onChange={(e) => setAmount(e.target.value)}
@@ -263,6 +289,14 @@ export default function ExpensesPage() {
                           {formatDate(e.expense_date)}
                           {e.kind && <span className="ml-1.5">· {planLabel(e.kind, e.billing_cycle)}</span>}
                           {e.source_ref?.startsWith('mail:') && <span className="ml-1.5">· 메일</span>}
+                          {/* 168 증빙 — 바로 고침. 홈택스 자동이 아닌 것(영수증만·없음·미정)은 진하게 */}
+                          <span className="ml-1.5">·</span>
+                          <select value={e.proof_type ?? ''} aria-label="증빙"
+                            onChange={(ev) => updateProof.mutate({ id: e.id, proof_type: (ev.target.value || null) as ProofType | null })}
+                            className={`ml-1 bg-transparent text-xs cursor-pointer hover:underline ${proofNeedsKeeping(e.proof_type) ? 'text-amber-700 font-medium' : 'text-neutral-400'}`}>
+                            {!e.proof_type && <option value="">증빙 미정</option>}
+                            {PROOF_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          </select>
                         </p>
                       </div>
                       <p className="text-sm font-bold text-neutral-800 shrink-0">{formatKRW(e.amount)}</p>

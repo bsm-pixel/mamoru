@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { toProof } from '@/lib/expenses/proof';
 
 /** GET /api/expenses — 경비 목록 (기간 필터) */
 export async function GET(req: NextRequest) {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { expense_date, category, amount, memo, kind, billing_cycle } = body;
+    const { expense_date, category, amount, memo, kind, billing_cycle, proof_type } = body;
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: '금액은 필수입니다' }, { status: 400 });
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
         memo: memo || null,
         kind: kind === 'fixed' || kind === 'variable' ? kind : null, // 166 고정/사용량
         billing_cycle: kind === 'fixed' && billing_cycle === 'annual' ? 'annual' : null, // 167 연간
+        proof_type: toProof(proof_type), // 168 증빙
         created_by: user.id,
       })
       .select()
@@ -118,7 +120,7 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { id, expense_date, category, amount, memo, kind, billing_cycle } = body;
+    const { id, expense_date, category, amount, memo, kind, billing_cycle, proof_type } = body;
     if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
 
     const updateData: Record<string, unknown> = {};
@@ -130,6 +132,7 @@ export async function PATCH(req: NextRequest) {
     // 167 연간: billing_cycle 을 보낼 때만 바꾼다(kind 만 바꿀 때 기존 연간 표시 유지). 사용량으로 바꾸면 연간 해제
     if (billing_cycle !== undefined) updateData.billing_cycle = billing_cycle === 'annual' && kind !== 'variable' ? 'annual' : null;
     else if (kind === 'variable') updateData.billing_cycle = null;
+    if (proof_type !== undefined) updateData.proof_type = toProof(proof_type); // 168 증빙 (null = 미정으로)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any).from('expenses').update(updateData).eq('id', id);

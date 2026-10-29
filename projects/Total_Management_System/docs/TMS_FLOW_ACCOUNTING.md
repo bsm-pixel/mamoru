@@ -327,3 +327,18 @@
 - 사장님이 직접 추가/삭제 가능
 - 미저장 시 기본값 자동 사용
 - 기존에 등록된 입출금 레코드는 카테고리 삭제해도 그대로 유지 (orphan 안전)
+
+## 2026-10-29 종소세 간편장부 + 경비 증빙 꼬리표 (마이그 168)
+
+### 간편장부 내보내기 — 회계 화면 [YYYY년 간편장부]
+- `GET /api/accounting/ledger?year=` (로그인 필요, `?format=json` 대조용) → 엑셀 4시트: 장부 · 월별 요약 · 증빙 챙길 것 · 안내
+- 본체 `lib/accounting/ledger.ts` — 매출 규칙은 `api/reports/summary` 와 동일(판매 total−discount / 반품 반품일 − / 납품 total / 복원수리 접수 입금일·sale_id 없는 건)
+- 세무용으로 다른 점 2가지: ① 아임웹 주문 = **실결제액**(배송비 포함·적립금 차감), 회계 화면은 상품 금액 → 차이를 「안내」 시트에 금액으로 ② 날짜 경계 = 한국시간(+09:00)
+- 비용 = 매입(purchase_orders 원화, 발주일) + 경비(expenses). 연간 구독은 결제일 전액
+- 검증(2026년 실데이터): 회계 화면 방식 환산 매출 = `total_revenue` **차이 0원**, 매입·경비 합계 일치
+
+### 증빙 꼬리표 `proof_type` — expenses · expense_inbox · expense_vendor_rules
+- 값: card 사업자카드 / tax_invoice 세금계산서 / cash_receipt 현금영수증 / receipt 영수증만 / none 없음 / NULL 미정 (`lib/expenses/proof.ts`)
+- 메일 수집: 거래처 기억 → 없으면 메일 종류(card→사업자카드, tax_invoice→세금계산서, 그 외→영수증만)
+- 대기함 [확인] 때 고른 값이 경비·거래처 기억에 저장. 경비 목록에서 바로 고침(PATCH)
+- 「증빙 챙길 것」 = 영수증만·없음·미정 경비 + 세금계산서 없는 매입(vat_amount=0)
