@@ -84,9 +84,14 @@ export function htmlToText(html: string): string {
     .replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#8361;|&#x20a9;/gi, '₩')
+    .replace(/&zwnj;|&#8204;|&#x200c;/gi, '')
+    .replace(INVISIBLE, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n\s*\n+/g, '\n');
 }
+
+/** 메일 미리보기 채움 글자(Stripe 등이 본문 앞에 수백 개 넣음) — 남기면 저장 미리보기(앞 300자)가 이것만으로 채워진다 */
+const INVISIBLE = /[͏­​-‍⁠﻿]/g;
 
 function extractText(part: Part | undefined | null): { plain: string; html: string } {
   const out = { plain: '', html: '' };
@@ -129,7 +134,7 @@ export async function listMails(query: string, max = 100, exclude?: Set<string>)
         subject: h('subject'),
         receivedAt: new Date(Number(data.internalDate || Date.now())).toISOString(),
         // 카드사 메일은 text/plain 이 비었거나 깨진 경우가 많다 → HTML 이 있으면 HTML 을 기준으로
-        text: html ? htmlToText(html) : plain,
+        text: html ? htmlToText(html) : plain.replace(INVISIBLE, ''),
       });
     }
     return { ok: true, messages };

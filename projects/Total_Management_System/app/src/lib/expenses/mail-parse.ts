@@ -12,6 +12,8 @@
  *   Anthropic   "Receipt from Anthropic, PBC $100.00 Paid on October 26, 2026" (외화 → 원화는 확인 때)
  *   팝빌        "[(주)비바리퍼블리카]에서 전자세금계산서" · "공급가액 | -1,280 원" · "세액 | -128 원"
  *   유니포스트  "주식회사 카카오페이(으)로 부터 세금계산서" (금액 없음)
+ * 2026-10-29 첫 4개월 스캔 후 보강(34통 대조): Stripe 원화 "₩28,869"(Meshy) · Paddle "지불한 금액 | ₩33,081" ·
+ *   publ "결제 금액 | 129,000 KRW" · 세이프빌 제목 "거래처:롯데글로벌로지스(주)" · 거래처명 "Anthropic," → "Anthropic", Celonis → Make
  */
 
 export type DocType = 'card' | 'receipt' | 'invoice' | 'tax_invoice';
@@ -46,7 +48,8 @@ const VENDOR_DEFAULTS: Array<{ re: RegExp; category: string; kind: ExpenseKind }
   { re: /anthropic|claude/i, category: '소프트웨어', kind: 'fixed' },
   { re: /adobe/i, category: '소프트웨어', kind: 'fixed' },
   { re: /google workspace/i, category: '소프트웨어', kind: 'fixed' },
-  { re: /notion|figma|vercel|supabase|openai|make\.com|jitter/i, category: '소프트웨어', kind: 'fixed' },
+  { re: /notion|figma|vercel|supabase|openai|make\.com|^make\b|jitter|meshy/i, category: '소프트웨어', kind: 'fixed' },
+  { re: /lucamotive|super pad/i, category: '소프트웨어', kind: 'variable' },
   { re: /솔라피|solapi/i, category: '소프트웨어', kind: 'variable' },
   { re: /google play|arlosoft/i, category: '소프트웨어', kind: 'variable' },
   { re: /롯데|lotte|택배|우체국|cj대한통운|postteam|프로스퍼글로벌|배송비/i, category: '택배비', kind: 'variable' },
@@ -65,11 +68,20 @@ const num = (s: string) => parseInt(s.replace(/[,\s]/g, ''), 10);
 const pad = (n: string | number) => String(n).padStart(2, '0');
 const clean = (s: string) => s.replace(/\s+/g, ' ').replace(/^[\s|:]+|[\s|:]+$/g, '').trim();
 
-/** "결제금액 | 30,500원" 처럼 라벨 뒤 첫 금액(원). 음수(취소·수정 세금계산서) 허용 */
+/** "결제금액 | 30,500원" 처럼 라벨 뒤 첫 금액(원). 음수(취소·수정 세금계산서) 허용.
+ *  2026-10-29 첫 4개월 스캔에서 놓친 표기 보강: "₩28,869"(Stripe·Paddle 원화) · "129,000 KRW"(publ) */
 function amountAfter(text: string, labels: string): number | null {
-  const m = new RegExp(`(?:${labels})[\\s|:：]*(-?[\\d,]{1,12})\\s*원`).exec(text);
-  return m ? num(m[1]) : null;
+  const m = new RegExp(`(?:${labels})[\\s|:：]*(?:₩\\s*(-?[\\d,]{1,12})|(-?[\\d,]{1,12})\\s*(?:원|KRW))`).exec(text);
+  return m ? num(m[1] ?? m[2]) : null;
 }
+
+/** 보낸 이름이 결제대행사 법인명인 경우 실제 서비스명으로 (Celonis Inc. = Make 운영사) */
+const VENDOR_ALIAS: Array<[RegExp, string]> = [
+  [/^celonis\b/i, 'Make'],
+];
+const aliasVendor = (v: string) => VENDOR_ALIAS.find(([re]) => re.test(v))?.[1] || v;
+/** "Anthropic, PBC" · "Vercel Inc." → 법인 꼬리 제거 (쉼표 포함) */
+const stripCorp = (v: string) => v.replace(/,?\s*(Inc|PBC|LLC|Ltd|Corp)\.?$/i, '').trim();
 
 /** "2026-10-11 10:46" · "2026년 10월 07일" · "2026. 10. 20." · "20260930" → YYYY-MM-DD */
 function dateAfter(text: string, labels: string): string | null {
@@ -131,10 +143,25 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
     docType = 'invoice';
     vendor = '솔라피';
     memo = '거래명세서 (금액은 첨부 PDF)';
+  } else if (/paddle\.com/.test(addr)) {
+    // Paddle — "LUCAMOTIVE 은(는) Paddle을 통해 …" · "지불한 금액 | ₩33,081 (세금 포함)"
+    docType = 'receipt';
+    vendor = clean(/([^\n|]+?)\s*은\(는\)\s*Paddle을 통해/.exec(t)?.[1] || '') || 'Paddle';
+    memo = clean(/결제 확인됨[\s|#]*([^|\n]+)\s*\|[\s|]*지불한 금액/.exec(t)?.[1] || '');
+    amount = amountAfter(t, '지불한 금액|Amount paid|Total');
+    if (amount === null) return null;
+  } else if (/publr?\.co/.test(addr)) {
+    // publ(디지털 콘텐츠 판매) — "사이트 | 유튜브 에디" · "결제 금액 | 129,000 KRW" · "주문일시 | 2026-07-27 13:36:07 (UTC)"
+    docType = 'receipt';
+    vendor = clean(/사이트[\s|]*([^|\n\[]+)/.exec(t)?.[1] || '') || 'publ';
+    memo = clean(/상품 명칭[\s|]*([^|\n]+)/.exec(t)?.[1] || '');
+    amount = amountAfter(t, '결제\\s*금액');
+    date = dateAfter(t, '주문일시');
+    if (amount === null) return null;
   } else if (/세금계산서/.test(subject)) {
-    // 팝빌·유니포스트·홈택스 등 — 공급자 이름은 제목에서
+    // 팝빌·유니포스트·홈택스 등 — 공급자 이름은 제목에서 (세이프빌: "…/거래처:롯데글로벌로지스(주)/…")
     docType = 'tax_invoice';
-    vendor = clean(/^\[(.+?)\]에서/.exec(subject)?.[1] || /님\s*(.+?)\s*\(으\)로\s*부터/.exec(subject)?.[1] || /(.+?)\s*\(으\)로\s*부터/.exec(subject)?.[1] || '');
+    vendor = clean(/^\[(.+?)\]에서/.exec(subject)?.[1] || /거래처:([^/]+)/.exec(subject)?.[1] || /님\s*(.+?)\s*\(으\)로\s*부터/.exec(subject)?.[1] || /(.+?)\s*\(으\)로\s*부터/.exec(subject)?.[1] || '');
     if (!vendor) vendor = clean(/공급자[\s\S]{0,40}?상호[\s|]*([^|\n]+)/.exec(t)?.[1] || '');
     const supply = amountAfter(t, '공급가액');
     const tax = amountAfter(t, '세액');
@@ -147,13 +174,17 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
     const usd = /\$\s?([\d,]+\.\d{2})\s*(?:Paid|paid|USD)?/.exec(t);
     const looksReceipt = /receipt|invoice|영수증|결제\s*(완료|내역|확인)|결제가 완료|청구/i.test(`${subject} ${t.slice(0, 400)}`);
     if (!looksReceipt) return null;
-    vendor = clean(/Receipt from\s+(.+?)\s+\$/i.exec(t)?.[1] || '')
+    // Stripe 영수증은 제목 "Your receipt from Anthropic, PBC #2438-…" 이 가장 안정적 (HTML 본문은 칸이 갈라져 "Receipt from X $" 가 끊김)
+    vendor = aliasVendor(stripCorp(clean(/receipt from\s+(.+?)\s+#/i.exec(subject)?.[1] || '')
+      || clean(/Receipt from\s+(.+?)\s+[$₩]/i.exec(t)?.[1] || '')
       || clean(/^\[([^\]]+)\]/.exec(subject)?.[1] || '')
-      || clean((/^"?([^"<]+)"?\s*</.exec(mail.from)?.[1] || addr.split('@')[1] || '').replace(/\s*(Inc|PBC|LLC)\.?$/i, ''));
-    const krw = amountAfter(t, '결제\\s*금액|결제금액|총\\s*결제\\s*금액|합계|총액|승인금액|Total');
+      || clean(/^"?([^"<]+)"?\s*</.exec(mail.from)?.[1] || addr.split('@')[1] || '')));
+    const krw = amountAfter(t, 'Amount paid|결제\\s*금액|결제금액|총\\s*결제\\s*금액|합계|총액|승인금액|Total')
+      ?? amountAfter(t, `Receipt from[^₩\\n]{1,60}?`);
     if (krw !== null) amount = krw;
     else if (usd) { currency = 'USD'; amountOriginal = parseFloat(usd[1].replace(/,/g, '')); }
-    const en = /Paid on\s+([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/.exec(t);
+    // "Paid on October 26, 2026"(Anthropic) · "Paid July 30, 2026"(Meshy·Make)
+    const en = /Paid(?: on)?\s+([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})/.exec(t);
     if (en) {
       const mon = new Date(`${en[1]} 1, 2000`).getMonth() + 1;
       if (mon > 0) date = `${en[3]}-${pad(mon)}-${pad(en[2])}`;
