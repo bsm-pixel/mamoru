@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { createExcelBuffer } from '@/lib/utils/excel';
 
@@ -7,6 +8,7 @@ import { createExcelBuffer } from '@/lib/utils/excel';
  * ?type=sales|purchases&from=2026-01-01&to=2026-01-31
  */
 export async function GET(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   const supabase = createServiceClient();
   const sp = req.nextUrl.searchParams;
   const type = sp.get('type') || 'sales';

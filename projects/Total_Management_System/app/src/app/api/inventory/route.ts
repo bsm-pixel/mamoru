@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 
 /**
@@ -6,6 +7,7 @@ import { createServiceClient } from '@/lib/supabase/server';
  * ?category=가위&search=&low_stock=true
  */
 export async function GET(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   const supabase = createServiceClient();
   const sp = req.nextUrl.searchParams;
   const category = sp.get('category') || '';

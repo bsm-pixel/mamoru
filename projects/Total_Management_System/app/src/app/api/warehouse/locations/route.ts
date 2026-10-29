@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { generateRackLocations, makeLocationCode, makeLocationLabel, locationSortOrder, type LevelSpec } from '@/lib/warehouse/location-code';
 
@@ -23,6 +24,7 @@ interface CellFull { id: string; rack_no: number; level_no: number; bin_no: numb
 
 /** GET */
 export async function GET() {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = createServiceClient();
 
@@ -65,6 +67,7 @@ export async function GET() {
 
 /** POST — action 분기 */
 export async function POST(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = createServiceClient();
   try {
@@ -355,6 +358,7 @@ async function widenRackIfNeeded(supabase: any, rackNo: number, neededColumns: n
 
 /** DELETE — 칸 1개(id) 또는 렉 통째(rack_no) */
 export async function DELETE(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = createServiceClient();
   const id = req.nextUrl.searchParams.get('id');

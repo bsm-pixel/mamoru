@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
 
@@ -14,6 +15,7 @@ import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
  *   - by_product / margin: RS 항목 제외 (RS 는 제품이 아니므로 제품 랭킹·원가 집계에서 빠짐)
  */
 export async function GET(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   const supabase = createServiceClient();
   const sp = req.nextUrl.searchParams;
   const fromDate = sp.get('from') || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);

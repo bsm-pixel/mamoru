@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { convertEventToSale } from '@/lib/event/convert-to-sale';
@@ -6,6 +7,7 @@ import { getEventCampaignNotifyVars, getEventCampaignConfig } from '@/lib/event/
 
 /** GET /api/events/[id] */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     const { id } = await params;
     const db = createServiceClient();
@@ -20,6 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 /** PATCH /api/events/[id] — action: payment_notice | confirm_payment | cancel | update */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     const { id } = await params;
     const body = await req.json();
@@ -145,6 +148,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
  *     오등록·테스트 접수 정리용.
  */
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     const { id } = await params;
     const db = createServiceClient();

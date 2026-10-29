@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMissingNoticeColumn } from '@/lib/event/campaign-notify';
 
-/** GET /api/campaigns — 캠페인 목록 (CORS도 허용: 고객 폼에서 캠페인명 표시용) */
-const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+/** GET /api/campaigns — 캠페인 목록 (CORS도 허용: 고객 폼 projects/event/page_form.html 에서 캠페인명 표시용 — 로그인 없이 공개 유지). POST 는 로그인 필요 */
+const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 export function OPTIONS() { return new NextResponse(null, { status: 204, headers: CORS }); }
 
 export async function GET() {
@@ -23,6 +24,7 @@ export async function GET() {
 
 /** POST /api/campaigns — 캠페인 생성 */
 export async function POST(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     const body = await req.json();
     if (!body.name?.trim()) return NextResponse.json({ ok: false, error: '캠페인명 필수' }, { status: 400 });

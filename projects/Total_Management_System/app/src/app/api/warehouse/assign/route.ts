@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 
 /**
@@ -11,6 +12,7 @@ import { createServiceClient } from '@/lib/supabase/server';
  *    stock_quantity / raw_stock 는 읽지도 쓰지도 않는다 — 재고 정합성 무영향 보장.
  */
 export async function PATCH(req: NextRequest) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = createServiceClient();
   try {

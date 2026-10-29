@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMissingNoticeColumn } from '@/lib/event/campaign-notify';
 
 /** PATCH /api/campaigns/[id] — 캠페인 수정 (이름/유형/상태/할인규칙) */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   try {
     const { id } = await params;
     const body = await req.json();
