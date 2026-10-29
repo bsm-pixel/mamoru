@@ -96,7 +96,7 @@
 - [ ] ⚠️ 솔라피/Make `purchase_review_request` 3항목 확인
 
 ### 진행/검수 대기 (날짜 유동)
-- [ ] ⭐ 상품 카탈로그(`products/catalog/preview.html`) 검토
+- [x] ~~상품 카탈로그 검토~~ — 폐기(2026-10-29): 상세페이지는 피그마로 제작, 빌더·카탈로그 삭제
 - [ ] ⚠️ 복원수리 직접방문 Phase4 — 솔라피 알림톡 5종 검수
 
 ---
@@ -319,30 +319,9 @@
 
 ---
 
-### 3. Phase 1A 상품 상세 카탈로그 검토 (사장님 검토 대기) ⭐
+### 3. ~~Phase 1A 상품 상세 카탈로그 검토~~ — 폐기 (2026-10-29)
 
-**검토 위치**: `projects/products/catalog/preview.html` 브라우저로 열기
-
-**검토 항목**:
-1. §0 매트릭스 — 4가위(블런트/장가위/틴닝/드라이) × 9카드 매핑 정확성
-2. §1~7 카드 시각화 — 각 카드 옵션값·SVG·설명
-3. 틴닝 옵션값 — 24/26/28/30/32/40 발 / 1·2·3·4 홈 / 15·20·25·30·40% 감모
-4. 드라이 옵션 가격 — 스트록 기본 / 정통 +1만 / 멀티(SHIFT ONE) +2만
-5. §A 카피 풀 / §B spec — 기존 (변경 없음)
-
-**카드 카탈로그 9개** (`projects/products/catalog/cards/`):
-- blade_edge.json (applies_to: blunt/long/dry)
-- blade_design.json (S/C/B)
-- handle_grip.json (세미/스탠/오프셋)
-- handle_camel.json (플랫/카멜)
-- grade.json (R/A/E/S)
-- thinning_teeth.json / thinning_holes.json / thinning_reduction.json
-- dry_cutting_style.json (★ 주문 옵션, 가격 차등)
-
-**사장님 검토 후 액션**:
-- "이 옵션 추가/빼기/이름·SVG/가격 수정" 한 마디 → 즉시 반영
-- OK → Phase 1B (틴닝 카피 풀) + Phase 1C (드라이 카피 풀)
-- 그 다음 → Phase 2 빌더 페이지 개발
+상세페이지는 피그마로 제작하기로 해서 빌더·카탈로그(`projects/products/`)를 삭제했다. 필요하면 git 이력에서 복구.
 
 ---
 
