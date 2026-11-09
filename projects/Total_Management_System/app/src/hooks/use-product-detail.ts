@@ -4,10 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Product } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 
-/** PATCH /api/products/[id] 의 아임웹 상품명 반영 결과 */
-export interface ImwebNameResult {
-  status: 'synced' | 'failed' | 'skipped';
-  error?: string;
+/** PATCH /api/products/[id] 의 아임웹 반영 결과 (상품명·판매가 = TMS 마스터, 2026-11-09) */
+export interface ImwebSyncResult {
+  synced: string[];   // 반영된 항목 ('상품명' | '판매가')
+  errors: string[];   // "판매가: 사유"
 }
 
 /** 제품 단건 조회 */
@@ -114,8 +114,8 @@ export function useUpdateProduct() {
       product_group?: string | null;
       purchase_name?: string | null;
       tags?: Record<string, unknown> | null;
-      /** 이름이 같아도 아임웹 상품명을 TMS 이름으로 다시 맞춤 */
-      sync_imweb_name?: boolean;
+      /** 값이 같아도 보낸 상품명·판매가를 아임웹에 다시 맞춤 */
+      sync_imweb?: boolean;
     }) => {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PATCH',
@@ -126,14 +126,15 @@ export function useUpdateProduct() {
         const errBody = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error(typeof errBody.error === 'string' ? errBody.error : JSON.stringify(errBody.error));
       }
-      return res.json() as Promise<{ product: Product; imwebName?: ImwebNameResult }>;
+      return res.json() as Promise<{ product: Product; imweb?: ImwebSyncResult }>;
     },
     onSuccess: (res, vars) => {
-      // 아임웹 상품명 반영 결과 (2026-11-09) — 실패는 TMS 저장과 별개로 분명히 알린다
-      if (res.imwebName?.status === 'failed') {
-        toast.error(`TMS에는 저장됐지만 아임웹 상품명은 못 바꿨습니다 — ${res.imwebName.error}\n제품 상세의 「아임웹 이름 맞추기」로 다시 시도하세요`, { duration: 8000 });
-      } else if (res.imwebName?.status === 'synced') {
-        toast.success('제품 수정 완료 · 아임웹 상품명도 바꿨습니다');
+      // 아임웹 반영 결과 (2026-11-09) — 실패는 TMS 저장과 별개로 분명히 알린다
+      const iw = res.imweb;
+      if (iw?.errors.length) {
+        toast.error(`TMS에는 저장됐지만 아임웹 반영 실패 — ${iw.errors.join(' / ')}\n제품 상세의 「아임웹을 TMS 값으로 다시 맞추기」로 다시 시도하세요`, { duration: 8000 });
+      } else if (iw?.synced.length) {
+        toast.success(`제품 수정 완료 · 아임웹 ${iw.synced.join('·')}도 바꿨습니다`);
       } else {
         toast.success('제품 수정 완료');
       }

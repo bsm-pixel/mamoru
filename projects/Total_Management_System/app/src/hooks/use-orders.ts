@@ -209,6 +209,8 @@ export interface ProductSyncResult {
   errors: string[];
   /** TMS 이름 ≠ 아임웹 이름 — TMS 이름 유지(덮어쓰지 않음), 2026-11-09 */
   nameMismatches: { sku: string; tms: string; imweb: string }[];
+  /** TMS 판매가 ≠ 아임웹 판매가 — TMS 가격 유지 */
+  priceMismatches: { sku: string; name: string; tms: number; imweb: number }[];
 }
 
 /** 아임웹 상품 동기화 */

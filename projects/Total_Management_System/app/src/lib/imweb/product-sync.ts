@@ -10,10 +10,10 @@
  *
  * 에러 처리: 각 상품별 INSERT/UPDATE 실패 사유를 수집해 반환
  *
- * 🔒 상품명 = TMS 마스터 (2026-11-09): 이미 있는 제품의 이름은 덮어쓰지 않는다.
- *   TMS에서 이름을 바꾸면 PATCH /api/products/[id] 가 아임웹 상품명까지 바꾼다(renameImwebProduct).
- *   전엔 이 동기화가 아임웹 이름으로 되돌려 TMS 개명이 사라졌다. 이름이 다르면 nameMismatches 로 알려만 준다.
- *   신규 생성 때만 아임웹 이름을 그대로 가져온다.
+ * 🔒 상품명·판매가 = TMS 마스터 (2026-11-09 사장님 확정): 이미 있는 제품의 이름·판매가는 덮어쓰지 않는다.
+ *   TMS에서 바꾸면 PATCH /api/products/[id] 가 아임웹까지 바꾼다(renameImwebProduct·updateImwebPrice).
+ *   전엔 이 동기화가 아임웹 값으로 되돌렸다. 다르면 nameMismatches·priceMismatches 로 알려만 준다.
+ *   신규 생성 때만 아임웹 이름·가격을 그대로 가져온다.
  */
 
 import { getImwebProducts, type ImwebV2Product } from './client';
@@ -29,6 +29,8 @@ interface SyncResult {
   errors: string[];
   /** TMS 이름 ≠ 아임웹 이름 (TMS 이름 유지, 덮어쓰지 않음) */
   nameMismatches: { sku: string; tms: string; imweb: string }[];
+  /** TMS 판매가 ≠ 아임웹 판매가 (TMS 가격 유지) */
+  priceMismatches: { sku: string; name: string; tms: number; imweb: number }[];
 }
 
 /** 아임웹 이미지 URL 생성 */
@@ -52,6 +54,7 @@ export async function syncProducts(): Promise<SyncResult> {
   let updated = 0;
   let linked = 0;
   const nameMismatches: SyncResult['nameMismatches'] = [];
+  const priceMismatches: SyncResult['priceMismatches'] = [];
 
   // sync_log 시작
   const { data: logEntry } = await db.from('sync_log').insert({
@@ -82,7 +85,7 @@ export async function syncProducts(): Promise<SyncResult> {
           // 1차: imweb_product_no 로 기존 조회
           const { data: byImwebNo, error: imwebErr } = await db
             .from('products')
-            .select('id, sku, name, imweb_product_no')
+            .select('id, sku, name, price, imweb_product_no')
             .eq('imweb_product_no', String(p.no))
             .maybeSingle();
 
@@ -107,9 +110,10 @@ export async function syncProducts(): Promise<SyncResult> {
           };
 
           if (byImwebNo) {
-            // 이미 연동된 상품 → UPDATE (재고·이름은 TMS가 마스터라 제외, is_active도 productData에서 빠져 있음)
-            const { stock_quantity: _omit, name: _keepName, ...updateData } = productData;
+            // 이미 연동된 상품 → UPDATE (재고·이름·판매가는 TMS가 마스터라 제외, is_active도 productData에서 빠져 있음)
+            const { stock_quantity: _omit, name: _keepName, price: _keepPrice, ...updateData } = productData;
             if (byImwebNo.name !== p.name) nameMismatches.push({ sku: byImwebNo.sku, tms: byImwebNo.name, imweb: p.name });
+            if (Number(byImwebNo.price) !== productData.price) priceMismatches.push({ sku: byImwebNo.sku, name: byImwebNo.name, tms: Number(byImwebNo.price), imweb: productData.price });
             const { error: updErr } = await db
               .from('products')
               .update(updateData)
@@ -124,7 +128,7 @@ export async function syncProducts(): Promise<SyncResult> {
             // 2차: sku 로 수동 등록된 상품 조회 (imweb_product_no 아직 안 붙은 상품)
             const { data: bySku, error: skuErr } = await db
               .from('products')
-              .select('id, sku, name, imweb_product_no')
+              .select('id, sku, name, price, imweb_product_no')
               .eq('sku', sku)
               .maybeSingle();
 
@@ -134,9 +138,10 @@ export async function syncProducts(): Promise<SyncResult> {
             }
 
             if (bySku) {
-              // 수동 등록된 상품을 이번 동기화로 imweb와 연결 (기존 is_active·이름 유지 — TMS 마스터)
-              const { stock_quantity: _omit, name: _keepName, ...updateData } = productData;
+              // 수동 등록된 상품을 이번 동기화로 imweb와 연결 (기존 is_active·이름·판매가 유지 — TMS 마스터)
+              const { stock_quantity: _omit, name: _keepName, price: _keepPrice, ...updateData } = productData;
               if (bySku.name !== p.name) nameMismatches.push({ sku: bySku.sku, tms: bySku.name, imweb: p.name });
+              if (Number(bySku.price) !== productData.price) priceMismatches.push({ sku: bySku.sku, name: bySku.name, tms: Number(bySku.price), imweb: productData.price });
               const { error: linkErr } = await db
                 .from('products')
                 .update(updateData)
@@ -196,7 +201,7 @@ export async function syncProducts(): Promise<SyncResult> {
       console.warn('[syncProducts] 실패 상세:\n' + errors.slice(0, 10).join('\n'));
     }
 
-    return { success: true, total_fetched: totalFetched, synced, created, updated, linked, errors, nameMismatches };
+    return { success: true, total_fetched: totalFetched, synced, created, updated, linked, errors, nameMismatches, priceMismatches };
   } catch (err) {
     if (logEntry?.id) {
       await db.from('sync_log').update({
@@ -207,6 +212,6 @@ export async function syncProducts(): Promise<SyncResult> {
       }).eq('id', logEntry.id);
     }
 
-    return { success: false, total_fetched: totalFetched, synced, created, updated, linked, errors: [String(err), ...errors], nameMismatches };
+    return { success: false, total_fetched: totalFetched, synced, created, updated, linked, errors: [String(err), ...errors], nameMismatches, priceMismatches };
   }
 }

@@ -78,7 +78,9 @@ export async function getImwebProducts(
   page = 1,
   limit = 50
 ): Promise<ImwebApiResponse<{ list: ImwebV2Product[]; pagenation: { data_count: string; current_page: number; total_page: number; pagesize: number } }>> {
-  return imwebFetch(`/v2/shop/products?page=${page}&limit=${limit}`);
+  // 🐞 2026-11-09: v2 는 `page` 를 무시하고 `offset` 을 페이지 번호로 쓴다(실측). page= 로 부르면 늘 최신 50개만 와서
+  //    상품 동기화가 오래된 상품을 한 번도 못 봤다 → offset=페이지번호
+  return imwebFetch(`/v2/shop/products?offset=${page}&limit=${limit}`);
 }
 
 /** 새 OpenAPI 토큰 — DB에서 읽고 만료 시 refreshToken으로 갱신 */
@@ -191,6 +193,27 @@ export async function renameImwebProduct(prodNo: number, name: string): Promise<
     const code = data?.error?.errorCode;
     if (code === '30016') throw new Error('아임웹에 이 상품이 없습니다(삭제됨)');
     throw new Error(`아임웹 상품명 변경 실패: ${res.status} ${JSON.stringify(data?.error ?? data)}`);
+  }
+}
+
+/**
+ * 아임웹 판매가 변경 — 새 OpenAPI PATCH /products/{prodNo}/price (JSON, price 만)
+ * 2026-11-09 실측: 판매가·수정시각 외 그대로, 옛 v2 API 에도 같은 값. 가격 = TMS 마스터(사장님 확정)
+ * 정가(originalPrice)가 판매가보다 낮아지면 아임웹이 거절(30036) → 실패로 알림
+ */
+export async function updateImwebPrice(prodNo: number, price: number): Promise<void> {
+  const token = await getOpenApiToken();
+  const res = await fetch(`https://openapi.imweb.me/products/${prodNo}/price`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ unitCode: await getImwebUnitCode(token), price }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.data !== true) {
+    const code = data?.error?.errorCode;
+    if (code === '30016') throw new Error('아임웹에 이 상품이 없습니다(삭제됨)');
+    if (code === '30036') throw new Error('아임웹 정가가 새 판매가보다 낮습니다 — 아임웹에서 정가를 먼저 고치세요');
+    throw new Error(`아임웹 가격 변경 실패: ${res.status} ${JSON.stringify(data?.error ?? data)}`);
   }
 }
 

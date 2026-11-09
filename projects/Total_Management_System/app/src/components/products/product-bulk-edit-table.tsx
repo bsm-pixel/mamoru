@@ -157,17 +157,17 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
 
     let successCount = 0;
     const newFailed = new Set<string>();
-    const imwebFailed: string[] = [];  // TMS 저장 OK · 아임웹 상품명 반영 실패 (2026-11-09)
+    const imwebFailed: string[] = [];  // TMS 저장 OK · 아임웹 상품명/판매가 반영 실패 (2026-11-09)
 
     for (const [productId, changes] of entries) {
       try {
         const product = products.find(p => p.id === productId);
         const payload: Record<string, unknown> = {};
 
-        // 이름을 고친 행은 아임웹 상품명도 맞춤 — 재시도 때 이름이 같아도 다시 보내도록 sync_imweb_name
-        if (changes.name !== undefined) { payload.name = changes.name; payload.sync_imweb_name = true; }
+        // 이름·판매가를 고친 행은 아임웹도 맞춤 — 재시도 때 값이 같아도 다시 보내도록 sync_imweb
+        if (changes.name !== undefined) { payload.name = changes.name; payload.sync_imweb = true; }
         if (changes.category !== undefined) payload.category = changes.category;
-        if (changes.price !== undefined) payload.price = changes.price;
+        if (changes.price !== undefined) { payload.price = changes.price; payload.sync_imweb = true; }
         if (changes.price_purchase !== undefined) payload.price_purchase = changes.price_purchase;
         if (changes.purchase_name !== undefined) payload.purchase_name = changes.purchase_name;
         if (changes.product_group !== undefined) payload.product_group = changes.product_group || null;
@@ -195,9 +195,9 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
         }
 
         const res = await patchProduct(productId, payload);
-        if (res?.imwebName?.status === 'failed') {
+        if (res?.imweb?.errors?.length) {
           newFailed.add(productId);  // 행을 남겨 [저장]으로 다시 시도
-          imwebFailed.push(`${changes.name ?? product?.name} — ${res.imwebName.error}`);
+          imwebFailed.push(`${changes.name ?? product?.name} — ${res.imweb.errors.join(' / ')}`);
         } else {
           successCount++;
         }
@@ -218,7 +218,7 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
       toast.error(`${successCount}개 성공, ${newFailed.size}개 실패`);
       if (imwebFailed.length > 0) {
         toast.error(
-          `TMS에는 저장됐지만 아임웹 상품명 반영 실패 ${imwebFailed.length}개 — [저장]을 다시 누르면 재시도합니다\n${imwebFailed.slice(0, 5).join('\n')}${imwebFailed.length > 5 ? `\n외 ${imwebFailed.length - 5}개` : ''}`,
+          `TMS에는 저장됐지만 아임웹 반영 실패 ${imwebFailed.length}개 — [저장]을 다시 누르면 재시도합니다\n${imwebFailed.slice(0, 5).join('\n')}${imwebFailed.length > 5 ? `\n외 ${imwebFailed.length - 5}개` : ''}`,
           { duration: 10000 },
         );
       }
@@ -283,7 +283,7 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
             <tr>
               <th className="sticky left-0 z-20 bg-neutral-50 w-2" /> {/* 변경 인디케이터 */}
               <th className="sticky left-2 z-20 bg-neutral-50 px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[80px]">SKU</th>
-              <th className="sticky left-[98px] z-20 bg-neutral-50 px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[180px] border-r border-neutral-200" title="아임웹 연결 상품은 저장하면 아임웹 상품명도 같이 바뀝니다">제품명</th>
+              <th className="sticky left-[98px] z-20 bg-neutral-50 px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[180px] border-r border-neutral-200" title="아임웹 연결 상품은 저장하면 아임웹 상품명도 같이 바뀝니다 (판매가도 동일)">제품명</th>
               <th className="px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[90px]">제품군</th>
               <th className="px-2 py-2 text-center text-xs font-medium text-neutral-500 w-[60px]">순서</th>
               <th className="px-2 py-2 text-left text-xs font-medium text-neutral-500 w-[100px]">카테고리</th>

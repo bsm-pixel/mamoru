@@ -219,18 +219,33 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
                 <> · 수동등록 연결 <b className="text-neutral-700">{productSync.data.linked}</b></>
               )}
             </div>
-            {/* 2026-11-09 상품명 = TMS 마스터 — 동기화는 이름을 덮어쓰지 않고, 다르면 알려만 준다 */}
+            {/* 2026-11-09 상품명·판매가 = TMS 마스터 — 동기화는 덮어쓰지 않고, 다르면 알려만 준다 */}
             {productSync.data.nameMismatches?.length > 0 && (
               <details className="pt-1">
                 <summary className="cursor-pointer text-amber-700 font-semibold hover:underline">
                   아임웹과 이름이 다른 상품 {productSync.data.nameMismatches.length}개 — TMS 이름을 유지했습니다
                 </summary>
                 <p className="mt-1 text-neutral-500 break-keep">
-                  아임웹에서 직접 이름을 바꾼 경우입니다. 아임웹 이름이 맞으면 TMS 제품명을 그 이름으로 저장, TMS 이름이 맞으면 제품 상세의 「아임웹 상품명을 이 이름으로 다시 맞추기」.
+                  아임웹에서 직접 이름을 바꾼 경우입니다. 아임웹 이름이 맞으면 TMS 제품명을 그 이름으로 저장, TMS 이름이 맞으면 제품 상세의 「아임웹을 TMS 값으로 다시 맞추기」.
                 </p>
                 <div className="mt-2 bg-white border border-amber-200 rounded p-2 max-h-48 overflow-y-auto text-[11px] text-neutral-700 space-y-1">
                   {productSync.data.nameMismatches.map((m: { sku: string; tms: string; imweb: string }) => (
                     <div key={m.sku} className="break-all"><span className="font-mono text-neutral-400">{m.sku}</span> TMS「{m.tms}」 ↔ 아임웹「{m.imweb}」</div>
+                  ))}
+                </div>
+              </details>
+            )}
+            {productSync.data.priceMismatches?.length > 0 && (
+              <details className="pt-1">
+                <summary className="cursor-pointer text-amber-700 font-semibold hover:underline">
+                  아임웹과 판매가가 다른 상품 {productSync.data.priceMismatches.length}개 — TMS 가격을 유지했습니다
+                </summary>
+                <p className="mt-1 text-neutral-500 break-keep">
+                  판매가 기준은 TMS입니다. 아임웹을 TMS 가격으로 맞추려면 제품 상세의 「아임웹을 TMS 값으로 다시 맞추기」.
+                </p>
+                <div className="mt-2 bg-white border border-amber-200 rounded p-2 max-h-48 overflow-y-auto text-[11px] text-neutral-700 space-y-1">
+                  {productSync.data.priceMismatches.map((m) => (
+                    <div key={m.sku} className="break-all"><span className="font-mono text-neutral-400">{m.sku}</span> {m.name} — TMS {m.tms.toLocaleString()}원 ↔ 아임웹 {m.imweb.toLocaleString()}원</div>
                   ))}
                 </div>
               </details>
