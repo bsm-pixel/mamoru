@@ -2,7 +2,7 @@
   📦 FILE   : projects/reviews/ImwebWidgetCode_product_reviews.html
   📍 PASTE  : 아임웹 디자인 모드 → 상품 상세 공통 → 코드위젯 (후기 영역)
   📝 기능   : 자체 후기 위젯 + sticky 탭바(정보/후기/문의) + 모달 좌우 화살표
-  🔧 최종   : Phase 2-C (2026-05-16)
+  🔧 최종   : 2026-11-09 — 후기 팝업·사진 확대가 화면 아래로 밀려 뜨던 문제(직접 삽입 → 화면 고정)
   ⚠️ 함께   : product_detail_common.html (공통 영역 코드위젯) 도 같이 paste
 ═══════════════════════════════════════════════════════════════ -->
 
@@ -584,6 +584,12 @@ img { display: block; max-width: 100%; }
 }
 
 /* ── 모달 ── */
+/* 2026-11-09 직접 삽입 시 팝업·라이트박스를 body 로 옮김(화면 고정) → .mm-prv 에서 받던 서체·색·줄바꿈을 직접 지정 */
+.mm-prv__overlay, .mm-lb {
+  font-family: 'Plus Jakarta Sans', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  color: var(--mm-void); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  word-break: keep-all; overflow-wrap: break-word; text-align: left;
+}
 .mm-prv__overlay {
   position: absolute; left: 0; right: 0; z-index: 9999;
   background: rgba(0,0,0,0.5);
@@ -1380,7 +1386,17 @@ img { display: block; max-width: 100%; }
       var cb = _pendingVpCb; _pendingVpCb = null; cb(e.data.visibleTop || 0, e.data.visibleHeight || window.innerHeight);
     }
   });
+  /* 2026-11-09 🐞 이 위젯은 iframe 이 아니라 아임웹 상세 페이지에 '직접' 들어간다(실측: window.self===window.top).
+     그때 absolute + top=scrollY 는 아임웹 상세 블록(position:relative, 문서 1146px 지점)이 기준이라
+     팝업이 화면 아래로 그만큼 밀려 '아래쪽에 반쯤' 떴다. 부모 협상(banner-widget)도 iframe 만 응답 →
+     직접 삽입일 땐 body 로 옮겨 화면에 고정(fixed). iframe 안에서는 기존 뷰포트 앵커 그대로 */
+  var IS_TOP = (function(){ try { return window.self === window.top; } catch(_) { return false; } })();
+  function pinToScreen(el){
+    if (el.parentNode !== document.body) document.body.appendChild(el);
+    el.style.position = 'fixed'; el.style.top = '0'; el.style.height = '100%';
+  }
   function placeInViewport(el, done){
+    if (IS_TOP) { pinToScreen(el); if (done) done(); return; }
     _pendingVpCb = function(top, h){ el.style.top = top + 'px'; el.style.height = h + 'px'; if (done) done(); };
     try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
     setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
@@ -1435,6 +1451,7 @@ img { display: block; max-width: 100%; }
       updateModalNav();
       overlay.classList.add('mm-prv__overlay--open');
       document.body.style.overflow = 'hidden';
+      if (IS_TOP) document.documentElement.style.overflow = 'hidden';  // 직접 삽입: 부모 스크롤 잠금 메시지가 안 먹으므로 직접 잠금
       // 모달 내용 위로 스크롤 (긴 후기 후 다음 후기 진입 시 상단부터 보이도록)
       var modalEl = document.querySelector('.mm-prv__modal');
       if (modalEl) modalEl.scrollTop = 0;
@@ -1453,6 +1470,7 @@ img { display: block; max-width: 100%; }
   function doCloseModal() {
     overlay.classList.remove('mm-prv__overlay--open');
     document.body.style.overflow = '';
+    if (IS_TOP) document.documentElement.style.overflow = '';
     try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {}
   }
   function closeModal() { if (history.state && history.state.mmPrvModal) history.back(); else doCloseModal(); }
@@ -1501,9 +1519,12 @@ img { display: block; max-width: 100%; }
     lbList = list || [];
     lbIdx = idx || 0;
     updateLightbox();
-    // 라이트박스도 오버레이와 동일 뷰포트 좌표로(잘림 방지)
-    lb.style.top = overlay.style.top || '0px';
-    lb.style.height = overlay.style.height || window.innerHeight + 'px';
+    // 라이트박스도 오버레이와 동일 뷰포트 좌표로(잘림 방지). 직접 삽입이면 화면 고정(포토 갤러리에서 바로 열 때도)
+    if (IS_TOP) pinToScreen(lb);
+    else {
+      lb.style.top = overlay.style.top || '0px';
+      lb.style.height = overlay.style.height || window.innerHeight + 'px';
+    }
     lb.classList.add('mm-lb--open');
   }
   function closeLightbox() { lb.classList.remove('mm-lb--open'); }
