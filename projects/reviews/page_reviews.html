@@ -299,7 +299,7 @@ img { display: block; max-width: 100%; }
 /* ── 모달 — iframe 뷰포트 센터링 ── */
 .mm-rv-overlay {
   position: absolute; z-index: 9999;
-  left: 0; right: 0;
+  left: 0; right: 0; top: 0; height: 0; /* 2026-11-09 열기 전 높이 0 — 후기 아래 빈칸(약 245px) 원인. 열 때 top/height 주입 */
   background: rgba(0,0,0,0.5);
   display: flex; align-items: flex-end; justify-content: center;  /* 하단 기준 — 버튼 위치 고정(다음 연타) */
   padding: 20px;
@@ -392,7 +392,7 @@ img { display: block; max-width: 100%; }
 
 /* ── 라이트박스 (사진 확대) ── */
 .mm-lb {
-  position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 10000;
+  position: absolute; left: 0; right: 0; top: 0; height: 0; z-index: 10000; /* 2026-11-09 100%→0: 열 때 높이 주입(빈칸 방지) */
   background: rgba(0,0,0,0.92);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; visibility: hidden;
@@ -609,7 +609,7 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) { .mm-rv-photos { padding: 0 48px; } .mm-rv-photos__grid { grid-template-columns: repeat(6, 1fr); } }
 
 /* ── 전체 사진 모아보기 오버레이 ── */
-.mm-rv-allgrid { position: absolute; left: 0; right: 0; top: 0; height: 100%; z-index: 9999; background: var(--cream, #FAF9F7); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mm-rv-allgrid { position: absolute; left: 0; right: 0; top: 0; height: 0; /* 2026-11-09 100%→0: 열 때 높이 주입 */ z-index: 9999; background: var(--cream, #FAF9F7); opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .mm-rv-allgrid--open { opacity: 1; visibility: visible; }
 .mm-rv-allgrid__head { position: sticky; top: 0; background: var(--cream, #FAF9F7); display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--mm-border-l); z-index: 1; }
 .mm-rv-allgrid__back { border: none; background: none; font-size: 22px; cursor: pointer; color: var(--mm-void); line-height: 1; padding: 0; }
@@ -657,7 +657,7 @@ img { display: block; max-width: 100%; }
 .mm-rv-card:active, .mm-review-card:active, .mm-prv__card:active{ transform:none !important; }
 @media (hover:hover){ .mm-rv-card:hover, .mm-review-card:hover, .mm-prv__card:hover{ border-color:#1A1A1A !important; box-shadow:none !important; transform:none !important; } }
 .mm-rv-card__img, .mm-review-card__img, .mm-prv__card-img{ border-radius:2px !important; }
-.mm-rv-card__meta, .mm-review-card__meta, .mm-prv__card-meta{ font-size:10.5px !important; font-weight:600 !important; letter-spacing:.08em !important; color:#8A8580 !important; }
+.mm-rv-card__meta, .mm-review-card__meta, .mm-prv__card-meta{ font-size:11px !important; font-weight:600 !important; letter-spacing:.08em !important; color:#8A8580 !important; }
 .mm-rv-card__meta-src, .mm-review-card__meta b{ color:#1A1A1A !important; font-weight:800 !important; }
 .mm-rv-card__name, .mm-review-card__name, .mm-prv__card-name{ font-weight:900 !important; letter-spacing:-.02em !important; color:#1A1A1A !important; }
 .mm-hon{ font-weight:400 !important; color:#8A8580 !important; }
@@ -678,7 +678,10 @@ img { display: block; max-width: 100%; }
 
 /* 3. 필터 탭 — 알약 → 글자 탭 + 굵은 밑줄 2px (가는 기준선 위) */
 .mm-rv-tabs, .mm-reviews__tabs, .mm-prv__filters{ gap:0 !important; border-bottom:1px solid #D4D0CB; flex-wrap:nowrap !important; }
-.mm-rv-tab, .mm-reviews__tab, .mm-prv__filter-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:#8A8580 !important; font-size:13px !important; font-weight:600 !important; letter-spacing:-.01em !important; padding:10px 12px 11px !important; transform:none !important; white-space:nowrap; }
+.mm-rv-tab, .mm-reviews__tab, .mm-prv__filter-btn{ position:relative; border:0 !important; border-radius:0 !important; background:transparent !important; color:#8A8580 !important; font-size:13px !important; font-weight:600 !important; letter-spacing:-.01em !important; padding:10px 12px 11px !important; min-height:44px; flex-shrink:0; transform:none !important; white-space:nowrap; } /* 2026-11-09 누르는 높이 44px */
+/* 탭 건수 · 넘칠 때 오른쪽 흐림(더 있음 신호) — 2026-11-09 */
+.mm-tab-count{ margin-left:4px; font-family:'Outfit','Pretendard',sans-serif; font-variant-numeric:tabular-nums; font-weight:600; color:#8A8580; }
+.mm-rv-tabs.is-more, .mm-reviews__tabs.is-more{ -webkit-mask-image:linear-gradient(to right,#000 82%,transparent); mask-image:linear-gradient(to right,#000 82%,transparent); }
 .mm-rv-tab:first-child, .mm-reviews__tab:first-child, .mm-prv__filter-btn:first-child{ padding-left:2px !important; }
 .mm-rv-tab--active, .mm-reviews__tab--active, .mm-prv__filter-btn.active{ color:#1A1A1A !important; font-weight:800 !important; background:transparent !important; }
 .mm-rv-tab--active::after, .mm-reviews__tab--active::after, .mm-prv__filter-btn.active::after{ content:''; position:absolute; left:12px; right:12px; bottom:-1px; height:2px; background:#1A1A1A; }
@@ -698,13 +701,14 @@ img { display: block; max-width: 100%; }
 .mm-rv-sheet__nav{ background:#FFFFFF !important; border-top:1px solid #EDEBE8 !important; }
 .mm-rv-modal__foot, .mm-prv__modal-foot{ border-top:1px solid #EDEBE8 !important; }
 .mm-rv-modal__close, .mm-rv-sheet__close, .mm-prv__modal-close{ border-radius:2px !important; background:#FFFFFF !important; border:1px solid #D4D0CB !important; color:#1A1A1A !important; }
+.mm-rv-modal__close::after, .mm-rv-sheet__close::after, .mm-prv__modal-close::after, .mm-lb__close::after, .mm-rv-lb__x::after{ content:''; position:absolute; inset:-8px; } /* 2026-11-09 누르는 영역 44px+ (보이는 크기 그대로) */
 .mm-rv-modal__photo, .mm-rv-gallery img, .mm-prv__modal-photo{ border-radius:2px !important; }
 .mm-rv-modal__chips, .mm-rv-sheet__topline, .mm-prv__modal-chips{ gap:6px !important; }
 .mm-rv-modal__name, .mm-rv-sheet__name, .mm-prv__modal-name{ font-family:'Pretendard',sans-serif !important; font-size:20px !important; font-weight:900 !important; letter-spacing:-.03em !important; color:#1A1A1A !important; line-height:1.35 !important; }
 .mm-rv-modal__stars, .mm-rv-sheet__stars, .mm-prv__modal-stars{ font-size:15px !important; letter-spacing:3px !important; color:#1A1A1A !important; }
 .mm-rv-modal__text, .mm-rv-sheet__body, .mm-prv__modal-text{ font-size:15px !important; line-height:1.85 !important; color:#2D2D2D !important; }
 .mm-rv-modal__date, .mm-rv-sheet__date, .mm-prv__modal-date{ font-family:'Outfit','Pretendard',sans-serif !important; font-variant-numeric:tabular-nums; font-size:11.5px !important; letter-spacing:.06em !important; color:#8A8580 !important; border-top:1px solid #EDEBE8 !important; }
-.mm-rv-modal__navbtn, .mm-rv-sheet__navbtn, .mm-prv__modal-footbtn{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#FFFFFF !important; color:#1A1A1A !important; font-weight:700 !important; }
+.mm-rv-modal__navbtn, .mm-rv-sheet__navbtn, .mm-prv__modal-footbtn{ border-radius:2px !important; border:1px solid #D4D0CB !important; background:#FFFFFF !important; color:#1A1A1A !important; font-weight:700 !important; min-height:44px; }
 .mm-rv-modal__navbtn--close, .mm-rv-sheet__navbtn--close, .mm-prv__modal-footbtn--close{ background:#1A1A1A !important; border-color:#1A1A1A !important; color:#FAF9F7 !important; }
 
 /* 6. 사진 확대(라이트박스) — 둥근 버튼 → 2px, 캡션 그라데이션 → 단색 띠 */
@@ -768,7 +772,9 @@ img { display: block; max-width: 100%; }
 /* 4. 필터 탭 — 그리드와 같은 왼쪽 선 */
 .mm-rv-tabs{ justify-content:flex-start !important; width:calc(100% - 32px); max-width:928px; margin:clamp(36px,9vw,56px) auto 18px !important; padding:0 !important; }
 @media (min-width:768px){ .mm-rv-tabs{ width:calc(100% - 64px); max-width:896px; margin-bottom:24px !important; } .mm-rv-tab{ font-size:14px !important; } }
-@media (min-width:1024px){ .mm-rv-tabs{ width:calc(100% - 96px); max-width:864px; } .mm-rv-tab{ font-size:15px !important; } }
+@media (min-width:1024px){ .mm-rv-tabs{ width:calc(100% - 96px); max-width:1104px; } .mm-rv-tab{ font-size:15px !important; } }
+/* 2026-11-09 PC 폭 960→1200(격자 페이지 표준) — 4열 카드가 약 200px라 글이 5~6자마다 줄바뀜 → 약 260px. 히어로·요약·사진·탭 같은 왼쪽 선 */
+@media (min-width:1024px){ :root{ --mm-max-w:1200px; } .mm-rv-header.b-hero{ max-width:1200px; } }
 
 /* 5. 모션 — 히어로 진입 1곳 */
 @keyframes b-rise{ from{ opacity:0; transform:translateY(22px); } to{ opacity:1; transform:none; } }
@@ -820,10 +826,11 @@ img { display: block; max-width: 100%; }
 
 <!-- 탭 필터 -->
 <nav class="mm-rv-tabs" id="rvTabs">
-  <button class="mm-rv-tab mm-rv-tab--active" data-type="all">전체</button>
-  <button class="mm-rv-tab" data-type="consult">상담</button>
-  <button class="mm-rv-tab" data-type="repair">복원수리</button>
-  <button class="mm-rv-tab" data-type="purchase">제품구매</button>
+  <!-- 2026-11-09 메인과 같은 이름·건수 (상담→컨설팅상담) -->
+  <button class="mm-rv-tab mm-rv-tab--active" data-type="all">전체<span class="mm-tab-count" data-count="all"></span></button>
+  <button class="mm-rv-tab" data-type="consult">컨설팅상담<span class="mm-tab-count" data-count="consult"></span></button>
+  <button class="mm-rv-tab" data-type="repair">복원수리<span class="mm-tab-count" data-count="repair"></span></button>
+  <button class="mm-rv-tab" data-type="purchase">제품구매<span class="mm-tab-count" data-count="purchase"></span></button>
 </nav>
 
 <!-- 리뷰 그리드 -->
@@ -1488,6 +1495,7 @@ img { display: block; max-width: 100%; }
         renderBestReviews();
         buildGallery();
         render();
+        renderTabCounts();
       })
       .catch(function(err) {
         console.error('리뷰 API 에러:', err);
@@ -1495,6 +1503,23 @@ img { display: block; max-width: 100%; }
         render();
       });
   }
+
+  /* 2026-11-09 탭마다 건수(메인과 동일) + 탭 줄이 넘치면(좁은 폰) 오른쪽 흐림 — 끝까지 밀면 해제 */
+  var _tabFade = null;
+  function initTabFade() {
+    var t = document.getElementById('rvTabs'); if (!t) return null;
+    function upd() { t.classList.toggle('is-more', t.scrollWidth - t.clientWidth - t.scrollLeft > 4); }
+    t.addEventListener('scroll', upd, { passive: true }); window.addEventListener('resize', upd); upd(); setTimeout(upd, 400);
+    return upd;
+  }
+  function renderTabCounts() {
+    if (!allReviews.length) return;
+    var cnt = { all: allReviews.length };
+    allReviews.forEach(function(r) { cnt[r.type] = (cnt[r.type] || 0) + 1; });
+    document.querySelectorAll('#rvTabs [data-count]').forEach(function(s) { s.textContent = cnt[s.getAttribute('data-count')] || 0; });
+    if (_tabFade) _tabFade();
+  }
+  _tabFade = initTabFade();
 
   /* 탭 전환 */
   document.getElementById('rvTabs').addEventListener('click', function(e) {
