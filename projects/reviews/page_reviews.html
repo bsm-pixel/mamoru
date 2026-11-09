@@ -1180,6 +1180,49 @@ img { display: block; max-width: 100%; }
     }, 200);
   }
 
+  /* 2026-11-09 후기 영역(iframe)이 화면에 일부만 보일 때(페이지 맨 아래·위) 팝업이 보이는 구간에 눌려 작게 뜨던 문제
+     → 먼저 누른 자리 기준으로 후기 영역을 화면 위로 끌어올리고(부모 MAMORU_IFRAME_SCROLL) 멈추면 연다.
+     이미 팝업·사진이 열려 있으면(배경 잠금 중) 그대로. 부모 응답 없으면 그냥 연다. iframe_main_reviews.html 과 같은 방식 */
+  var lastTapY = 0;
+  document.addEventListener('click', function(e) {
+    try { lastTapY = e.target.getBoundingClientRect().top + (window.pageYOffset || 0) - 24; } catch(_) {}
+  }, true);
+  function askViewport(cb) {
+    var done = false;
+    pendingViewportCb = function(top, h) { if (done) return; done = true; cb(top, h); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function() { if (done) return; done = true; pendingViewportCb = null; cb(null, null); }, 200);
+  }
+  function ensureRoom(anchorY, go) {
+    askViewport(function(top, h) {
+      var docH = document.documentElement.scrollHeight;
+      if (top === null || (top > 0 && top + h < docH - 2)) return go();   // 응답 없음 / 이미 화면을 꽉 채움
+      // 끌어올릴 위치 = 누른 자리 — 단, 영역 아래가 화면보다 짧아지지 않게 문서 끝-1100px 보다 아래로는 안 감
+      var y = Math.max(0, Math.min(anchorY, docH - 1100));
+      try { window.parent.postMessage({ type: 'MAMORU_IFRAME_SCROLL', y: y }, '*'); } catch(_) { return go(); }
+      var last = null, same = 0, tries = 0;
+      (function poll() {                                                  // 부드러운 스크롤이 멈출 때까지(최대 약 1.5초)
+        setTimeout(function() {
+          askViewport(function(t) {
+            tries++;
+            if (t === last) same++; else { same = 0; last = t; }
+            if (same >= 1 || tries >= 12) go(); else poll();
+          });
+        }, 130);
+      })();
+    });
+  }
+  var _opening = false;  // 끌어올리는 동안 두 번 눌림 방지
+  function placeRoomy(el, done) {
+    var busy = overlay.classList.contains('mm-rv-overlay--open') ||
+      document.getElementById('rvAllGrid').classList.contains('mm-rv-allgrid--open') ||
+      document.getElementById('rvLightbox').classList.contains('mm-lb--open');
+    if (busy) return placeInViewport(el, done);
+    if (_opening) return;
+    _opening = true;
+    ensureRoom(lastTapY, function() { placeInViewport(el, function() { _opening = false; if (done) done(); }); });
+  }
+
   function openModalAt(list, idx) {
     if (!list || !list.length) return;
     var safe = ((idx % list.length) + list.length) % list.length;
@@ -1187,7 +1230,7 @@ img { display: block; max-width: 100%; }
     if (overlay.classList.contains('mm-rv-overlay--open')) {
       showModalContent(list[safe]); // 순회 중 — 이미 배치됨
     } else {
-      placeInViewport(overlay, function() {
+      placeRoomy(overlay, function() {
         showModalContent(list[safe]);
         overlay.classList.add('mm-rv-overlay--open');
         document.body.style.overflow = 'hidden';
@@ -1305,7 +1348,7 @@ img { display: block; max-width: 100%; }
       return '<div class="mm-rv-allgrid__item" data-gal-idx="' + i + '"><img src="' + p.url + '" alt="사진 후기" loading="lazy"></div>';
     }).join('');
     allGrid.scrollTop = 0;
-    placeInViewport(allGrid, function() {
+    placeRoomy(allGrid, function() {
       allGrid.classList.add('mm-rv-allgrid--open');
       document.body.style.overflow = 'hidden';
     });
@@ -1340,7 +1383,7 @@ img { display: block; max-width: 100%; }
     lbIdx = idx || 0;
     updateLightbox();
     document.body.style.overflow = 'hidden';
-    placeInViewport(lb, function() { lb.classList.add('mm-lb--open'); });
+    placeRoomy(lb, function() { lb.classList.add('mm-lb--open'); });
   }
   function closeLightbox() {
     lb.classList.remove('mm-lb--open');

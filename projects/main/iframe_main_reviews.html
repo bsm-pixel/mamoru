@@ -538,15 +538,49 @@ img { display: block; max-width: 100%; }
     try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
     setTimeout(function(){ if (!_pendingVpCb) return; _pendingVpCb = null; el.style.top = (window.scrollY||0) + 'px'; el.style.height = window.innerHeight + 'px'; if (done) done(); }, 200);
   }
+  /* 2026-11-09 후기 영역이 화면에 일부만 보일 때(영역 위·아래 끝이 화면 안) 시트가 보이는 구간에 눌려 작게 뜨고
+     위쪽은 어두워지지 않던 문제 → 먼저 후기 영역을 화면 위로 끌어올리고(부모 MAMORU_IFRAME_SCROLL) 멈추면 연다.
+     부모 응답이 없으면(단독 열기 등) 그냥 연다. page_reviews.html 과 같은 방식 */
+  function askViewport(cb){
+    var done = false;
+    _pendingVpCb = function(top, h){ if (done) return; done = true; cb(top, h); };
+    try { window.parent.postMessage({ type: 'MAMORU_REQUEST_VIEWPORT' }, '*'); } catch(_) {}
+    setTimeout(function(){ if (done) return; done = true; _pendingVpCb = null; cb(null, null); }, 200);
+  }
+  function ensureRoom(anchorY, go){
+    askViewport(function(top, h){
+      var docH = document.documentElement.scrollHeight;
+      if (top === null || (top > 0 && top + h < docH - 2)) return go();   // 응답 없음 / 이미 화면을 꽉 채움
+      // 끌어올릴 위치 = 기준점(탭·카드) — 단, 영역 아래가 화면보다 짧아지지 않게 문서 끝-1100px 보다 아래로는 안 감(가장 큰 폰·PC 화면 여유)
+      var y = Math.max(0, Math.min(anchorY, docH - 1100));
+      try { window.parent.postMessage({ type: 'MAMORU_IFRAME_SCROLL', y: y }, '*'); } catch(_) { return go(); }
+      var last = null, same = 0, tries = 0;
+      (function poll(){                                                   // 부드러운 스크롤이 멈출 때까지(최대 약 1.5초)
+        setTimeout(function(){
+          askViewport(function(t){
+            tries++;
+            if (t === last) same++; else { same = 0; last = t; }
+            if (same >= 1 || tries >= 12) go(); else poll();
+          });
+        }, 130);
+      })();
+    });
+  }
+  var _opening = false;  // 끌어올리는 동안 두 번 눌림 방지
   function openSheet(idx){
+    if (_opening) return;
     reviewState.idx = idx;
-    placeInViewport(_rvBackdrop, function(){
+    var tabs = document.getElementById('mmReviewTabs');
+    var anchorY = tabs ? tabs.getBoundingClientRect().top + (window.pageYOffset || 0) : 0;
+    _opening = true;
+    ensureRoom(anchorY, function(){ placeInViewport(_rvBackdrop, function(){
+      _opening = false;
       renderSheet();
       _rvBackdrop.classList.add('mm-rv-backdrop--open');
       document.body.style.overflow = 'hidden';
       try { history.pushState({ mmRvSheet: 1 }, ''); } catch(_) {} // 폰 뒤로가기 → 모달만 닫힘
       try { window.parent.postMessage({ type: 'MAMORU_LOCK_SCROLL' }, '*'); } catch(_) {} // 배경 스크롤 잠금
-    });
+    }); });
   }
   function doCloseSheet(){ _rvBackdrop.classList.remove('mm-rv-backdrop--open'); document.body.style.overflow = ''; try { window.parent.postMessage({ type: 'MAMORU_UNLOCK_SCROLL' }, '*'); } catch(_) {} }
   function closeSheet(){ if (history.state && history.state.mmRvSheet) history.back(); else doCloseSheet(); }
