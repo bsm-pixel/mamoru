@@ -322,7 +322,8 @@ function NewSaleContent() {
     if (cart.length === 0 && !hasRepair) { toast.error('제품 또는 복원수리를 입력해주세요'); return; }
     // 165: 맡김 접수는 연락처가 있어야 한다(알림톡·출고 안내·고객 매칭)
     const phoneForRepair = selectedCustomer?.phone || customerPhone.trim();
-    const takeAway = hasRepair && repTakeAway;
+    // 2026-11-09 출장 채널일 때만 수거 접수 (매장 손님이 두고 간 가위는 복원수리 접수에서 따로 받는다)
+    const takeAway = hasRepair && repTakeAway && saleChannel === 'field';
     if (takeAway && !phoneForRepair) { toast.error('가위를 수거하려면 고객 연락처가 필요합니다'); return; }
 
     await createSale.mutateAsync({
@@ -628,7 +629,7 @@ function NewSaleContent() {
                   <span className="text-stone-900">{formatKRW(repairTotal)}</span>
                 </div>
                 {/* 165: 출장 현장에서 가위를 맡아 감 → 복원수리 접수 자동 생성 (결제는 이 판매로 끝) */}
-                {hasRepair && (
+                {hasRepair && saleChannel === 'field' && (
                   <label className="flex items-start gap-2 p-3 rounded-lg border border-neutral-200 bg-white cursor-pointer">
                     <input type="checkbox" checked={repTakeAway} onChange={(e) => setRepTakeAway(e.target.checked)}
                       className="mt-0.5 w-4 h-4 accent-neutral-900 shrink-0" />
@@ -642,6 +643,11 @@ function NewSaleContent() {
                       </span>
                     </span>
                   </label>
+                )}
+                {hasRepair && saleChannel !== 'field' && (
+                  <p className="text-[11px] text-neutral-400 leading-relaxed break-keep">
+                    매출만 기록됩니다. 출장에서 가위를 수거했다면 판매 채널을 「출장」으로 고르세요 — 복원수리 접수가 함께 만들어집니다.
+                  </p>
                 )}
               </div>
             </Card>

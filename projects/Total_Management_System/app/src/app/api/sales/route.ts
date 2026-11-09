@@ -91,7 +91,8 @@ export async function POST(req: NextRequest) {
     const fieldRepair = (body as { field_repair?: { qty_mamoru?: number; qty_other?: number } }).field_repair;
     const frQtyM = Math.max(0, Math.floor(Number(fieldRepair?.qty_mamoru) || 0));
     const frQtyO = Math.max(0, Math.floor(Number(fieldRepair?.qty_other) || 0));
-    const wantsFieldRepair = !!fieldRepair && frQtyM + frQtyO > 0;
+    // 2026-11-09 출장 채널만 — 화면이 아닌 경로로 다른 채널에 실려 와도 출장수거 건을 만들지 않는다
+    const wantsFieldRepair = !!fieldRepair && frQtyM + frQtyO > 0 && sale.sale_channel === 'field';
     if (wantsFieldRepair && !sale.customer_phone?.trim()) {
       return NextResponse.json({ error: '가위를 수거하려면 고객 연락처가 필요합니다' }, { status: 400 });
     }
