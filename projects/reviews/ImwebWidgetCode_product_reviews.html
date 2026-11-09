@@ -1185,7 +1185,7 @@ img { display: block; max-width: 100%; }
       imgHtml = '<img class="mm-prv__card-img" src="' + r.product_image_url + '" alt="제품 이미지" loading="lazy">';
     }
     var productHtml = r.product ? '<div class="mm-prv__card-product">' + r.product + '</div>' : '';
-    var preview = r.content.length > 80 ? r.content.substring(0, 80) + '…' : r.content;
+    var preview = r.content.length > 80 ? r.content.substring(0, 80).replace(/&[#a-z0-9]*$/i, '') + '…' : r.content; // 잘린 &lt; 조각 제거(서버 이스케이프, 2026-11-09)
 
     return '<article class="mm-prv__card" data-idx="' + idx + '">' +
       imgHtml +

@@ -77,7 +77,9 @@ img { display: block; max-width: 100%; }
 .mm-reviews__head { margin-bottom: 28px; }
 .mm-reviews__title { font-size: 18px; font-weight: 700; color: var(--void); margin-bottom: 4px; }
 .mm-reviews__desc { font-size: 13px; color: var(--stone); }
-.mm-reviews__tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.mm-reviews__tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; overflow-y: hidden; padding-bottom: 1px; scrollbar-width: none; } /* 2026-11-09 전체 탭 추가 — 좁은 폰에서 넘치면 가로 스크롤(세로는 고정, 밑줄 1px 여유) */
+.mm-reviews__tabs::-webkit-scrollbar { display: none; }
+.mm-reviews__tab-count { margin-left: 4px; font-family: 'Outfit', 'Pretendard', sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--warm-gray); }
 .mm-reviews__tab {
   padding: 8px 16px; border: 1px solid var(--sand); border-radius: var(--radius-sm);
   background: transparent; font-family: var(--font-body); font-size: 13px; font-weight: 600;
@@ -282,7 +284,9 @@ img { display: block; max-width: 100%; }
     </div>
 
     <div class="mm-reviews__tabs" id="mmReviewTabs">
-      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="consult">컨설팅상담</button>
+      <!-- 2026-11-09 전체 탭 추가(기본) — 후기 규모가 바로 보이게, 전체보기(/62)와 같은 순서 -->
+      <button class="mm-reviews__tab mm-reviews__tab--active" data-type="all">전체<span class="mm-reviews__tab-count" id="mmReviewTotal"></span></button>
+      <button class="mm-reviews__tab" data-type="consult">컨설팅상담</button>
       <button class="mm-reviews__tab" data-type="repair">복원수리</button>
       <button class="mm-reviews__tab" data-type="purchase">제품구매</button>
     </div>
@@ -292,7 +296,7 @@ img { display: block; max-width: 100%; }
     </div>
 
     <!-- ✏️ 수정가능: 후기 더보기 링크 URL -->
-    <a href="/62" class="mm-reviews__more">후기 더보기 →</a>
+    <a href="/62" class="mm-reviews__more" id="mmReviewMore">후기 더보기 →</a>
   </div>
 </section>
 
@@ -386,7 +390,7 @@ img { display: block; max-width: 100%; }
   function renderReviews(type) {
     var el = document.getElementById('mmReviews');
     if (!el) return;
-    var items = allReviews.filter(function(r) { return r.type === type; });
+    var items = type === 'all' ? allReviews.slice() : allReviews.filter(function(r) { return r.type === type; });
     if (items.length === 0) {
       el.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--warm-gray);font-size:14px;">아직 등록된 후기가 없습니다</div>';
       return;
@@ -413,7 +417,7 @@ img { display: block; max-width: 100%; }
       if (clbl) { chips += '<span class="mm-review-card__subtype">' + clbl + '</span>'; }
       if (r.source === 'naver') { chips += '<span class="mm-review-card__source-badge">네이버</span>'; }
       var metaHtml = (clbl || '').replace('·', ' · ') + (r.source === 'naver' ? (clbl ? ' · ' : '') + '<b style="font-weight:700;color:var(--stone);">네이버</b>' : '');
-      var preview = r.content.length > 60 ? r.content.substring(0, 60) + '…' : r.content;
+      var preview = r.content.length > 60 ? r.content.substring(0, 60).replace(/&[#a-z0-9]*$/i, '') + '…' : r.content; // 잘린 &lt; 조각 제거(서버 이스케이프, 2026-11-09)
       return '<div class="mm-review-card mm-anim mm-anim-stagger" data-idx="' + idx + '">' +
         imgHtml +
         // 2026-10-01: 분류(위·작게) → 이름(한 줄 전체) → 매장(자기 줄) — 이름 옆 칩이 줄바꿈되며 틀이 깨지던 문제 (page_reviews 와 동일)
@@ -435,8 +439,15 @@ img { display: block; max-width: 100%; }
   function loadReviews() {
     fetch(REVIEW_API + '?type=all')
       .then(function(res) { return res.json(); })
-      .then(function(data) { allReviews = Array.isArray(data) ? data : []; renderReviews('consult'); })
-      .catch(function() { allReviews = []; renderReviews('consult'); });
+      .then(function(data) {
+        allReviews = Array.isArray(data) ? data : [];
+        if (allReviews.length) {  // 2026-11-09 후기 규모 표시 — 전체 탭 숫자 + 더보기 문구
+          var tc = document.getElementById('mmReviewTotal'); if (tc) tc.textContent = allReviews.length;
+          var mo = document.getElementById('mmReviewMore'); if (mo) mo.textContent = '후기 ' + allReviews.length + '건 모두 보기 →';
+        }
+        renderReviews('all');
+      })
+      .catch(function() { allReviews = []; renderReviews('all'); });
   }
 
   function initReviewTabs() {
