@@ -11,7 +11,7 @@ import { StoreVisitList, type StoreVisitTabKey } from '@/components/consultation
 import { StageGrid } from '@/components/ui/stage-grid';
 import { FieldRequestList } from '@/components/consultations/field-request-list';
 import { TalkConsultList } from '@/components/consultations/talk-consult-list';
-import { AllConsultationsList } from '@/components/consultations/all-consultations-list';
+import { AllConsultationsList, ACTIVE_STATUSES } from '@/components/consultations/all-consultations-list';
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
@@ -53,6 +53,16 @@ function useNeedActionCounts() {
   };
 }
 
+/** 2026-11-09 모바일 종류 카드 = 진행 중 건수 (아래 전체 목록·하위 단계 카드와 같은 기준)
+ *  전엔 '처리 필요 건수'만 세서 매장 예약이 있어도 매장=–, 전체=출장 대기 수만 보였다 */
+function useActiveCounts() {
+  const { data: store } = useConsultations({ statuses: ACTIVE_STATUSES, type: 'store_visit', limit: 1 });
+  const { data: field } = useConsultations({ statuses: ACTIVE_STATUSES, type: 'field_request', limit: 1 });
+  const { data: talk } = useConsultations({ statuses: ACTIVE_STATUSES, type: 'talk_consult', limit: 1 });
+  const s = store?.total || 0, f = field?.total || 0, t = talk?.total || 0;
+  return { all: s + f + t, store_visit: s, field_request: f, talk_consult: t };
+}
+
 
 // 서브탭 → 지도 activeStatuses 매핑
 const SUB_TAB_STATUSES: Record<string, string[] | undefined> = {
@@ -76,6 +86,7 @@ export default function ConsultationsPage() {
   const [mobileMapOpen, setMobileMapOpen] = useState(false);
   const sync = useConsultationSync();
   const needAction = useNeedActionCounts();
+  const activeCounts = useActiveCounts();
   const { data: stats } = useConsultationDashboardStats();
 
   // 077: 상담완료 후 매장방문 '확정' 탭에 있을 때만 '지난내역'으로 자동 전환
@@ -146,11 +157,16 @@ export default function ConsultationsPage() {
           </div>
         </div>}
 
-        {/* 모바일: 종류 4칸 버튼판 — 숫자 = 처리 필요 건수 (가로 스크롤로 '톡'이 가려지던 문제) */}
+        {/* 모바일: 종류 4칸 버튼판 — 숫자 = 진행 중 건수, 처리 필요가 있으면 이름 옆 「확인n」+주황 (2026-11-09) */}
         {!isLg && (
           <StageGrid
             ariaLabel="상담 종류"
-            items={TABS.map((t) => ({ key: t.key, label: t.label, count: t.key === 'store_visit' ? null : needAction[t.key], tone: 'amber' as const }))}
+            items={TABS.map((t) => ({
+              key: t.key,
+              label: needAction[t.key] > 0 ? `${t.label} 확인${needAction[t.key]}` : t.label,
+              count: activeCounts[t.key],
+              tone: needAction[t.key] > 0 ? 'amber' as const : 'default' as const,
+            }))}
             active={activeTab}
             onChange={(k) => { setActiveTab(k); setSelectedFieldId(null); setSelectedId(null); }}
           />

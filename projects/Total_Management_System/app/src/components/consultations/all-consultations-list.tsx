@@ -31,7 +31,8 @@ import {
 import { Search, ChevronLeft, ChevronRight, Store, Truck, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
-const ACTIVE_STATUSES = [
+// 진행 중 상태 — 전체 목록과 모바일 상단 종류 카드(consultations/page.tsx)가 같은 기준을 쓴다
+export const ACTIVE_STATUSES = [
   'pending_admin',
   'suggested',
   'confirmed',
