@@ -298,7 +298,7 @@ export async function createFieldRepairFromSale(db: Db, input: FieldRepairFromSa
   await db.from('repair_history').insert({
     repair_id: repair.id,
     to_status: 'intake',
-    note: `출장 현장 맡김 — 판매 ${input.saleNumber} 에서 접수${input.paid ? ' (현장 결제 완료)' : ''}`,
+    note: `출장 현장 수거 — 판매 ${input.saleNumber} 에서 접수${input.paid ? ' (현장 결제 완료)' : ''}`,
   });
 
   // 맡김 확인 알림톡 — 사장님 본인 등록이라 앱 푸시 없음. 웹훅 미설정(검수 전)이면 sendNotification 이 건너뛴다

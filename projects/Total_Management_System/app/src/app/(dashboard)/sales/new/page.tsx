@@ -323,7 +323,7 @@ function NewSaleContent() {
     // 165: 맡김 접수는 연락처가 있어야 한다(알림톡·출고 안내·고객 매칭)
     const phoneForRepair = selectedCustomer?.phone || customerPhone.trim();
     const takeAway = hasRepair && repTakeAway;
-    if (takeAway && !phoneForRepair) { toast.error('가위를 맡아 가려면 고객 연락처가 필요합니다'); return; }
+    if (takeAway && !phoneForRepair) { toast.error('가위를 수거하려면 고객 연락처가 필요합니다'); return; }
 
     await createSale.mutateAsync({
       sale: {
@@ -633,10 +633,11 @@ function NewSaleContent() {
                     <input type="checkbox" checked={repTakeAway} onChange={(e) => setRepTakeAway(e.target.checked)}
                       className="mt-0.5 w-4 h-4 accent-neutral-900 shrink-0" />
                     <span className="min-w-0">
-                      <span className="block text-xs font-semibold text-neutral-800">가위를 맡아 가요 — 복원수리 접수 함께 만들기</span>
+                      {/* 2026-11-09 문구: '가위를 맡아 가요' → 사장님 관점 '수거했어요' (고객 알림톡 문구는 고객 관점 그대로) */}
+                      <span className="block text-xs font-semibold text-neutral-800">고객 가위를 수거했어요 — 복원수리 접수 함께 만들기</span>
                       <span className="block text-[11px] text-neutral-500 leading-relaxed mt-0.5">
                         {repTakeAway
-                          ? '저장하면 복원수리 목록에 출장수거 건이 생기고, 고객에게 맡김 확인 알림톡이 갑니다. 결제는 이 판매로 끝나 비용안내·입금확인은 건너뜁니다.'
+                          ? '저장하면 복원수리 목록에 출장수거 건이 생기고, 고객에게 수거 확인 알림톡이 갑니다. 결제는 이 판매로 끝나 비용안내·입금확인은 건너뜁니다.'
                           : '현장에서 바로 수리해 건넨 경우 등 — 매출만 기록하고 복원수리 접수는 만들지 않습니다.'}
                       </span>
                     </span>

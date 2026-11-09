@@ -196,9 +196,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 165 출장 맡김 입고: 비용확정→작업시작 (알림톡 없음 — 결제는 판매에서 끝남, 맡김 확인은 접수 때 이미 발송)
   const handleFieldInbound = async () => {
     if (currentStatus !== 'cost_notified') {
-      await updateStatus.mutateAsync({ id: r.id, status: 'cost_notified', note: '출장 맡김 입고 확인 (판매에서 결제)' });
+      await updateStatus.mutateAsync({ id: r.id, status: 'cost_notified', note: '출장 수거 입고 확인 (판매에서 결제)' });
     }
-    await updateStatus.mutateAsync({ id: r.id, status: 'repairing', note: '출장 맡김 작업시작' });
+    await updateStatus.mutateAsync({ id: r.id, status: 'repairing', note: '출장 수거 작업시작' });
   };
 
   // 입금확인 처리 (paid_at 설정 — 상태 변경 없음) + 결제수단 기록
@@ -300,8 +300,8 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
     }
     if (canFieldInbound) {
       return (
-        <ActionNote tone="wait" title="입고대기 · 출장 맡김">
-          출장 현장에서 맡아 온 가위입니다. 사무실에서 수량을 확인하고 [입고 확인 · 작업 시작]을 눌러주세요. 고객 알림톡은 나가지 않습니다.
+        <ActionNote tone="wait" title="입고대기 · 출장 수거">
+          출장 현장에서 수거해 온 가위입니다. 사무실에서 수량을 확인하고 [입고 확인 · 작업 시작]을 눌러주세요. 고객 알림톡은 나가지 않습니다.
         </ActionNote>
       );
     }

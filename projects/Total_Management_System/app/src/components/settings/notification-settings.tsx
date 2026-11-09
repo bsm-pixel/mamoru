@@ -143,7 +143,7 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
-      <Field label="Make 웹훅 URL (출장 맡김·함께 출고)" desc="출장 현장 맡김 확인 / 제품·복원수리 함께 출고 1통 — 비워 두면 맡김 확인은 안 나가고, 함께 출고는 지금처럼 2통(복원수리 출고 + 판매 출고). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
+      <Field label="Make 웹훅 URL (출장 수거·함께 출고)" desc="출장 현장 수거 확인 / 제품·복원수리 함께 출고 1통 — 비워 두면 맡김 확인은 안 나가고, 함께 출고는 지금처럼 2통(복원수리 출고 + 판매 출고). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
         <input value={webhookFieldRepair} onChange={(e) => setWebhookFieldRepair(e.target.value)}
           className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
       </Field>

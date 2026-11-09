@@ -448,7 +448,7 @@ export function useCreateSale() {
     onSuccess: (data) => {
       toast.success(`판매 등록 완료: ${data.saleNumber}`);
       // 165: 출장 맡김 → 복원수리 건 자동 생성 결과 (실패해도 판매는 저장됨)
-      if (data.repairAsId) toast.success(`복원수리 접수 ${data.repairAsId} 생성 · 맡김 확인 알림톡`);
+      if (data.repairAsId) toast.success(`복원수리 접수 ${data.repairAsId} 생성 · 수거 확인 알림톡`);
       if (data.repairError) toast.error(`복원수리 접수 생성 실패 — 복원수리 목록에서 직접 확인하세요: ${data.repairError}`, { duration: 8000 });
       invalidateFinancialQueries(queryClient);
       queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });

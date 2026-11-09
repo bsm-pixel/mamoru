@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     const frQtyO = Math.max(0, Math.floor(Number(fieldRepair?.qty_other) || 0));
     const wantsFieldRepair = !!fieldRepair && frQtyM + frQtyO > 0;
     if (wantsFieldRepair && !sale.customer_phone?.trim()) {
-      return NextResponse.json({ error: '가위를 맡아 가려면 고객 연락처가 필요합니다' }, { status: 400 });
+      return NextResponse.json({ error: '가위를 수거하려면 고객 연락처가 필요합니다' }, { status: 400 });
     }
 
     // 무결성 가드 — 같은 판매 안에서 동일 시리얼이 두 품목에 중복 배정되면 거부

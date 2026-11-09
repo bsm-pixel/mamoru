@@ -37,7 +37,7 @@ export async function POST(
 
     // 165: 판매와 연결된 출장 맡김 건은 현장에서 결제가 끝났다 — 비용안내·입금확인 알림톡을 보내지 않는다
     if (repair.sale_id && (template === 'as_cost_notice' || template === 'as_payment_confirmed')) {
-      return NextResponse.json({ error: '출장 맡김 건은 판매에서 결제가 끝나 비용·입금 안내를 보내지 않습니다' }, { status: 400 });
+      return NextResponse.json({ error: '출장 수거 건은 판매에서 결제가 끝나 비용·입금 안내를 보내지 않습니다' }, { status: 400 });
     }
 
     const result = await sendNotification({
