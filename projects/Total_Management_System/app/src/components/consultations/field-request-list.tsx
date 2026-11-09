@@ -8,10 +8,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations } from '@/hooks/use-consultations';
+import { useConsultations, useClosingHistory } from '@/hooks/use-consultations';
+import { ClosedMeta, PastFilterChips, OverdueBlock, useOverdueCount, pastStatuses, type PastFilter } from './closed-info';
 import {
   formatPhone,
   formatDday,
+  toLocalDateString,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
 } from '@/lib/utils/format';
@@ -37,7 +39,7 @@ const TABS: { key: TabKey; label: string; short?: string }[] = [
   { key: 'past', label: '지난내역' },
 ];
 
-function getTabFilters(tab: TabKey) {
+function getTabFilters(tab: TabKey, pastFilter: PastFilter) {
   switch (tab) {
     case 'today':
       return null;
@@ -52,7 +54,7 @@ function getTabFilters(tab: TabKey) {
     case 'on_hold':
       return { status: 'on_hold', orderBy: 'updated_at_desc' as const };
     case 'past':
-      return { statuses: ['completed', 'cancelled'], orderBy: 'updated_at_desc' as const };
+      return { statuses: pastStatuses(pastFilter), orderBy: 'updated_at_desc' as const };  // 끝난 건 + 칩(전체·완료·취소) 2026-11-09
   }
 }
 
@@ -73,9 +75,10 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const [page, setPage] = useState(1);
   const [showRegionFilter, setShowRegionFilter] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [pastFilter, setPastFilter] = useState<PastFilter>('all');
 
   // 기본 탭 결정용 건수 확인
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateString(new Date());  // 한국 날짜 기준 (UTC면 새벽 0~9시에 어제로 계산) 2026-11-09
   const { data: todayCheck } = useConsultations({
     status: 'confirmed',
     type: 'field_request',
@@ -95,12 +98,13 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   const { data: suggestedCheck } = useConsultations({ status: 'suggested', type: 'field_request', limit: 1 });
   const { data: confirmedCheck } = useConsultations({ status: 'confirmed', dateFilter: 'upcoming', type: 'field_request', limit: 1 });
   const { data: holdCheck } = useConsultations({ status: 'on_hold', type: 'field_request', limit: 1 });
+  const overdueCount = useOverdueCount('field_request');
   const stageCount: Record<TabKey, number | null> = {
     today: todayCount,
     new_intake: newCheck?.total ?? 0,
     suggested: suggestedCheck?.total ?? 0,
     action_needed: actionCount,
-    confirmed: confirmedCheck?.total ?? 0,
+    confirmed: (confirmedCheck?.total ?? 0) + overdueCount,
     on_hold: holdCheck?.total ?? 0,
     past: null,
   };
@@ -116,7 +120,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
     }
   }, [todayCheck, actionCheck, todayCount, actionCount, initialTabSet]);
 
-  const tabFilters = getTabFilters(tab);
+  const tabFilters = getTabFilters(tab, pastFilter);
   const { data, isLoading } = useConsultations({
     ...(tabFilters || {}),
     type: 'field_request',
@@ -126,6 +130,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
   });
   const consultations = data?.consultations || [];
   const consultActTypes = useActivityTypes(consultations.map((c) => c.phone));
+  const { data: closingMap } = useClosingHistory(tab === 'past' ? consultations.map((c) => c.id) : []);
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -188,7 +193,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
             <Badge className={CONSULTATION_STATUS_COLOR[c.status]}>
               {CONSULTATION_STATUS_LABEL[c.status]}
             </Badge>
-            {dday.label && (tab === 'confirmed' || tab === 'past') && (
+            {dday.label && tab === 'confirmed' && (
               <Badge className={
                 dday.isToday ? 'bg-terracotta/10 text-terracotta'
                 : dday.isPast ? 'bg-error-soft text-error'
@@ -198,7 +203,9 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+          {/* 지난내역: 처리일·예약일 + 취소 사유 (2026-11-09) */}
+          {tab === 'past' && (isCancelled || isCompleted) && <ClosedMeta c={c} h={closingMap?.get(c.id)} />}
+          <div className={`${tab === 'past' && (isCancelled || isCompleted) ? 'hidden' : 'flex'} items-center gap-3 mt-1 text-xs text-neutral-500`}>
             <span>{formatPhone(c.phone)}</span>
             {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
             {/* 제안중: suggestions에서 제안 시간 표시 */}
@@ -315,6 +322,11 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
         {tab !== 'today' && <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>}
       </div>}
 
+      {/* 지난내역 칩 (2026-11-09) */}
+      {tab === 'past' && (
+        <PastFilterChips value={pastFilter} onChange={(v) => { setPastFilter(v); setPage(1); }} />
+      )}
+
       {/* 지역 필터 토글 + 칩 */}
       {(tab === 'new_intake' || tab === 'action_needed') && consultations.length > 0 && (
         <div className="space-y-2">
@@ -362,6 +374,10 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
         <>
           {/* 목록 */}
           <Card padding={false}>
+            {/* 확정 탭: 방문일 지난 미처리 건을 맨 위로 (2026-11-09) */}
+            {tab === 'confirmed' && page === 1 && (
+              <OverdueBlock type="field_request" search={search} renderRow={renderRow} />
+            )}
             {isLoading ? (
               <div className="p-4 space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (

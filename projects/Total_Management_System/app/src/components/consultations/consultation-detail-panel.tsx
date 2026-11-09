@@ -18,6 +18,7 @@ import { Modal } from '@/components/ui/modal';
 import Link from 'next/link';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { HoldReasonModal } from './hold-reason-modal';
+import { historyNoteText } from './closed-info';
 import { getAllowedTransitions } from '@/lib/consultation/transitions';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
@@ -481,14 +482,20 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         <div className="pt-2 border-t border-neutral-100">
           <p className="text-xs font-semibold text-neutral-500 mb-2">상태 이력</p>
           <div className="space-y-1.5">
-            {history.slice(0, 5).map((h) => (
-              <div key={h.id} className="flex items-center justify-between text-xs">
-                <span className="text-neutral-500">
-                  {(h.from_status && CONSULTATION_STATUS_LABEL[h.from_status]) || h.from_status || '-'} → {CONSULTATION_STATUS_LABEL[h.to_status] || h.to_status}
-                </span>
-                <span className="text-neutral-400">{formatDate(h.created_at)}</span>
-              </div>
-            ))}
+            {history.slice(0, 5).map((h) => {
+              const note = historyNoteText(h);  // 취소 사유 등 — 저장만 되고 안 보이던 것 (2026-11-09)
+              return (
+                <div key={h.id} className="text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-neutral-500">
+                      {(h.from_status && CONSULTATION_STATUS_LABEL[h.from_status]) || h.from_status || '-'} → {CONSULTATION_STATUS_LABEL[h.to_status] || h.to_status}
+                    </span>
+                    <span className="text-neutral-400">{formatDate(h.created_at)}</span>
+                  </div>
+                  {note && <p className="mt-0.5 text-neutral-500 whitespace-pre-wrap break-words">{note}</p>}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

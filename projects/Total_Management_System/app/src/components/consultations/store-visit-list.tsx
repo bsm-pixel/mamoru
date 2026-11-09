@@ -8,7 +8,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConsultations } from '@/hooks/use-consultations';
+import { useConsultations, useClosingHistory } from '@/hooks/use-consultations';
+import { ClosedMeta, PastFilterChips, OverdueBlock, useOverdueCount, pastStatuses, type PastFilter } from './closed-info';
 import { activityDisplay } from '@/lib/customer/display';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -33,14 +34,16 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'past', label: '지난내역' },
 ];
 
-function getTabFilters(tab: TabKey) {
+function getTabFilters(tab: TabKey, pastFilter: PastFilter) {
   switch (tab) {
     case 'confirmed':
       return { status: 'confirmed', dateFilter: 'upcoming' as const, orderBy: 'visit_date_asc' };
     case 'on_hold':
       return { status: 'on_hold', orderBy: 'updated_at_desc' };
     case 'past':
-      return { statuses: ['completed', 'cancelled', 'confirmed'], dateFilter: 'past' as const, orderBy: 'updated_at_desc' };
+      // 2026-11-09 기준 변경: "방문일 지난 건" → "끝난 건(완료·취소)". 미리 취소된 건이 어디에도 안 보이던 문제.
+      //   방문일 지난 확정 건은 확정 탭 「처리 필요」로 이동
+      return { statuses: pastStatuses(pastFilter), orderBy: 'updated_at_desc' };
   }
 }
 
@@ -62,7 +65,8 @@ export function StoreVisitList({
   // 2026-10-19 모바일 단계 버튼판 건수
   const { data: confCheck } = useConsultations({ status: 'confirmed', dateFilter: 'upcoming', type: 'store_visit', limit: 1 });
   const { data: holdCheck } = useConsultations({ status: 'on_hold', type: 'store_visit', limit: 1 });
-  const stageCount: Record<TabKey, number | null> = { confirmed: confCheck?.total ?? 0, on_hold: holdCheck?.total ?? 0, past: null };
+  const overdueCount = useOverdueCount('store_visit');
+  const stageCount: Record<TabKey, number | null> = { confirmed: (confCheck?.total ?? 0) + overdueCount, on_hold: holdCheck?.total ?? 0, past: null };
   const [internalTab, setInternalTab] = useState<TabKey>('confirmed');
   const tab = externalTab ?? internalTab;
   const setTab = (next: TabKey) => {
@@ -71,8 +75,9 @@ export function StoreVisitList({
   };
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [pastFilter, setPastFilter] = useState<PastFilter>('all');
 
-  const tabFilters = getTabFilters(tab);
+  const tabFilters = getTabFilters(tab, pastFilter);
   const { data, isLoading } = useConsultations({
     ...tabFilters,
     type: 'store_visit',
@@ -82,6 +87,7 @@ export function StoreVisitList({
   });
   const consultations = data?.consultations || [];
   const consultActTypes = useActivityTypes(consultations.map((c) => c.phone));
+  const { data: closingMap } = useClosingHistory(tab === 'past' ? consultations.map((c) => c.id) : []);
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / 20);
 
@@ -138,6 +144,10 @@ export function StoreVisitList({
               </Badge>
             )}
           </div>
+          {/* 지난내역: 처리일·예약일 + 취소 사유 (2026-11-09) */}
+          {tab === 'past' && (isCancelled || isCompleted) ? (
+            <ClosedMeta c={c} h={closingMap?.get(c.id)} />
+          ) : (
           <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
             <span>{formatPhone(c.phone)}</span>
             {c.visit_date && (
@@ -147,6 +157,7 @@ export function StoreVisitList({
               </span>
             )}
           </div>
+          )}
         </div>
       </div>
     );
@@ -198,8 +209,17 @@ export function StoreVisitList({
         <span className="ml-auto text-xs text-neutral-500 shrink-0">{total}건</span>
       </div>}
 
+      {/* 지난내역 칩 (2026-11-09) */}
+      {tab === 'past' && (
+        <PastFilterChips value={pastFilter} onChange={(v) => { setPastFilter(v); setPage(1); }} />
+      )}
+
       {/* 목록 */}
       <Card padding={false}>
+        {/* 확정 탭: 방문일 지난 미처리 건을 맨 위로 (2026-11-09) */}
+        {tab === 'confirmed' && page === 1 && (
+          <OverdueBlock type="store_visit" search={search} renderRow={renderRow} />
+        )}
         {isLoading ? (
           <div className="p-4 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -208,7 +228,7 @@ export function StoreVisitList({
           </div>
         ) : consultations.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-neutral-400">
-            {tab === 'confirmed' ? '확정된 방문이 없습니다' : tab === 'on_hold' ? '보류 중인 방문이 없습니다' : '지난 내역이 없습니다'}
+            {tab === 'confirmed' ? '앞으로 확정된 방문이 없습니다' : tab === 'on_hold' ? '보류 중인 방문이 없습니다' : '지난 내역이 없습니다'}
           </div>
         ) : dateGroups ? (
           <div>

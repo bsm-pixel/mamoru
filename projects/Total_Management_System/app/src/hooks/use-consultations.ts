@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Consultation, ConsultationHistory } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
 import { errMsg } from '@/lib/utils/err';
+import { toLocalDateString } from '@/lib/utils/format';
 
 /** 응답 에러를 사람이 읽을 수 있는 string으로 직렬화 ([object Object] 방지) */
 async function parseApiError(res: Response, fallback: string): Promise<string> {
@@ -65,8 +66,8 @@ export function useConsultations(filters?: {
           `name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,unique_id.ilike.%${filters.search}%`
         );
       }
-      // 날짜 필터
-      const today = new Date().toISOString().slice(0, 10);
+      // 날짜 필터 — 한국 날짜 기준 (toISOString은 UTC라 KST 새벽 0~9시에 어제로 계산되던 버그, 2026-11-09)
+      const today = toLocalDateString(new Date());
       if (filters?.dateFilter === 'upcoming') {
         query = query.gte('visit_date', today);
       } else if (filters?.dateFilter === 'past') {
@@ -79,6 +80,32 @@ export function useConsultations(filters?: {
         throw error;
       }
       return { consultations: (data || []) as Consultation[], total: count || 0 };
+    },
+  });
+}
+
+/** 목록 행에 붙일 "끝난 이유" — 건별 마지막 완료/취소 이력(사유·처리일) 한 번에 조회 (2026-11-09)
+ *  고객 취소 사유는 consultation_history.note 에만 저장됨 → 지난내역에서 상세를 열지 않아도 보이게 */
+export function useClosingHistory(ids: string[]) {
+  const supabase = createClient();
+  const key = [...ids].sort().join(',');
+  return useQuery({
+    queryKey: ['consultations', 'closing-history', key],  // 'consultations' 접두 → 상태 변경 시 같이 갱신
+    enabled: ids.length > 0,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('consultation_history')
+        .select('*')
+        .in('consultation_id', ids)
+        .in('to_status', ['cancelled', 'completed'])
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const map = new Map<string, ConsultationHistory>();
+      for (const h of (data || []) as ConsultationHistory[]) {
+        if (!map.has(h.consultation_id)) map.set(h.consultation_id, h);
+      }
+      return map;
     },
   });
 }
