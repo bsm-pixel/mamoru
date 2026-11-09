@@ -207,6 +207,8 @@ export interface ProductSyncResult {
   updated: number;
   linked: number;        // 수동 등록된 상품에 imweb_product_no 연결
   errors: string[];
+  /** TMS 이름 ≠ 아임웹 이름 — TMS 이름 유지(덮어쓰지 않음), 2026-11-09 */
+  nameMismatches: { sku: string; tms: string; imweb: string }[];
 }
 
 /** 아임웹 상품 동기화 */

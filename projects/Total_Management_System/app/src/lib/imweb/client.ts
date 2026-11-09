@@ -159,6 +159,41 @@ export async function adjustImwebStockDelta(
 /** 하위 호환 — 기존 호출처에서 사용. delta를 직접 전달 */
 export const updateImwebStock = adjustImwebStockDelta;
 
+/** 사이트 유닛 코드 (상품 수정 API 필수값) — GET /site-info 의 첫 유닛. 인스턴스 안에서 캐시 */
+let cachedUnitCode: string | null = null;
+async function getImwebUnitCode(token: string): Promise<string> {
+  if (cachedUnitCode) return cachedUnitCode;
+  const res = await fetch('https://openapi.imweb.me/site-info', { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const code = data?.data?.unitList?.[0]?.unitCode;
+  if (!res.ok || !code) throw new Error(`아임웹 유닛 코드 조회 실패: ${res.status} ${JSON.stringify(data)}`);
+  cachedUnitCode = code as string;
+  return cachedUnitCode;
+}
+
+/**
+ * 아임웹 상품명 변경 — 새 OpenAPI PATCH /products/{prodNo} (multipart, productName 만)
+ * 2026-11-09 실측: 이름만 보내면 이름·수정시각 외 모든 칸(상세설명·가격·재고·상태·이미지) 그대로 — 부분 수정 확인
+ * 결제명·SEO 제목은 전 상품 비어 있어 상품명을 따라간다(별도 수정 불필요)
+ */
+export async function renameImwebProduct(prodNo: number, name: string): Promise<void> {
+  const token = await getOpenApiToken();
+  const form = new FormData();
+  form.append('unitCode', await getImwebUnitCode(token));
+  form.append('productName', name);
+  const res = await fetch(`https://openapi.imweb.me/products/${prodNo}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },  // Content-Type 은 FormData 가 boundary 포함해 자동 설정
+    body: form,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.data !== true) {
+    const code = data?.error?.errorCode;
+    if (code === '30016') throw new Error('아임웹에 이 상품이 없습니다(삭제됨)');
+    throw new Error(`아임웹 상품명 변경 실패: ${res.status} ${JSON.stringify(data?.error ?? data)}`);
+  }
+}
+
 /** v2 상품 응답 타입 */
 export interface ImwebV2Product {
   no: number;

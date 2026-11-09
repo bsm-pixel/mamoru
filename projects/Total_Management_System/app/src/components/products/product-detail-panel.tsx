@@ -28,7 +28,11 @@ import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 // 2026-10-29 아임웹 연동 매칭 코드 안내 — 상품 동기화는 ①아임웹 상품번호 ②SKU = 아임웹 「자체 상품코드」 순으로 연결한다
 // (lib/imweb/product-sync.ts). 둘 다 안 맞으면 IW-번호 제품이 새로 생겨 중복되므로 어떤 코드를 맞춰야 하는지 보여준다.
 const IMWEB_MATCH_SKIP = new Set(['RS', 'SVC', 'EVENT']); // 아임웹에 올리지 않는 품목
-function ImwebMatchCode({ sku, imwebNo, category }: { sku: string; imwebNo?: string | null; category?: string | null }) {
+function ImwebMatchCode({ sku, imwebNo, category, onSyncName, syncing }: {
+  sku: string; imwebNo?: string | null; category?: string | null;
+  /** 2026-11-09 아임웹 상품명을 지금 TMS 이름으로 다시 맞추기 (반영 실패·아임웹에서 직접 바꾼 경우) */
+  onSyncName?: () => void; syncing?: boolean;
+}) {
   if (!sku || (category && IMWEB_MATCH_SKIP.has(category))) return null;
   const copy = () => { navigator.clipboard?.writeText(sku).then(() => toast.success(`복사: ${sku}`)).catch(() => {}); };
   return (
@@ -45,9 +49,15 @@ function ImwebMatchCode({ sku, imwebNo, category }: { sku: string; imwebNo?: str
       </div>
       <p className="text-[11px] text-neutral-500 leading-relaxed break-keep mt-0.5">
         {imwebNo
-          ? '이미 연결된 제품입니다. 따로 맞출 필요 없음.'
+          ? '이미 연결된 제품입니다. 제품명은 TMS에서만 바꾸세요 — 저장하면 아임웹 상품명도 같이 바뀝니다.'
           : '아임웹 상품의 「자체 상품코드」에 이 코드를 똑같이 입력 → 설정 › 시스템 › [상품 동기화]. 다르면 제품이 하나 더 생깁니다(중복).'}
       </p>
+      {imwebNo && onSyncName && (
+        <button type="button" onClick={onSyncName} disabled={syncing}
+          className="mt-1 text-[11px] font-semibold text-neutral-600 underline underline-offset-2 hover:text-neutral-900 disabled:opacity-50">
+          {syncing ? '맞추는 중…' : '아임웹 상품명을 이 이름으로 다시 맞추기'}
+        </button>
+      )}
     </div>
   );
 }
@@ -725,7 +735,11 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             )}
             {/* 2026-10-29: 아임웹 #번호만 보이던 것 → 연동 매칭 코드·연결 상태 안내 */}
             <div className="mb-3">
-              <ImwebMatchCode sku={p.sku} imwebNo={p.imweb_product_no} category={p.category} />
+              <ImwebMatchCode
+                sku={p.sku} imwebNo={p.imweb_product_no} category={p.category}
+                onSyncName={productId ? () => updateProduct.mutate({ id: productId, name: p.name, sync_imweb_name: true }) : undefined}
+                syncing={updateProduct.isPending}
+              />
             </div>
             {p.description && (
               <div>

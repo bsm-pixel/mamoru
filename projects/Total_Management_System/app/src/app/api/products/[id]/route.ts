@@ -102,6 +102,11 @@ export async function PATCH(
     }
     // FK 필드: 빈 문자열 → null 변환 (FK 제약 위반 방지)
     if (updates.supplier_id === '') updates.supplier_id = null;
+    // 이름: 앞뒤 공백 제거, 빈 이름 금지 (아임웹 상품명으로도 나가므로) 2026-11-09
+    if ('name' in updates) {
+      updates.name = String(updates.name ?? '').trim();
+      if (!updates.name) return NextResponse.json({ error: '제품명을 입력하세요' }, { status: 400 });
+    }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: '수정할 항목이 없습니다' }, { status: 400 });
@@ -109,6 +114,11 @@ export async function PATCH(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    // 이름 변경 감지용 — 수정 전 값
+    const { data: prev } = 'name' in updates
+      ? await db.from('products').select('name, imweb_product_no').eq('id', id).single()
+      : { data: null };
 
     const { data: product, error } = await db
       .from('products')
@@ -140,7 +150,22 @@ export async function PATCH(
       }
     }
 
-    return NextResponse.json({ product });
+    // 이름 변경 → 아임웹 상품명도 같이 (TMS 한 곳에서만 고치기, 2026-11-09)
+    //   바뀐 경우 또는 sync_imweb_name(다시 맞추기·일괄 재시도) 일 때만. 실패해도 TMS 저장은 유지하고 화면에 알린다(조용히 삼키지 않음)
+    let imwebName: { status: 'synced' | 'failed' | 'skipped'; error?: string } = { status: 'skipped' };
+    if ('name' in updates && product.imweb_product_no && (prev?.name !== product.name || body.sync_imweb_name === true)) {
+      try {
+        const { renameImwebProduct } = await import('@/lib/imweb/client');
+        await renameImwebProduct(Number(product.imweb_product_no), product.name);
+        imwebName = { status: 'synced' };
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[products/PATCH] 아임웹 상품명 변경 실패:', { id, prodNo: product.imweb_product_no, msg });
+        imwebName = { status: 'failed', error: msg };
+      }
+    }
+
+    return NextResponse.json({ product, imwebName });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : JSON.stringify(err);
     console.error('[products/PATCH] error:', message);
