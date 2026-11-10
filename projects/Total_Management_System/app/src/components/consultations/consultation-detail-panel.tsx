@@ -442,6 +442,8 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
             <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
               아직 연결된 판매가 없습니다.<br />판매를 먼저 등록하시겠습니까?
             </p>
+            {/* 2026-11-10 판매 저장 시 서버가 상담 자동 완료 (lib/consultation/complete-from-sale.ts) */}
+            <p className="mt-2 text-xs text-neutral-500">판매를 저장하면 이 상담도 자동으로 완료됩니다.</p>
           </div>
           <div className="flex flex-col gap-2">
             <Button

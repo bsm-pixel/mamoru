@@ -4,6 +4,7 @@ import { updateImwebStock } from '@/lib/imweb/client';
 import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
 import { recalcOutstanding } from '@/lib/outstanding';
+import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
 export async function PATCH(
@@ -936,6 +937,12 @@ export async function PATCH(
         .update({ source_consultation_id })
         .eq('id', id);
       if (updateErr) throw updateErr;
+      // 2026-11-10 판매 연결 = 상담 끝 → 자동 완료 (실패해도 연결은 유지)
+      try {
+        await completeConsultationFromSale(db, { consultationId: source_consultation_id, saleNumber: sale.sale_number, userId: user.id });
+      } catch (e) {
+        console.error('[sales link_consultation] 상담 자동 완료 실패 (연결은 저장됨):', e);
+      }
       return NextResponse.json({ success: true, action: 'consultation_linked', consultation: { id: consult.id, name: consult.name } });
     }
 

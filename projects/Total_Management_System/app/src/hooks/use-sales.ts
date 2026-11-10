@@ -445,8 +445,13 @@ export function useCreateSale() {
       }
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success(`판매 등록 완료: ${data.saleNumber}`);
+      // 2026-11-10 상담에서 넘어온 판매 → 서버가 상담을 자동 완료 → 상담 목록·상세 즉시 갱신
+      if (variables.sale.source_consultation_id) {
+        queryClient.invalidateQueries({ queryKey: ['consultations'] });
+        queryClient.invalidateQueries({ queryKey: ['consultation'] });
+      }
       // 165: 출장 맡김 → 복원수리 건 자동 생성 결과 (실패해도 판매는 저장됨)
       if (data.repairAsId) toast.success(`복원수리 접수 ${data.repairAsId} 생성 · 수거 확인 알림톡`);
       if (data.repairError) toast.error(`복원수리 접수 생성 실패 — 복원수리 목록에서 직접 확인하세요: ${data.repairError}`, { duration: 8000 });

@@ -17,6 +17,7 @@
 import { useState, useEffect } from 'react';
 import { X, Link2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 
@@ -65,6 +66,7 @@ export function LinkConsultationModal({ saleId, customerPhone, onClose, onLinked
   const [items, setItems] = useState<ConsultationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!customerPhone) {
@@ -101,6 +103,9 @@ export function LinkConsultationModal({ saleId, customerPhone, onClose, onLinked
         return;
       }
       toast.success(`${consultationName}님 상담과 연결되었습니다`);
+      // 2026-11-10 연결 시 서버가 상담 자동 완료 → 상담 목록·상세 갱신
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation'] });
       onLinked();
     } catch (e) {
       toast.error(`오류: ${String(e)}`);

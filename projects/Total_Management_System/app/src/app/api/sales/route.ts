@@ -4,6 +4,7 @@ import { updateImwebStock } from '@/lib/imweb/client';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 import { createFieldRepairFromSale } from '@/lib/repair/intake';
+import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -414,6 +415,15 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         repairError = e instanceof Error ? e.message : JSON.stringify(e);
         console.error('[sales POST] 출장 맡김 복원수리 생성 실패 (판매는 저장됨):', repairError);
+      }
+    }
+
+    // 2026-11-10 상담에서 넘어온 판매 → 상담 자동 완료 (실패해도 판매는 유지)
+    if (sale.source_consultation_id) {
+      try {
+        await completeConsultationFromSale(db, { consultationId: sale.source_consultation_id, saleNumber: created.sale_number, userId: user.id });
+      } catch (e) {
+        console.error('[sales POST] 상담 자동 완료 실패 (판매는 저장됨):', e);
       }
     }
 
