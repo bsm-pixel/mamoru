@@ -22,6 +22,8 @@ const ITEM_NAME = '미용가위'; // 04 물품 = 불러오기
 
 if (!AS_ID) { console.error('사용법: node run.mjs AS-YYYYMMDD-NNNN [--submit] [--show]'); process.exit(2); }
 
+// 로그인 여부 = '로그아웃' 링크(버튼)가 있는지. 본문 글자로 보면 안 됨 — 로그인 화면 안내문에 '자동 로그아웃' 문구가 있음(3차 시험 오판)
+const IS_LOGGED_IN_JS = "[...document.querySelectorAll('a,button')].some((e) => e.textContent.trim() === '로그아웃')";
 const sleep = (t) => new Promise((r) => setTimeout(r, t));
 const readEnv = (file) => Object.fromEntries(
   fs.readFileSync(file, 'utf8').split(/\r?\n/).filter((l) => /^[A-Z_0-9]+=/.test(l))
@@ -133,7 +135,7 @@ try {
   // ── 2) 로그인 ──
   await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded' });
   await sleep(1500);
-  if (!(await page.evaluate(() => document.body.innerText.includes('로그아웃')))) {
+  if (!(await page.evaluate(IS_LOGGED_IN_JS))) {
     await page.waitForSelector('#id');
     await page.click('#id', { clickCount: 3 }); await page.type('#id', login.EPOST_ID, { delay: 30 });
     await page.click('#passwd'); await page.type('#passwd', login.EPOST_PW, { delay: 30 });
@@ -150,7 +152,7 @@ try {
     let ok = false;
     for (let i = 0; i < 30 && !ok; i++) {
       await sleep(500);
-      ok = await page.evaluate(() => !location.pathname.includes('/usr/login/') || document.body.innerText.includes('로그아웃')).catch(() => false);
+      ok = await page.evaluate("!location.pathname.includes('/usr/login/') || " + IS_LOGGED_IN_JS).catch(() => false);
     }
     if (!ok) {
       // 화면 안 안내창(cfAlertMsg 레이어·대기열 창) 문구 수집
@@ -165,7 +167,7 @@ try {
   log(`로그인 후 화면: ${page.url().replace(/\?.*$/, '')}`);
   await page.goto(RESERVE_URL, { waitUntil: 'domcontentloaded' });
   await sleep(2000);
-  if (!(await page.evaluate(() => document.body.innerText.includes('로그아웃')))) { await shot('login-fail'); stop('로그인 실패(로그아웃 버튼 없음) — 차단·보안확인 가능성'); }
+  if (!(await page.evaluate(IS_LOGGED_IN_JS))) { await shot('login-fail'); stop('로그인 실패(로그아웃 버튼 없음) — 차단·보안확인 가능성'); }
   if (!(await page.$('#parcelUseGuideInfoChkBox'))) { await shot('no-form'); stop('방문접수 예약 화면이 안 열림'); }
   await shot('reserve-open');
   log('방문접수소포 예약 화면 열림');
