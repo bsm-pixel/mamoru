@@ -1,0 +1,13 @@
+{
+  "name": "epost-pickup",
+  "private": true,
+  "type": "module",
+  "description": "인터넷우체국 방문접수(수거) 자동 접수 — 1단계 PC 시험 (서버 이식 전)",
+  "scripts": {
+    "dry": "node run.mjs",
+    "submit": "node run.mjs --submit"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.11.1"
+  }
+}
