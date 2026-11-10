@@ -350,7 +350,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       {/* 출고완료 탭 안내 — 기간 제한과 전체 검색 */}
       {activeTab === 'shipped' && !isLoading && (
         <p className="pt-3 text-center text-[11px] text-neutral-400">
-          {shippedSearchOn ? '전체 기간에서 검색한 결과입니다' : `최근 ${SHIPPED_WINDOW_DAYS}일 안에 끝난 건만 보입니다 · 이전 건은 이름·전화·접수번호로 검색하세요`}
+          {shippedSearchOn ? '전체 기간에서 검색한 결과입니다' : `최근 ${SHIPPED_WINDOW_DAYS}일 안에 끝난 건 + 미입금 건이 보입니다 · 이전 건은 이름·전화·접수번호로 검색하세요`}
         </p>
       )}
 

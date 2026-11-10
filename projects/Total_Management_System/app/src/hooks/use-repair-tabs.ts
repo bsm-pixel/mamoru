@@ -85,6 +85,7 @@ export function useRepairTabData() {
         inProgressRes,
         readyToShipRes,
         shippedRes,
+        shippedUnpaidRes,
         recallRes,
         staleRes,
       ] = await Promise.all([
@@ -167,6 +168,15 @@ export function useRepairTabData() {
           .or(`delivered_at.gte.${shippedSinceISO},shipped_at.gte.${shippedSinceISO},updated_at.gte.${shippedSinceISO}`)
           .limit(1000),
 
+        // 6b) 출고완료 중 미입금 — 30일이 지나도 항상 보인다 (받을 돈 = 처리할 일). 미입금 카드(use-dashboard-stats)와 같은 기준
+        supabase
+          .from('repairs')
+          .select('*')
+          .in('status', SHIPPED_STATUSES)
+          .gt('total_amount', 0)
+          .is('paid_at', null)
+          .limit(200),
+
         // 7) 재수리: 재수거 접수했으나 아직 재작업 전 (출고완료에 묻히던 건 — 여기서 [재작업 시작])
         supabase
           .from('repairs')
@@ -196,8 +206,11 @@ export function useRepairTabData() {
       const inProgress = (inProgressRes.data || []) as Repair[];
       const readyToShip = (readyToShipRes.data || []) as Repair[];
       const shippedSinceMs = new Date(shippedSinceISO).getTime();
-      const shipped = sortByEndedAt(((shippedRes.data || []) as Repair[])
-        .filter((r) => !isRecallPending(r) && repairEndedAt(r) >= shippedSinceMs));
+      const recentShipped = ((shippedRes.data || []) as Repair[]).filter((r) => repairEndedAt(r) >= shippedSinceMs);
+      const unpaidShipped = (shippedUnpaidRes.data || []) as Repair[]; // 기간 무관
+      const seenShipped = new Set<string>();
+      const shipped = sortByEndedAt([...recentShipped, ...unpaidShipped]
+        .filter((r) => !isRecallPending(r) && (seenShipped.has(r.id) ? false : (seenShipped.add(r.id), true))));
       // 재수리: 재수거 접수 후 아직 재작업/재출고 전인 것만.
       //  재수거 이후 이미 재출고/재배달된 건(shipped/delivered_at > recall_booked_at)은 사이클 종료 → 제외.
       //  ([재작업 시작] 버튼을 안 거쳐 reworked_at 이 없어도 자동 정리 — 송채림 사례)
