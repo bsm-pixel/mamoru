@@ -141,7 +141,25 @@ try {
       let box = document.querySelector('#passwd'); for (let i = 0; i < 5; i++) box = box.parentElement;
       return [...box.querySelectorAll('a,button')].find((a) => a.textContent.trim() === '로그인') || null;
     });
-    await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}), clickEl(btn, '로그인')]);
+    const idLen = await page.$eval('#id', (e) => e.value.length);
+    const pwLen = await page.$eval('#passwd', (e) => e.value.length);
+    log(`로그인 입력 자릿수: 아이디 ${idLen} / 비밀번호 ${pwLen}`);
+    await shot('login-filled-masked'); // 비밀번호 칸은 화면에서 ●로 가려짐
+    await clickEl(btn, '로그인'); // checkVal() → NetFunnel(접속 대기열) → submit
+    // 로그인은 대기열을 거쳐 비동기로 넘어감 → 화면이 바뀌거나 '로그아웃'이 보일 때까지 최대 15초
+    let ok = false;
+    for (let i = 0; i < 30 && !ok; i++) {
+      await sleep(500);
+      ok = await page.evaluate(() => !location.pathname.includes('/usr/login/') || document.body.innerText.includes('로그아웃')).catch(() => false);
+    }
+    if (!ok) {
+      // 화면 안 안내창(cfAlertMsg 레이어·대기열 창) 문구 수집
+      const layer = await page.evaluate(() => [...document.querySelectorAll('div,section,p')]
+        .filter((e) => e.offsetParent !== null && e.childElementCount < 6 && /잠시|중단|대기|접속자|확인|오류|일치|잘못|비밀번호/.test(e.innerText) && e.innerText.length < 200)
+        .map((e) => e.innerText.replace(/\s+/g, ' ').trim()).filter((t, i, a) => a.indexOf(t) === i).slice(0, 8)).catch(() => []);
+      await shot('login-stuck');
+      stop(`로그인 버튼 후 화면이 안 넘어감. 화면 문구: ${layer.join(' | ') || '(없음)'}`);
+    }
     await sleep(1500);
   }
   log(`로그인 후 화면: ${page.url().replace(/\?.*$/, '')}`);
