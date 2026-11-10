@@ -16,6 +16,44 @@ interface RepairTabData {
   recall: Repair[];
 }
 
+// ── 출고완료 탭 (2026-11-10) ──
+export const SHIPPED_WINDOW_DAYS = 30;
+const SHIPPED_STATUSES = ['shipped', 'delivered', 'completed'];
+/** 끝난 시각 — 택배=배송완료·출고, 방문=전달(delivered_at). 둘 다 없으면 마지막 수정 */
+export function repairEndedAt(r: Repair): number {
+  return new Date(r.delivered_at || r.shipped_at || r.updated_at).getTime();
+}
+/** 재수거 접수 후 재작업 전 = '재수리' 탭 소속 (출고완료에서 제외) */
+const isRecallPending = (r: Repair) => !!r.recall_booked_at && !r.reworked_at;
+const sortByEndedAt = (list: Repair[]) => [...list].sort((a, b) => repairEndedAt(b) - repairEndedAt(a));
+
+/**
+ * 출고완료 탭 전체 기간 검색 — 탭은 최근 30일만 불러오므로 이전 고객은 서버에서 찾는다 (이름·전화·접수번호)
+ * 2글자 이상일 때만. PostgREST or-문법을 깨는 문자(, ( ) * %)는 제거
+ */
+export function useRepairShippedSearch(term: string, enabled: boolean) {
+  const supabase = createClient();
+  const q = term.trim().replace(/[,()*%\\]/g, '');
+  const digits = q.replace(/\D/g, '');
+  return useQuery({
+    queryKey: ['repair-tabs', 'shipped-search', q],
+    enabled: enabled && q.length >= 2,
+    staleTime: 20_000,
+    queryFn: async () => {
+      const ors = [`name.ilike.*${q}*`, `as_id.ilike.*${q}*`];
+      if (digits.length >= 3) ors.push(`phone_normalized.ilike.*${digits}*`, `phone.ilike.*${digits}*`);
+      const { data, error } = await supabase
+        .from('repairs')
+        .select('*')
+        .in('status', SHIPPED_STATUSES)
+        .or(ors.join(','))
+        .limit(200);
+      if (error) throw error;
+      return sortByEndedAt(((data || []) as Repair[]).filter((r) => !isRecallPending(r)));
+    },
+  });
+}
+
 /** 복원수리 대시보드 탭별 데이터 + 카운트 */
 export function useRepairTabData() {
   const supabase = createClient();
@@ -23,10 +61,19 @@ export function useRepairTabData() {
   const query = useQuery({
     queryKey: ['repair-tabs'],
     staleTime: 20_000, // 20초 — 10초는 너무 공격적
+    // 170: 우체국 자동접수 진행 중(3분 잠금)인 건이 있을 때만 5초마다 다시 읽음 → 끝나면 목록이 바로 입고대기로
+    refetchInterval: (q) => {
+      const rows = (q.state.data as { tabData?: RepairTabData } | undefined)?.tabData?.pickup_needed || [];
+      const inFlight = rows.some((r) => !r.epost_reservation_no && r.epost_requested_at && Date.now() - new Date(r.epost_requested_at).getTime() < 3 * 60 * 1000);
+      return inFlight ? 5000 : false;
+    },
     queryFn: async () => {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
       const threeDaysAgoISO = threeDaysAgo.toISOString();
+      const shippedSince = new Date();
+      shippedSince.setDate(shippedSince.getDate() - SHIPPED_WINDOW_DAYS);
+      const shippedSinceISO = shippedSince.toISOString();
 
       // 병렬 쿼리 6개 + staleCount
       const [
@@ -108,16 +155,17 @@ export function useRepairTabData() {
           .order('received_at', { ascending: false })
           .limit(50),
 
-        // 6) 출고완료: shipped + delivered + completed
-        //    단, 재수거 접수 후 재작업 전(recall_booked_at 있고 reworked_at 없음)인 건은 '재수리' 탭으로 이동 → 여기서 제외.
-        //    재출고 완료건(reworked_at 있음)은 다시 출고완료로 복귀.
+        // 6) 출고완료: shipped + delivered + completed — 2026-11-10 최근 30일(끝난 날 기준)만, 최신순
+        //    전엔 shipped_at 내림차순 + 50건 상한 → ① 탭 숫자가 늘 50 ② 출고일 없는 방문 건이 맨 위(빈 값이 먼저)
+        //    ③ 검색이 이 50건 안에서만 돼 예전 고객을 못 찾음. 이제 기간으로 자르고, 이전 건은 서버 검색(useRepairShippedSearch)
+        //    끝난 날 = delivered_at ?? shipped_at ?? updated_at (아래 JS 에서 다시 걸러 정확히 30일)
+        //    재수거 접수 후 재작업 전(recall_booked_at 있고 reworked_at 없음)인 건은 '재수리' 탭 → 아래 JS 에서 제외
         supabase
           .from('repairs')
           .select('*')
-          .in('status', ['shipped', 'delivered', 'completed'])
-          .or('recall_booked_at.is.null,reworked_at.not.is.null')
-          .order('shipped_at', { ascending: false })
-          .limit(50),
+          .in('status', SHIPPED_STATUSES)
+          .or(`delivered_at.gte.${shippedSinceISO},shipped_at.gte.${shippedSinceISO},updated_at.gte.${shippedSinceISO}`)
+          .limit(1000),
 
         // 7) 재수리: 재수거 접수했으나 아직 재작업 전 (출고완료에 묻히던 건 — 여기서 [재작업 시작])
         supabase
@@ -147,7 +195,9 @@ export function useRepairTabData() {
       );
       const inProgress = (inProgressRes.data || []) as Repair[];
       const readyToShip = (readyToShipRes.data || []) as Repair[];
-      const shipped = (shippedRes.data || []) as Repair[];
+      const shippedSinceMs = new Date(shippedSinceISO).getTime();
+      const shipped = sortByEndedAt(((shippedRes.data || []) as Repair[])
+        .filter((r) => !isRecallPending(r) && repairEndedAt(r) >= shippedSinceMs));
       // 재수리: 재수거 접수 후 아직 재작업/재출고 전인 것만.
       //  재수거 이후 이미 재출고/재배달된 건(shipped/delivered_at > recall_booked_at)은 사이클 종료 → 제외.
       //  ([재작업 시작] 버튼을 안 거쳐 reworked_at 이 없어도 자동 정리 — 송채림 사례)

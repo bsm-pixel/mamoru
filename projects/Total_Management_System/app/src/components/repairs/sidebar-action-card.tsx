@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { Modal } from '@/components/ui/modal';
 import { MergedShipModal } from './merged-ship-modal';
 import { InspectionForm } from './inspection-form';
+import { useNow } from '@/hooks/use-now';
 
 interface SidebarActionCardProps {
   repair: Repair;
@@ -139,6 +140,20 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const epostNo = r.epost_reservation_no;
   const epostNeedsCheck = epostNo === '확인필요';
   const canEpostPickup = proceedType === '방문수거' && currentStatus === 'intake' && !isFieldTake && !epostNo;
+  // 진행 중 여부는 화면 상태가 아니라 서버 기록(epost_requested_at, 3분 잠금)으로 판단 — 다른 화면 갔다 와도·다른 기기에서도 보인다
+  const now = useNow(5000);
+  const epostStartedMs = r.epost_requested_at ? new Date(r.epost_requested_at).getTime() : 0;
+  const epostInFlight = canEpostPickup && (epostPickup.isPending || (now > 0 && epostStartedMs > 0 && now - epostStartedMs < 3 * 60 * 1000));
+  const epostStartedLabel = r.epost_requested_at ? new Date(r.epost_requested_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+  // 진행 중이면 5초마다 다시 읽어 끝나는 즉시 입고대기·예약번호로 바뀌게
+  useEffect(() => {
+    if (!epostInFlight) return;
+    const id = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['repair'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+    }, 5000);
+    return () => clearInterval(id);
+  }, [epostInFlight, queryClient]);
 
   // 🔒 기존 동작 보존: 출고 섹션이 cost_notified 이상에서 송장 생성을 열어줬다(입금확인 후 바로 발급).
   //    ready_to_ship 은 주 액션이라 여기서 제외 — 나머지 단계에서는 보조 버튼으로 제공한다.
@@ -331,7 +346,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
           : proceedType === '방문수거' && currentStatus === 'intake'
             ? (epostNeedsCheck
                 ? '⚠️ 우체국 자동접수에서 신청은 눌렀지만 결과를 확인하지 못했습니다. 우체국 예약조회에서 확인 후 [수거접수 완료]를 눌러주세요. (다시 자동접수하면 중복될 수 있습니다)'
-                : '[우체국 수거접수]를 누르면 고객이 고른 수거일·보관장소로 우체국에 자동 접수됩니다 (약 45초).')
+                : epostInFlight
+                  ? `우체국 접수 진행 중입니다${epostStartedLabel ? ` (${epostStartedLabel} 시작)` : ''}. 다른 화면으로 가셔도 됩니다 — 끝나면 자동으로 입고대기로 바뀝니다.`
+                  : '[우체국 수거접수]를 누르면 고객이 고른 수거일·보관장소로 우체국에 자동 접수됩니다 (약 45초).')
             : proceedType === '방문수거' && currentStatus === 'pickup_scheduled' && epostNo
             ? `우체국 방문접수 예약됨 (${epostNo}). 가위가 도착하면 수량을 확인하고 [입고 & 비용안내]를 보내주세요.`
             : '가위가 도착하면 수량을 확인하고 [입고 & 비용안내]를 보내주세요. 수리내역서는 출고 전까지 작성하면 됩니다.'}
@@ -523,9 +540,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
               </div>
             ) : canEpostPickup ? (
               // 170 우체국 방문접수 자동 예약 — 서버가 접수 후 입고대기로 넘긴다
-              <Button className="w-full" onClick={() => setConfirmAction('epost_pickup')} loading={epostPickup.isPending}>
+              <Button className="w-full" onClick={() => setConfirmAction('epost_pickup')} loading={epostInFlight} disabled={epostInFlight}>
                 <Truck size={14} />
-                {epostPickup.isPending ? '우체국 접수 중… (약 45초)' : '우체국 수거접수'}
+                {epostInFlight ? '우체국 접수 중… (약 45초)' : '우체국 수거접수'}
               </Button>
             ) : primaryTransition ? (
               <Button
@@ -587,7 +604,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                 {canEpostPickup && (
                   <SubtleButton
                     onClick={() => updateStatus.mutate({ id: r.id, status: 'pickup_scheduled', note: '우체국 직접 접수 (수동)' })}
-                    disabled={busy || epostPickup.isPending}
+                    disabled={busy || epostInFlight}
                   >
                     우체국에서 직접 접수했어요 — 수거접수 완료
                   </SubtleButton>

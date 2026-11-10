@@ -3,6 +3,11 @@
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
+## 2026-11-10 — 출고완료 탭: 최근 30일·최신순·전체기간 검색
+- 전: shipped_at 내림차순 + 50건 상한 → 탭 숫자 늘 50(실제 70), 출고일 없는 방문 건이 맨 위, 검색이 50건 안에서만
+- 후: 끝난 날(delivered_at ?? shipped_at ?? updated_at) 기준 최근 30일만 최신순, 탭 숫자=실제 건수 (`hooks/use-repair-tabs.ts`)
+- 출고완료 탭에서 2글자 이상 검색 → 서버 전체기간 검색(이름·접수번호·전화) `useRepairShippedSearch`
+
 ## 2026-11-10 — 우체국 방문접수 자동 예약 (마이그170)
 ```
 방문수거 · 신규접수 → [우체국 수거접수] (상세 검은 버튼 / 목록 '수거접수필요' 탭 빠른 버튼)
@@ -19,6 +24,7 @@
 - 비밀값: Vercel 환경변수 `EPOST_ID/PW`, `EPOST_CARD_*` (Production, Secret). 원본 `C:\마모루드라이브\ClaudeSecrets\epost-*.env`
 - 시험: `GET /api/repair/epost-pickup?as=AS-…` = 신청 직전까지만(DB 변경 없음). 실제 신청은 POST만
 - 알림톡 없음(기존 수거접수 완료와 동일). 서버 로그인 시 다른 곳의 우체국 로그인은 풀림(우체국 정책)
+- 진행 중 표시는 서버 기록(epost_requested_at 3분) 기준 — 화면 이동·다른 기기에서도 '접수 중', 5초 자동 갱신
 - 우체국 예약 취소는 자동 아님 — 복원수리 취소 확인창에 예약번호와 함께 안내
 - 순서 SSOT: `.claude/skills/epost-pickup/SKILL.md` / PC 시험판 `tools/epost-pickup/run.mjs`
 

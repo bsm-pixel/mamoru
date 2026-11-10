@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
-import { useRepairTabData } from '@/hooks/use-repair-tabs';
+import { useRepairTabData, useRepairShippedSearch, SHIPPED_WINDOW_DAYS } from '@/hooks/use-repair-tabs';
 import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair, useEpostPickup } from '@/hooks/use-repairs';
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
@@ -19,6 +19,7 @@ import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
 import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useIsLg } from '@/hooks/use-grid-mode';
+import { useNow } from '@/hooks/use-now';
 import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RepairBlockedDatesModal } from './repair-blocked-dates-modal';
 import type { Repair } from '@/lib/supabase/types';
@@ -112,6 +113,9 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [activeTab, setActiveTab] = useState<RepairTabKey>(initialTab || 'intake');
   const [search, setSearch] = useState('');
   const { tabs, tabData, isLoading } = useRepairTabData();
+  // 2026-11-10 출고완료 탭은 최근 ${SHIPPED_WINDOW_DAYS}일만 불러온다 → 검색은 서버에서 전체 기간 (예전 고객 재방문·재수리 문의)
+  const shippedSearchOn = activeTab === 'shipped' && search.trim().length >= 2;
+  const shippedSearch = useRepairShippedSearch(search, shippedSearchOn);
   // 준비표(트레이형) 다중선택
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -137,14 +141,15 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   // 검색 + 교차 필터 적용
   const filteredRepairs = useMemo(() => {
     let list = tabData[activeTab] || [];
-    if (search) list = list.filter((r) => matchSearch(r, search));
+    if (shippedSearchOn) list = shippedSearch.data || [];
+    else if (search) list = list.filter((r) => matchSearch(r, search));
     if (unpaidOnly) list = list.filter((r) => !r.paid_at);
     if (staleOnly) {
       const threeDaysAgo = Date.now() - 3 * 86400000;
       list = list.filter((r) => new Date(r.updated_at).getTime() < threeDaysAgo);
     }
     return list;
-  }, [tabData, activeTab, search, unpaidOnly, staleOnly]);
+  }, [tabData, activeTab, search, unpaidOnly, staleOnly, shippedSearchOn, shippedSearch.data]);
 
   const repairActTypes = useActivityTypes(filteredRepairs.map((r) => r.phone));
 
@@ -298,7 +303,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       {rowToggles && checkedIds.size === 0 && <p className="text-[11px] text-neutral-400 -mt-1">행을 눌러 선택하세요.</p>}
 
       {/* 목록 */}
-      {isLoading ? (
+      {isLoading || (shippedSearchOn && shippedSearch.isLoading) ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full rounded-xl" />
@@ -340,6 +345,13 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
             />
           ))}
         </div>
+      )}
+
+      {/* 출고완료 탭 안내 — 기간 제한과 전체 검색 */}
+      {activeTab === 'shipped' && !isLoading && (
+        <p className="pt-3 text-center text-[11px] text-neutral-400">
+          {shippedSearchOn ? '전체 기간에서 검색한 결과입니다' : `최근 ${SHIPPED_WINDOW_DAYS}일 안에 끝난 건만 보입니다 · 이전 건은 이름·전화·접수번호로 검색하세요`}
+        </p>
       )}
 
       {showPrep && <RepairPrepSheetModal repairIds={[...checkedIds]} onClose={() => setShowPrep(false)} />}
@@ -585,6 +597,9 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending || epostPickup.isPending;
   // 170: 수거접수필요 탭의 [수거접수] = 우체국 자동 접수 (예약번호 '확인필요' 건은 예전처럼 수동 완료)
   const autoEpost = tab === 'pickup_needed' && r.proceed_type === '방문수거' && r.status === 'intake' && !r.epost_reservation_no;
+  // 서버 기록 기준 진행 중(3분 잠금) — 화면을 옮겨 다녀도 '접수 중' 유지
+  const now = useNow(5000);
+  const epostInFlight = autoEpost && (epostPickup.isPending || (now > 0 && !!r.epost_requested_at && now - new Date(r.epost_requested_at).getTime() < 3 * 60 * 1000));
 
   // 2026-10-08 방문 건(직접방문 + 송장 없음): 진행중·작업완료 탭에서 바로 [전달완료] → 완료.
   //   상세 패널의 [고객 전달 완료]와 같은 요청(서버가 전달 시각·수령방법을 채우고, 후기 요청은 3시간 뒤 크론).
@@ -626,7 +641,7 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const labels: Record<string, { btn: string; title: string; msg: string }> = {
     intake: { btn: '접수확인', title: '접수 확인', msg: `${r.name}님의 접수를 확인합니다.` },
     pickup_needed: autoEpost
-      ? { btn: epostPickup.isPending ? '접수 중…' : '우체국 접수', title: '우체국 수거접수', msg: `${r.name}님 건을 고객이 고른 수거일(${r.pickup_date})·보관장소(${r.delivery_method})로 인터넷우체국에 자동 접수합니다 (약 45초). 성공하면 입고대기로 넘어갑니다.` }
+      ? { btn: epostInFlight ? '접수 중…' : '우체국 접수', title: '우체국 수거접수', msg: `${r.name}님 건을 고객이 고른 수거일(${r.pickup_date})·보관장소(${r.delivery_method})로 인터넷우체국에 자동 접수합니다 (약 45초). 성공하면 입고대기로 넘어갑니다.` }
       : { btn: '수거접수', title: '수거접수 완료', msg: `${r.name}님의 수거접수를 완료합니다.` },
     in_progress: { btn: '입금확인', title: '입금 확인', msg: `${r.name}님의 입금을 확인합니다.` },
     ready_to_ship: !r.invoice_number
@@ -656,7 +671,7 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
     <>
       <button
         onClick={handleClick}
-        disabled={busy}
+        disabled={busy || epostInFlight}
         className={`px-2 py-1 rounded-md text-[11px] font-semibold transition disabled:opacity-50 ${isVisitHandover ? 'bg-neutral-900 text-white hover:bg-neutral-700' : btnColors[tab]}`}
       >
         {!isVisitHandover && tab === 'ready_to_ship' && !r.invoice_number && <Truck size={11} className="inline mr-0.5" />}
