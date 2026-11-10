@@ -1,7 +1,26 @@
 # 복원수리 프로세스 흐름도
-> 최종 업데이트: 2026-10-28 — 접수번호 뒤 4자리 임의 + KST 날짜
+> 최종 업데이트: 2026-11-10 — 우체국 방문접수 자동 예약 / (이전) 2026-10-28 — 접수번호 뒤 4자리 임의 + KST 날짜
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
+
+## 2026-11-10 — 우체국 방문접수 자동 예약 (마이그170)
+```
+방문수거 · 신규접수 → [우체국 수거접수] (상세 검은 버튼 / 목록 '수거접수필요' 탭 빠른 버튼)
+  → 확인창(고객·주소·수거일·보관장소 요약) → POST /api/repair/epost-pickup {repair_id}
+     · 서울 리전(icn1) 서버 크롬(@sparticuz/chromium) — lib/epost/pickup.ts
+     · 잠금: epost_requested_at 조건부 업데이트(3분) — 두 번 클릭·다른 기기 거절
+     · 인터넷우체국: 로그인 → 보내는 분=고객(주소찾기·상세주소 그대로 / 'X동 Y호'면 아파트) → 수거일=pickup_date
+       → 보관장소=직접입력 delivery_method 문구 그대로 → 모바일영수증 미신청 → 받는 분=기존이력(매장)
+       → 물품=불러오기(미용가위) → 목록 정확히 1건 → 주소검증 '모두 정상' → 결제카드검증(1회) → 신청
+  → 성공: epost_reservation_no 저장 + intake→pickup_scheduled(입고대기) + 이력 "우체국 방문접수 자동 예약 …"
+  → 신청 전 실패: 아무것도 안 바뀜(잠금만 해제), 사유 토스트 → 접힘 [우체국에서 직접 접수했어요] 수동 가능
+  → 신청 후 결과 불명: epost_reservation_no='확인필요' (재접수 차단) → 우체국 예약조회 확인 후 [수거접수 완료]
+```
+- 비밀값: Vercel 환경변수 `EPOST_ID/PW`, `EPOST_CARD_*` (Production, Secret). 원본 `C:\마모루드라이브\ClaudeSecrets\epost-*.env`
+- 시험: `GET /api/repair/epost-pickup?as=AS-…` = 신청 직전까지만(DB 변경 없음). 실제 신청은 POST만
+- 알림톡 없음(기존 수거접수 완료와 동일). 서버 로그인 시 다른 곳의 우체국 로그인은 풀림(우체국 정책)
+- 우체국 예약 취소는 자동 아님 — 복원수리 취소 확인창에 예약번호와 함께 안내
+- 순서 SSOT: `.claude/skills/epost-pickup/SKILL.md` / PC 시험판 `tools/epost-pickup/run.mjs`
 
 ## 2026-10-28 — 접수번호 형식 `AS-YYYYMMDD-NNNN`
 - 뒤 4자리 = 임의(1000~9999), 순번 아님. 이유: ① 그날 몇 번째 고객인지 드러남 ② 수리내역서 링크(`uid=접수번호`)에서 끝자리만 바꿔 남의 내역서를 열 수 있었음(순번 001·002 → 9천 개 중 하나)

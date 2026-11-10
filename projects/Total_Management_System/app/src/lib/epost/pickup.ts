@@ -34,6 +34,7 @@ export interface EpostSecrets {
 export interface EpostResult {
   ok: boolean;
   submitted: boolean;
+  submitAttempted: boolean; // '신청'을 눌렀는가 — 눌렀는데 결과 불명이면 재접수 금지(중복 위험)
   reservationNo: string | null;
   stoppedReason: string | null;
   logs: string[];
@@ -149,6 +150,7 @@ export async function runEpostPickup(opts: {
   });
 
   let submitted = false;
+  let submitAttempted = false;
   let reservationNo: string | null = null;
   try {
     // ── 로그인 ──
@@ -341,6 +343,7 @@ export async function runEpostPickup(opts: {
       log('신청 직전에서 멈춤(시험 모드)');
     } else {
       log('신청');
+      submitAttempted = true;
       await Promise.all([
         page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
         realClick(await byText(page, '신청'), '신청'),
@@ -353,14 +356,14 @@ export async function runEpostPickup(opts: {
       log(`신청 결과: ${submitted ? '예약됨' : '예약 확인창 없음'} / 예약접수번호 ${reservationNo || '못 찾음'}`);
       if (!submitted && !reservationNo) stop('신청 후 예약 완료를 확인하지 못함 — 우체국 예약조회에서 직접 확인 필요');
     }
-    return { ok: true, submitted, reservationNo, stoppedReason: null, logs, dialogs, errorShot: null, ms: Date.now() - started };
+    return { ok: true, submitted, submitAttempted, reservationNo, stoppedReason: null, logs, dialogs, errorShot: null, ms: Date.now() - started };
   } catch (e) {
     const msg = e instanceof Stop ? e.message : `오류: ${e instanceof Error ? e.message : String(e)}`;
     log(`중단: ${msg}`);
     if (!cardStage) { // 카드 입력 단계 이후 화면은 남기지 않는다
       errorShot = await page.screenshot({ type: 'jpeg', quality: 50, encoding: 'base64' }).catch(() => null) as string | null;
     }
-    return { ok: false, submitted, reservationNo, stoppedReason: msg, logs, dialogs, errorShot, ms: Date.now() - started };
+    return { ok: false, submitted, submitAttempted, reservationNo, stoppedReason: msg, logs, dialogs, errorShot, ms: Date.now() - started };
   } finally {
     await page.close().catch(() => {});
   }

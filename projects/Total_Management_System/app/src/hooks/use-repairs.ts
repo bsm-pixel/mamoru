@@ -352,6 +352,36 @@ export function useRecallRepairPickup() {
   });
 }
 
+/** 170: 우체국 방문접수 자동 예약 — 서버(서울) 크롬이 우체국에 접수까지. 성공 시 서버가 입고대기 전이 + 예약번호 저장 (약 45초) */
+export function useEpostPickup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (repairId: string) => {
+      const res = await fetch('/api/repair/epost-pickup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repair_id: repairId }),
+      });
+      const data = await res.json().catch(() => ({ error: res.statusText }));
+      if (!res.ok || !data.ok) {
+        const reason = typeof data.stoppedReason === 'string' && data.stoppedReason ? data.stoppedReason : (typeof data.error === 'string' ? data.error : '우체국 접수 실패');
+        throw new Error(data.needsCheck ? `신청 후 결과 확인 실패 — 우체국 예약조회에서 직접 확인해 주세요 (${reason})` : reason);
+      }
+      return data as { ok: true; reservationNo: string; ms: number };
+    },
+    onSuccess: (d) => {
+      toast.success(`우체국 수거접수 완료 · 예약번호 ${d.reservationNo}`, { duration: 8000 });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : '우체국 접수 실패', { duration: 10000 }),
+    onSettled: () => {
+      // 실패해도 서버가 '확인필요'로 막았을 수 있어 항상 다시 읽는다
+      queryClient.invalidateQueries({ queryKey: ['repair'] });
+      queryClient.invalidateQueries({ queryKey: ['repairs'] });
+      queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+    },
+  });
+}
+
 /** 재수거품 입고 · 재작업 시작 — 출고건을 repairing 으로 되돌림(송장 초기화) */
 export function useReworkRepair() {
   const queryClient = useQueryClient();

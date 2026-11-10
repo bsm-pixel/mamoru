@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useRepairTabData } from '@/hooks/use-repair-tabs';
-import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair } from '@/hooks/use-repairs';
+import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair, useEpostPickup } from '@/hooks/use-repairs';
 import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
@@ -580,8 +580,11 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const updateStatus = useUpdateRepairStatus();
   const updateFields = useUpdateRepairFields();
   const shipRepair = useShipRepair();
+  const epostPickup = useEpostPickup(); // 170 우체국 방문접수 자동 예약
   const [showConfirm, setShowConfirm] = useState(false);
-  const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending;
+  const busy = updateStatus.isPending || updateFields.isPending || shipRepair.isPending || epostPickup.isPending;
+  // 170: 수거접수필요 탭의 [수거접수] = 우체국 자동 접수 (예약번호 '확인필요' 건은 예전처럼 수동 완료)
+  const autoEpost = tab === 'pickup_needed' && r.proceed_type === '방문수거' && r.status === 'intake' && !r.epost_reservation_no;
 
   // 2026-10-08 방문 건(직접방문 + 송장 없음): 진행중·작업완료 탭에서 바로 [전달완료] → 완료.
   //   상세 패널의 [고객 전달 완료]와 같은 요청(서버가 전달 시각·수령방법을 채우고, 후기 요청은 3시간 뒤 크론).
@@ -604,6 +607,7 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
         await updateFields.mutateAsync({ id: r.id, confirmed_at: new Date().toISOString() });
         break;
       case 'pickup_needed':
+        if (autoEpost) { epostPickup.mutate(r.id); break; } // 약 45초 — 결과는 알림(토스트)으로
         await updateStatus.mutateAsync({ id: r.id, status: 'pickup_scheduled', note: '수거접수 완료' });
         break;
       case 'in_progress':
@@ -621,7 +625,9 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
 
   const labels: Record<string, { btn: string; title: string; msg: string }> = {
     intake: { btn: '접수확인', title: '접수 확인', msg: `${r.name}님의 접수를 확인합니다.` },
-    pickup_needed: { btn: '수거접수', title: '수거접수 완료', msg: `${r.name}님의 수거접수를 완료합니다.` },
+    pickup_needed: autoEpost
+      ? { btn: epostPickup.isPending ? '접수 중…' : '우체국 접수', title: '우체국 수거접수', msg: `${r.name}님 건을 고객이 고른 수거일(${r.pickup_date})·보관장소(${r.delivery_method})로 인터넷우체국에 자동 접수합니다 (약 45초). 성공하면 입고대기로 넘어갑니다.` }
+      : { btn: '수거접수', title: '수거접수 완료', msg: `${r.name}님의 수거접수를 완료합니다.` },
     in_progress: { btn: '입금확인', title: '입금 확인', msg: `${r.name}님의 입금을 확인합니다.` },
     ready_to_ship: !r.invoice_number
       ? { btn: '송장생성', title: '송장 생성', msg: '롯데택배 송장을 생성합니다.' }

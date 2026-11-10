@@ -16,6 +16,7 @@ import {
   useReworkRepair,
   useSendRepairNotification,
   useDeleteRepair,
+  useEpostPickup,
 } from '@/hooks/use-repairs';
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL, getRepairDisplayLabel } from '@/lib/repair/transitions';
@@ -40,6 +41,7 @@ type ConfirmAction =
   | 'cost_notice' | 'mark_paid' | 'mark_shipped' | 'cancel_shipment'
   | 'cancel_repair' | 'delete_repair' | 'visit_checkout' | 'visit_handover'
   | 'direct_pickup' | 'recall_pickup' | 'rework' | 'mark_delivered'
+  | 'epost_pickup'
   | null;
 type PayMethod = 'transfer' | 'card' | 'cash';
 const PAY_METHODS: { id: PayMethod; label: string }[] = [
@@ -71,6 +73,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   const reworkRepair = useReworkRepair();
   const sendNotify = useSendRepairNotification();
   const deleteRepair = useDeleteRepair();
+  const epostPickup = useEpostPickup();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [mergedShipOpen, setMergedShipOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<PayMethod>('transfer'); // 120: 결제수단
@@ -131,6 +134,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 방문 건(주소 없음)은 롯데 재수거를 걸 수 없다 → 재점검이 필요하면 다시 방문 예약을 잡는다
   const canRecall = !isVisitFlow && ['shipped', 'delivered', 'completed'].includes(currentStatus);
 
+  // 170 우체국 방문접수 자동 예약 — 방문수거 신규접수 건의 검은 버튼. 예약번호가 생기면 사라진다(중복 방지)
+  //   예약번호 '확인필요' = 신청은 눌렀으나 결과를 못 읽음 → 자동 버튼 숨기고 기존 [수거접수 완료]로 사람이 마무리
+  const epostNo = r.epost_reservation_no;
+  const epostNeedsCheck = epostNo === '확인필요';
+  const canEpostPickup = proceedType === '방문수거' && currentStatus === 'intake' && !isFieldTake && !epostNo;
+
   // 🔒 기존 동작 보존: 출고 섹션이 cost_notified 이상에서 송장 생성을 열어줬다(입금확인 후 바로 발급).
   //    ready_to_ship 은 주 액션이라 여기서 제외 — 나머지 단계에서는 보조 버튼으로 제공한다.
   // 방문 건은 송장이 필요 없다 → [송장 미리 생성] 숨김. 택배로 보내야 하면 접힘 안의 [택배로 보내야 해요]를 쓴다
@@ -149,6 +158,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
 
   // 접힘(④)에 들어갈 게 하나라도 있는가
   const hasMore =
+    canEpostPickup || // 170: 자동 접수 대신 우체국에서 직접 접수한 경우의 수동 완료
     visibleTransitions.length > 1 ||
     canManualShipFallback || canDirectPickup || canRecall || canVisitHandover ||
     (hasInvoice && ['cost_notified', 'repairing', 'ready_to_ship', 'shipped'].includes(currentStatus)) ||
@@ -319,7 +329,11 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         {isDirectVisit
           ? '고객이 매장에 오시면 현장에서 비용을 확정하고 결제까지 한 번에 처리합니다.'
           : proceedType === '방문수거' && currentStatus === 'intake'
-            ? '고객집 방문수거를 먼저 접수해주세요.'
+            ? (epostNeedsCheck
+                ? '⚠️ 우체국 자동접수에서 신청은 눌렀지만 결과를 확인하지 못했습니다. 우체국 예약조회에서 확인 후 [수거접수 완료]를 눌러주세요. (다시 자동접수하면 중복될 수 있습니다)'
+                : '[우체국 수거접수]를 누르면 고객이 고른 수거일·보관장소로 우체국에 자동 접수됩니다 (약 45초).')
+            : proceedType === '방문수거' && currentStatus === 'pickup_scheduled' && epostNo
+            ? `우체국 방문접수 예약됨 (${epostNo}). 가위가 도착하면 수량을 확인하고 [입고 & 비용안내]를 보내주세요.`
             : '가위가 도착하면 수량을 확인하고 [입고 & 비용안내]를 보내주세요. 수리내역서는 출고 전까지 작성하면 됩니다.'}
       </ActionNote>
     );
@@ -507,6 +521,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                   </Button>
                 )}
               </div>
+            ) : canEpostPickup ? (
+              // 170 우체국 방문접수 자동 예약 — 서버가 접수 후 입고대기로 넘긴다
+              <Button className="w-full" onClick={() => setConfirmAction('epost_pickup')} loading={epostPickup.isPending}>
+                <Truck size={14} />
+                {epostPickup.isPending ? '우체국 접수 중… (약 45초)' : '우체국 수거접수'}
+              </Button>
             ) : primaryTransition ? (
               <Button
                 className="w-full"
@@ -564,6 +584,14 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
             {/* ④ 드물게 쓰는 것 — 접어둔다 */}
             {hasMore && (
               <MoreActions label={currentStatus === 'completed' ? '재점검이 필요한가요?' : '다른 처리 방법'}>
+                {canEpostPickup && (
+                  <SubtleButton
+                    onClick={() => updateStatus.mutate({ id: r.id, status: 'pickup_scheduled', note: '우체국 직접 접수 (수동)' })}
+                    disabled={busy || epostPickup.isPending}
+                  >
+                    우체국에서 직접 접수했어요 — 수거접수 완료
+                  </SubtleButton>
+                )}
                 {visibleTransitions.slice(1).map((nextStatus) => (
                   <SubtleButton
                     key={nextStatus}
@@ -784,6 +812,28 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         message={<>고객집 방문수거로 <strong>재수거</strong>를 접수합니다.<br />접수 후 취소는 ALPS에서 수동입니다.</>}
         confirmLabel="재수거 접수"
       />
+      {/* 170 우체국 방문접수 자동 예약 — 고객이 고른 값 그대로 들어가는지 한 번 보고 누른다 */}
+      <ConfirmModal
+        open={confirmAction === 'epost_pickup'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => { epostPickup.mutate(r.id); setConfirmAction(null); }}
+        title="우체국 수거접수"
+        message={
+          <div className="space-y-2 text-left">
+            <p>아래 내용으로 <strong>인터넷우체국 방문접수</strong>를 예약합니다. (약 45초)</p>
+            <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1 text-xs bg-neutral-50 rounded-lg p-3">
+              <dt className="text-neutral-500">보내는 분</dt><dd>{r.name} · {r.phone}</dd>
+              <dt className="text-neutral-500">주소</dt><dd>({r.postcode}) {r.address} <strong>{r.address_detail}</strong></dd>
+              <dt className="text-neutral-500">수거일</dt><dd><strong>{r.pickup_date}</strong></dd>
+              <dt className="text-neutral-500">보관장소</dt><dd><strong>{r.delivery_method}</strong></dd>
+              <dt className="text-neutral-500">받는 분</dt><dd>마모루 매장 (우체국 이력)</dd>
+              <dt className="text-neutral-500">물품</dt><dd>미용가위 · 사전결제(비대면)</dd>
+            </dl>
+            <p className="text-xs text-neutral-500">우체국에서 수거일을 고를 수 없거나 주소가 맞지 않으면 접수하지 않고 멈춥니다. 성공하면 입고대기로 넘어갑니다.</p>
+          </div>
+        }
+        confirmLabel="우체국에 접수"
+      />
       <ConfirmModal
         open={confirmAction === 'rework'}
         onClose={() => setConfirmAction(null)}
@@ -832,7 +882,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         onClose={() => setConfirmAction(null)}
         onConfirm={() => updateStatus.mutateAsync({ id: r.id, status: 'cancelled', note: '관리자 취소' })}
         title="복원수리 취소"
-        message="정말 이 복원수리 접수를 취소하시겠습니까?"
+        message={epostNo && !['shipped', 'delivered', 'completed'].includes(currentStatus)
+          ? <>정말 이 복원수리 접수를 취소하시겠습니까?<br /><strong>⚠️ 우체국 수거 예약({epostNo})은 자동으로 취소되지 않습니다.</strong> 인터넷우체국 예약조회에서 직접 취소해 주세요.</>
+          : '정말 이 복원수리 접수를 취소하시겠습니까?'}
         confirmLabel="취소 확정"
         variant="danger"
       />
