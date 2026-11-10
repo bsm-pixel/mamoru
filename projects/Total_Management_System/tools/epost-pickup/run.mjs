@@ -99,7 +99,7 @@ const shot = async (name, p = page) => { shotNo += 1; await p.screenshot({ path:
 const waitPop = async (part, since) => {
   for (let i = 0; i < 60; i++) {
     const p = pops.slice(since).find((x) => !x.isClosed() && x.url().includes(part));
-    if (p) { await p.waitForFunction(() => document.readyState === 'complete').catch(() => {}); return p; }
+    if (p) { await p.waitForFunction(() => document.readyState === 'complete', { polling: 250, timeout: 15000 }).catch(() => {}); return p; }
     await sleep(250);
   }
   stop(`팝업(${part})이 안 열림`);
@@ -113,6 +113,11 @@ const clickEl = async (h, what) => {
   await h.click();
 };
 const clickText = async (text, opt) => clickEl(await handleByText(page, text, opt), text);
+// 단계 시간 제한 — 어디서 멈췄는지 바로 찍히게 (4차 시험: 주소찾기 팝업에서 무한 대기)
+const T = (label, p, ms = 20000) => { log(`  · ${label}`); return Promise.race([p, sleep(ms).then(() => stop(`${label} — ${ms / 1000}초 넘게 응답 없음`))]); };
+// 화면 안 직접 클릭(비동기) — 팝업 안 링크·숨은 라디오용. 확인창은 puppeteer 가 처리
+const domClick = (h) => h.evaluate((e) => { setTimeout(() => e.click(), 0); });
+const POLL = { polling: 250 };
 // 기준 요소 뒤에 오는 첫 '다음' 버튼
 const clickNextAfter = async (anchorSelectorJs) => {
   const h = await page.evaluateHandle((js) => {
@@ -191,40 +196,46 @@ try {
     return a || null;
   });
   let since = pops.length;
-  await clickEl(zipBtn, '주소찾기');
-  let pop = await waitPop('ZipCd', since);
-  await pop.waitForSelector('#keyword');
+  await T('주소찾기 클릭', clickEl(zipBtn, '주소찾기'));
+  let pop = await T('주소찾기 팝업 대기', waitPop('ZipCd', since));
+  await T('검색칸 대기', pop.waitForSelector('#keyword'));
   await pop.$eval('#keyword', (e, v) => { e.value = v; }, rep.address);
-  await pop.click('#btnImgSrch');
-  await pop.waitForFunction(() => document.querySelectorAll('a#hi').length > 0 || /검색결과가 없|결과가 없/.test(document.body.innerText), { timeout: 15000 }).catch(() => {});
-  const picked = await pop.evaluateHandle((zip) => {
+  await T('검색 클릭', domClick(await pop.$('#btnImgSrch')));
+  await T('검색 결과 대기', pop.waitForFunction(() => document.querySelectorAll('a#hi').length > 0 || /검색결과가 없|결과가 없/.test(document.body.innerText), { ...POLL, timeout: 15000 }).catch(() => {}));
+  const picked = await T('우편번호 일치 결과 찾기', pop.evaluateHandle((zip) => {
     const as = [...document.querySelectorAll('a')].filter((e) => e.offsetParent !== null);
     const pairs = [];
     as.forEach((a, i) => { if (a.id === 'hi') { let z = ''; for (let j = i - 1; j >= 0; j--) { const t = as[j].textContent.trim(); if (/^\d{5}$/.test(t)) { z = t; break; } } pairs.push({ a, z }); } });
     const m = pairs.filter((p) => p.z === zip);
     return m.length === 1 ? m[0].a : null;
-  }, rep.postcode);
+  }, rep.postcode));
   if (!(await picked.evaluate((e) => !!e).catch(() => false))) { await shot('zip-nomatch', pop); stop(`주소 검색 결과 중 우편번호 ${rep.postcode} 일치가 1건이 아님`); }
   log(`주소 선택: ${await picked.evaluate((e) => e.textContent.replace(/\s+/g, ' ').trim())}`);
-  await picked.click();
-  await pop.waitForSelector('#reg_address2', { timeout: 10000 });
+  await T('주소 클릭', domClick(picked));
+  await T('상세주소 칸 대기', pop.waitForFunction(() => { const e = document.getElementById('reg_address2'); return e && e.offsetParent !== null; }, { ...POLL, timeout: 10000 }));
   const detail = (rep.address_detail || '').trim();
   const apt = detail.match(/(\d+)\s*동\s*(\d+)\s*호/);
   const hasApt = await pop.$('#apart_yn1');
   if (apt && hasApt) {
-    await pop.click('#apart_yn1'); await sleep(200);
-    await pop.$eval('#reg_apartdong', (e, v) => { e.value = v; }, apt[1]);
-    await pop.$eval('#reg_apartho', (e, v) => { e.value = v; }, apt[2]);
+    await T('아파트 방식 선택', pop.evaluate((d, h) => {
+      document.getElementById('apart_yn1').click();
+      document.getElementById('reg_apartdong').value = d; document.getElementById('reg_apartho').value = h;
+    }, apt[1], apt[2]));
     log(`상세주소: 아파트 ${apt[1]}동 ${apt[2]}호`);
   } else {
     if (!detail) stop('TMS 상세주소가 비어 있음 → 사람 확인 필요');
-    await pop.click('#apart_yn2'); await sleep(200);
-    await pop.$eval('#reg_address2', (e, v) => { e.value = v; e.dispatchEvent(new Event('change', { bubbles: true })); }, detail);
+    // 라디오는 숨겨져 있고 아이콘으로 그려짐 → 마우스 클릭 금지, 화면 안 직접 클릭
+    await T('상세주소 방식 선택·입력', pop.evaluate((v) => {
+      document.getElementById('apart_yn2').click();
+      const f = document.getElementById('reg_address2'); f.value = v; f.dispatchEvent(new Event('change', { bubbles: true }));
+      return document.getElementById('apart_yn2').checked;
+    }, detail));
     log(`상세주소: 그대로 "${detail}"`);
   }
-  const addrBtn = await handleByText(pop, '주소입력');
-  await clickEl(addrBtn, '주소입력');
-  await sleep(1500);
+  await sleep(300);
+  await T('주소입력 클릭', domClick(await handleByText(pop, '주소입력')));
+  await T('팝업 닫힘 대기', (async () => { for (let i = 0; i < 40 && !pop.isClosed(); i++) await sleep(250); })());
+  await sleep(800);
   await page.evaluate((p) => {
     const s = (id, v) => { const e = document.getElementById(id) || document.querySelector(`input[name=${id}]`); e.value = v; e.dispatchEvent(new Event('change', { bubbles: true })); };
     s('cell1', p[0]); s('cell2', p[1]); s('cell3', p[2]);
@@ -237,7 +248,7 @@ try {
 
   // ── 5) 02 방문접수 소포정보 ──
   const mr = await page.$('#mreceipt_n');
-  await clickEl(mr, '모바일영수증 미신청');
+  await T('모바일영수증 미신청 클릭', clickEl(mr, '모바일영수증 미신청'));
   if ((await page.$eval('input[name=mreceipt]', (e) => e.value)) !== 'N') stop('모바일영수증 미신청 반영 안 됨');
   const dates = await page.$$eval('#labwishReceiptTime option', (os) => os.map((o) => o.value));
   if (!dates.includes(rep.pickup_date)) stop(`수거요청일 ${rep.pickup_date} 선택 불가 (가능: ${dates.filter(Boolean).join(', ')})`);
@@ -255,11 +266,11 @@ try {
 
   // ── 6) 03 받는 분 = 기존 이력 ──
   since = pops.length;
-  await clickText('기존받는 분 정보검색', { exact: false });
-  pop = await waitPop('RecSearchAddress', since);
-  await pop.waitForFunction((n) => [...document.querySelectorAll('tr')].some((t) => t.textContent.includes(n)), {}, RECEIVER_NAME);
+  await T('기존받는 분 정보검색 클릭', clickText('기존받는 분 정보검색', { exact: false }));
+  pop = await T('받는 분 팝업 대기', waitPop('RecSearchAddress', since));
+  await T('받는 분 이력 대기', pop.waitForFunction((n) => [...document.querySelectorAll('tr')].some((t) => t.textContent.includes(n)), POLL, RECEIVER_NAME));
   const recv = await pop.evaluateHandle((n) => { const row = [...document.querySelectorAll('tr')].find((t) => t.textContent.includes(n)); return [...row.querySelectorAll('a')].find((a) => a.textContent.trim() === n) || null; }, RECEIVER_NAME);
-  await clickEl(recv, RECEIVER_NAME);
+  await T('받는 분 선택', domClick(recv));
   await sleep(2000);
   const recvName = await page.evaluate(() => [...document.querySelectorAll('input[type=text]')].filter((e) => e.offsetParent !== null && e.title === '이름').map((e) => e.value));
   if (!recvName.includes(RECEIVER_NAME)) stop('받는 분 적용 안 됨');
@@ -268,16 +279,16 @@ try {
 
   // ── 7) 04 물품정보 = 불러오기 → 목록 추가 ──
   since = pops.length;
-  await clickText('물품정보불러오기', { exact: false });
-  pop = await waitPop('MailContList', since);
-  await pop.waitForFunction((n) => [...document.querySelectorAll('tr')].some((t) => t.textContent.includes(n)), {}, ITEM_NAME);
+  await T('물품정보 불러오기 클릭', clickText('물품정보불러오기', { exact: false }));
+  pop = await T('물품 팝업 대기', waitPop('MailContList', since));
+  await T('물품 목록 대기', pop.waitForFunction((n) => [...document.querySelectorAll('tr')].some((t) => t.textContent.includes(n)), POLL, ITEM_NAME));
   const item = await pop.evaluateHandle((n) => { const row = [...document.querySelectorAll('tr')].find((t) => t.textContent.includes(n)); return [...row.querySelectorAll('a')].find((a) => a.textContent.trim() === n) || null; }, ITEM_NAME);
-  await clickEl(item, ITEM_NAME);
+  await T('물품 선택', domClick(item));
   await sleep(2000);
   const itemInfo = await page.evaluate(() => [...document.querySelectorAll('select')].filter((s) => s.offsetParent !== null && ['중량', '크기', '내용품코드'].includes(s.title)).map((s) => `${s.title}=${(s.options[s.selectedIndex] || {}).text}`));
   log(`04 물품: ${ITEM_NAME} / ${itemInfo.join(' / ')}`);
   if ((await listRows()).length) stop('목록 추가 전에 이미 행이 있음');
-  await clickText('받는 분 목록에 추가');
+  await T('받는 분 목록에 추가', clickText('받는 분 목록에 추가'));
   await sleep(2000);
   const rows = await listRows();
   if (rows.length !== 1 || !rows[0].includes(rep.name) || !rows[0].includes(RECEIVER_NAME)) stop(`받는 분 목록이 1건이 아님/내용 불일치: ${rows.length}건`);
@@ -285,7 +296,7 @@ try {
 
   // ── 8) 05 주소검증 ──
   const before = dialogs.length;
-  await clickText('주소검증');
+  await T('주소검증 클릭', clickText('주소검증'));
   await sleep(3000);
   if (!dialogs.slice(before).some((m) => m.includes('모두 정상'))) { await shot('addr-verify-fail'); stop(`주소검증 실패: ${dialogs.slice(before).join(' | ')}`); }
   log('05 주소검증: 모두 정상');
@@ -301,7 +312,7 @@ try {
   await typeInto('creditBirth', card.CARD_OWNER_ID);
   const lens = await page.evaluate(() => ['creditNo1', 'creditNo2', 'creditNo3', 'creditNo4', 'creditExp1', 'creditExp2', 'creditPwd1', 'creditPwd2', 'creditBirth'].map((id) => document.getElementById(id).value.length));
   log(`06 카드 입력 자릿수: ${lens.join(',')}`);
-  await clickText('결제카드검증');
+  await T('결제카드검증 클릭', clickText('결제카드검증'));
   let verified = false;
   for (let i = 0; i < 20 && !verified; i++) { await sleep(500); verified = await page.evaluate(() => document.body.innerText.includes('결제카드 검증이 완료')); }
   if (!verified) stop(`결제카드검증 실패(재시도 안 함): ${dialogs.slice(-2).join(' | ')}`);
