@@ -11,7 +11,8 @@ import { fileURLToPath } from 'url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const AS_ID = process.argv.find((a) => /^AS-/.test(a));
 const SUBMIT = process.argv.includes('--submit');
-const SHOW = process.argv.includes('--show');
+const MANUAL_LOGIN = process.argv.includes('--manual-login'); // 사람이 직접 로그인(창 표시 강제)
+const SHOW = process.argv.includes('--show') || MANUAL_LOGIN;
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const SECRETS = 'C:\\마모루드라이브\\ClaudeSecrets';
 const TMS_ENV = path.join(HERE, '..', '..', 'app', '.env.local');
@@ -52,9 +53,9 @@ log(`TMS: ${rep.name} / ${rep.postcode} ${rep.address} ${rep.address_detail || '
 for (const k of ['name', 'phone', 'postcode', 'address', 'pickup_date', 'delivery_method']) if (!rep[k]) { console.error(`TMS ${k} 비어 있음 → 중단`); process.exit(2); }
 if (rep.proceed_type !== '방문수거') { console.error(`진행방법이 방문수거가 아님(${rep.proceed_type}) → 중단`); process.exit(2); }
 
-const login = readEnv(path.join(SECRETS, 'epost-login.env'));
+const login = MANUAL_LOGIN ? {} : readEnv(path.join(SECRETS, 'epost-login.env')); // 직접 로그인 모드에선 비밀번호 파일 안 읽음
 const card = readEnv(path.join(SECRETS, 'epost-card.env'));
-if (!login.EPOST_ID || !login.EPOST_PW) { console.error('epost-login.env 비어 있음'); process.exit(2); }
+if (!MANUAL_LOGIN && (!login.EPOST_ID || !login.EPOST_PW)) { console.error('epost-login.env 비어 있음'); process.exit(2); }
 const cn = (card.CARD_NUMBER || '').replace(/\D/g, '');
 const pw2 = (card.CARD_PW2 || '').replace(/\D/g, '');
 if (cn.length !== 16 || pw2.length !== 2) { console.error('epost-card.env 확인 필요'); process.exit(2); }
@@ -140,7 +141,14 @@ try {
   // ── 2) 로그인 ──
   await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded' });
   await sleep(1500);
-  if (!(await page.evaluate(IS_LOGGED_IN_JS))) {
+  if (MANUAL_LOGIN && !(await page.evaluate(IS_LOGGED_IN_JS))) {
+    // 사람이 뜬 창에서 직접 로그인 → 로그인 확인되면 이어서 자동 진행 (Claude 실행 시 비밀번호 입력 금지)
+    log('👉 크롬 창에서 직접 로그인해 주세요 (최대 3분 대기)');
+    let ok = false;
+    for (let i = 0; i < 360 && !ok; i++) { await sleep(500); ok = await page.evaluate(IS_LOGGED_IN_JS).catch(() => false); }
+    if (!ok) stop('3분 안에 로그인 확인 안 됨');
+    log('로그인 확인됨 → 자동 진행');
+  } else if (!(await page.evaluate(IS_LOGGED_IN_JS))) {
     await page.waitForSelector('#id');
     await page.click('#id', { clickCount: 3 }); await page.type('#id', login.EPOST_ID, { delay: 30 });
     await page.click('#passwd'); await page.type('#passwd', login.EPOST_PW, { delay: 30 });
