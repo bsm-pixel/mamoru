@@ -73,7 +73,18 @@ const ua = (await browser.userAgent()).replace('HeadlessChrome', 'Chrome');
 const hooked = new WeakSet();
 const hook = (p, tag) => {
   if (!p || hooked.has(p)) return; hooked.add(p);
-  p.on('dialog', async (d) => { const m = `${tag}:${d.type()}:${d.message()}`; dialogs.push(m); log(`확인창 자동확인 → ${d.message().replace(/\n/g, ' ')}`); await d.accept().catch(() => {}); });
+  p.on('dialog', async (d) => {
+    const msg = d.message();
+    const m = `${tag}:${d.type()}:${msg}`; dialogs.push(m);
+    // 보안프로그램(nProtect) 설치 권유 = [취소]가 '설치 없이 이용' → 취소 (확인 누르면 설치 페이지로 빠짐, 1차 시험 사고)
+    if (d.type() === 'confirm' && /보안\s*프로그램|설치/.test(msg)) {
+      log(`확인창 '취소' → ${msg.replace(/\n/g, ' ')}`);
+      await d.dismiss().catch(() => {});
+      return;
+    }
+    log(`확인창 자동확인 → ${msg.replace(/\n/g, ' ')}`);
+    await d.accept().catch(() => {});
+  });
 };
 const page = await browser.newPage();
 await page.setUserAgent(ua);
