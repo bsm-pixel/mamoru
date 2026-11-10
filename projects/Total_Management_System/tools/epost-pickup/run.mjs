@@ -143,10 +143,10 @@ try {
   await sleep(1500);
   if (MANUAL_LOGIN && !(await page.evaluate(IS_LOGGED_IN_JS))) {
     // 사람이 뜬 창에서 직접 로그인 → 로그인 확인되면 이어서 자동 진행 (Claude 실행 시 비밀번호 입력 금지)
-    log('👉 크롬 창에서 직접 로그인해 주세요 (최대 3분 대기)');
+    log('👉 크롬 창에서 직접 로그인해 주세요 (최대 5분 대기)');
     let ok = false;
-    for (let i = 0; i < 360 && !ok; i++) { await sleep(500); ok = await page.evaluate(IS_LOGGED_IN_JS).catch(() => false); }
-    if (!ok) stop('3분 안에 로그인 확인 안 됨');
+    for (let i = 0; i < 600 && !ok; i++) { await sleep(500); ok = await page.evaluate(IS_LOGGED_IN_JS).catch(() => false); }
+    if (!ok) stop('5분 안에 로그인 확인 안 됨');
     log('로그인 확인됨 → 자동 진행');
   } else if (!(await page.evaluate(IS_LOGGED_IN_JS))) {
     await page.waitForSelector('#id');
