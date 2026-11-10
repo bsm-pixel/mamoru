@@ -22,7 +22,11 @@ when_to_use: >-
 ## 1. TMS에서 건 읽기 (조회만)
 - `projects/Total_Management_System/app/.env.local` 의 서비스 키로 `repairs` 조회.
 - 키: `as_id` (예: AS-20261110-1234) 또는 고객 이름 → 여러 건이면 사장님께 고르게 함.
-- 쓰는 항목: `name`, `phone`, `postcode`, `address`, `address_detail`, `pickup_date`, `qty_mamoru`, `qty_other`, `memo`
+- 쓰는 항목: `name`, `phone`, `postcode`, `address`, `address_detail`, `pickup_date`, `delivery_method`, `qty_mamoru`, `qty_other`, `memo`
+- **수거 요청값은 고객이 고른 그대로 옮긴다** (사장님 지시 2026-11-10):
+  - `pickup_date`(수거요청일) → 우체국 수거 희망일
+  - `delivery_method`(전달방법: 문앞보관-9시 이전 / 매장카운터·직접전달-9시·10시 이후 수거요청) → 우체국 수거 방식·요청 메모 칸에 **문구 그대로**
+  - 시간은 '요청'일 뿐(집배원 동선상 더 일찍 옴) — 정책 [[reference_as_pickup_time_policy]]
 - 받는 분(매장): `.env.local` 의 `LOTTE_SENDER_NAME / _TEL / _ZIP / _ADDR` (롯데 접수와 같은 매장 정보)
 - 값은 화면 입력에만 쓰고, 채팅엔 이름·주소 요약만.
 
