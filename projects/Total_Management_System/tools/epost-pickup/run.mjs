@@ -309,10 +309,22 @@ try {
   if (!dialogs.slice(before).some((m) => m.includes('모두 정상'))) { await shot('addr-verify-fail'); stop(`주소검증 실패: ${dialogs.slice(before).join(' | ')}`); }
   log('05 주소검증: 모두 정상');
   await shot('05-list');
-  await clickNextAfter("[...document.querySelectorAll('a,button')].find(e=>e.textContent.trim()==='주소검증')");
+  // 05 '다음' = 화면에 보이는 마지막 '다음'을 화면 안 직접 클릭 (5차 시험: 마우스 클릭이 안 먹어 06이 접힌 채 남음)
+  await T('05 다음 클릭', page.evaluate(() => { const nx = [...document.querySelectorAll('a')].filter((a) => a.textContent.trim() === '다음' && a.offsetParent !== null); nx[nx.length - 1].click(); }));
+  const cardVisible = () => page.evaluate(() => { const e = document.getElementById('creditNo1'); return !!e && e.offsetParent !== null && e.getBoundingClientRect().height > 0; });
+  for (let i = 0; i < 12 && !(await cardVisible()); i++) await sleep(250);
+  if (!(await cardVisible())) {
+    log('  · 06 결제수단 칸이 접혀 있음 → 제목 눌러 펼침');
+    await page.evaluate(() => { const h = [...document.querySelectorAll('*')].find((e) => e.childElementCount < 4 && /^06\s*결제수단\s*등록/.test(e.textContent.trim())); (h.closest('a,button,h3,h4,div') || h).click(); });
+    for (let i = 0; i < 12 && !(await cardVisible()); i++) await sleep(250);
+  }
+  if (!(await cardVisible())) { await shot('card-hidden'); stop('06 결제수단 칸이 안 열림'); }
 
   // ── 9) 06 결제수단 + 결제카드검증 (1회만) ──
-  const typeInto = async (id, v) => { await page.click(`#${id}`, { clickCount: 3 }); await page.type(`#${id}`, v, { delay: 20 }); };
+  const typeInto = async (id, v) => {
+    await page.evaluate((x) => { const e = document.getElementById(x); e.scrollIntoView({ block: 'center' }); e.value = ''; e.focus(); }, id);
+    await page.keyboard.type(v, { delay: 20 });
+  };
   await typeInto('creditNo1', cn.slice(0, 4)); await typeInto('creditNo2', cn.slice(4, 8));
   await typeInto('creditNo3', cn.slice(8, 12)); await typeInto('creditNo4', cn.slice(12, 16));
   await typeInto('creditExp1', card.CARD_EXP_MM); await typeInto('creditExp2', card.CARD_EXP_YY);
@@ -320,7 +332,7 @@ try {
   await typeInto('creditBirth', card.CARD_OWNER_ID);
   const lens = await page.evaluate(() => ['creditNo1', 'creditNo2', 'creditNo3', 'creditNo4', 'creditExp1', 'creditExp2', 'creditPwd1', 'creditPwd2', 'creditBirth'].map((id) => document.getElementById(id).value.length));
   log(`06 카드 입력 자릿수: ${lens.join(',')}`);
-  await T('결제카드검증 클릭', clickText('결제카드검증'));
+  await T('결제카드검증 클릭', domClick(await handleByText(page, '결제카드검증')));
   let verified = false;
   for (let i = 0; i < 20 && !verified; i++) { await sleep(500); verified = await page.evaluate(() => document.body.innerText.includes('결제카드 검증이 완료')); }
   if (!verified) stop(`결제카드검증 실패(재시도 안 함): ${dialogs.slice(-2).join(' | ')}`);
