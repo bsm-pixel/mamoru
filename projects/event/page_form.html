@@ -752,7 +752,7 @@ function closeInapp(){
   function loadDaum(cb){
     if(window.daum && window.daum.Postcode){ cb(); return; }
     var s=document.createElement('script');
-    s.src='https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.src='https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
     s.onload=cb; s.onerror=function(){ alert('주소검색을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.'); };
     document.head.appendChild(s);
   }
