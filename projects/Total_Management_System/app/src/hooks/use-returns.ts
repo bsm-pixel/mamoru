@@ -114,3 +114,30 @@ export function useReturnPickupSchedule(monthStart: string, monthEnd: string) {
     },
   });
 }
+
+/** 2026-11-12 판매 상세에 붙는 반품·교환·점검조정 건 요약 (같은 판매의 returns) */
+export interface SaleReturnRef {
+  id: string;
+  return_number: string;
+  return_type: string;
+  status: string;
+  product_name: string | null;
+  exchange_out_invoice_number: string | null;
+  exchange_out_notified_at: string | null;
+  created_at: string;
+}
+export function useSaleReturns(saleId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['returns', 'by-sale', saleId],
+    enabled: !!saleId,
+    queryFn: async (): Promise<SaleReturnRef[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = createClient() as any;
+      const { data } = await db.from('returns')
+        .select('id, return_number, return_type, status, product_name, exchange_out_invoice_number, exchange_out_notified_at, created_at')
+        .eq('sale_id', saleId)
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+  });
+}

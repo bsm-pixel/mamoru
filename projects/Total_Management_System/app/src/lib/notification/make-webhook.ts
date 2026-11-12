@@ -115,6 +115,7 @@ const RETURN_TEMPLATES = new Set<NotifyTemplate>([
   'return_received',
   'return_inbound',
   'exchange_shipped',
+  'adjust_shipped',
 ]);
 
 /** 165 출장 맡김·함께 출고 (전용 Make 시나리오 → webhook_field_repair, 폴백 없음) */
@@ -195,7 +196,9 @@ export type NotifyTemplate =
   | 'imweb_return_completed'   // IW-반품완료 (환불 안내 겸)
   | 'imweb_exchange_requested' // IW-교환접수 (고객 요청만) — 2026-09-21
   // 교환 출고 (2026-09-21) — 아임웹 주문 + 오프라인 판매 공통
-  | 'exchange_shipped';        // TMS-교환발송 (교환 출고 송장 발행 시 · 송장번호 포함)
+  | 'exchange_shipped'         // TMS-교환발송 (교환 출고 송장 발행 시 · 송장번호 포함)
+  // 판매 제품 점검·조정 후 재발송 (2026-11-12) — webhook_returns · 재발송 송장 집하 시 1회
+  | 'adjust_shipped';          // TMS-점검조정발송 (리뷰 요청 없음)
 
 /** GAS postMake_ event명 매핑 */
 const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
@@ -246,6 +249,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   return_received: 'RETURN_RECEIVED',
   return_inbound: 'RETURN_INBOUND',
   exchange_shipped: 'EXCHANGE_SHIPPED',
+  adjust_shipped: 'ADJUST_SHIPPED',
   // 아임웹 주문 취소·반품·교환
   imweb_exchange_requested: 'IMWEB_EXCHANGE_REQUESTED',
   imweb_cancel_requested: 'IMWEB_CANCEL_REQUESTED',

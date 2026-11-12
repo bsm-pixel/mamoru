@@ -1,8 +1,20 @@
 # 판매관리 프로세스 흐름도
-> 최종 업데이트: 2026-10-21 — 납품(B2B) 반품·부분반품(164)
+> 최종 업데이트: 2026-11-12 — 판매 제품 점검·조정 후 재발송(adjust)
 > 이전: 2026-10-14 — 판매 합포장(162): 다른 판매의 롯데 송장에 같이 보내기
 > 이전: 2026-10-12 — 직접 입력(임시) 품목에 [제품]/[복원수리] 분류 선택 추가
 > 이전: 2026-05-26 — Phase G + 자동 후기 요청 정책 정정 (약속 ✓ 만 자동) + autoSendPending amber 시각 신호 + 약속 토글 시안 3 (스위치) 적용
+
+## 2026-11-12 — 판매 제품 점검·조정 후 재발송 (returns.return_type='adjust', 마이그 없음)
+
+판매 상세 [🛠 점검·조정 후 재발송] → AdjustReturnModal → POST /api/returns (return_type='adjust', 접수 알림톡 없음)
+   · 이미 받았어요 = pickup_method '대면수령' + 즉시 PATCH status=inbound
+   · 택배로 회수   = '택배수거' → 반품·교환 메뉴 [롯데 반품 수거접수](book-pickup 02) → [입고완료]
+   입고(PATCH inbound): **시리얼 반품창고 이동 안 함**(고객 제품, 판매 상태 유지) · 입고 알림톡 없음
+   → [재발송 송장 발행] POST /api/returns/[id]/ship — 같은 제품(product_name ×1 (점검·조정)), inbound/inspected 만
+        송장은 교환과 같은 칸 exchange_out_invoice_number·exchange_shipped_at (발행 즉시 알림톡 없음)
+   → 크론 [3-C] 집하 감지(return_type in exchange,adjust) → exchange_out_notified_at CAS → adjust_shipped 1통 (B2B 제외, 리뷰요청 없음)
+- 재고·매출·판매 행 무변경. 판매 상세 「반품 · 교환 · 점검조정」 카드(useSaleReturns)에 이력.
+- 알림톡 = webhook_returns 시나리오 분기 ADJUST_SHIPPED (docs/solapi_return_templates.md ③). Make 분기 전엔 웹훅이 받고 아무것도 안 보냄.
 
 ## 2026-10-21 — 납품(B2B) 반품 · 부분반품 (164)
 ```

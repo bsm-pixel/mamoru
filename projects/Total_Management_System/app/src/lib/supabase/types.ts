@@ -55,7 +55,8 @@ export type ReturnStatus =
   | 'inspected'          // 검수 완료
   | 'completed'          // 교환발송/환불 완료
   | 'cancelled';
-export type ReturnType = 'exchange' | 'refund';
+// 2026-11-12 adjust = 판매 제품 점검·조정 후 같은 제품 재발송(재고·시리얼·매출 무변경)
+export type ReturnType = 'exchange' | 'refund' | 'adjust';
 // 154(2026-09-17): 용어 통일 — '방문수거'(복원수리 용어와 충돌)·'직접반납'(뜻이 안 읽힘) 폐기
 export type ReturnPickupMethod = '택배수거' | '대면수령';
 

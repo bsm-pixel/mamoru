@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { insertReturn } from '@/lib/returns/insert-return';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { toLocalDateString } from '@/lib/utils/format';
-import { returnTypeLabel, isCourierPickup } from '@/lib/returns/transitions';
+import { returnTypeLabel, isCourierPickup, isAdjustReturn } from '@/lib/returns/transitions';
 
 /** GET /api/returns?status=&search= — 반품·교환수거 목록 */
 export async function GET(req: NextRequest) {
@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
     //   🔴 154(2026-09-17): **택배수거일 때만** 고객에게 보낸다.
     //   대면수령은 사장님이 만나서 받기로 이미 얘기한 건이라 알림톡이 잔소리가 된다(사장님 확정).
     //   덕분에 본문·이미지의 "문 앞에 놓아주세요" 가 항상 사실이 된다(전엔 직접 받는 건과 충돌).
-    if (payload.phone && isCourierPickup(payload.pickup_method as string | null)) {
+    // 2026-11-12: 점검·조정 재발송은 접수 알림톡 없음 — 사장님이 고객과 이미 통화해 정한 건(본문의 '반품·교환' 말투도 안 맞음)
+    if (payload.phone && isCourierPickup(payload.pickup_method as string | null) && !isAdjustReturn(String(payload.return_type ?? ''))) {
       after(async () => {
         try {
           await sendNotification({

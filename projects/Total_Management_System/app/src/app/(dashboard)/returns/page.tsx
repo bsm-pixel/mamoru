@@ -10,7 +10,7 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { StageGrid } from '@/components/ui/stage-grid';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from '@/hooks/use-returns';
-import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions } from '@/lib/returns/transitions';
+import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions, returnTypeChip, isAdjustReturn, ADJUST_STATUS_HINT } from '@/lib/returns/transitions';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
@@ -57,7 +57,7 @@ export default function ReturnsPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-stone-800 truncate">{r.name || '이름없음'}</span>
               <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${RETURN_STATUS_COLOR[r.status]}`}>{RETURN_STATUS_LABEL[r.status]}</span>
-              <span className="text-[10px] font-semibold text-neutral-400">{r.return_type === 'refund' ? '반품' : '교환'}</span>
+              <span className="text-[10px] font-semibold text-neutral-400">{returnTypeChip(r.return_type)}</span>
               {/* 164: 납품(B2B)에서 생긴 반품 */}
               {r.source === 'delivery' && <span className="text-[10px] font-semibold text-violet-600">납품</span>}
             </div>
@@ -133,14 +133,16 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
   // 진행 흐름 — 교환/반품 타입별로 다르게 (교환은 '송장 생성'과 '발송(집하)'를 분리)
   //   ⚠️ 발송 ✓ = 송장 생성이 아니라 '기사 집하' 시점(exchange_out_notified_at, 크론이 집하 감지 시 CAS 세팅).
   //      송장만 발행하고 아직 집하 전이면 '송장 생성'까지만 ✓, '발송(집하)'는 대기.
-  const isExchange = r.return_type === 'exchange';
+  // 2026-11-12: 점검·조정(adjust)도 '고객에게 다시 나가는 송장'이 있어 교환과 같은 5단계 흐름
+  const isAdjust = isAdjustReturn(r.return_type);
+  const isExchange = r.return_type === 'exchange' || isAdjust;
   const hasInvoice = !!r.exchange_out_invoice_number;   // 송장 생성됨
   const dispatched = !!r.exchange_out_notified_at;       // 기사 집하됨(실발송)
   const flowSteps = isExchange
     ? [
         { key: 'requested', label: '접수', at: r.requested_at },
-        { key: 'inbound', label: '구제품 회수', at: r.inbound_at },
-        { key: 'booked', label: '송장 생성', at: r.exchange_shipped_at },
+        { key: 'inbound', label: isAdjust ? '가위 입고' : '구제품 회수', at: r.inbound_at },
+        { key: 'booked', label: isAdjust ? '재발송 송장' : '송장 생성', at: r.exchange_shipped_at },
         { key: 'dispatched', label: '발송(집하)', at: r.exchange_out_notified_at },
         { key: 'completed', label: '완료', at: r.completed_at },
       ]
@@ -170,7 +172,7 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-stone-800">{r.name || '이름없음'}</span>
             {r.phone && <a href={`tel:${r.phone}`} className="text-xs text-blue-600">{formatPhone(r.phone)}</a>}
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500">{r.return_type === 'refund' ? '반품환불' : '교환'}</span>
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500">{r.return_type === 'refund' ? '반품환불' : returnTypeChip(r.return_type)}</span>
           </div>
           <p className="text-neutral-600 flex items-center gap-1"><Package size={13} className="text-neutral-400" />{r.product_name}{r.serial_number ? ` · ${r.serial_number}` : ''}</p>
           {r.pickup_method && <p className="text-xs text-neutral-500">회수: {r.pickup_method}{r.pickup_date ? ` · 예약 ${formatDate(r.pickup_date)}` : ''}</p>}
@@ -228,6 +230,32 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         </Card>
       )}
 
+      {/* 2026-11-12 점검·조정 재발송 — 같은 제품을 고객에게 다시 보낸다(재고·매출 무변경). 입고 뒤에만 */}
+      {isAdjust && r.status !== 'cancelled' && (
+        <Card>
+          <p className="text-xs font-semibold text-neutral-500 mb-2">점검·조정 후 재발송 (같은 제품)</p>
+          <p className="text-sm text-neutral-700 mb-2">{r.product_name}{r.serial_number ? ` · ${r.serial_number}` : ''}</p>
+          {r.exchange_out_invoice_number ? (
+            <ActionNote
+              tone={r.exchange_out_notified_at ? 'done' : 'wait'}
+              title={r.exchange_out_notified_at ? '발송완료' : '집하대기'}
+              meta={r.exchange_out_invoice_number}
+            >
+              {r.exchange_out_notified_at
+                ? `기사 집하 확인 · ${formatDate(r.exchange_out_notified_at)} 발송 · 고객 안내 알림톡 1통`
+                : '기사님이 집하하면 고객에게 「점검·조정 후 재발송」 알림톡이 자동으로 나갑니다'}
+            </ActionNote>
+          ) : ['inbound', 'inspected'].includes(r.status) ? (
+            <Button className="w-full" disabled={ship.isPending} loading={ship.isPending} onClick={() => ship.mutate(r.id)}>
+              <Truck size={14} /> 재발송 송장 발행
+            </Button>
+          ) : (
+            <p className="text-[11px] text-neutral-400">가위가 입고되면 재발송 송장을 발행할 수 있습니다.</p>
+          )}
+          <p className="text-[11px] text-neutral-400 mt-1.5">고객 제품이라 재고·시리얼·매출은 바뀌지 않습니다. 알림톡은 집하 때 1통만(리뷰 요청 없음).</p>
+        </Card>
+      )}
+
       {/* 교환 출고 송장 (배송 교환 — 새 제품 발송) */}
       {r.return_type === 'exchange' && r.new_product_name && (
         <Card>
@@ -271,7 +299,10 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
            2026-09-15: 전엔 진행 흐름 카드 안에 안내문·주 액션·보조 전이·취소가 한 덩어리로
            섞여 있었고, [취소]가 보조 버튼과 같은 줄에 나란히 있어 오클릭 위험이 있었다 */}
       {allowed.length > 0 && (() => {
-        const primary = RETURN_PRIMARY_NEXT[r.status];
+        // 점검·조정: 재발송 송장이 나가기 전엔 '완료'를 큰 버튼으로 두지 않는다(돌려보내기 전에 끝내는 실수 방지)
+        const primary = isAdjust && !hasInvoice && ['inbound', 'inspected'].includes(r.status)
+          ? undefined
+          : RETURN_PRIMARY_NEXT[r.status];
         const secondary = allowed.filter((s) => s !== primary && s !== 'cancelled');
         return (
           <Card>
@@ -279,13 +310,13 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
             <div className="space-y-2">
               {/* ① 지금 상태 */}
               <ActionNote tone="wait" title={RETURN_STATUS_LABEL[r.status]}>
-                {RETURN_STATUS_HINT[r.status]}
+                {(isAdjust && ADJUST_STATUS_HINT[r.status]) || RETURN_STATUS_HINT[r.status]}
               </ActionNote>
 
               {/* ② 주 액션 */}
               {primary && allowed.includes(primary) && (
                 <Button className="w-full" disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: primary })}>
-                  {RETURN_ACTION_LABEL[primary]}
+                  {isAdjust && primary === 'inbound' ? '입고완료' : RETURN_ACTION_LABEL[primary]}
                 </Button>
               )}
 
@@ -294,7 +325,7 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
                 <MoreActions label="다른 처리 방법">
                   {secondary.map((next) => (
                     <SubtleButton key={next} disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: next })}>
-                      {RETURN_ACTION_LABEL[next]}
+                      {isAdjust && next === 'inbound' ? '입고완료' : RETURN_ACTION_LABEL[next]}
                     </SubtleButton>
                   ))}
                 </MoreActions>

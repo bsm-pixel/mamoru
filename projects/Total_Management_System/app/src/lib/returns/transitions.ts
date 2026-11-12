@@ -92,8 +92,33 @@ export function getReturnDisplayLabel(status: ReturnStatus, pickupMethod?: strin
 export function returnTypeLabel(returnType?: string | null): string {
   // 164: DB 값은 'refund'(types.ts ReturnType). 예전엔 'return' 만 봐서 반품 건이 "교환"으로 나갔다 → 둘 다 반품
   const t = String(returnType || '').trim();
+  if (t === 'adjust') return '점검·조정';
   return t === 'refund' || t === 'return' ? '반품' : '교환';
 }
+
+/** 2026-11-12 판매 제품 점검·조정 후 재발송 — 같은 제품을 회수해 손본 뒤 돌려보낸다.
+ *  🚨 고객 소유 제품: 입고해도 시리얼을 반품창고로 옮기지 않는다 / 재고·매출 무변경 /
+ *     접수·입고 알림톡 없음(사장님이 이미 통화) / 재발송 집하 때 adjust_shipped 1통만(리뷰 요청 없음) */
+export function isAdjustReturn(returnType?: string | null): boolean {
+  return String(returnType || '').trim() === 'adjust';
+}
+
+/** 화면 칩용 짧은 이름 */
+export function returnTypeChip(returnType?: string | null): string {
+  const t = String(returnType || '').trim();
+  if (t === 'adjust') return '점검·조정';
+  return t === 'refund' ? '반품' : '교환';
+}
+
+/** 점검·조정 건의 상태별 안내 (기본 RETURN_STATUS_HINT 는 '구 제품'·'교환/환불' 말투라 따로) */
+export const ADJUST_STATUS_HINT: Partial<Record<ReturnStatus, string>> = {
+  requested: '회수를 접수했습니다. 가위가 도착하면 「입고완료」를 누르세요.',
+  pickup_scheduled: '수거 예약됨. 가위가 도착하면 「입고완료」를 누르세요.',
+  inbound: '입고됐습니다(고객 제품 — 재고에 안 잡힘). 점검·조정이 끝나면 위 「재발송 송장 발행」을 누르세요.',
+  inspected: '점검 완료. 위 「재발송 송장 발행」을 누르세요.',
+  completed: '완료된 건입니다.',
+  cancelled: '취소된 건입니다.',
+};
 
 /* ── 회수 방법 (154, 2026-09-17) ────────────────────────────────
    전엔 '직접반납'·'고객반납'·'직접수거'·'방문수거' 가 뒤섞여 있었고

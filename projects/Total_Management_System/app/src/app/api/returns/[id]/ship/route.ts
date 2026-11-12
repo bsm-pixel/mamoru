@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { isAdjustReturn } from '@/lib/returns/transitions';
 
 /** POST /api/returns/[id]/ship — 교환 출고 송장 발행 (새 제품 1개만, 매장→고객 정방향)
  *  빠른송장(manual-invoices)과 동일한 롯데 발행 패턴. 판매/주문/아임웹 부수효과 0.
@@ -17,11 +18,17 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     const { data: r } = await db.from('returns').select('*').eq('id', id).single();
     if (!r) return NextResponse.json({ error: '반품 건을 찾을 수 없습니다' }, { status: 404 });
-    if (r.return_type !== 'exchange' || !r.new_product_name) {
+    // 2026-11-12: 점검·조정 건 = 같은 제품(product_name)을 그대로 돌려보낸다. 송장·집하 칸은 교환과 같은 칸을 쓴다
+    //   (exchange_out_* = '이 반품 건에서 고객에게 나가는 송장' — 마이그 불필요, 크론 [3-C] 집하 감지 재사용)
+    const adjust = isAdjustReturn(r.return_type);
+    if (!adjust && (r.return_type !== 'exchange' || !r.new_product_name)) {
       return NextResponse.json({ error: '교환(새 제품) 건이 아닙니다' }, { status: 400 });
     }
+    if (adjust && !['inbound', 'inspected'].includes(r.status)) {
+      return NextResponse.json({ error: '가위가 입고된 뒤에 재발송할 수 있습니다' }, { status: 400 });
+    }
     if (r.exchange_out_invoice_number) {
-      return NextResponse.json({ error: '이미 교환 출고 송장이 발행되었습니다' }, { status: 400 });
+      return NextResponse.json({ error: adjust ? '이미 재발송 송장이 발행되었습니다' : '이미 교환 출고 송장이 발행되었습니다' }, { status: 400 });
     }
 
     // 받는분 주소 — 고객 정보에서 조회(빠른송장과 동일)
@@ -51,7 +58,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: '고객 연락처가 없습니다.' }, { status: 400 });
     }
 
-    const goodsName = `${r.new_product_name} ×1 (교환)`.slice(0, 50);
+    const goodsName = (adjust
+      ? `${r.product_name || '가위'} ×1 (점검·조정)`
+      : `${r.new_product_name} ×1 (교환)`).slice(0, 50);
     const fullAddr = [addrRoad, addrDetail].filter(Boolean).join(' ');
 
     const { invoiceNumber } = await getNextInvoice();
@@ -62,7 +71,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       receiverZip: postcode,
       receiverAddr: fullAddr,
       goodsName,
-      deliveryMessage: '교환 상품',
+      deliveryMessage: adjust ? '점검·조정 재발송' : '교환 상품',
     });
     if (!result.success) {
       return NextResponse.json({ error: `ALPS 송장 생성 실패: ${result.error}` }, { status: 502 });
@@ -88,7 +97,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
        송장번호를 확실히 넣을 수 있다(아임웹 웹훅에 오는지 확인할 필요가 없었다).
        위 update 성공 뒤(= 송장번호 확정 뒤)에만 부르므로 건당 1회. 이미 발행된 건은 위에서 400 으로 끊긴다.
        after() 로 응답을 막지 않는다 — 알림 실패가 송장 발행을 되돌리지는 않는다. */
-    if (r.phone) {
+    // 2026-11-12: 점검·조정 건은 여기서 보내지 않는다 — 기사 집하 때 크론 [3-C]가 adjust_shipped 1통
+    if (r.phone && !adjust) {
       after(async () => {
         try {
           await sendNotification({

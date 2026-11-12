@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isValidReturnTransition } from '@/lib/returns/transitions';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
-import { returnTypeLabel, isCourierPickup } from '@/lib/returns/transitions';
+import { returnTypeLabel, isCourierPickup, isAdjustReturn } from '@/lib/returns/transitions';
 import { applyDeliveryReturn } from '@/lib/deliveries/apply-return';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
@@ -47,7 +47,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (body.status === 'cancelled' && body.cancelled_reason) update.cancelled_reason = body.cancelled_reason;
 
       // 입고완료 시: 구 시리얼을 반품창고(returned/return)로 확정 (idempotent — 교환 시 이미 이동됐으면 무해)
-      if (body.status === 'inbound' && cur.serial_id) {
+      //   2026-11-12: 점검·조정 건은 고객 제품이라 시리얼을 그대로 둔다(판매 상태 유지 — 같은 제품을 돌려보냄)
+      if (body.status === 'inbound' && cur.serial_id && !isAdjustReturn(cur.return_type)) {
         await db.from('product_serials').update({
           status: 'returned', warehouse_zone: 'return',
           offline_sale_id: null, sale_item_id: null, sold_via: null, sold_at: null,
@@ -79,7 +80,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // 입고완료 → 고객에게 "반품 잘 받았습니다" 알림톡(솔라피 return_inbound 등록 시). after()로 완주 보장
     // 154: 입고 알림톡도 택배수거 건만 — 대면으로 받았으면 눈앞에서 건넸으니 알릴 것이 없다
     // 164: 납품(B2B) 반품은 거래처 건이라 보내지 않는다 (판매 쪽 B2B 출고 알림톡 skip 과 같은 규칙)
-    if (update.status === 'inbound' && cur.phone && isCourierPickup(cur.pickup_method) && !cur.delivery_id) {
+    // 2026-11-12: 점검·조정 건은 입고 알림톡 없음(재발송 집하 때 1통만)
+    if (update.status === 'inbound' && cur.phone && isCourierPickup(cur.pickup_method) && !cur.delivery_id && !isAdjustReturn(cur.return_type)) {
       after(async () => {
         try {
           await sendNotification({

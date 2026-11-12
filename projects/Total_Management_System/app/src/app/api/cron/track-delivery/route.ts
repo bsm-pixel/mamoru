@@ -506,8 +506,9 @@ export async function GET(request: NextRequest) {
     let exchangeNotified = 0;
     const { data: exTargets, error: exErr } = await db
       .from('returns')
-      .select('id, return_number, sale_id, new_product_name, exchange_out_invoice_number, exchange_out_courier_name, name, phone')
-      .eq('return_type', 'exchange')
+      .select('id, return_number, return_type, sale_id, product_name, new_product_name, exchange_out_invoice_number, exchange_out_courier_name, name, phone')
+      // 2026-11-12: 점검·조정 재발송(adjust)도 같은 송장 칸을 쓴다 → 집하 감지 시 adjust_shipped 1통
+      .in('return_type', ['exchange', 'adjust'])
       .not('exchange_out_invoice_number', 'is', null)
       .is('exchange_out_notified_at', null)
       .not('status', 'in', '(cancelled)')
@@ -547,6 +548,36 @@ export async function GET(request: NextRequest) {
         if (ret.sale_id) {
           const { data: s } = await db.from('offline_sales').select('sale_number, customer_type').eq('id', ret.sale_id).single();
           if (s) { refId = s.sale_number || refId; customerType = s.customer_type; }
+        }
+
+        // 2026-11-12 점검·조정 재발송 — 전용 문구(「수리」「주문」 없음), 리뷰 요청 없음, B2B 제외
+        if (ret.return_type === 'adjust') {
+          if (!ret.phone || isB2BCustomerType(customerType)) {
+            console.log(`[track-delivery/returns pickup] ${ret.return_number} 점검·조정 알림톡 skip — ${ret.phone ? 'b2b' : 'no_phone'}`);
+            exchangeNotified++;
+            continue;
+          }
+          after(async () => {
+            try {
+              const res = await sendNotification({
+                template: 'adjust_shipped',
+                phone: String(ret.phone),
+                name: String(ret.name || ''),
+                data: {
+                  // 🚨 비면 문자로 대체되고 버튼이 사라진다 → 폴백
+                  product_name: String(ret.product_name || '가위'),
+                  courier: String(ret.exchange_out_courier_name || '롯데택배'),
+                  tracking: String(ret.exchange_out_invoice_number),
+                  return_number: String(ret.return_number || ''),
+                },
+              });
+              console.log(`[track-delivery/returns pickup] ${ret.return_number} 점검·조정 재발송 알림톡 ${res?.success ? '성공' : '미발송'}`);
+            } catch (e) {
+              console.error(`[track-delivery/returns pickup] ${ret.return_number} 점검·조정 알림톡 예외:`, e);
+            }
+          });
+          exchangeNotified++;
+          continue;
         }
 
         after(async () => {

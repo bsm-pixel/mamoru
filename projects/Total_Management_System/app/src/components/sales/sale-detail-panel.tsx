@@ -23,6 +23,10 @@ import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, courie
 import { MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { ExchangeModal } from './exchange-modal';
+import { AdjustReturnModal } from './adjust-return-modal';
+import { useSaleReturns } from '@/hooks/use-returns';
+import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, returnTypeChip } from '@/lib/returns/transitions';
+import type { ReturnStatus } from '@/lib/supabase/types';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { LinkConsultationModal } from './link-consultation-modal';
@@ -124,6 +128,9 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showLinkConsultation, setShowLinkConsultation] = useState(false);
   const serialLabelTpl = useLabelTemplate('serial_40x20');
   const [labelSerial, setLabelSerial] = useState<{ product: string; serial: string } | null>(null);
+  // 2026-11-12 점검·조정 후 재발송 + 이 판매의 반품·교환 이력
+  const [showAdjust, setShowAdjust] = useState(false);
+  const { data: saleReturns = [] } = useSaleReturns(saleId);
 
   if (isLoading) {
     return (
@@ -878,6 +885,30 @@ export function SaleDetailPanel({ saleId }: Props) {
         </div>
       )}
 
+      {/* 2026-11-12 이 판매의 반품·교환·점검조정 이력 — 진행은 반품·교환 메뉴에서 */}
+      {saleReturns.length > 0 && (
+        <div className="pt-2 border-t border-neutral-100">
+          <p className="text-xs font-semibold text-neutral-500 mb-1.5">반품 · 교환 · 점검조정</p>
+          <div className="space-y-1.5">
+            {saleReturns.map((r) => (
+              <Link key={r.id} href={`/returns?search=${encodeURIComponent(r.return_number)}`}
+                className="block rounded-lg border border-neutral-200 px-3 py-2 hover:bg-stone-50 transition">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium truncate">{returnTypeChip(r.return_type)} · {r.product_name}</span>
+                  <span className={`shrink-0 px-2 py-0.5 rounded text-[10.5px] font-bold ${RETURN_STATUS_COLOR[r.status as ReturnStatus] ?? ''}`}>
+                    {RETURN_STATUS_LABEL[r.status as ReturnStatus] || r.status}
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  <span className="font-mono">{r.return_number}</span>
+                  {r.exchange_out_invoice_number ? ` · 재발송 ${r.exchange_out_invoice_number}${r.exchange_out_notified_at ? ' 발송됨' : ' 집하대기'}` : ''}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 액션 ④⑤ — 반품·교환·취소. 주 액션(②③)은 상단 「⚡ 다음 할 일」 바가 맡는다.
            2026-09-15: 택배 발송 섹션보다 위에 있어 슬롯 순서가 뒤집혀 있던 것을 맨 아래로 내렸다 */}
       {s.cancelled_at ? (
@@ -906,6 +937,9 @@ export function SaleDetailPanel({ saleId }: Props) {
             </SubtleButton>
             <SubtleButton onClick={() => setReturnMode(true)}>
               ↩ 반품 처리
+            </SubtleButton>
+            <SubtleButton onClick={() => setShowAdjust(true)}>
+              🛠 점검·조정 후 재발송 (같은 제품 회수 → 손봐서 다시 보냄)
             </SubtleButton>
             <DangerZone>
               <DangerLink onClick={() => setShowCancelConfirm(true)}>판매 취소</DangerLink>
@@ -1054,6 +1088,15 @@ export function SaleDetailPanel({ saleId }: Props) {
           saleIds={[saleId]}
           preloaded={{ sourceType: 'sale', sale: s, items: data.items, serials: data.serials || [] }}
           onClose={() => setShowPrepSheet(false)}
+        />
+      )}
+
+      {showAdjust && data && (
+        <AdjustReturnModal
+          sale={s as unknown as Parameters<typeof AdjustReturnModal>[0]['sale']}
+          items={data.items as unknown as Parameters<typeof AdjustReturnModal>[0]['items']}
+          serials={(data.serials || []) as unknown as Parameters<typeof AdjustReturnModal>[0]['serials']}
+          onClose={() => setShowAdjust(false)}
         />
       )}
 
