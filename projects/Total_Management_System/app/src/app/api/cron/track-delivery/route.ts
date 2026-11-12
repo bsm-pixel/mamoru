@@ -4,7 +4,7 @@ import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
 import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
 import { sendOrderShippedNotification } from '@/lib/notification/sales-shipped';
-import { sendSalesShippedNotification, sendExchangeShippedNotification } from '@/lib/notification/sales-shipped';
+import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { shipImwebOrder } from '@/lib/imweb/client';
@@ -499,7 +499,8 @@ export async function GET(request: NextRequest) {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // [3-C] returns 교환 출고 집하 감지 → 교환 출고 알림톡 (136, 2026-08-27)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    //   배송 교환건의 '교환 출고 송장'이 집하되면 판매 출고와 동일하게 sales_shipped 로 발송.
+    //   배송 교환건의 '교환 출고 송장' 집하 시각만 기록(발송 ✓). 알림톡은 송장 발행 때 exchange_shipped 1통뿐(2026-11-12, 예전 sales_shipped 중복 제거).
+    //   점검·조정(adjust)은 여기서 adjust_shipped 1통.
     //   매장 교환(송장 없음)은 exchange_out_invoice_number NULL → 자연 제외. B2B 는 헬퍼가 걸러 냄.
     //   dedup: exchange_out_notified_at 을 CAS 로 선점(판매 shipped_at 선점과 동일 철학 — 집하 시 1회).
     let exchangePicked = 0;
@@ -580,24 +581,11 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        after(async () => {
-          try {
-            const sent = await sendExchangeShippedNotification({
-              refId,
-              invoiceNumber: ret.exchange_out_invoice_number,
-              customerName: ret.name || '고객',
-              customerPhone: ret.phone,
-              customerType,
-              newProductName: ret.new_product_name,
-              courierName: ret.exchange_out_courier_name,
-            });
-            if (sent.sent) console.log(`[track-delivery/returns pickup] ${ret.return_number} 교환 출고 알림톡 발송 성공`);
-            else console.log(`[track-delivery/returns pickup] ${ret.return_number} 알림톡 미발송 — ${sent.reason} ${sent.error || ''}`);
-          } catch (e) {
-            console.error(`[track-delivery/returns pickup] ${ret.return_number} 알림톡 예외:`, e);
-          }
-        });
-        exchangeNotified++;
+        // 2026-11-12 사장님 결정: 교환은 집하 때 알림톡을 보내지 않는다.
+        //   송장 발행 때 이미 TMS-교환발송(exchange_shipped, 송장번호+배송조회)이 나간다(returns/[id]/ship, 09-21~).
+        //   예전엔 여기서 판매 출고(sales_shipped)를 또 보내 고객이 2통을 받는 구조였다. 집하 시각(exchange_out_notified_at)
+        //   기록은 위 CAS 로 그대로 남는다 → 반품·교환 화면의 '발송(집하) ✓' 표시는 유지.
+        console.log(`[track-delivery/returns pickup] ${ret.return_number} 교환 집하 확인(${refId}) — 알림톡은 송장 발행 때 이미 발송, 여기선 안 보냄`);
       } catch (e) {
         console.error(`[track-delivery/returns pickup] ${ret.return_number} 집하 확인 실패:`, e);
       }

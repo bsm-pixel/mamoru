@@ -161,6 +161,8 @@ export interface ExchangeShippedTarget {
   courierName?: string | null;
 }
 
+/** ⚠️ 2026-11-12부터 호출처 없음 — 교환 집하 때 sales_shipped 를 또 보내 2통이 되던 것을 제거(크론 [3-C]).
+ *  교환 알림은 송장 발행 때 exchange_shipped 1통(api/returns/[id]/ship). 되살리지 말 것. */
 export async function sendExchangeShippedNotification(
   t: ExchangeShippedTarget,
 ): Promise<{ sent: boolean; reason?: string; error?: string }> {
