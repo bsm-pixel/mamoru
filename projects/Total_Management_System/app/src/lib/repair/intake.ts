@@ -238,7 +238,7 @@ export async function createRepairIntake(db: Db, input: RepairIntakeInput, actor
  *   금액은 판매 RS 줄을 그대로 옮겨 표시만 하고, 매출·자루 집계는 sale_id IS NOT NULL 을 빼서 이중 집계를 막는다
  *   (get_hub_stats 165 · use-dashboard-stats · reports/summary · bank/deposit).
  * 결제는 현장에서 끝났다 → 판매가 결제완료면 paid_at 을 바로 채운다(비용안내·입금확인 단계 없음).
- * 가위는 사장님이 들고 오므로 접수확인까지 된 상태(confirmed_at) = 목록의 '입고대기'.
+ * 가위는 이미 사장님 손에 있으므로 접수 즉시 입고 완료 → status='repairing' = 목록의 '진행중'(2026-11-12, 이전엔 입고대기).
  */
 export interface FieldRepairFromSaleInput {
   saleId: string;
@@ -287,7 +287,8 @@ export async function createFieldRepairFromSale(db: Db, input: FieldRepairFromSa
     service_cost: input.serviceCost,
     shipping_fee: input.shippingFee,
     total_amount: input.serviceCost + input.shippingFee,
-    status: 'intake',
+    // 2026-11-12: 가위는 이미 사장님 손에 있음(현장 수거) → 입고대기 없이 바로 작업중. 결제는 판매에서 끝나 비용안내 단계 없음
+    status: 'repairing',
     received_at: now,
     confirmed_at: now,
     sale_id: input.saleId,
@@ -297,8 +298,8 @@ export async function createFieldRepairFromSale(db: Db, input: FieldRepairFromSa
 
   await db.from('repair_history').insert({
     repair_id: repair.id,
-    to_status: 'intake',
-    note: `출장 현장 수거 — 판매 ${input.saleNumber} 에서 접수${input.paid ? ' (현장 결제 완료)' : ''}`,
+    to_status: 'repairing',
+    note: `출장 현장 수거 — 판매 ${input.saleNumber} 에서 접수 · 즉시 입고·작업중${input.paid ? ' (현장 결제 완료)' : ''}`,
   });
 
   // 맡김 확인 알림톡 — 사장님 본인 등록이라 앱 푸시 없음. 웹훅 미설정(검수 전)이면 sendNotification 이 건너뛴다

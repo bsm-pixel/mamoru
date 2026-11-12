@@ -638,7 +638,7 @@ function NewSaleContent() {
                       <span className="block text-xs font-semibold text-neutral-800">고객 가위를 수거했어요 — 복원수리 접수 함께 만들기</span>
                       <span className="block text-[11px] text-neutral-500 leading-relaxed mt-0.5">
                         {repTakeAway
-                          ? '저장하면 복원수리 목록에 출장수거 건이 생기고, 고객에게 수거 확인 알림톡이 갑니다. 결제는 이 판매로 끝나 비용안내·입금확인은 건너뜁니다.'
+                          ? '저장하면 복원수리 「진행중」에 출장수거 건이 바로 생기고(입고 확인 불필요), 고객에게 수거 확인 알림톡이 갑니다. 결제는 이 판매로 끝나 비용안내·입금확인은 건너뜁니다.'
                           : '현장에서 바로 수리해 건넨 경우 등 — 매출만 기록하고 복원수리 접수는 만들지 않습니다.'}
                       </span>
                     </span>
