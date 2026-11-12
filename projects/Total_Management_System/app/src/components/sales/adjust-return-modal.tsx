@@ -13,7 +13,7 @@ import { PICKUP_COURIER, PICKUP_IN_PERSON } from '@/lib/returns/transitions';
  *
  * 판매한 제품을 고객이 불편해할 때 — 같은 제품을 회수해 손본 뒤 다시 보낸다.
  * 교환(새 제품)·반품(환불)과 달리 **판매·재고·시리얼·매출은 그대로**. returns 에 return_type='adjust' 한 건만 만든다.
- * 이후 진행(수거접수 → 입고완료 → 재발송 송장 → 집하 시 알림톡 1통)은 반품·교환 메뉴에서.
+ * 이후 진행(수거접수 → 입고완료 → 재발송 송장 → 집하)은 반품·교환 메뉴에서. 고객 알림톡은 없음 — 사장님이 직접 연락(11-12 결정).
  *
  * 회수 방법
  *   택배수거 = 롯데 반품수거(반품·교환 메뉴의 [롯데 반품 수거접수] 버튼). 접수 알림톡은 보내지 않는다(사장님이 이미 통화)
@@ -86,7 +86,7 @@ export function AdjustReturnModal({ sale, items, serials, onClose }: {
         <div className="overflow-y-auto flex-1 p-4 space-y-4">
           <p className="text-[11px] text-neutral-500 leading-relaxed">
             같은 제품을 회수해 손본 뒤 다시 보냅니다. <b>판매·재고·시리얼·매출은 바뀌지 않습니다.</b>
-            고객 알림톡은 재발송 택배가 집하될 때 1통만 나갑니다(「수리」「주문」 문구 없음, 리뷰 요청 없음).
+            <b>고객 알림톡은 나가지 않습니다</b> — 재발송 후 송장번호로 직접 연락해 주세요.
           </p>
 
           <div>

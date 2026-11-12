@@ -97,7 +97,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
        송장번호를 확실히 넣을 수 있다(아임웹 웹훅에 오는지 확인할 필요가 없었다).
        위 update 성공 뒤(= 송장번호 확정 뒤)에만 부르므로 건당 1회. 이미 발행된 건은 위에서 400 으로 끊긴다.
        after() 로 응답을 막지 않는다 — 알림 실패가 송장 발행을 되돌리지는 않는다. */
-    // 2026-11-12: 점검·조정 건은 여기서 보내지 않는다 — 기사 집하 때 크론 [3-C]가 adjust_shipped 1통
+    // 2026-11-12: 점검·조정 건은 알림톡 없음 — 사장님이 송장번호로 직접 연락(템플릿 두지 않기로 결정)
     if (r.phone && !adjust) {
       after(async () => {
         try {

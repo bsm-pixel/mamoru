@@ -98,7 +98,7 @@ export function returnTypeLabel(returnType?: string | null): string {
 
 /** 2026-11-12 판매 제품 점검·조정 후 재발송 — 같은 제품을 회수해 손본 뒤 돌려보낸다.
  *  🚨 고객 소유 제품: 입고해도 시리얼을 반품창고로 옮기지 않는다 / 재고·매출 무변경 /
- *     접수·입고 알림톡 없음(사장님이 이미 통화) / 재발송 집하 때 adjust_shipped 1통만(리뷰 요청 없음) */
+ *     알림톡 전혀 없음 — 드문 불만 건이라 사장님이 직접 연락(2026-11-12 결정, 템플릿 미등록) */
 export function isAdjustReturn(returnType?: string | null): boolean {
   return String(returnType || '').trim() === 'adjust';
 }

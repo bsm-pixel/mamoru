@@ -15,7 +15,8 @@ import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
-import { Undo2, Package, Truck, Store } from 'lucide-react';
+import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { ReturnRow } from '@/lib/supabase/types';
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -236,15 +237,26 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           <p className="text-xs font-semibold text-neutral-500 mb-2">점검·조정 후 재발송 (같은 제품)</p>
           <p className="text-sm text-neutral-700 mb-2">{r.product_name}{r.serial_number ? ` · ${r.serial_number}` : ''}</p>
           {r.exchange_out_invoice_number ? (
+            <>
             <ActionNote
               tone={r.exchange_out_notified_at ? 'done' : 'wait'}
               title={r.exchange_out_notified_at ? '발송완료' : '집하대기'}
               meta={r.exchange_out_invoice_number}
             >
               {r.exchange_out_notified_at
-                ? `기사 집하 확인 · ${formatDate(r.exchange_out_notified_at)} 발송 · 고객 안내 알림톡 1통`
-                : '기사님이 집하하면 고객에게 「점검·조정 후 재발송」 알림톡이 자동으로 나갑니다'}
+                ? `기사 집하 확인 · ${formatDate(r.exchange_out_notified_at)} 발송`
+                : '기사님 집하를 기다리는 중입니다'}
             </ActionNote>
+            {/* 2026-11-12: 알림톡 없음 — 사장님이 송장번호로 직접 연락(불만 고객은 직접 한 줄이 신뢰 회복에 낫다) */}
+            <div className="mt-2 flex items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+              <span className="text-[11px] text-amber-800">알림톡 없음 — 송장번호로 고객에게 <b>직접 연락</b>하세요</span>
+              <button type="button"
+                onClick={() => { navigator.clipboard?.writeText(r.exchange_out_invoice_number || '').then(() => toast.success('송장번호 복사됨')).catch(() => toast.error('복사 실패')); }}
+                className="shrink-0 inline-flex items-center gap-1 rounded-md border border-amber-300 bg-white px-2 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-100">
+                <Copy size={11} /> 송장번호 복사
+              </button>
+            </div>
+            </>
           ) : ['inbound', 'inspected'].includes(r.status) ? (
             <Button className="w-full" disabled={ship.isPending} loading={ship.isPending} onClick={() => ship.mutate(r.id)}>
               <Truck size={14} /> 재발송 송장 발행
@@ -252,7 +264,7 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
           ) : (
             <p className="text-[11px] text-neutral-400">가위가 입고되면 재발송 송장을 발행할 수 있습니다.</p>
           )}
-          <p className="text-[11px] text-neutral-400 mt-1.5">고객 제품이라 재고·시리얼·매출은 바뀌지 않습니다. 알림톡은 집하 때 1통만(리뷰 요청 없음).</p>
+          <p className="text-[11px] text-neutral-400 mt-1.5">고객 제품이라 재고·시리얼·매출은 바뀌지 않습니다. 고객 알림톡은 나가지 않습니다 — 발송 후 직접 연락해 주세요.</p>
         </Card>
       )}
 

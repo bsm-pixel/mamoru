@@ -12,9 +12,9 @@
    입고(PATCH inbound): **시리얼 반품창고 이동 안 함**(고객 제품, 판매 상태 유지) · 입고 알림톡 없음
    → [재발송 송장 발행] POST /api/returns/[id]/ship — 같은 제품(product_name ×1 (점검·조정)), inbound/inspected 만
         송장은 교환과 같은 칸 exchange_out_invoice_number·exchange_shipped_at (발행 즉시 알림톡 없음)
-   → 크론 [3-C] 집하 감지(return_type in exchange,adjust) → exchange_out_notified_at CAS → adjust_shipped 1통 (B2B 제외, 리뷰요청 없음)
+   → 크론 [3-C] 집하 감지(return_type in exchange,adjust) → exchange_out_notified_at CAS = 발송 ✓ 기록만
 - 재고·매출·판매 행 무변경. 판매 상세 「반품 · 교환 · 점검조정」 카드(useSaleReturns)에 이력.
-- 알림톡 = webhook_returns 시나리오 분기 ADJUST_SHIPPED (docs/solapi_return_templates.md ③). Make 분기 전엔 웹훅이 받고 아무것도 안 보냄.
+- 🔕 알림톡 없음(2026-11-12 사장님 결정): 드문 불만 건이라 템플릿을 두지 않고, 재발송 후 사장님이 송장번호로 직접 연락. 화면에 「알림톡 없음 — 직접 연락」+[송장번호 복사].
 
 ## 2026-10-21 — 납품(B2B) 반품 · 부분반품 (164)
 ```
