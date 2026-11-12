@@ -25,6 +25,8 @@ import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { ExchangeModal } from './exchange-modal';
 import { AdjustReturnModal } from './adjust-return-modal';
 import { useSaleReturns } from '@/hooks/use-returns';
+import { useSaleRepairs } from '@/hooks/use-repairs';
+import { REPAIR_STATUS_LABEL } from '@/lib/repair/transitions';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, returnTypeChip } from '@/lib/returns/transitions';
 import type { ReturnStatus } from '@/lib/supabase/types';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -131,6 +133,9 @@ export function SaleDetailPanel({ saleId }: Props) {
   // 2026-11-12 점검·조정 후 재발송 + 이 판매의 반품·교환 이력
   const [showAdjust, setShowAdjust] = useState(false);
   const { data: saleReturns = [] } = useSaleReturns(saleId);
+  // 2026-11-12 출장 맡김으로 함께 맡은 가위(repairs.sale_id) — 아직 송장이 없으면 「같이 보내기」 안내
+  const { data: saleRepairs = [] } = useSaleRepairs(saleId);
+  const pendingRepairs = saleRepairs.filter((r) => !r.invoice_number && !r.shipped_at && !['shipped', 'delivered', 'completed', 'cancelled'].includes(r.status));
 
   if (isLoading) {
     return (
@@ -408,6 +413,21 @@ export function SaleDetailPanel({ saleId }: Props) {
         </div>
       )}
 
+      {/* 2026-11-12 출장에서 함께 맡은 가위 — 판매와 연결된 복원수리 건. 전엔 판매 화면에 안 보여 제품만 먼저 출고되는 일이 생겼다 */}
+      {saleRepairs.length > 0 && (
+        <div className="space-y-1.5">
+          {saleRepairs.map((r) => (
+            <Link key={r.id} href={`/repairs/${r.id}`}
+              className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 px-3 py-2 hover:bg-stone-50 transition">
+              <span className="text-sm min-w-0 truncate">🔗 함께 맡은 가위 <span className="font-mono text-xs text-neutral-500">{r.as_id}</span></span>
+              <span className="shrink-0 text-[11px] font-semibold text-neutral-600">
+                {r.invoice_number || r.shipped_at ? '출고됨' : (REPAIR_STATUS_LABEL[r.status] || r.status)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {/* 판매 항목 */}
       <div className="border-t border-neutral-100 pt-3">
         <h4 className="text-xs font-semibold text-neutral-500 mb-2">판매 항목</h4>
@@ -602,6 +622,14 @@ export function SaleDetailPanel({ saleId }: Props) {
       {/* 결제완료 확인 모달 */}
       {/* 159: 택배 발송 — 받는 곳 확인(등록 주소 / 이번만 다른 주소). 고객정보 주소는 바뀌지 않는다 */}
       <ShipAddressModal
+        notice={pendingRepairs.length > 0 ? (
+          /* 2026-11-12 함께 맡은 가위가 아직 출고 전 — 막지 않고 알려만 준다(제품만 먼저 보내도 됨) */
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900 space-y-1">
+            <p className="font-semibold">🔗 함께 맡은 가위 {pendingRepairs.map((r) => r.as_id).join(', ')} — 아직 출고 전({REPAIR_STATUS_LABEL[pendingRepairs[0].status] || pendingRepairs[0].status})</p>
+            <p className="leading-relaxed">같은 상자로 보내면 고객 알림톡이 <b>1통(제품·가위 함께 출고)</b>으로 나갑니다. 가위 작업이 끝난 뒤 이 송장을 만들고, 복원수리 화면에서 <b>[다른 송장에 합포장]</b>으로 이 송장에 얹으세요 (기사님 집하 전까지).</p>
+            <p className="text-amber-700">제품만 먼저 보내도 됩니다 — 그러면 알림톡이 제품·가위 따로 1통씩 나갑니다.</p>
+          </div>
+        ) : null}
         open={shipAddrOpen}
         onClose={() => setShipAddrOpen(false)}
         name={s.customer_name}

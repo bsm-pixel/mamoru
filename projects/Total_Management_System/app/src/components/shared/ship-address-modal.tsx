@@ -21,6 +21,8 @@ interface Props {
   saved?: AddrLike;
   busy?: boolean;
   confirmLabel?: string;
+  /** 2026-11-12 맨 위 안내(예: 판매에 연결된 가위가 아직 출고 전) — 막지 않고 알려만 준다 */
+  notice?: React.ReactNode;
   /** null = 등록 주소로 발송 / 객체 = 그 주소로 발송 */
   onConfirm: (addr: ShipAddress | null) => void;
 }
@@ -38,7 +40,7 @@ const has = (a: AddrLike) => !!(a?.postcode && a?.road);
  * 판매(B2C)·납품(B2B) 두 화면이 같이 쓴다.
  */
 export function ShipAddressModal({
-  open, onClose, name, phone, registered, saved, busy, confirmLabel = '이 주소로 송장 생성', onConfirm,
+  open, onClose, name, phone, registered, saved, busy, confirmLabel = '이 주소로 송장 생성', onConfirm, notice,
 }: Props) {
   const regOk = has(registered);
   // 처음 그릴 때부터 올바른 값으로 — 지난번 별도 배송지가 있으면 그걸로, 등록 주소가 없으면 입력 모드
@@ -69,6 +71,7 @@ export function ShipAddressModal({
   return (
     <Modal open={open} onClose={onClose} title="택배 발송 — 받는 곳 확인">
       <div className="space-y-4">
+        {notice}
         {/* 받는 분 — 고정 */}
         <div className="rounded-lg bg-stone-50 px-3 py-2.5 text-sm">
           <div className="flex items-center justify-between">

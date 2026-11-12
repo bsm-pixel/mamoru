@@ -531,3 +531,27 @@ export function useRepairPickupSchedule(fromDate?: string, toDate?: string) {
     },
   });
 }
+
+/** 2026-11-12 판매에 연결된 복원수리 건(출장 맡김, repairs.sale_id) — 판매 상세에 「함께 맡은 가위」 표시·송장 생성 안내용 */
+export interface SaleRepairRef {
+  id: string;
+  as_id: string;
+  status: string;
+  invoice_number: string | null;
+  shipped_at: string | null;
+}
+export function useSaleRepairs(saleId: string | null | undefined) {
+  return useQuery({
+    queryKey: ['repairs', 'by-sale', saleId],
+    enabled: !!saleId,
+    queryFn: async (): Promise<SaleRepairRef[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = createClient() as any;
+      const { data } = await db.from('repairs')
+        .select('id, as_id, status, invoice_number, shipped_at')
+        .eq('sale_id', saleId)
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+  });
+}
