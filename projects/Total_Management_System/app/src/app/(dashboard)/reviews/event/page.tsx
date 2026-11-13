@@ -96,10 +96,12 @@ export default function ReviewEventPage() {
   const [wonRank, setWonRank] = useState<number | null>(null);   // 당첨 연출용(등급별)
   const [reveal, setReveal] = useState(false);                   // 당첨 연출 표시: 릴 도는 중=false, 한 명 확정 후 유지=true
   const spinTimer = useRef<number | null>(null);
+  const loadingMonth = useRef<string>('');   // 2026-11-13 달을 빨리 넘길 때 늦게 온 응답이 덮어쓰지 않게
   useEffect(() => () => { if (spinTimer.current) window.clearTimeout(spinTimer.current); }, []);
 
   const load = useCallback(async (m: string) => {
     setLoading(true); setMsg('');
+    loadingMonth.current = m;
     try {
       const res = await fetch(`/api/reviews/event?month=${m}`);
       const data = await res.json();
@@ -123,6 +125,31 @@ export default function ReviewEventPage() {
       });
       setMarks(mk);
       setDirty(false);   // 새로 불러오면 깨끗한 상태
+      // 2026-11-13 설정이 없는 달 = 직전 달(최대 3개월 전까지) 상품·등수·인원·대표이미지를 미리 채움.
+      //   저장 전엔 DB에 아무것도 안 씀. 이미 저장된 달은 건드리지 않음. 날짜는 새로 계산(마감=그 달 말일 23:59 KST)
+      if (!cfg) {
+        for (let back = 1; back <= 3; back++) {
+          const pm = shiftMonth(m, -back);
+          const pr = await fetch(`/api/reviews/event?month=${pm}`);
+          if (!pr.ok) break;
+          const pc = (await pr.json()).config;
+          if (loadingMonth.current !== m) break;   // 그새 다른 달로 넘어감
+          if (!pc || !Array.isArray(pc.prizes) || !pc.prizes.some((p: Prize) => (p.name || '').trim())) continue;
+          const y = 2000 + parseInt(m.slice(0, 2), 10), mo = parseInt(m.slice(2, 4), 10);
+          const lastDay = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+          setConfig({
+            deadline: fromLocal(`${y}-${String(mo).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}T23:59`),
+            announce_at: null,
+            entry_start: null,
+            hero_image_url: pc.hero_image_url ?? null,
+            prizes: pc.prizes.map((p: Prize, i: number) => { const imgs = prizeImgList(p); return { rank: p.rank ?? i + 1, label: p.label ?? '', name: p.name ?? '', desc: p.desc ?? '', image_url: imgs[0] ?? '', count: p.count ?? 0, image_urls: imgs }; }),
+            status: 'draft',
+          });
+          setDirty(true);
+          setMsg(`${monthTitle(pm)} 설정(상품·등수·인원·이미지)을 불러왔습니다 — 응모 시작일·마감일·발표 예정일 확인 후 [저장]을 눌러야 반영됩니다`);
+          break;
+        }
+      }
     } catch (e) {
       setMsg('불러오기 실패: ' + String(e));
     } finally { setLoading(false); }
