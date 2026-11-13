@@ -323,3 +323,14 @@
 4. 기다림이 풀려 다음 단계가 생기면 기존 항목을 고치지 말고 새 항목을 넣는다. 지우지 않는다(soft delete 원칙).
 처리했으면 답변 끝 우체통 줄에 같이 적는다: "우체통: 끝남 처리 1".
 넣었으면 답변 끝에 한 줄: "우체통: 끝남 1 · 새 할 일 1"
+
+---
+
+## 클로드(claude.ai) ↔ Claude Code 협업 (2026-11-13 사장님 지시)
+두 클로드는 서로의 대화를 못 본다. **마모루 작업실 db**(https://claude.ai/artifact/NXww8NJQV6hKwayGHQHs5K)가 공용 기록장이다. 규칙 원본 = db `settings/handoff`.
+- **시작할 때**(사장님이 claude.ai에서 한 작업을 언급하거나, 콘텐츠·디자인·프로젝트·할 일 얘기가 나오면): ArtifactData로 `log`에서 `by`=claude 최근 7일 + `tasks`에서 `who`=code·미완료를 먼저 읽는다. 단순 코드 수정엔 생략.
+- **끝날 때**(배포·문서·구조 변경·사장님 결정이 있었으면): `log`에 한 건 `set` — `{at, by:"code", space:"mamoru 저장소", title, detail, decisions, links}`. doc_id `l-YYMMDD-code-N`. 질문·답으로 끝난 대화는 남기지 않는다.
+- claude.ai에게 넘길 일 = `tasks`에 `who:"claude"`로 추가(필요한 파일 경로·문구는 `note`·`copy`에). 사장님 몫은 기존대로 우체통.
+- claude.ai 프로젝트 목록·핵심 문서 = db `spaces`. 모르는 프로젝트·문서 번호(예: claude/36)가 나오면 여기서 찾고, 없으면 "확인 못 했다"고 말한다.
+- 비밀값·고객 실명·전화번호는 db에 적지 않는다.
+답변 끝 우체통 줄에 같이 적는다: "공용 기록: 1건".
