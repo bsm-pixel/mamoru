@@ -176,7 +176,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         </div>
         <div className="flex items-center gap-2 text-xs text-neutral-500">
           <Badge className="bg-neutral-100 text-neutral-600">{TYPE_LABEL[c.consultation_type] || c.consultation_type}</Badge>
-          <span>{formatDate(c.received_at)}</span>
+          <span>접수 {formatDate(c.received_at, 'M월 d일 HH:mm')}</span>
         </div>
       </div>
 

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations, useClosingHistory } from '@/hooks/use-consultations';
 import { ClosedMeta, PastFilterChips, OverdueBlock, useOverdueCount, pastStatuses, type PastFilter } from './closed-info';
-import {
+import { formatDate,
   formatPhone,
   formatDday,
   toLocalDateString,
@@ -208,6 +208,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           <div className={`${tab === 'past' && (isCancelled || isCompleted) ? 'hidden' : 'flex'} items-center gap-3 mt-1 text-xs text-neutral-500`}>
             <span>{formatPhone(c.phone)}</span>
             {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
+            {/* 2026-11-14 일정 미정 건은 접수 시각으로 구분 */}
+            {!c.visit_date && c.received_at && <span>접수 {formatDate(c.received_at, 'M/d HH:mm')}</span>}
             {/* 제안중: suggestions에서 제안 시간 표시 */}
             {!c.visit_date && c.status === 'suggested' && (c as any).suggestions && (() => {
               const raw = (c as any).suggestions;
