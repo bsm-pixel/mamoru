@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendAdminEmail } from '@/lib/notification/email';
@@ -102,6 +102,93 @@ export async function POST(req: NextRequest) {
         position: position || null,
       },
     });
+
+    // ── 다시 접수 = 기존 건 수정 (2026-11-14) ──
+    //   출장 요청·톡 상담은 같은 번호의 '확정 전(pending_admin)' 건이 있으면 새로 만들지 않고 그 건을 최신 내용으로 바꾼다.
+    //   고객이 내용을 고쳐 다시 보내는 경우가 있어서(2분 간격 2건 실사례). 접수 알림톡은 다시 보내지 않고, 이전 내용은 이력에 남긴다.
+    //   확정 뒤 들어온 접수는 추가 요청일 수 있어 새 건으로 받는다. 매장 방문은 위의 같은 일정 409 차단 그대로.
+    if (consultationType !== 'store_visit') {
+      const { data: prevRows } = await dbAny
+        .from('consultations')
+        .select('id, unique_id, memo, address_road, address_detail, gas_raw')
+        .eq('phone_normalized', phoneNorm)
+        .eq('consultation_type', consultationType)
+        .eq('status', 'pending_admin')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const prev = prevRows?.[0];
+      if (prev) {
+        const prevAddr = [prev.address_road, prev.address_detail].filter(Boolean).join(' ');
+        const prevDays = String(prev.gas_raw?.days || '');
+        const prevTimes = String(prev.gas_raw?.timePrefs || '');
+        const lines = ['고객이 다시 접수 — 내용이 최신으로 바뀜'];
+        if ((prev.memo || '') !== (memoText || '')) lines.push(`이전 메모: ${prev.memo || '(없음)'}`);
+        if (prevAddr !== fullAddress) lines.push(`이전 주소: ${prevAddr || '(없음)'}`);
+        if (prevDays !== daysArr.join(',') || prevTimes !== timePrefsArr.join(',')) {
+          lines.push(`이전 희망: ${prevDays || '-'} / ${prevTimes || '-'}`);
+        }
+        const { error: updErr } = await dbAny.from('consultations').update({
+          customer_id: customerId,
+          name: name.trim(),
+          phone: phone.trim(),
+          activity_name: (activityName || '').trim() || null,
+          position: (position || '').trim() || null,
+          address_road: addressRoad || null,
+          address_detail: addressDetail || null,
+          memo: memoText,
+          latitude: lat,
+          longitude: lng,
+          gas_raw: {
+            days: daysArr.join(','),
+            timePrefs: timePrefsArr.join(','),
+            addressZip: addressZip || '',
+            addressRoad: addressRoad || '',
+            addressDetail: addressDetail || '',
+            addressLat: addressLat || '',
+            addressLng: addressLng || '',
+          },
+          updated_at: new Date().toISOString(),
+        }).eq('id', prev.id);
+        if (updErr) throw new Error(updErr.message || JSON.stringify(updErr));
+
+        await dbAny.from('consultation_history').insert({
+          consultation_id: prev.id,
+          from_status: 'pending_admin',
+          to_status: 'pending_admin',
+          note: lines.join('\n'),
+        });
+
+        // 사장님께만 알림(푸시 + 메일). 고객 알림톡은 첫 접수 때 이미 나갔다
+        after(async () => {
+          try {
+            const { sendPushToAll } = await import('@/lib/firebase/send-push');
+            await sendPushToAll({
+              title: '상담 접수 내용 수정',
+              body: `${name.trim()}님이 ${type} 내용을 고쳐 다시 접수했습니다`,
+              url: '/consultations',
+              tag: `mamoru-consult-resubmit-${prev.id}`,
+            });
+          } catch (e) { console.error('[consultation/submit] 재접수 푸시 실패:', e); }
+          try {
+            await sendAdminEmail(
+              `[MAMORU 상담] ${type} 접수 내용 수정`,
+              [`■ ${type} 재접수 (기존 건에 반영)`, `이름: ${name.trim()}`, `연락처: ${phone}`,
+                ...(fullAddress ? [`주소: ${fullAddress}`] : []), ...(memoText ? [`메모: ${memoText}`] : []),
+                '— 바뀌기 전 —', ...lines.slice(1)].join('\n'),
+            );
+          } catch (e) { console.error('[consultation/submit] 재접수 메일 실패:', e); }
+        });
+
+        return NextResponse.json(
+          {
+            ok: true,
+            data: { id: prev.id, unique_id: prev.unique_id, status: 'pending_admin', google_event_id: null, merged: true },
+            _notifications: { alrimtalk: { success: false, error: 'skipped_resubmit' }, email: true },
+          },
+          { headers: CORS_HEADERS }
+        );
+      }
+    }
 
     // INSERT
     const { data: consultation, error: insertErr } = await dbAny

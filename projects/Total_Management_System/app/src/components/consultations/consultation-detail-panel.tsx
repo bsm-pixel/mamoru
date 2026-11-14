@@ -490,7 +490,10 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
                 <div key={h.id} className="text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-neutral-500">
-                      {(h.from_status && CONSULTATION_STATUS_LABEL[h.from_status]) || h.from_status || '-'} → {CONSULTATION_STATUS_LABEL[h.to_status] || h.to_status}
+                      {/* 2026-11-14 상태가 그대로면(고객 재접수로 내용만 바뀜) '내용 수정'으로 표시 */}
+                      {h.from_status && h.from_status === h.to_status
+                        ? '내용 수정'
+                        : <>{(h.from_status && CONSULTATION_STATUS_LABEL[h.from_status]) || h.from_status || '-'} → {CONSULTATION_STATUS_LABEL[h.to_status] || h.to_status}</>}
                     </span>
                     <span className="text-neutral-400">{formatDate(h.created_at)}</span>
                   </div>

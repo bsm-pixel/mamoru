@@ -494,7 +494,7 @@ export default function ConsultationDetailPage() {
                         {CONSULTATION_STATUS_LABEL[h.to_status]}
                       </span>
                     </div>
-                    {h.note && <p className="text-xs text-neutral-500 mt-0.5">{h.note}</p>}
+                    {h.note && <p className="text-xs text-neutral-500 mt-0.5 whitespace-pre-wrap break-words">{h.note}</p>}
                     <p className="text-xs text-neutral-400 mt-0.5">
                       {formatRelative(h.created_at)}
                     </p>
