@@ -971,7 +971,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         /* ④ 드물게 쓰는 것 + ⑤ 파괴적 액션 — 표준 5슬롯(components/ui/action-section.tsx).
              주 액션(②③)은 상단 「⚡ 다음 할 일」 바가 맡는다 */
         <div className="pt-2 border-t border-neutral-100">
-          <MoreActions label="반품 · 교환 · 취소">
+          <MoreActions label="⋯ 더 보기 (반품 · 교환 · 취소)">
             <SubtleButton onClick={() => setShowExchange(true)}>
               <RefreshCw size={13} className="inline -mt-0.5 mr-1.5" />제품 교환 (구제품 반납 + 새 제품 배정)
             </SubtleButton>

@@ -13,8 +13,7 @@ import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
 import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL, CUSTOMER_TYPE_COLOR, CONSULTATION_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
-  ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, Truck, Copy, Merge, Package,
+  ShoppingBag, FileSignature, MessageSquare, Wrench, Pencil, Truck, Copy, Merge, Package,
 } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';

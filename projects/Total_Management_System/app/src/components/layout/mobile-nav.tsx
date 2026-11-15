@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MoreHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { NAV_ITEMS } from '@/lib/utils/constants';
+import { NAV_ITEMS, isNavActive } from '@/lib/utils/constants';
 import { NAV_ICON_MAP } from '@/lib/utils/nav-icons';
 
 // 모바일 하단 탭에 고정 표시할 4개 + 더보기
@@ -23,7 +23,7 @@ export function MobileNav() {
   );
 
   // "더보기" 메뉴 안의 항목이 활성화되어있는지 확인
-  const moreActive = moreItems.some((item) => pathname.startsWith(item.matchPrefix));
+  const moreActive = moreItems.some((item) => isNavActive(pathname, item.matchPrefix));
 
   return (
     <>
@@ -47,7 +47,7 @@ export function MobileNav() {
             <div className="grid grid-cols-4 gap-1 px-3 pb-4">
               {moreItems.map((item) => {
                 const Icon = NAV_ICON_MAP[item.icon];
-                const active = pathname.startsWith(item.matchPrefix);
+                const active = isNavActive(pathname, item.matchPrefix);
                 return (
                   <Link
                     key={item.href}
@@ -73,7 +73,7 @@ export function MobileNav() {
         <div className="flex items-center justify-around h-14">
           {mobileTabs.map((item) => {
             const Icon = NAV_ICON_MAP[item.icon];
-            const active = pathname.startsWith(item.matchPrefix);
+            const active = isNavActive(pathname, item.matchPrefix);
             return (
               <Link
                 key={item.href}

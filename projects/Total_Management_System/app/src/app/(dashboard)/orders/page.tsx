@@ -26,6 +26,7 @@ import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 const STATUS_TABS = [
   { value: 'all', label: '전체' },
@@ -45,7 +46,7 @@ export default function OrdersPage() {
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   // 준비표 다중선택 (판매관리와 동일 UX)
   const [prepMode, setPrepMode] = useState(false);

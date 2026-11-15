@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import type { ReturnRow } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useStatusCounts } from '@/hooks/use-status-counts';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -34,7 +35,7 @@ const STATUS_TABS: { value: string; label: string }[] = [
 export default function ReturnsPage() {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const tabCounts = useStatusCounts('returns');
   const tabCountOf = (v: string): number | null => !tabCounts.loaded ? null : v === 'all' ? tabCounts.total : (tabCounts.counts[v] || 0);

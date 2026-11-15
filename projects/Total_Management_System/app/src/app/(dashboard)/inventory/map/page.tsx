@@ -16,9 +16,10 @@ import { RackEditModal } from '@/components/inventory/rack-edit-modal';
 import { RackMapPrint } from '@/components/inventory/rack-map-print';
 import { cellGridPos, cellSpan, levelColumnCount } from '@/lib/warehouse/location-code';
 import { Modal } from '@/components/ui/modal';
-import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
+import { Boxes, MapPin, Plus, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { matchSearch } from '@/lib/utils/search-match';
+import { ProductSectionTabs } from '@/components/products/product-section-tabs';
 
 /**
  * 창고 배치도 (정위치 관리) — 112, 2026-07-18
@@ -315,11 +316,8 @@ export default function WarehouseLayoutPage() {
 
   return (
     <>
-      <Topbar title="창고 배치도" action={
-        <Button size="sm" variant="ghost" onClick={() => router.push('/inventory')}>
-          <ArrowLeft size={14} /> 재고 목록
-        </Button>
-      } />
+      <Topbar title="창고 배치도" />
+      <ProductSectionTabs />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4">
         {isLoading ? (

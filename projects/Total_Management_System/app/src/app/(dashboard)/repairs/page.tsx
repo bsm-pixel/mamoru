@@ -15,10 +15,12 @@ import { RefreshCw, Scissors, CreditCard, AlertTriangle, TrendingUp } from 'luci
 import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useUrlSelection } from '@/hooks/use-url-selection';
+import { RepairCustomerAside } from '@/components/repairs/repair-customer-aside';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const [bookingOpen, setBookingOpen] = useState(false);   // 방문 예약 등록 모달
   const { data: stats } = useRepairDashboardStats();
@@ -130,7 +132,10 @@ export default function RepairsPage() {
       {isLg ? (
         /* PC: 좌측(통계+밀집그리드) + 우측 상세(전체 높이) — 판매관리와 동일 IA */
         <div className="flex gap-4 px-4 md:px-6 py-4 h-[calc(100vh-92px)] bg-stone-50">
-          <div className="flex-1 min-w-0 overflow-auto space-y-2.5 pr-1">
+          {/* 2026-11-15 큰 화면: 표를 끝까지 늘리지 않고 칸을 더 쓴다
+              ~1439 지금처럼 / 1440~ 목록(최대 1,100) + 상세 560 / 1920~ 상세 640 / 2200~ 목록(최대 900) + 상세 640 + 그 고객의 이력 480
+              (왼쪽 메뉴 224 를 빼면 1920 에서는 3칸이 좁아 목록이 496 밖에 안 남는다 → 3칸은 2200 부터) */}
+          <div className="flex-1 min-w-0 overflow-auto space-y-2.5 pr-1 min-[1440px]:max-w-[1100px] min-[2200px]:max-w-[900px]">
             {topStats}
             <RepairList
               onSelect={setSelectedId}
@@ -143,8 +148,16 @@ export default function RepairsPage() {
               gridMode
             />
           </div>
-          <div className="w-[440px] shrink-0 overflow-y-auto">
+          <div className="w-[440px] min-[1440px]:w-[560px] min-[1920px]:w-[640px] shrink-0 overflow-y-auto">
             {detailPanel}
+          </div>
+          <div className="hidden min-[2200px]:block w-[480px] shrink-0 overflow-y-auto">
+            {selectedId ? (
+              <div className="bg-white rounded-xl border border-neutral-200">
+                <p className="px-4 pt-3 text-[11px] font-semibold text-neutral-400">이 고객의 이력 · 메모</p>
+                <RepairCustomerAside repairId={selectedId} />
+              </div>
+            ) : null}
           </div>
         </div>
       ) : (

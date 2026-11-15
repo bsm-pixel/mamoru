@@ -52,6 +52,8 @@ export default function NewPurchaseOrderPage() {
   const lowStockCount = products.filter(
     (p) => p.stock_quantity >= 0 && p.stock_quantity <= lowStockThreshold
   ).length;
+  const [scope, setScope] = useState<'low' | 'all' | null>(null);
+  const effScope = scope ?? (lowStockCount > 0 ? 'low' : 'all');
   const alreadyAddedIds = new Set(items.filter((i) => i.product?.id).map((i) => i.product!.id));
 
   // 매입품목 + 검색 필터링
@@ -61,6 +63,9 @@ export default function NewPurchaseOrderPage() {
       : products;
     if (productSearch) {
       list = list.filter(p => matchSearch(productSearch, p.name, p.sku, p.product_group));
+    } else if (effScope === 'low') {
+      // 2026-11-15 기본은 「저재고」만 — 전엔 제품 전체(버튼 175개)가 깔려 화면 길이가 4,600px 이었다. 검색하면 전체에서 찾는다
+      list = list.filter((p) => p.stock_quantity >= 0 && p.stock_quantity <= lowStockThreshold);
     }
     return list;
   })();
@@ -191,6 +196,20 @@ export default function NewPurchaseOrderPage() {
                   className="w-full h-8 pl-8 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
                 />
               </div>
+              {!productSearch && (
+                <div className="flex items-center gap-1.5 mb-2" role="radiogroup" aria-label="보여 줄 제품">
+                  {([['low', `저재고만 ${lowStockCount}`], ['all', `전체 ${products.length}`]] as const).map(([k, label]) => (
+                    <button key={k} type="button" role="radio" aria-checked={effScope === k} onClick={() => setScope(k)}
+                      className={`h-8 px-3 rounded-lg text-xs font-semibold border transition ${effScope === k ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'}`}>
+                      {label}
+                    </button>
+                  ))}
+                  <span className="text-[11px] text-neutral-400 ml-1">검색하면 전체에서 찾습니다</span>
+                </div>
+              )}
+              {displayProducts.length === 0 && (
+                <p className="py-6 text-center text-xs text-neutral-400">{productSearch ? '맞는 제품이 없습니다' : '저재고 제품이 없습니다 — [전체]를 누르거나 검색하세요'}</p>
+              )}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {displayProducts.map((p, pi) => {
                   const inList = items.find((i) => i.product?.id === p.id);

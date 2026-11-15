@@ -24,6 +24,7 @@ import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 const TABS: { key: ContractTab; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -64,7 +65,7 @@ export default function ContractsPage() {
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const isLg = useIsLg();
 

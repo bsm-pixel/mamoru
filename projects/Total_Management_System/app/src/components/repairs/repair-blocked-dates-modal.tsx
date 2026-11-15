@@ -80,16 +80,21 @@ export function RepairBlockedDatesModal({ onClose }: Props) {
         {/* 추가 폼 */}
         <div className="rounded-lg border border-neutral-200 p-3 space-y-2">
           <p className="text-[11px] font-semibold text-neutral-500">기간 추가</p>
-          <div className="flex items-center gap-2 flex-wrap">
-            <input type="date" value={start} onChange={(e) => setStart(e.target.value)}
-              className="h-9 px-2.5 rounded-lg border border-neutral-200 bg-white text-sm" aria-label="시작일" />
-            <span className="text-neutral-400 text-sm">~</span>
-            <input type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)}
-              className="h-9 px-2.5 rounded-lg border border-neutral-200 bg-white text-sm" aria-label="종료일(생략 시 하루)" />
+          <div className="flex items-end gap-2 flex-wrap">
+            <label className="text-[11px] font-semibold text-neutral-500">시작일
+              <input type="date" value={start} onChange={(e) => setStart(e.target.value)}
+                className="mt-0.5 block h-9 px-2.5 rounded-lg border border-neutral-200 bg-white text-sm font-normal text-neutral-900" />
+            </label>
+            <span className="text-neutral-400 text-sm pb-2">~</span>
+            <label className="text-[11px] font-semibold text-neutral-500">종료일 (비우면 하루)
+              <input type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)}
+                className="mt-0.5 block h-9 px-2.5 rounded-lg border border-neutral-200 bg-white text-sm font-normal text-neutral-900" />
+            </label>
           </div>
+          <label className="block text-[11px] font-semibold text-neutral-500">사유</label>
           <div className="flex items-center gap-2">
-            <input type="text" value={reason} onChange={(e) => setReason(e.target.value)}
-              placeholder="사유 (예: 명절 픽업 중지)"
+            <input type="text" aria-label="사유" value={reason} onChange={(e) => setReason(e.target.value)}
+              placeholder="예: 명절 픽업 중지"
               className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400" />
             <Button size="sm" variant="secondary" onClick={add} disabled={!start}>
               <Plus size={14} /> 추가

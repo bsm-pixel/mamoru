@@ -25,6 +25,7 @@ import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 import { useSetting } from '@/hooks/use-settings';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 const SOURCE_LABEL: Record<string, string> = {
@@ -71,7 +72,7 @@ export default function CustomersPage() {
   const [tagFilter, setTagFilter] = useState('');
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const limit = 20;
   const availableTags = useSetting<string[]>('customer.tags', []);

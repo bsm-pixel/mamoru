@@ -33,6 +33,7 @@ const CATEGORY_GROUPS: { key: string; label: string; codes: string[] }[] = [
 
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+import { ProductSectionTabs } from '@/components/products/product-section-tabs';
 const CAT_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
   TH: 'bg-purple-100 text-purple-700',
@@ -145,7 +146,8 @@ export default function InventoryPage() {
   return (
     <>
       {/* 2026-10-19 상단바=제목+새로고침만 — 작업 버튼은 검색줄(작업 영역)로 이동 (모바일 3줄 줄바꿈 해소) */}
-      <Topbar title="창고·재고 관리" />
+      <Topbar title="재고" />
+      <ProductSectionTabs />
 
       {showAdjust && (
         <AdjustModal

@@ -146,7 +146,7 @@ export function useOrderActions(order: Order | null | undefined, items: OrderIte
   const canCancelOrder = showInvoiceCreate || canPushImweb;
   const secondary = (
     <div className="pt-3 border-t border-neutral-100">
-      <MoreActions label="송장 · 교환 · 취소">
+      <MoreActions label="⋯ 더 보기 (송장 · 교환 · 취소)">
         <SubtleButton onClick={() => setShowExchange(true)} disabled={busy}>
           🔄 제품 교환
         </SubtleButton>

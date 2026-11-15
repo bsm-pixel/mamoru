@@ -259,7 +259,7 @@ export function useRepairTabData() {
 
   const tabs: RepairTabDef[] = [
     { key: 'intake', label: '신규접수', count: tabData.intake.length },
-    { key: 'pickup_needed', label: '수거접수필요', count: tabData.pickup_needed.length },
+    { key: 'pickup_needed', label: '수거필요', count: tabData.pickup_needed.length },
     { key: 'visit_scheduled', label: '방문예정', count: tabData.visit_scheduled.length },
     { key: 'inbound_waiting', label: '입고대기', count: tabData.inbound_waiting.length },
     { key: 'in_progress', label: '진행중', count: tabData.in_progress.length },

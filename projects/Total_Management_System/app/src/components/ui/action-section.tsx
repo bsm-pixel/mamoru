@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 /**
@@ -58,6 +58,9 @@ interface MoreProps {
   children: ReactNode;
 }
 
+// 「더 보기」 안인지 — 안이면 DangerZone 이 또 접지 않는다
+const InMoreContext = createContext(false);
+
 /** 드물게 쓰는 액션 묶음 — 평소엔 글자 한 줄로 접혀 있어 주 액션을 가리지 않는다 */
 export function MoreActions({ label, defaultOpen = false, children }: MoreProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -71,14 +74,32 @@ export function MoreActions({ label, defaultOpen = false, children }: MoreProps)
         {label}
         <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && <div className="space-y-1.5 pt-0.5">{children}</div>}
+      {open && <div className="space-y-1.5 pt-0.5"><InMoreContext.Provider value={true}>{children}</InMoreContext.Provider></div>}
     </div>
   );
 }
 
 /** 파괴적 액션 구역 — 주 액션과 시각적으로 분리하고 무게를 낮춘다 */
 export function DangerZone({ children }: { children: ReactNode }) {
-  return <div className="pt-2 mt-1 border-t border-neutral-100 space-y-0.5">{children}</div>;
+  // 2026-11-15 취소 · 삭제가 진한 버튼 바로 아래에 늘 보여 잘못 누르기 쉬웠다 →
+  //   「더 보기」 밖에 놓인 위험 구역은 스스로 「⋯ 더 보기」로 접힌다(누르면 펼쳐지고, 각 버튼은 다시 한 번 묻는다)
+  const inMore = useContext(InMoreContext);
+  const [open, setOpen] = useState(false);
+  if (inMore) return <div className="pt-2 mt-1 border-t border-neutral-100 space-y-0.5">{children}</div>;
+  return (
+    <div className="pt-1 mt-1 border-t border-neutral-100">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-neutral-400 hover:text-neutral-700 transition"
+      >
+        ⋯ 더 보기
+        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="space-y-0.5">{children}</div>}
+    </div>
+  );
 }
 
 /** 위험/되돌리기용 텍스트 버튼 — 평소 회색, hover 에서만 빨강 */

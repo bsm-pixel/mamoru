@@ -21,6 +21,8 @@ import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import { matchSearch } from '@/lib/utils/search-match';
 import { useListEscape } from '@/components/layout/list-keys';
 import { OPEN_PRODUCT_KEY } from '@/components/layout/quick-find';
+import { useUrlSelection } from '@/hooks/use-url-selection';
+import { ProductSectionTabs } from '@/components/products/product-section-tabs';
 
 const CATEGORY_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
@@ -38,7 +40,7 @@ export default function ProductsPage() {
   const defaultSort = useSetting<string>('inventory.default_sort', 'group');
   const lowThreshold = useSetting<number>('inventory.low_stock_threshold', 3);  // 재고화면과 동일 기준
   const useGrouping = defaultSort === 'group';
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   // 2026-11-15 빠른 찾기(Ctrl+K)에서 고른 제품을 편다 — 제품은 상세 주소가 따로 없어 이렇게 넘겨받는다
   useEffect(() => {
@@ -123,6 +125,7 @@ export default function ProductsPage() {
   return (
     <>
       <Topbar title="제품 관리" />
+      <ProductSectionTabs />
 
       <div className="flex flex-col h-full min-h-0 px-4 md:px-6 pt-4 overflow-hidden bg-stone-50">
         {/* ── 상단 고정 영역 ── */}

@@ -29,6 +29,7 @@ import { MissingNote } from '@/components/ui/missing-note';
 import { matchSearch } from '@/lib/utils/search-match';
 import { useListEscape } from '@/components/layout/list-keys';
 import { typingPhone } from '@/lib/utils/validate';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 // 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
 // supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
@@ -86,7 +87,7 @@ export default function B2BPartnersPage() {
   const [activeTab, setActiveTab] = useState<string>('dealer');
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const isLg = useIsLg();
 

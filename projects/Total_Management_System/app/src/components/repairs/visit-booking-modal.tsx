@@ -126,10 +126,15 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
               disableInlineNewForm
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="성함 *"
-                className="h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
-              <input value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="연락처 * (010-0000-0000)" inputMode="numeric"
-                className="h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
+              {/* 2026-11-15 칸 안 예시 글자만 있어 값을 넣으면 무슨 칸인지 사라졌다 → 이름표 */}
+              <label className="text-[11px] font-semibold text-neutral-500">성함 *
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="예: 홍길동"
+                  className="mt-0.5 w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm font-normal text-neutral-900" />
+              </label>
+              <label className="text-[11px] font-semibold text-neutral-500">연락처 *
+                <input value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} placeholder="010-0000-0000" inputMode="numeric"
+                  className="mt-0.5 w-full h-10 px-3 rounded-lg border border-neutral-200 text-sm font-normal text-neutral-900" />
+              </label>
             </div>
             <p className="text-[11px] text-neutral-400 mt-1">기존 고객은 위에서 검색하면 채워집니다. 처음 오시는 분은 직접 입력하면 고객으로 자동 등록돼요.</p>
           </section>
@@ -152,7 +157,7 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
           {/* 3. 날짜·시간 */}
           <section>
             <p className="text-xs font-semibold text-neutral-500 mb-2">방문 날짜 · 시간</p>
-            <input type="date" value={date} onChange={(e) => { setDate(e.target.value); setTime(''); }}
+            <input type="date" aria-label="방문 날짜" value={date} onChange={(e) => { setDate(e.target.value); setTime(''); }}
               className="h-10 px-3 rounded-lg border border-neutral-200 text-sm" />
             {closedReason && (
               <p className="text-xs text-amber-700 mt-2">{closedReason === 'closed_date' ? '휴무일로 지정된 날입니다.' : '정기 휴무 요일입니다.'} 그래도 등록할 수 있어요(확인 후 등록).</p>
@@ -179,7 +184,7 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
               ) : null}
               <div className="flex items-center gap-2 mt-2">
                 <span className="text-xs text-neutral-500">직접 입력</span>
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} step={300}
+                <input type="time" aria-label="방문 시간 직접 입력" value={time} onChange={(e) => setTime(e.target.value)} step={300}
                   className="h-9 px-2 rounded-lg border border-neutral-200 text-sm" />
                 <span className="text-[11px] text-neutral-400">전화로 정한 시간이 칸에 없을 때</span>
               </div>
@@ -192,7 +197,7 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
           {/* 4. 메모 */}
           <section>
             <p className="text-xs font-semibold text-neutral-500 mb-2">메모 <span className="font-normal text-neutral-400">(선택)</span></p>
-            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} placeholder="예: 오후 3시쯤 온다고 함 · 틴닝 1자루 날 나감"
+            <textarea aria-label="메모" value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} placeholder="예: 오후 3시쯤 온다고 함 · 틴닝 1자루 날 나감"
               className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm resize-none" />
           </section>
 

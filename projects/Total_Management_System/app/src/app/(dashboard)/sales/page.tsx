@@ -415,7 +415,7 @@ export default function SalesPage() {
         <div className="relative shrink-0">
           <button type="button" onClick={() => setMobileMenu(mobileMenu === 'add' ? null : 'add')}
             className="h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-            <Plus size={14} />입력
+            <Plus size={14} />판매 입력
           </button>
           {mobileMenu === 'add' && (
             <div className="absolute right-0 top-11 z-40 w-40 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">

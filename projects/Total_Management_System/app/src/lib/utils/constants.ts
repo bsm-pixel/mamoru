@@ -58,7 +58,7 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '상품 · 재고',
     items: [
       { label: '제품', href: '/products', icon: 'Package', matchPrefix: '/products' },
-      { label: '창고·재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
+      // 2026-11-15 「창고·재고」 메뉴는 「제품」 안의 탭으로 합쳤다(components/products/product-section-tabs.tsx). 주소 /inventory 는 그대로
       { label: '매입관리', href: '/purchasing', icon: 'Truck', matchPrefix: '/purchasing' },
       { label: '샘플 소싱', href: '/sourcing', icon: 'PackageSearch', matchPrefix: '/sourcing' },
       { label: '부자재', href: '/supplies', icon: 'PackageOpen', matchPrefix: '/supplies' },
@@ -90,6 +90,17 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ];
+
+/** 메뉴에서는 뺐지만 즐겨찾기(MY MENU)에 남아 있을 수 있는 항목 — 사이드바가 이름 · 아이콘을 찾을 때만 쓴다 */
+export const NAV_LEGACY_ITEMS: NavItem[] = [
+  { label: '재고', href: '/inventory', icon: 'Boxes', matchPrefix: '/inventory' },
+];
+
+/** 메뉴가 켜진 상태인지 — 「제품」은 재고 · 창고 배치도 화면에서도 켜진다 */
+export function isNavActive(pathname: string, matchPrefix: string): boolean {
+  if (matchPrefix === '/products') return pathname.startsWith('/products') || pathname.startsWith('/inventory');
+  return pathname.startsWith(matchPrefix);
+}
 
 /** 플랫 목록 (모바일 네비 등에서 사용) */
 export const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);

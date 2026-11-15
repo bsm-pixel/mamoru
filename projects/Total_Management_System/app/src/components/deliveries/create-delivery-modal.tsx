@@ -9,7 +9,7 @@
  *   - 집계는 delivery_items.category='RS' 태그 기반으로 그대로 작동
  */
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCreateDelivery } from '@/hooks/use-deliveries';
 import { useProducts } from '@/hooks/use-sales';
@@ -198,6 +198,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
 
         {/* 본문 */}
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          {/* 2026-11-15 입력칸 15개가 한 화면에 깔려 있어 순서를 3단으로 표시 */}
+          <p className="flex items-center gap-2 text-xs font-bold text-neutral-800 pt-1"><span className="w-5 h-5 rounded-full bg-stone-900 text-white text-[11px] flex items-center justify-center">1</span>거래처 · 날짜</p>
           {/* 거래처 선택 */}
           <div>
             <label className="text-xs font-semibold text-neutral-500 mb-1 block">거래처 (딜러/아카데미)</label>
@@ -311,6 +313,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             </div>
           </div>
 
+          <p className="flex items-center gap-2 text-xs font-bold text-neutral-800 pt-1"><span className="w-5 h-5 rounded-full bg-stone-900 text-white text-[11px] flex items-center justify-center">2</span>품목</p>
           {/* 제품 선택 */}
           <div>
             <label className="text-xs font-semibold text-neutral-500 mb-1 block">품목 (제품)</label>
@@ -467,6 +470,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             )}
           </div>
 
+          <p className="flex items-center gap-2 text-xs font-bold text-neutral-800 pt-1"><span className="w-5 h-5 rounded-full bg-stone-900 text-white text-[11px] flex items-center justify-center">3</span>결제</p>
           {/* VAT + 증빙 + 결제 — 그루핑 (모바일 세로) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="border border-neutral-200 rounded-lg p-2.5">

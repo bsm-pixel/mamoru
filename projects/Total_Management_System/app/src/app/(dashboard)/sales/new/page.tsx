@@ -30,6 +30,7 @@ import { useSetting } from '@/hooks/use-settings';
 import type { Product } from '@/lib/supabase/types';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { matchSearch } from '@/lib/utils/search-match';
+import { useTopProductIds } from '@/hooks/use-top-products';
 
 interface CartItem {
   product: Product | null; // null이면 임시 제품
@@ -430,13 +431,25 @@ function NewSaleContent() {
     SL: '슬라이싱',
   };
 
-  const filteredProducts = products.filter((p) => {
+  const matchedProducts = products.filter((p) => {
     if (p.category === 'RS') return false; // 복원수리는 상단 "복원수리" 모드로 입력 — 제품 선택 목록에서 제외
     const hit = !productSearch ||
       matchSearch(productSearch, p.name, p.sku); // 2026-11-15 초성 · 띄어쓰기/하이픈 무시
     const matchCat = productCategory === 'all' || p.category === productCategory;
     return hit && matchCat;
   });
+  // 2026-11-15 검색도 분류도 안 골랐을 때는 제품 전체(160여 줄) 대신 「자주 파는 제품 10개」만 먼저 보여 준다
+  const { data: topIds = [] } = useTopProductIds();
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const browsing = !productSearch && productCategory === 'all' && !showAllProducts;
+  const frequentProducts = (() => {
+    const byId = new Map(matchedProducts.map((p) => [p.id, p]));
+    const top = topIds.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+    // 판매 기록이 아직 적으면 나머지를 목록 순서대로 채운다
+    const rest = matchedProducts.filter((p) => !topIds.includes(p.id));
+    return [...top, ...rest].slice(0, 10);
+  })();
+  const filteredProducts = browsing ? frequentProducts : matchedProducts;
 
   const submitDisabled = (!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending;
 
@@ -525,7 +538,18 @@ function NewSaleContent() {
               <SkeletonRows rows={4} />
             ) : (
               <Card padding={false}>
-                <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 320px)', minHeight: '300px' }}>
+                <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100 text-xs">
+                  <span className="font-semibold text-neutral-600">
+                    {browsing ? '자주 파는 제품 10개' : `제품 ${filteredProducts.length}개`}
+                  </span>
+                  {!productSearch && productCategory === 'all' && (
+                    <button type="button" tabIndex={-1} onClick={() => { setShowAllProducts((v) => !v); setActiveIdx(-1); }}
+                      className="h-7 px-2.5 rounded-md border border-neutral-200 text-neutral-600 font-semibold hover:bg-neutral-50">
+                      {showAllProducts ? '자주 파는 것만' : `전체 보기 (${matchedProducts.length})`}
+                    </button>
+                  )}
+                </div>
+                <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 360px)', minHeight: '300px' }}>
                   <table className="w-full text-sm">
                     <thead className="bg-neutral-50 sticky top-0">
                       <tr className="text-xs text-neutral-500">

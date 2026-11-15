@@ -25,6 +25,7 @@ import { formatKRW, formatDate, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from 
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 /* ── 상수 ── */
 const STATUS_LABEL: Record<string, string> = {
@@ -83,7 +84,7 @@ export default function DeliveriesPage() {
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState<string>('all');
   const [page, setPage] = useState(1);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const [addMenu, setAddMenu] = useState(false); // 2026-10-19 모바일 [+ 작성] 메뉴
   const limit = 20;

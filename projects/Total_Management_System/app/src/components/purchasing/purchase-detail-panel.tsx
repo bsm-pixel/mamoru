@@ -19,6 +19,7 @@ import { useEnterSelect } from '@/hooks/use-enter-select';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { matchSearch } from '@/lib/utils/search-match';
+import { DangerZone, DangerLink } from '@/components/ui/action-section';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -388,9 +389,11 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
                 잔금 완료
               </Button>
             )}
-            <Button variant="ghost" className="w-full text-red-500 hover:text-red-600" onClick={() => setPendingAction({ status: 'cancelled', label: '발주 취소', msg: '이 발주를 취소합니다.', variant: 'danger' })} disabled={updatePO.isPending}>
-              발주 취소
-            </Button>
+            <DangerZone>
+              <DangerLink onClick={() => setPendingAction({ status: 'cancelled', label: '발주 취소', msg: '이 발주를 취소합니다. 취소한 발주는 「취소」 탭에 남습니다.', variant: 'danger' })} disabled={updatePO.isPending}>
+                발주 취소 (취소 탭으로 이동)
+              </DangerLink>
+            </DangerZone>
           </div>
         </Card>
       )}

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Star, ChevronDown, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { NAV_GROUPS } from '@/lib/utils/constants';
+import { NAV_GROUPS, NAV_LEGACY_ITEMS, isNavActive } from '@/lib/utils/constants';
 import { NAV_ICON_MAP } from '@/lib/utils/nav-icons';
 import { useSetting } from '@/hooks/use-settings';
 
@@ -17,7 +17,7 @@ export function Sidebar() {
   // 사이드바 커스텀 설정 (즐겨찾기 MY MENU + 숨김) — 설정>화면 설정에서 관리
   const cfg = useSetting<{ hidden?: string[]; favorites?: string[] }>('system.sidebar_config', {});
   const hidden = new Set(cfg.hidden || []);
-  const itemByHref = Object.fromEntries(NAV_GROUPS.flatMap((g) => g.items).map((i) => [i.href, i]));
+  const itemByHref = Object.fromEntries([...NAV_GROUPS.flatMap((g) => g.items), ...NAV_LEGACY_ITEMS].map((i) => [i.href, i]));
   const favorites = (cfg.favorites || [])
     .map((href) => itemByHref[href])
     .filter((it): it is (typeof NAV_GROUPS)[number]['items'][number] => !!it && it.href !== '/dashboard');
@@ -48,7 +48,7 @@ export function Sidebar() {
   const isActive = (matchPrefix: string) =>
     matchPrefix === '/consultations'
       ? pathname === '/consultations' || (pathname.startsWith('/consultations/') && !pathname.startsWith('/consultations/calendar'))
-      : pathname.startsWith(matchPrefix);
+      : isNavActive(pathname, matchPrefix);
 
   const dashActive = pathname.startsWith('/dashboard');
   const onFavorite = favorites.some((f) => isActive(f.matchPrefix));
