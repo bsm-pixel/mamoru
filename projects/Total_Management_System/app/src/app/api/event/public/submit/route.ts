@@ -6,6 +6,7 @@ import { sendAdminEmail } from '@/lib/notification/email';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import { computeEventPricing } from '@/lib/event/pricing';
 import type { EventItem } from '@/lib/event/types';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -180,6 +181,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     console.error('[event/public/submit] 접수 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

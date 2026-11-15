@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendReviewRequestNotification, type ReviewSource } from '@/lib/notification/review-request';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/reviews/request — 후기 요청 알림톡 발송 (consultation / repair / sale 통합)
  *
@@ -105,6 +106,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, webhook_result: result });
   } catch (err) {
     console.error('[reviews/request] Error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMissingNoticeColumn } from '@/lib/event/campaign-notify';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/campaigns — 캠페인 목록 (CORS도 허용: 고객 폼 projects/event/page_form.html 에서 캠페인명 표시용 — 로그인 없이 공개 유지). POST 는 로그인 필요 */
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
@@ -18,7 +19,7 @@ export async function GET() {
     if (error) throw error;
     return NextResponse.json({ ok: true, campaigns: data || [] }, { headers: CORS });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS });
   }
 }
 
@@ -53,6 +54,6 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json({ ok: true, campaign: data });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

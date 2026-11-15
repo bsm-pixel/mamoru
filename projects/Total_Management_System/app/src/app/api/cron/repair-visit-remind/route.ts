@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/lib/notification/review-request';
+import { errMsg } from '@/lib/utils/err';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
 const GITHUB_PAGES = 'page.mamoru.kr/projects/as'; // Make 시나리오가 https:// 추가
@@ -185,6 +186,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error('[cron/repair-visit-remind] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

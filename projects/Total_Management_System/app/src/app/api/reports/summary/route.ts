@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/reports/summary — 매출/매입/VAT 기간별 집계
@@ -474,7 +475,7 @@ export async function GET(req: NextRequest) {
       details: { sales, purchases, repairs: repairSales, deliveries },
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 

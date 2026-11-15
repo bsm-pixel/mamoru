@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getConnectionStatus } from '@/lib/google/oauth';
 import { probeTasks } from '@/lib/google/tasks-client';
+import { errMsg } from '@/lib/utils/err';
 
 export async function GET() {
   const supabase = await createServerSupabaseClient();
@@ -29,6 +30,6 @@ export async function GET() {
     }
     return NextResponse.json({ ok: true, data: { ...status, tasks_api_disabled: tasksApiDisabled } });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

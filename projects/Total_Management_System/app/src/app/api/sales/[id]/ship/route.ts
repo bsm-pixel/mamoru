@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment, cancelShipment } from '@/lib/lotte/alps-client';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/sales/[id]/ship — 판매 건 송장 등록
@@ -122,7 +123,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, invoiceNumber, shipAddress: useOther ? fullAddr : null });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -195,6 +196,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, warning, mergedCleared: freed?.length || 0, unmerged: isMergedChild, repairsCleared });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

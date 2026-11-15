@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/reviews/related-activity
  *  query: ?phone=xxx&excludeSource=consultation|repair|sale&excludeId=xxx
@@ -98,6 +99,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ items: items.slice(0, 10) });
   } catch (err) {
     console.error('[reviews/related-activity] Error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

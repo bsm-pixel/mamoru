@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isAdjustReturn } from '@/lib/returns/transitions';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/returns/[id]/ship — 교환 출고 송장 발행 (새 제품 1개만, 매장→고객 정방향)
  *  빠른송장(manual-invoices)과 동일한 롯데 발행 패턴. 판매/주문/아임웹 부수효과 0.
@@ -118,6 +119,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ success: true, return: data });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

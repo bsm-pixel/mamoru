@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/manual-invoices — 빠른 송장(별도 송장) 발급
  *  body: { customer_id: string; goods_name: string; delivery_message?: string }
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, invoice: inserted });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -146,6 +147,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ invoices: data ?? [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

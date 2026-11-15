@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/customers/[id] — 고객 상세 (판매내역 포함) */
 export async function GET(
@@ -15,10 +16,10 @@ export async function GET(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    const [customerRes, salesRes, contractsRes, consultationsRes, repairsRes, ordersRes] = await Promise.all([
+    const [customerRes, salesRes, contractsRes, consultationsRes, repairsRes, ordersRes, salesAllRes] = await Promise.all([
       db.from('customers').select('*').eq('id', id).single(),
       db.from('offline_sales')
-        .select('id, sale_number, sale_date, total_amount, paid_amount, payment_method, payment_status')
+        .select('id, sale_number, sale_date, total_amount, paid_amount, payment_method, payment_status, cancelled_at, returned_at')
         .eq('customer_id', id)
         .order('sale_date', { ascending: false })
         .limit(20),
@@ -43,13 +44,20 @@ export async function GET(
         .eq('customer_id', id)
         .order('ordered_at', { ascending: false })
         .limit(20),
+      // 2026-11-15 합계 전용 — 위 목록은 최근 20건만이라 합계에 쓰면 21건째부터 빠진다. 취소·반품 판정 칸 포함
+      db.from('offline_sales')
+        .select('paid_amount, sale_date, cancelled_at, returned_at')
+        .eq('customer_id', id),
     ]);
 
     if (customerRes.error) throw customerRes.error;
 
     // 판매 합계 계산
-    const sales = (salesRes.data || []) as Array<{ paid_amount: number; sale_date: string; cancelled_at?: string }>;
-    const activeSales = sales.filter((s) => !s.cancelled_at);
+    //   2026-11-15 취소한 판매가 「판매 N건 · 매출」에 그대로 세던 문제 — 조회에 cancelled_at 이 빠져 걸러지지 않았다.
+    //   취소·반품 건 제외(대시보드 use-dashboard-stats 와 같은 기준). 합계는 전체 판매(salesAllRes)로 계산
+    const sales = (salesRes.data || []) as Array<{ paid_amount: number; sale_date: string; cancelled_at?: string | null; returned_at?: string | null }>;
+    const allSales = (salesAllRes.data || []) as Array<{ paid_amount: number; sale_date: string; cancelled_at?: string | null; returned_at?: string | null }>;
+    const activeSales = allSales.filter((s) => !s.cancelled_at && !s.returned_at);
     const totalSalesAmount = activeSales.reduce((s, r) => s + (r.paid_amount || 0), 0);
     const lastSaleDate = activeSales.length > 0
       ? activeSales.sort((a, b) => b.sale_date.localeCompare(a.sale_date))[0].sale_date
@@ -69,7 +77,7 @@ export async function GET(
       },
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -119,6 +127,6 @@ export async function PATCH(
 
     return NextResponse.json({ customer });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

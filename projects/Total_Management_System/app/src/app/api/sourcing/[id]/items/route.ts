@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/sourcing/[id]/items — 발주에 품목 1건 추가 (sticker_no 자동 채번) */
 export async function POST(
@@ -51,6 +52,6 @@ export async function POST(
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

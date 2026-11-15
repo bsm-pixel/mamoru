@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMissingNoticeColumn } from '@/lib/event/campaign-notify';
+import { errMsg } from '@/lib/utils/err';
 
 /** PATCH /api/campaigns/[id] — 캠페인 수정 (이름/유형/상태/할인규칙) */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -35,6 +36,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

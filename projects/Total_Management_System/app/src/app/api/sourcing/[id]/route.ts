@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/sourcing/[id] — 발주 + 품목 (정렬순) */
 export async function GET(
@@ -37,7 +38,7 @@ export async function GET(
 
     return NextResponse.json({ po: poRes.data, items: itemsWithLinked });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -65,7 +66,7 @@ export async function PATCH(
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -87,6 +88,6 @@ export async function DELETE(
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

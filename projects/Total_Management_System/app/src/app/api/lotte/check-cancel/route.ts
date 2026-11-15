@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/lotte/check-cancel — ALPS 추적으로 취소 여부 확인 후 자동 전환 */
 export async function POST(request: NextRequest) {
@@ -44,6 +45,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ cancelled: false, state: track.state });
   } catch (err) {
     console.error('[check-cancel] 오류:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

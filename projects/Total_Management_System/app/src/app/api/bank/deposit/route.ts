@@ -4,6 +4,7 @@ import { parseWooriDeposit, normalizeName } from '@/lib/bank/woori-deposit';
 import { sendRepairPaymentConfirmed } from '@/lib/repair/payment-notify';
 import { sendPushToAll } from '@/lib/firebase/send-push';
 import { formatKRW } from '@/lib/utils/format';
+import { errMsg } from '@/lib/utils/err';
 
 /** 자동 입금확인 대상 상태 = 「입고 & 비용안내」(cost_notified) 이후 (payment_confirmed 는 레거시) */
 const POST_COST_STATUSES = new Set([
@@ -143,6 +144,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ outcome: 'unmatched' });
   } catch (err) {
     console.error('[bank/deposit] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

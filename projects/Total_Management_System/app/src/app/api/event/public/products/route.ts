@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { stockLabel } from '@/lib/event/options';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -56,6 +57,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, items }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error('[event/public/products] 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

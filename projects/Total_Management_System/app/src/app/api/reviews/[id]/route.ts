@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { isReviewType, isAllowedReviewSubtype } from '@/lib/reviews/consult-subtype';
+import { errMsg } from '@/lib/utils/err';
 
 /** 수정 가능한 필드 목록 */
 const EDITABLE_FIELDS = ['name', 'stars', 'content', 'photo_urls', 'type', 'subtype', 'product', 'created_at'] as const;
@@ -90,7 +91,7 @@ export async function PATCH(
     return NextResponse.json(data);
   } catch (err) {
     console.error('[reviews] 수정 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -113,6 +114,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[reviews] 삭제 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

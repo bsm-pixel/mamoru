@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/contracts — 계약서 목록 */
 export async function GET(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ contracts: data || [], total: count || 0 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -127,6 +128,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ contract: created, contractNumber });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 리뷰 이벤트 관리 (인증 필요, TMS 관리자용).
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ config: config || null, reviews: reviews || [] });
   } catch (err) {
     console.error('[reviews/event] GET 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -124,6 +125,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, saved: winners.length });
   } catch (err) {
     console.error('[reviews/event] POST 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

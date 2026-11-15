@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { normalizeChecks } from '@/lib/repair/wound-catalog';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/repair/[id]/inspect — 검수 데이터 저장 (가위별) */
 export async function POST(
@@ -67,7 +68,7 @@ export async function POST(
     return NextResponse.json({ inspections: data });
   } catch (err) {
     console.error('[repair] 검수 저장 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -107,6 +108,6 @@ export async function PUT(
     return NextResponse.json(data);
   } catch (err) {
     console.error('[repair] 검수 수정 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

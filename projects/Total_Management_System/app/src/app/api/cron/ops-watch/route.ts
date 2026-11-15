@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { runOpsWatch } from '@/lib/ops/watch';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/cron/ops-watch — 10분마다 (2026-10-06)
@@ -25,6 +26,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[cron/ops-watch] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

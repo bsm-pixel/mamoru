@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -162,7 +163,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('[reviews/public] 조회 실패:', err);
     return NextResponse.json(
-      { error: String(err) },
+      { error: errMsg(err) },
       { status: 500, headers: CORS_HEADERS }
     );
   }

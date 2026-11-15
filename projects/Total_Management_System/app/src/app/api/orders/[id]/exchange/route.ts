@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { insertReturn } from '@/lib/returns/insert-return';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/orders/[id]/exchange — 아임웹 주문 제품 교환 (매출/카드 불변, 상품·재고만 스왑)
@@ -206,6 +207,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ ok: true, summary, returns: retLabels, newItems: newLabels, shipMethod });
   } catch (err) {
     console.error('[orders/exchange]', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { runExpenseMailScan } from '@/lib/expenses/mail-scan';
 import { fillRecurring, thisMonthKst } from '@/lib/expenses/recurring';
 import { archivePendingReceipts } from '@/lib/expenses/receipt-archive';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/cron/expense-mail — 매일 08시(KST) (2026-10-29)
@@ -28,6 +29,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ...result, recurring, receipts });
   } catch (err) {
     console.error('[cron/expense-mail] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

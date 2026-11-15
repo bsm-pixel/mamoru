@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/repair/[id]/related-shipments
@@ -78,6 +79,6 @@ export async function GET(
     });
   } catch (err) {
     console.error('[related-shipments] 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

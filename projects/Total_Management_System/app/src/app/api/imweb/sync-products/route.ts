@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { syncProducts } from '@/lib/imweb/product-sync';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/imweb/sync-products — 아임웹 상품 수동 동기화 */
 export async function POST(req: NextRequest) {
@@ -13,6 +14,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

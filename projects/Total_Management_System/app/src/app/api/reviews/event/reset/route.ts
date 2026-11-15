@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { inspectReset, performReset } from '@/lib/reviews/event-reset';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 리뷰 이벤트 추첨 초기화 (2026-10-02) — 설정 > 시스템 「리뷰 추첨 초기화」
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
     const db = createServiceClient() as any;
     return NextResponse.json(await inspectReset(db, month));
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -52,6 +53,6 @@ export async function POST(req: NextRequest) {
     if (result.blocked) return NextResponse.json({ error: result.blocked }, { status: 409 });
     return NextResponse.json(result);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

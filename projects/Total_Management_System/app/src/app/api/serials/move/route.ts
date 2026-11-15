@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/serials/move — 창고 간 시리얼 이동 */
 export async function POST(req: NextRequest) {
@@ -82,6 +83,6 @@ export async function POST(req: NextRequest) {
     // from_zone === 'raw' → 보관에서 시리얼 창고로 이동은 /api/serials/batch에서 처리
     return NextResponse.json({ error: '보관→시리얼 창고 이동은 시리얼 생성 API를 사용하세요' }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

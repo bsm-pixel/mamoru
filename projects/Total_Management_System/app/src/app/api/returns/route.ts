@@ -5,6 +5,7 @@ import { insertReturn } from '@/lib/returns/insert-return';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { toLocalDateString } from '@/lib/utils/format';
 import { returnTypeLabel, isCourierPickup, isAdjustReturn } from '@/lib/returns/transitions';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/returns?status=&search= — 반품·교환수거 목록 */
 export async function GET(req: NextRequest) {
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ returns: data || [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -97,6 +98,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ return: created });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/analytics/product-lifecycle — 제품 수명주기 분석
  *  시리얼 판매일 → 동일 고객 복원수리 접수일 간격 분석
@@ -107,6 +108,6 @@ export async function GET() {
       by_product: summary,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { cancelShipment } from '@/lib/lotte/alps-client';
+import { errMsg } from '@/lib/utils/err';
 
 /** DELETE /api/manual-invoices/[id] — 빠른 송장 취소 (soft delete + ALPS 취소 시도) */
 export async function DELETE(
@@ -55,6 +56,6 @@ export async function DELETE(
       warning: alpsFailed ? `ALPS 취소 실패: ${cancelResult.error}. DB는 취소 처리되었지만 ALPS에서 직접 추가 확인이 필요할 수 있습니다.` : undefined,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

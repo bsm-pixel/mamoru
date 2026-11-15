@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 재고판매(LS) 분류 목록 — 2026-07-21
@@ -28,6 +29,6 @@ export async function GET() {
     return NextResponse.json({ categories: [...set].sort((a, b) => a.localeCompare(b, 'ko')) });
   } catch (err) {
     console.error('[stock-sale/categories] 실패:', err);
-    return NextResponse.json({ categories: [], error: String(err) }, { status: 500 });
+    return NextResponse.json({ categories: [], error: errMsg(err) }, { status: 500 });
   }
 }

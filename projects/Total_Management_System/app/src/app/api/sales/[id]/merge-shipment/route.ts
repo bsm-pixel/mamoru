@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { COURIER_LOTTE, isAlpsTrackable } from '@/lib/shipping/couriers';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 판매 합포장 (162, 2026-10-14) — 납품 합포장(158)과 같은 규칙
@@ -89,7 +90,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ mergedInto, mergedChildren: children || [], candidates });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -135,6 +136,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true, mergedInto: target.sale_number, targetName: target.customer_name, invoiceNumber: target.invoice_number });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

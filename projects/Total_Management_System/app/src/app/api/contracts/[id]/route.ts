@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * DELETE /api/contracts/[id] — 계약서 영구 삭제
@@ -74,6 +75,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       contract_number: contract.contract_number,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

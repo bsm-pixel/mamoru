@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/reviews — 전체 리뷰 목록 (인증 필요, TMS 관리용) */
 export async function GET(req: NextRequest) {
@@ -26,6 +27,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(data);
   } catch (err) {
     console.error('[reviews] 목록 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

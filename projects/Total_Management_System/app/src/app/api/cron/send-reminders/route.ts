@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { errMsg } from '@/lib/utils/err';
 
 const CRON_SECRET = process.env.CRON_SECRET || 'mamoru-tms-cron-2026';
 
@@ -149,6 +150,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error('[cron/send-reminders] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

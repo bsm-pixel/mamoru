@@ -9,6 +9,7 @@ import { PICKUP_COURIER, PICKUP_IN_PERSON } from '@/lib/returns/transitions';
 import { applyDeliveryReturn, isReturnableDeliveryItem, summarizeReturnItems, type DeliveryReturnItem } from '@/lib/deliveries/apply-return';
 import { toLocalDateString } from '@/lib/utils/format';
 import { bookReturnPickupFor } from '@/lib/returns/book-pickup';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -79,7 +80,7 @@ export async function GET(
       mergeCandidates,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -483,6 +484,6 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

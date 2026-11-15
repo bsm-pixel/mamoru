@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { displayWinnerName, maskPhoneEvent } from '@/lib/reviews/mask';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/reviews/event-public
@@ -107,6 +108,6 @@ export async function GET() {
     return NextResponse.json({ current, past }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error('[reviews/event-public] 조회 실패:', err);
-    return NextResponse.json({ current: null, past: [], error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ current: null, past: [], error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

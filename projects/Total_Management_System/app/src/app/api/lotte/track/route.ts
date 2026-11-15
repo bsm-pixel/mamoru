@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/lotte/track?invNo=xxx — 배송 조회 */
 export async function GET(request: NextRequest) {
@@ -14,6 +15,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[lotte/track] 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/events?status=…&kind=event|stock_sale
  *  kind 기본값 'event' — 재고판매(stock_sale)와 화면을 분리한다 (117) */
@@ -22,6 +23,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, events: data || [] });
   } catch (err) {
     console.error('[events GET] 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

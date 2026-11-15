@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/dashboard/todos — 할일 목록 (최신순) */
 export async function GET() {
@@ -17,7 +18,7 @@ export async function GET() {
     if (error) throw error;
     return NextResponse.json({ todos: data || [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ todo: data });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -60,6 +61,6 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

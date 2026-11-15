@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** KST 기준 YYYYMMDD (Vercel UTC 보정) */
 function kstYmd(): string {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ orders });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -104,6 +105,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id: po.id, po_number }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

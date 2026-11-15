@@ -6,6 +6,7 @@ import {
   type ShipmentRow,
 } from '@/lib/reviews/event-shipments';
 import { COURIER_DIRECT, isDirectHandover } from '@/lib/shipping/couriers';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 리뷰 이벤트 당첨자 배송 — 관리 API (2026-10-02, 마이그 156)
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ items });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -164,6 +165,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'unknown action' }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/push/subscribe — FCM 토큰 등록 (기기당 1개)
@@ -83,6 +84,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, mode: 'legacy' });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

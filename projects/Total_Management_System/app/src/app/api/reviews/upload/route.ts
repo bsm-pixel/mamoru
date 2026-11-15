@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[reviews/upload] 업로드 실패:', err);
     return NextResponse.json(
-      { error: String(err) },
+      { error: errMsg(err) },
       { status: 500, headers: CORS_HEADERS }
     );
   }

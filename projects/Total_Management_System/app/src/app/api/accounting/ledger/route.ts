@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { buildLedger } from '@/lib/accounting/ledger';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/accounting/ledger?year=2026 — 종소세 간편장부 엑셀 (2026-10-29)
@@ -82,6 +83,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

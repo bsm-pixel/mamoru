@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 반품창고 검수 후 처리 (2026-10-14)
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       return_stock: productRes.error ? 0 : (productRes.data?.return_stock || 0),
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -139,6 +140,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, action, label, imweb_sync: imwebSync });
   } catch (err) {
     console.error('[return-release] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

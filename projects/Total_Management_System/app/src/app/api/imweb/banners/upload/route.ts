@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
@@ -87,6 +88,6 @@ export async function POST(req: NextRequest) {
       path,
     });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

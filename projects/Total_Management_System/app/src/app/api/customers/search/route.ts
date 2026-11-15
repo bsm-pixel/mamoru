@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/customers/search?q=홍 — 고객 자동완성 검색 */
 export async function GET(req: NextRequest) {
@@ -38,6 +39,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ customers: data || [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

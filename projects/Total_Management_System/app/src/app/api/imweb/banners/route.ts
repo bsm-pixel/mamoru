@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 export async function GET() {
   const supabase = await createServerSupabaseClient();
@@ -129,6 +130,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

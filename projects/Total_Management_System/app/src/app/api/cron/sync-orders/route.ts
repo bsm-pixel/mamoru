@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { syncOrders } from '@/lib/imweb/sync';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/cron/sync-orders — 자동 동기화 (Vercel Cron) */
 export async function GET(request: NextRequest) {
@@ -14,6 +15,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[cron] 동기화 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

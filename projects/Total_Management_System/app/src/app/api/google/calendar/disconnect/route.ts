@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { disconnectCalendar } from '@/lib/google/oauth';
+import { errMsg } from '@/lib/utils/err';
 
 export async function POST() {
   const supabase = await createServerSupabaseClient();
@@ -20,6 +21,6 @@ export async function POST() {
     await disconnectCalendar();
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

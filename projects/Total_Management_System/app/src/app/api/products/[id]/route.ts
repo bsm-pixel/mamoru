@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/products/[id] — 제품 상세 */
 export async function GET(
@@ -36,7 +37,7 @@ export async function GET(
 
     return NextResponse.json({ product, supplier });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -55,30 +56,41 @@ export async function DELETE(
     const db = supabase as any;
 
     // 연관 데이터 체크
-    const [serialsRes, saleItemsRes, contractItemsRes] = await Promise.all([
-      db.from('product_serials').select('id', { count: 'exact', head: true }).eq('product_id', id),
-      db.from('offline_sale_items').select('id', { count: 'exact', head: true }).eq('product_id', id),
-      db.from('contract_items').select('id', { count: 'exact', head: true }).eq('product_id', id),
+    //   2026-11-15 재고 조정·발주·납품·주문 이력도 검사 — 전엔 이 넷을 안 봐서 DB가 거부(500)하고 화면에 [object Object] 가 떴다
+    const cnt = (t: string) => db.from(t).select('id', { count: 'exact', head: true }).eq('product_id', id);
+    const [serialsRes, saleItemsRes, contractItemsRes, adjRes, poItemsRes, dlItemsRes, orderItemsRes] = await Promise.all([
+      cnt('product_serials'), cnt('offline_sale_items'), cnt('contract_items'),
+      cnt('stock_adjustments'), cnt('purchase_order_items'), cnt('delivery_items'), cnt('order_items'),
     ]);
 
     const linked: string[] = [];
     if ((serialsRes.count || 0) > 0) linked.push(`시리얼 ${serialsRes.count}개`);
     if ((saleItemsRes.count || 0) > 0) linked.push(`판매 ${saleItemsRes.count}건`);
     if ((contractItemsRes.count || 0) > 0) linked.push(`계약서 ${contractItemsRes.count}건`);
+    if ((adjRes.count || 0) > 0) linked.push(`재고 조정 ${adjRes.count}건`);
+    if ((poItemsRes.count || 0) > 0) linked.push(`발주 ${poItemsRes.count}건`);
+    if ((dlItemsRes.count || 0) > 0) linked.push(`납품 ${dlItemsRes.count}건`);
+    if ((orderItemsRes.count || 0) > 0) linked.push(`주문 ${orderItemsRes.count}건`);
 
     if (linked.length > 0) {
       return NextResponse.json({
-        error: `연결된 데이터가 있어 삭제할 수 없습니다 (${linked.join(', ')}). 비활성화를 사용하세요.`,
+        error: `이력이 있는 제품은 삭제할 수 없습니다 (${linked.join(', ')}). 대신 [비활성]으로 바꾸면 목록·판매 입력에서 숨겨집니다.`,
       }, { status: 400 });
     }
 
     // 삭제
     const { error } = await db.from('products').delete().eq('id', id);
-    if (error) throw error;
+    if (error) {
+      // 위 검사에 없는 표가 이 제품을 가리키는 경우(DB 참조 제약 23503) — 사람 말로 안내
+      if (error.code === '23503') {
+        return NextResponse.json({ error: '다른 기록이 이 제품을 쓰고 있어 삭제할 수 없습니다. 대신 [비활성]으로 바꿔 주세요.' }, { status: 400 });
+      }
+      throw error;
+    }
 
     return NextResponse.json({ deleted: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 

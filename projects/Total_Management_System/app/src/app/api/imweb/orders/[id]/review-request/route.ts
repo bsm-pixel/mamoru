@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/imweb/orders/[id]/review-request — 수동 리뷰 요청 알림톡 발송 */
 export async function POST(
@@ -84,6 +85,6 @@ export async function POST(
     return NextResponse.json({ success: true, message: '리뷰 요청 알림톡이 발송되었습니다' });
   } catch (err) {
     console.error('[review-request] 발송 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

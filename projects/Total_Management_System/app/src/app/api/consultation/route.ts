@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/consultation — 상담 목록 (필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ consultations: data || [], total: count || 0 });
   } catch (err) {
     console.error('[consultation] 목록 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -86,6 +87,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
     console.error('[consultation] 생성 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

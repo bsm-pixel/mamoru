@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/imweb/oauth/callback — 아임웹 OpenAPI OAuth2 콜백
@@ -63,6 +64,6 @@ export async function GET(req: NextRequest) {
     // 성공 페이지로 리다이렉트
     return NextResponse.redirect(new URL('/settings?imweb_oauth=success', req.nextUrl.origin));
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

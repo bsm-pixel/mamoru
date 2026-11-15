@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { fillRecurring, monthsBetween, thisMonthKst } from '@/lib/expenses/recurring';
 import { toProof } from '@/lib/expenses/proof';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/expenses/recurring — 고정 경비 목록 */
 export async function GET() {
@@ -20,7 +21,7 @@ export async function GET() {
     if (error) throw error;
     return NextResponse.json({ items: data || [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -74,6 +75,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: '알 수 없는 action' }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

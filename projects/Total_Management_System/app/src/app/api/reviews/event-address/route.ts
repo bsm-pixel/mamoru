@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { findPrefillAddress, upsertCustomerAddress, digits, type ShipmentRow } from '@/lib/reviews/event-shipments';
 import { isDirectHandover } from '@/lib/shipping/couriers';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 리뷰 이벤트 당첨자 배송지 입력 — 고객 공개 API (2026-10-02, 마이그 156)
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
       shipped: !!row.shipped_at,
     }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
@@ -133,6 +134,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

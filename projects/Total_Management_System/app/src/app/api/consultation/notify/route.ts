@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/consultation/notify — 알림톡 발송 트리거 */
 export async function POST(req: NextRequest) {
@@ -62,6 +63,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('[notify] 알림톡 발송 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

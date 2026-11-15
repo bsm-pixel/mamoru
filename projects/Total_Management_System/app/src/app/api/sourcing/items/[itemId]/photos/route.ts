@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const BUCKET = 'repair-photos'; // 기존 공개 버킷 재사용 (sourcing/ 경로 분리)
 const MAX_SIZE = 10 * 1024 * 1024;
@@ -50,7 +51,7 @@ export async function POST(
 
     return NextResponse.json({ url, inbound_photos: next }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -88,6 +89,6 @@ export async function DELETE(
 
     return NextResponse.json({ inbound_photos: next });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { computeNextSku } from '@/lib/product/next-sku';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/products/[id]/renumber-sku
@@ -73,6 +74,6 @@ export async function POST(
 
     return NextResponse.json({ ok: true, sku: nextSku, oldSku, prefix });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

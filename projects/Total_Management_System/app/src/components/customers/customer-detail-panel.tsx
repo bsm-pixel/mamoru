@@ -100,7 +100,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
       amount: s.paid_amount,
       icon: ShoppingBag,
       color: 'text-blue-600 bg-blue-50',
-      cancelled: false,
+      cancelled: !!s.cancelled_at,   // 2026-11-15 취소한 판매는 이력에서도 '취소됨'으로
     })),
     ...contracts.map((ct) => ({
       type: 'contract' as const,

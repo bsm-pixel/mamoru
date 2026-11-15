@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMobileLabel } from '@/lib/firebase/push-fallback';
 import { sendOwnerAlert } from '@/lib/notification/owner-alert';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/push/lost — 서비스워커가 "푸시 구독이 교체돼 이 기기 알림이 끊겼다"고 알림 (2026-09-29)
@@ -39,6 +40,6 @@ export async function POST(req: NextRequest) {
     );
     return NextResponse.json({ ok: r.ok });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

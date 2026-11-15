@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/tax-invoices — 세금계산서 목록 */
 export async function GET(req: NextRequest) {
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       summary: { salesTotal, purchaseTotal, salesTax, purchaseTax, netTax: salesTax - purchaseTax, count: items.length },
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -107,7 +108,7 @@ export async function DELETE(req: NextRequest) {
     await (supabase as any).from('tax_invoices').delete().eq('id', id);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -139,6 +140,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { sendNotification } from '@/lib/notification/make-webhook';
 import type { ReturnStatus } from '@/lib/supabase/types';
 import { returnTypeLabel, isCourierPickup, isAdjustReturn } from '@/lib/returns/transitions';
 import { applyDeliveryReturn } from '@/lib/deliveries/apply-return';
+import { errMsg } from '@/lib/utils/err';
 
 /** 상태 → 채울 타임스탬프 컬럼 */
 const STATUS_TS: Partial<Record<ReturnStatus, string>> = {
@@ -101,6 +102,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     return NextResponse.json({ return: data });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/
 import { runExpenseMailScan } from '@/lib/expenses/mail-scan';
 import { toProof } from '@/lib/expenses/proof';
 import { archivePendingReceipts } from '@/lib/expenses/receipt-archive';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * 메일·카드 내역에서 찾은 경비 — 확인 대기함 (2026-10-29, 마이그 166)
@@ -143,7 +144,7 @@ export async function GET() {
     const knownCount = items.filter((i) => i.vendor && known.has(i.vendor) && i.amount && !i.dup_hint).length;
     return NextResponse.json({ items, knownCount });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -208,6 +209,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'unknown action' }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

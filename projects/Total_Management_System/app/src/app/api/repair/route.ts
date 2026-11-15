@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/repair — 복원수리 목록 (필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ repairs: data || [], total: count || 0 });
   } catch (err) {
     console.error('[repair] 목록 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -106,6 +107,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
     console.error('[repair] 생성 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

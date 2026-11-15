@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateImwebStock } from '@/lib/imweb/client';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/inventory/adjust — 재고 수동 조정
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
       imweb_sync: imwebResult,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -134,6 +135,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ adjustments: data || [] });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

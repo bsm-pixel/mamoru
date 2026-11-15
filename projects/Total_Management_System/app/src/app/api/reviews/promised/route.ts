@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/reviews/promised — 후기 요청 대상인데 아직 미작성인 고객 리스트
  *  153(2026-09-16): 자동발송이 기본 ON 이라 "약속 받은 고객"이 아니라 "해제하지 않은 전체"가 뜬다
@@ -76,6 +77,6 @@ export async function GET() {
     return NextResponse.json({ items });
   } catch (err) {
     console.error('[reviews/promised] Error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

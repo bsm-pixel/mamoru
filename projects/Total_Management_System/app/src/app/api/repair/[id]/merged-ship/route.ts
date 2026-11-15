@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/repair/[id]/merged-ship
@@ -157,6 +158,6 @@ export async function POST(
     return NextResponse.json({ ok: true, repair: updated, note });
   } catch (err) {
     console.error('[merged-ship] 처리 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

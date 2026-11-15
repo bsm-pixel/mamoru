@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/consultation/assign — 딜러 배정 */
 export async function POST(req: NextRequest) {
@@ -53,6 +54,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data);
   } catch (err) {
     console.error('[consultation] 딜러 배정 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

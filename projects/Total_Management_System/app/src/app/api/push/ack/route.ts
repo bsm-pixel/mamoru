@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isMobileLabel } from '@/lib/firebase/push-fallback';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/push/ack — 서비스워커의 "알림 받았음" 신호 (2026-09-29, 마이그 155)
@@ -46,6 +47,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, mobile: isMobileLabel(label) });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

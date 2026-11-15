@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/consultation/delay — 출장 지연 안내 (직접 알림톡 발송) */
 export async function POST(req: NextRequest) {
@@ -92,6 +93,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('[delay] 출장 지연 안내 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { toProof } from '@/lib/expenses/proof';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/expenses — 경비 목록 (기간 필터) */
 export async function GET(req: NextRequest) {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ expenses: data || [], total, byCategory, byKind, fixedMonthly, fixedMonths: months });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -108,7 +109,7 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -139,6 +140,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

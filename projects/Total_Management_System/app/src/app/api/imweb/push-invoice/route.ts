@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { updateInvoice, prepareImwebDelivery } from '@/lib/imweb/client';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/imweb/push-invoice — 아임웹에 송장번호 재전송 */
 export async function POST(request: NextRequest) {
@@ -33,6 +34,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[imweb/push-invoice] 오류:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { convertEventToSale } from '@/lib/event/convert-to-sale';
 import { getEventCampaignNotifyVars, getEventCampaignConfig } from '@/lib/event/campaign-notify';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/events/[id] */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (error) throw error;
     return NextResponse.json({ ok: true, event: data });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -138,7 +139,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ ok: false, error: '알 수 없는 action' }, { status: 400 });
   } catch (err) {
     console.error('[events PATCH] 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -160,6 +161,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[events DELETE] 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

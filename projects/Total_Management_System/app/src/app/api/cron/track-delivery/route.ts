@@ -10,6 +10,7 @@ import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { shipImwebOrder } from '@/lib/imweb/client';
 import { claimSaleForCombined, sendCombinedShipped } from '@/lib/notification/combined-shipped';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/cron/track-delivery
@@ -790,6 +791,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     console.error('[cron/track-delivery] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

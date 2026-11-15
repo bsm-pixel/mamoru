@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { geocodeForConsultation } from '@/lib/kakao/geocode';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/consultation/backfill-coords — 좌표 없는 출장 건에 좌표 채우기
  *  - 회귀 방지: lib/kakao/geocode 공통 helper 사용 (3단계 fallback)
@@ -51,12 +52,12 @@ export async function POST() {
         // Rate limit 방지: 100ms 딜레이
         await new Promise(r => setTimeout(r, 100));
       } catch (err) {
-        results.push({ id: row.id, address: road, error: String(err) });
+        results.push({ id: row.id, address: road, error: errMsg(err) });
       }
     }
 
     return NextResponse.json({ updated, total: rows.length, results });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

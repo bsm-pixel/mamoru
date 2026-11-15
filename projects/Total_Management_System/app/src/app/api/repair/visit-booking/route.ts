@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { createRepairIntake, visitDurationMin } from '@/lib/repair/intake';
 import { getVisitDay, buildSlots, conflictsAt, kstNow, toMinutes } from '@/lib/repair/visit-schedule';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * TMS 「방문 예약 등록」 — 전화로 "몇 시쯤 갈게요" 한 고객을 사장님이 직접 등록 (2026-10-06)
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
       slots: buildSlots(day, date, blockMin),
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -112,6 +113,6 @@ export async function POST(req: NextRequest) {
       warnings,
     }, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

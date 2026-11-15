@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { computeDeliveryTotals } from '@/lib/deliveries/totals';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/deliveries — 납품 목록 */
 export async function GET(req: NextRequest) {
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ deliveries: data || [], total: count || 0 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -179,6 +180,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ delivery, dlNumber });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

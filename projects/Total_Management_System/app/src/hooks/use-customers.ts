@@ -78,6 +78,8 @@ export function useCustomer(id: string) {
           paid_amount: number;
           payment_method: string;
           payment_status: string;
+          cancelled_at?: string | null;
+          returned_at?: string | null;
         }>;
         contracts: Array<{
           id: string;

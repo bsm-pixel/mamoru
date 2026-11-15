@@ -5,6 +5,7 @@ import { recalcOutstanding } from '@/lib/outstanding';
 import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 import { createFieldRepairFromSale } from '@/lib/repair/intake';
 import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ sales: data || [], total: count || 0 });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 

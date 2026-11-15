@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { computeNextSku } from '@/lib/product/next-sku';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/products/next-sku?category=BL
@@ -24,6 +25,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ sku: nextSku, category, number });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

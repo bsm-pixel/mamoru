@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { runFallbackSweep } from '@/lib/firebase/push-fallback';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/cron/push-fallback — 1분마다 (2026-09-29, 마이그 155)
@@ -21,6 +22,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error('[cron/push-fallback] 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

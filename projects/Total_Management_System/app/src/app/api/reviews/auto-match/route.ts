@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/reviews/auto-match
  *  body: { source: 'consultation' | 'repair' | 'sale', id: string }
@@ -87,6 +88,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('[reviews/auto-match] Error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

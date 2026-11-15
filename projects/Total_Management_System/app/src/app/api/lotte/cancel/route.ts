@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/lotte/cancel — 소프트 취소 (ALPS 직접 취소 필요) */
 export async function POST(request: NextRequest) {
@@ -28,6 +29,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error('[lotte/cancel] 취소 처리 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

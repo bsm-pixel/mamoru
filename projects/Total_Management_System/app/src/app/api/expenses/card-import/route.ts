@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { parseCardSheet, importCardRows } from '@/lib/expenses/card-import';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/expenses/card-import (multipart: file) — 카드 이용내역 엑셀 → 경비 「확인 대기」 (2026-10-29)
@@ -21,6 +22,6 @@ export async function POST(req: NextRequest) {
     const result = await importCardRows(createServiceClient() as any, parsed.rows, file.name);
     return NextResponse.json({ ok: true, rows: parsed.rows.length, cancelled: parsed.cancelled, ...result });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

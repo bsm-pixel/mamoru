@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/contracts/[id]/image — 계약서 이미지 업로드 */
 export async function POST(
@@ -52,6 +53,6 @@ export async function POST(
     return NextResponse.json({ imageUrl });
   } catch (err) {
     console.error('[contracts/image POST] error:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

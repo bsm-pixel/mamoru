@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { syncOrders } from '@/lib/imweb/sync';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/imweb/sync — 수동 주문 동기화 */
 export async function POST() {
@@ -17,7 +18,7 @@ export async function POST() {
   } catch (err) {
     console.error('[sync] 동기화 실패:', err);
     return NextResponse.json(
-      { error: String(err) },
+      { error: errMsg(err) },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { bookReturnPickupFor } from '@/lib/returns/book-pickup';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/returns/[id]/pickup — 롯데 반품 수거접수 (ustRtgSctCd='02', 고객집 → 마모루 회수)
  *  로직 SSOT = lib/returns/book-pickup.ts (납품 반품 접수와 공용, 2026-10-21 분리 — 동작 동일)
@@ -20,6 +21,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     if (r.warning) return NextResponse.json({ success: true, warning: r.warning, invoiceNumber: r.invoiceNumber });
     return NextResponse.json({ success: true, return: r.row });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { generateWorkSummary } from '@/lib/repair/inspection-text';
 import { DIAGRAM_FILE, normalizeChecks, woundLayerColors, woundLayers, woundLines, woundViews } from '@/lib/repair/wound-catalog';
+import { errMsg } from '@/lib/utils/err';
 
 /** CORS 헤더 — GitHub Pages에서 호출 허용 */
 const CORS_HEADERS = {
@@ -106,6 +107,6 @@ export async function GET(req: NextRequest) {
     }, { headers: CORS_HEADERS });
   } catch (err) {
     console.error('[repair/report] 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

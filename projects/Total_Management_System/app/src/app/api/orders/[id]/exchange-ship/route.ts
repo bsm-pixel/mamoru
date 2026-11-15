@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 import { sendNotification } from '@/lib/notification/make-webhook';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * POST /api/orders/[id]/exchange-ship — 교환 새 제품 발송 송장 발행 (롯데, 수령지 기준)
@@ -83,6 +84,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, invoiceNumber });
   } catch (err) {
     console.error('[orders/exchange-ship]', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

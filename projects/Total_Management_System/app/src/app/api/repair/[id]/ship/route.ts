@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getNextInvoice, bookShipment, cancelShipment } from '@/lib/lotte/alps-client';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/repair/[id]/ship — 송장 생성 (ALPS 직접 호출) */
 export async function POST(
@@ -152,6 +153,6 @@ export async function DELETE(
     });
   } catch (err) {
     console.error('[repair] 송장 취소 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { sendReviewRequestNotification, repairSubtypeFromProceedType } from '@/l
 import type { RepairStatus } from '@/lib/supabase/types';
 import { syncRepairToCalendar } from '@/lib/google/repair-calendar-sync';
 import { sendRepairPaymentConfirmed } from '@/lib/repair/payment-notify';
+import { errMsg } from '@/lib/utils/err';
 
 /** 상태→자동 알림톡 매핑 (payment_confirmed는 paid_at 플래그로 분리됨) */
 function getAutoNotifyTemplate(newStatus: string): NotifyTemplate | null {
@@ -55,7 +56,7 @@ export async function GET(
     });
   } catch (err) {
     console.error('[repair] 상세 조회 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -241,7 +242,7 @@ export async function PATCH(
     return NextResponse.json(data);
   } catch (err) {
     console.error('[repair] 업데이트 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -323,6 +324,6 @@ export async function DELETE(
     return NextResponse.json({ ok: true, deleted: repair.as_id, warning: alpsWarning });
   } catch (err) {
     console.error('[repair] 삭제 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

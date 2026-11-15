@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 /** 리뷰 ID 자동 채번: RV-YYYYMMDD-NNN */
 async function generateReviewId(
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
         if (error) throw error;
         results.push({ index: i, review_id: reviewId });
       } catch (err) {
-        results.push({ index: i, review_id: '', error: String(err) });
+        results.push({ index: i, review_id: '', error: errMsg(err) });
       }
     }
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success, failed, results });
   } catch (err) {
     console.error('[reviews/naver] 등록 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 

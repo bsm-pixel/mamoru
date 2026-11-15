@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { randomBytes } from 'crypto';
 import { nextSerialNumber, nextSerialBatch } from '@/lib/serial/next-serial';
+import { errMsg } from '@/lib/utils/err';
 
 /** verify_token 생성 — 12자리 hex */
 function generateVerifyToken(): string {
@@ -22,7 +23,7 @@ export async function GET() {
     const next = await nextSerialNumber(db);
     return NextResponse.json({ next_serial: next });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -128,6 +129,6 @@ export async function POST(req: NextRequest) {
       raw_stock_remaining: rawStock - count,
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

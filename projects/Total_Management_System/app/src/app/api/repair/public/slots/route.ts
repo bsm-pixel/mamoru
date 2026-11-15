@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getVisitDay, buildSlots } from '@/lib/repair/visit-schedule';
 import { visitDurationMin } from '@/lib/repair/intake';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     console.error('[repair/public/slots] 실패:', err);
     return NextResponse.json(
-      { ok: false, error: String(err) },
+      { ok: false, error: errMsg(err) },
       { status: 500, headers: CORS_HEADERS }
     );
   }

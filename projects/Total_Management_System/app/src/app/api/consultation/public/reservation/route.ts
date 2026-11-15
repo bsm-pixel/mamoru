@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -61,6 +62,6 @@ export async function GET(req: NextRequest) {
       },
     }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

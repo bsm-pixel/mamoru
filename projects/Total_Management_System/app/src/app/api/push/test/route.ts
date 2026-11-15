@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendPushToAll } from '@/lib/firebase/send-push';
+import { errMsg } from '@/lib/utils/err';
 
 type TestType =
   | 'generic'
@@ -116,6 +117,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

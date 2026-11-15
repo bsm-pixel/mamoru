@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendNotification } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
+import { errMsg } from '@/lib/utils/err';
 
 const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting'; // Make 시나리오가 https:// 추가
 
@@ -106,6 +107,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (err) {
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500, headers: CORS_HEADERS });
   }
 }

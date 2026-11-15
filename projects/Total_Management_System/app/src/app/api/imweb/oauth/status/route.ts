@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { getOpenApiConnectionStatus } from '@/lib/imweb/client';
+import { errMsg } from '@/lib/utils/err';
 
 /** GET /api/imweb/oauth/status — 아임웹 OpenAPI 연결 상태 진단 (재고 push 가능 여부) */
 export async function GET() {
@@ -12,6 +13,6 @@ export async function GET() {
     const status = await getOpenApiConnectionStatus();
     return NextResponse.json(status);
   } catch (err) {
-    return NextResponse.json({ connected: false, error: String(err) }, { status: 200 });
+    return NextResponse.json({ connected: false, error: errMsg(err) }, { status: 200 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB per file
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
 
         results.push({ name: file.name, url: urlData.publicUrl });
       } catch (err) {
-        results.push({ name: file.name, error: String(err) });
+        results.push({ name: file.name, error: errMsg(err) });
       }
     }
 
@@ -63,6 +64,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ uploaded, total: files.length, results });
   } catch (err) {
     console.error('[reviews/upload-bulk] 업로드 실패:', err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

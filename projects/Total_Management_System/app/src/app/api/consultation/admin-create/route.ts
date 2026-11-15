@@ -19,6 +19,7 @@ import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import crypto from 'crypto';
+import { errMsg } from '@/lib/utils/err';
 
 const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting';
 
@@ -204,6 +205,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, data: consultation });
   } catch (err) {
     console.error('[consultation/admin-create] 등록 실패:', err);
-    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
+    return NextResponse.json({ ok: false, error: errMsg(err) }, { status: 500 });
   }
 }

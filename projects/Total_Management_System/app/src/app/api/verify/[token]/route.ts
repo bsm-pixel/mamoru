@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { errMsg } from '@/lib/utils/err';
 
 // 공개 정품확인 — page.mamoru.kr(다른 도메인)에서 fetch 하므로 CORS 허용 필수.
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' } as const;
@@ -121,6 +122,6 @@ export async function GET(
       },
     });
   } catch (err) {
-    return jr({ valid: false, error: String(err) }, 500);
+    return jr({ valid: false, error: errMsg(err) }, 500);
   }
 }

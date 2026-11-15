@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { createExcelBuffer } from '@/lib/utils/excel';
+import { errMsg } from '@/lib/utils/err';
 
 /**
  * GET /api/reports/export — 매출/매입 엑셀 다운로드
@@ -158,6 +159,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }

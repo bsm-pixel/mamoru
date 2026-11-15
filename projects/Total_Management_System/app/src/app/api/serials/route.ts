@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { randomBytes } from 'crypto';
+import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/serials — 시리얼 단건 등록 */
 export async function POST(req: NextRequest) {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ serial: data });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
 
@@ -80,6 +81,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, updated: ids.length });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
 }
