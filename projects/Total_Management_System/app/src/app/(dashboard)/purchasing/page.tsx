@@ -21,6 +21,7 @@ import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useStatusCounts } from '@/hooks/use-status-counts';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -65,6 +66,9 @@ export default function PurchasingPage() {
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
+  // 탭 건수 — 「전체」는 취소를 뺀 수가 아니라 표 전체
+  const tabCounts = useStatusCounts('purchase_orders');
+  const tabCountOf = (v: string): number | null => !tabCounts.loaded ? null : v === '' ? tabCounts.total : (tabCounts.counts[v] || 0);
   const limit = 20;
 
   const isLg = useIsLg();
@@ -106,7 +110,7 @@ export default function PurchasingPage() {
           <>
             <StageGrid
               ariaLabel="발주 상태"
-              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: null }))}
+              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: tabCountOf(t.value) }))}
               active={statusFilter}
               onChange={(k) => { setStatusFilter(k); setPage(1); }}
             />
@@ -171,6 +175,7 @@ export default function PurchasingPage() {
               }`}
             >
               {tab.label}
+              {tabCountOf(tab.value) !== null && <span className="ml-1 tabular-nums opacity-70">{tabCountOf(tab.value)}</span>}
             </button>
           ))}
         </div>

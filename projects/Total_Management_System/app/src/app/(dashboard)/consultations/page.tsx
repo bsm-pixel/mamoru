@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import dynamic from 'next/dynamic';
 import { Topbar } from '@/components/layout/topbar';
-import { Button } from '@/components/ui/button';
 import { useConsultationSync, useConsultations } from '@/hooks/use-consultations';
 import { useConsultationDashboardStats } from '@/hooks/use-dashboard-stats';
 import { StoreVisitList, type StoreVisitTabKey } from '@/components/consultations/store-visit-list';
@@ -15,9 +14,8 @@ import { AllConsultationsList, ACTIVE_STATUSES } from '@/components/consultation
 import { ScheduleCalendar } from '@/components/consultations/schedule-calendar';
 import { ConsultationDetailPanel } from '@/components/consultations/consultation-detail-panel';
 import { SlidePanel } from '@/components/ui/slide-panel';
-import { RefreshCw, Store, Truck, MessageCircle, Inbox, Loader, CheckCircle, CalendarCheck, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
+import { RefreshCw, Store, Truck, MessageCircle, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
 import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
-import { StatCard } from '@/components/ui/stat-card';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -115,9 +113,9 @@ export default function ConsultationsPage() {
       <Topbar
         title="상담관리"
         count={needAction.all}
-        hideRefresh={!isLg}
-        action={!isLg && (
-          <button type="button" onClick={() => sync.mutate()} disabled={sync.isPending} aria-label="목록 새로고침"
+        hideRefresh
+        action={(
+          <button type="button" onClick={() => sync.mutate()} disabled={sync.isPending} aria-label="목록 새로고침" title="새로고침"
             className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition disabled:opacity-60">
             <RefreshCw size={16} className={`text-neutral-500 ${sync.isPending ? 'animate-spin' : ''}`} />
           </button>
@@ -127,36 +125,16 @@ export default function ConsultationsPage() {
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-4 overflow-x-hidden">
         {/* 1행: 요약 4카드 (상태 기반: 신규/조율중/확정/완료) + 새로고침 — PC 전용
             (모바일은 아래 종류·단계 버튼판이 같은 역할. 카드는 엉뚱한 탭으로 이동해 혼란만 줬다) */}
-        {isLg && <div className="grid grid-cols-12 gap-3">
-          <div className="col-span-12 lg:col-span-9 grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard label="신규" icon={Inbox} accent="blue"
-              value={stats?.newIntake || 0} primarySub="확인 필요"
-              onClick={() => setActiveTab('field_request')}
-            />
-            <StatCard label="조율중" icon={Loader} accent="amber"
-              value={stats?.inCoordination || 0} primarySub="일정 조율 필요"
-              onClick={() => setActiveTab('field_request')}
-            />
-            <StatCard label="확정" icon={CalendarCheck} accent="violet"
-              value={stats?.confirmed || 0} primarySub="방문 예정"
-              onClick={() => setActiveTab('all')}
-            />
-            <StatCard label="완료" icon={CheckCircle} accent="emerald"
-              value={stats?.completedMonth || 0} primarySub="이번달"
-              onClick={() => setActiveTab('store_visit')}
-            />
-          </div>
-          <div className="col-span-12 lg:col-span-3 flex items-stretch">
-            <button
-              onClick={() => sync.mutate()}
-              disabled={sync.isPending}
-              className="w-full rounded-2xl border border-stone-200 bg-white hover:bg-stone-50 transition flex items-center justify-center gap-2 text-xs font-semibold text-stone-700 disabled:opacity-60 px-3 py-3"
-            >
-              <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
-              {sync.isPending ? '새로고침 중...' : '새로고침'}
-            </button>
-          </div>
-        </div>}
+        {/* 2026-11-15 PC: 요약 카드 4장(아래 탭과 같은 숫자) + 화면 안 [새로고침](머리줄과 중복)을 걷어내고 한 줄 요약만 남긴다 */}
+        {isLg && (
+          <p className="text-xs text-stone-500 tabular-nums">
+            <span className={stats?.newIntake ? 'font-bold text-amber-700' : ''}>신규 {stats?.newIntake || 0}</span>
+            <span className="mx-1.5 text-stone-300">·</span>
+            <span className={stats?.inCoordination ? 'font-bold text-amber-700' : ''}>일정 조율 중 {stats?.inCoordination || 0}</span>
+            <span className="mx-1.5 text-stone-300">·</span>방문 예정 {stats?.confirmed || 0}
+            <span className="mx-1.5 text-stone-300">·</span>이번 달 완료 {stats?.completedMonth || 0}
+          </p>
+        )}
 
         {/* 모바일: 종류 4칸 버튼판 — 숫자 = 진행 중 건수, 처리 필요가 있으면 이름 옆 「확인n」+주황 (2026-11-09) */}
         {!isLg && (
@@ -201,7 +179,7 @@ export default function ConsultationsPage() {
             className="px-3 py-1.5 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition flex items-center gap-1.5 mb-1 shrink-0"
           >
             <CalendarPlus size={14} />
-            일정수동등록
+            일정 등록
           </button>
         </div>}
 

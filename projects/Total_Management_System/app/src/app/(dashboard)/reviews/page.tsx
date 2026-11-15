@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { kstDate } from '@/lib/utils/kst';
 import { Topbar } from '@/components/layout/topbar';
-import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2, Trophy } from 'lucide-react';
+import { ChevronDown, Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
@@ -127,6 +127,13 @@ export default function ReviewsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');  // 상담/복원수리/제품 필터
   const [lightbox, setLightbox] = useState<string | null>(null);
+  // 2026-11-15 20건씩 더 보기 + 한 건씩 펼치기
+  //   탭 · 유형을 바꾸면 다시 20건부터(효과 대신 '어느 목록의 숫자인지'를 같이 들고 있는다)
+  const listKey = `${activeTab}|${typeFilter}`;
+  const [shown, setShown] = useState({ key: listKey, n: 20 });
+  const shownCount = shown.key === listKey ? shown.n : 20;
+  const setShownCount = (fn: (n: number) => number) => setShown({ key: listKey, n: fn(shownCount) });
+  const [openReviewId, setOpenReviewId] = useState<string | null>(null);
   const [editReview, setEditReview] = useState<Review | null>(null);
   const [editForm, setEditForm] = useState<Partial<Review>>({});
   const [saving, setSaving] = useState(false);
@@ -355,6 +362,11 @@ export default function ReviewsPage() {
                 {tab.label}
               </button>
             ))}
+            {/* 2026-11-15 리뷰 이벤트로 가는 길이 ⋯ 안에 숨어 있었다 → 탭 줄에 나란히 */}
+            <Link href="/reviews/event"
+              className="flex-1 lg:flex-none h-10 lg:h-auto px-1 lg:px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition bg-neutral-100 text-neutral-500 hover:bg-neutral-200 inline-flex items-center justify-center gap-1">
+              <Trophy size={12} />리뷰 이벤트
+            </Link>
             </div>
             {/* 모바일 도구 메뉴 */}
             <div className="relative shrink-0 lg:hidden">
@@ -573,15 +585,21 @@ export default function ReviewsPage() {
             {reviews.length === 0 ? '리뷰가 없습니다' : '해당 유형의 리뷰가 없습니다'}
           </div>
         ) : (
-          <div className="grid gap-3 lg:grid-cols-3 md:grid-cols-2">
-            {visibleReviews.map(review => (
+          <>
+          {/* 2026-11-15 20건씩 보여 주고, 한 건은 2줄로 접는다(누르면 펼침). 수정 · BEST · 숨기기는 펼쳤을 때만
+              — 전엔 전부 펼쳐져 PC 27,000px · 버튼 1,266개였다 */}
+          <div className="grid gap-3 lg:grid-cols-3 md:grid-cols-2 items-start">
+            {visibleReviews.slice(0, shownCount).map(review => { const isOpen = openReviewId === review.id; return (
               <div
                 key={review.id}
-                className="bg-white rounded-xl border border-neutral-100 p-4 space-y-3"
+                className="bg-white rounded-xl border border-neutral-100 p-4 space-y-3 min-w-0"
               >
-                {/* 헤더: 이름 + 유형 칩 + 상태 칩 */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                {/* 헤더: 이름 + 유형 칩 + 상태 칩 — 누르면 펼침/접힘 */}
+                <div role="button" tabIndex={0} aria-expanded={isOpen}
+                  onClick={() => setOpenReviewId(isOpen ? null : review.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenReviewId(isOpen ? null : review.id); } }}
+                  className="flex items-center justify-between gap-2 cursor-pointer">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
                     <span className="font-semibold text-sm">{review.name}</span>
                     <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-500">
                       {getChipLabel(review)}
@@ -605,23 +623,24 @@ export default function ReviewsPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] text-neutral-400">
-                    {review.review_id}
+                  <span className="text-[11px] text-neutral-400 shrink-0 flex items-center gap-1">
+                    <span className="hidden sm:inline">{review.review_id}</span>
+                    <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </span>
                 </div>
 
-                {/* 별점 */}
-                <div className="flex items-center gap-0.5">
-                  {renderStars(review.stars)}
+                {/* 별점 + 내용 (접혔을 때는 한 줄) */}
+                <div className={isOpen ? 'space-y-2' : 'flex items-center gap-2 min-w-0'}>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    {renderStars(review.stars)}
+                  </div>
+                  <p className={`text-sm text-neutral-700 leading-relaxed min-w-0 ${isOpen ? 'whitespace-pre-line break-words' : 'truncate'}`}>
+                    {review.content}
+                  </p>
                 </div>
 
-                {/* 내용 */}
-                <p className="text-sm text-neutral-700 leading-relaxed line-clamp-3">
-                  {review.content}
-                </p>
-
                 {/* 사진 썸네일 */}
-                {review.photo_urls && review.photo_urls.length > 0 && (
+                {isOpen && review.photo_urls && review.photo_urls.length > 0 && (
                   <div className="flex gap-2">
                     {review.photo_urls.map((url, i) => (
                       <button
@@ -635,8 +654,8 @@ export default function ReviewsPage() {
                   </div>
                 )}
 
-                {/* 하단: 날짜 + 액션 */}
-                <div className="flex items-center justify-between pt-2 border-t border-neutral-50">
+                {/* 하단: 날짜 + 액션 — 펼쳤을 때만 */}
+                {isOpen && <div className="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-neutral-50">
                   <span className="text-[11px] text-neutral-400">
                     {formatDate(review.created_at)}
                     {review.source_id && ` · ${review.source_id}`}
@@ -682,10 +701,19 @@ export default function ReviewsPage() {
                       <Trash2 size={12} />
                     </button>
                   </div>
-                </div>
+                </div>}
               </div>
-            ))}
+            ); })}
           </div>
+          {visibleReviews.length > shownCount && (
+            <div className="flex justify-center pt-4">
+              <button type="button" onClick={() => setShownCount((n) => n + 20)}
+                className="h-10 px-5 rounded-lg border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition">
+                더 보기 ({shownCount} / {visibleReviews.length})
+              </button>
+            </div>
+          )}
+          </>
         ))}
       </div>
 

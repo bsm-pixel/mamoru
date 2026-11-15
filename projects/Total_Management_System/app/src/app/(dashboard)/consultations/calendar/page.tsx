@@ -318,7 +318,7 @@ export default function CalendarManagePage() {
 
   return (
     <>
-      <Topbar title="달력 관리" />
+      <Topbar title="영업시간·휴무" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
         {/* 안내 카드 */}

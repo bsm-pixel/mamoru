@@ -173,6 +173,19 @@ export default function ExpensesPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
 
+  // 탭: 고른 것이 없으면 확인할 영수증 유무로 정한다
+  const { data: inboxData } = useQuery({
+    queryKey: ['expense-inbox'],
+    queryFn: async () => {
+      const res = await fetch('/api/expenses/inbox');
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<{ items: Array<{ id: string }> }>;
+    },
+  });
+  const inboxCount = inboxData?.items?.length || 0;
+  const [viewPicked, setViewPicked] = useState<'inbox' | 'add' | 'fixed' | null>(null);
+  const view = viewPicked ?? (inboxCount > 0 ? 'inbox' : 'add');
+
   return (
     <>
       <Topbar title="경비 관리" />
@@ -214,10 +227,24 @@ export default function ExpensesPage() {
           </div>
         )}
 
-        {/* 166: 메일에서 찾은 영수증 — 확인 대기 */}
-        <ExpenseInbox categories={CATEGORIES} />
+        {/* 2026-11-15 한 화면에 버튼 56 · 입력칸 31개가 깔려 있었다 → 탭 3개로 나눈다.
+            확인할 영수증이 있으면 「확인 대기」부터, 없으면 「경비 등록」부터 */}
+        <div data-status-tabs role="tablist" className="flex gap-1 border-b border-neutral-200">
+          {([['inbox', `확인 대기${inboxCount ? ` ${inboxCount}` : ''}`], ['add', '경비 등록'], ['fixed', '고정 경비']] as const).map(([k, label]) => (
+            <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setViewPicked(k)}
+              className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${view === k ? 'border-stone-900 text-stone-900' : 'border-transparent text-neutral-500 hover:text-neutral-700'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* 166: 메일에서 찾은 영수증 — 확인 대기 */}
+        <div className={view === 'inbox' ? '' : 'hidden'}>
+          <ExpenseInbox categories={CATEGORIES} />
+          {inboxCount === 0 && <EmptyState compact message="확인할 영수증이 없습니다" action={{ label: '경비 등록', onClick: () => setViewPicked('add') }} />}
+        </div>
+
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-4 ${view === 'add' ? '' : 'hidden'}`}>
           {/* 좌측: 등록 폼 */}
           <Card>
             <h3 className="text-sm font-bold text-indigo-black mb-3 flex items-center gap-2">
@@ -381,6 +408,7 @@ export default function ExpensesPage() {
           </div>
         </div>
         {/* 고정 경비 */}
+        <div className={view === 'fixed' ? '' : 'hidden'}>
         <Card>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -455,6 +483,7 @@ export default function ExpensesPage() {
             </Button>
           </div>
         </Card>
+        </div>
       </div>
     </>
   );

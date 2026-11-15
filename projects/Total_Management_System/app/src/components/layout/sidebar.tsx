@@ -4,7 +4,7 @@ import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Star, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Star, ChevronDown, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { NAV_GROUPS } from '@/lib/utils/constants';
 import { NAV_ICON_MAP } from '@/lib/utils/nav-icons';
@@ -29,6 +29,9 @@ export function Sidebar() {
       if (s) setCollapsed(JSON.parse(s));
     } catch { /* ignore */ }
   }, []);
+  // 2026-11-15 MY MENU 에 있는 메뉴는 아래 전체 메뉴에서 빼고(중복 제거), 나머지는 「더 보기」로 접는다.
+  //   지금 보고 있는 화면이 MY MENU 에 없으면 자동으로 펴서 어디에 있는지 보이게 한다.
+  const favSet = new Set(favorites.map((f) => f.href));
   const toggleGroup = (key: string) => {
     setCollapsed((c) => {
       const next = { ...c, [key]: !c[key] };
@@ -37,6 +40,10 @@ export function Sidebar() {
     });
   };
 
+  // 「더 보기」 펼침 여부는 그룹 접힘과 같은 저장 칸에 함께 둔다(따로 읽어 오는 코드를 늘리지 않으려고)
+  const moreOpen = !!collapsed.__more;
+  const toggleMore = () => toggleGroup('__more');
+
   // matchPrefix 정확 매칭 (하위 경로가 별도 메뉴인 경우 겹치지 않게 — IA 정리 2026-05-18)
   const isActive = (matchPrefix: string) =>
     matchPrefix === '/consultations'
@@ -44,6 +51,10 @@ export function Sidebar() {
       : pathname.startsWith(matchPrefix);
 
   const dashActive = pathname.startsWith('/dashboard');
+  const onFavorite = favorites.some((f) => isActive(f.matchPrefix));
+  const settingsActive = pathname.startsWith('/settings');
+  // 즐겨찾기가 없으면 접을 이유가 없다 → 항상 펼침
+  const showAll = favorites.length === 0 || moreOpen || (!onFavorite && !dashActive && !settingsActive);
 
   return (
     <aside className="hidden md:flex flex-col w-56 h-screen sticky top-0 self-start bg-indigo-black text-cream border-r border-white/8">
@@ -98,9 +109,21 @@ export function Sidebar() {
       )}
 
       {/* 그룹별 내비 (그룹 접기 + pill 액티브) — 나머지, 스크롤 */}
-      <nav className="flex-1 px-2.5 pb-4 overflow-y-auto">
-        {NAV_GROUPS.map((group, gi) => {
-          const items = group.items.filter((it) => it.href !== '/dashboard' && !hidden.has(it.href)); // 대시보드·숨김 제외
+      <nav className="flex-1 px-2.5 pb-2 overflow-y-auto">
+        {favorites.length > 0 && (
+          <button
+            type="button"
+            onClick={toggleMore}
+            aria-expanded={showAll}
+            className="w-full flex items-center justify-between px-2.5 mt-3 py-1.5 rounded-lg text-cream/60 hover:text-cream/90 hover:bg-white/8 transition"
+          >
+            <span className="text-xs font-semibold">{showAll ? '메뉴 접기' : '더 보기'}</span>
+            <ChevronDown size={14} className={cn('transition-transform', showAll && 'rotate-180')} />
+          </button>
+        )}
+        {showAll && NAV_GROUPS.map((group, gi) => {
+          // 대시보드 · 숨김 · MY MENU 에 이미 있는 것 · 설정(맨 아래 고정) 제외
+          const items = group.items.filter((it) => it.href !== '/dashboard' && it.href !== '/settings' && !hidden.has(it.href) && !favSet.has(it.href));
           if (items.length === 0) return null; // 대시보드만 있던 빈 그룹 스킵
           const hasHeader = !!group.group;
           const isCollapsed = hasHeader && !!collapsed[group.group];
@@ -143,6 +166,21 @@ export function Sidebar() {
           );
         })}
       </nav>
+      {/* 설정은 맨 아래 고정 (MY MENU 에 넣었으면 위에만) */}
+      {!favSet.has('/settings') && !hidden.has('/settings') && (
+        <div className="flex-shrink-0 px-2.5 pb-3 pt-1 border-t border-white/8">
+          <Link
+            href="/settings"
+            className={cn(
+              'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
+              settingsActive ? 'bg-white/12 text-cream' : 'text-cream/55 hover:text-cream/90 hover:bg-white/8'
+            )}
+          >
+            <Settings size={18} className={settingsActive ? 'opacity-100' : 'opacity-50'} />
+            설정
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

@@ -19,6 +19,7 @@ import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ReturnRow } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
+import { useStatusCounts } from '@/hooks/use-status-counts';
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -35,6 +36,8 @@ export default function ReturnsPage() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
+  const tabCounts = useStatusCounts('returns');
+  const tabCountOf = (v: string): number | null => !tabCounts.loaded ? null : v === 'all' ? tabCounts.total : (tabCounts.counts[v] || 0);
   // 주문/판매 상세의 [반품·교환에서 관리 →] 링크로 진입 시 검색어 프리필
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get('search');
@@ -84,7 +87,7 @@ export default function ReturnsPage() {
           <>
             <StageGrid
               ariaLabel="반품 상태"
-              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: null }))}
+              items={STATUS_TABS.map((t) => ({ key: t.value, label: t.label, count: tabCountOf(t.value) }))}
               active={status}
               onChange={setStatus}
             />
@@ -100,6 +103,7 @@ export default function ReturnsPage() {
             <button key={t.value} onClick={() => setStatus(t.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${status === t.value ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>
               {t.label}
+              {tabCountOf(t.value) !== null && <span className="ml-1 tabular-nums opacity-70">{tabCountOf(t.value)}</span>}
             </button>
           ))}
         </div>

@@ -85,7 +85,7 @@ export default function ConsultationSettings({ settings, onSave, saving }: TabPr
           href="/consultations/calendar"
           className="inline-flex items-center gap-2 px-3 h-9 rounded-lg bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition"
         >
-          달력 관리로 이동
+          영업시간·휴무 열기
         </a>
       </Field>
 

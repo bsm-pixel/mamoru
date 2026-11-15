@@ -218,7 +218,8 @@ export default function NewPurchaseOrderPage() {
                       <p className="text-xs text-neutral-500">{p.sku.startsWith('IW-') ? '' : p.sku}</p>
                       <div className="flex items-center gap-1 mt-1">
                         <p className="text-xs text-neutral-600">
-                          매입가 {p.price_purchase > 0 ? formatKRW(p.price_purchase) : '-'}
+                          {/* 2026-11-15 「-」만 보여 왜 비었는지 알 수 없었다 — 매입가를 넣지 않은 제품이다(제품 상세에서 입력) */}
+                          {p.price_purchase > 0 ? `매입가 ${formatKRW(p.price_purchase)}` : '매입가 미입력'}
                         </p>
                         {catalogFeaturesMap.has(p.id) && (
                           <span className="text-[10px] text-blue-500 truncate">{catalogFeaturesMap.get(p.id)}</span>

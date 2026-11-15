@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Star, Trophy, Calendar, ImagePlus, Save, Loader2, ExternalLink, Dices, Hand, PartyPopper, Copy } from 'lucide-react';
+import { ArrowLeft, Star, Calendar, ImagePlus, Save, Loader2, ExternalLink, Dices, Hand, PartyPopper, Copy } from 'lucide-react';
 import { resizeImage } from '@/lib/utils/resize-image';
 import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
 import EventShipmentsPanel from '@/components/reviews/event-shipments-panel';
-import { usePageTitle } from '@/hooks/use-page-title';
+import { Topbar } from '@/components/layout/topbar';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
@@ -81,7 +81,6 @@ const EMPTY_PRIZES: Prize[] = [
 function prizeImgList(p: Prize): string[] { return (Array.isArray(p.image_urls) && p.image_urls.length) ? p.image_urls.filter(Boolean) : (p.image_url ? [p.image_url] : []); }
 
 export default function ReviewEventPage() {
-  usePageTitle('리뷰 이벤트 관리');
   const [month, setMonth] = useState<string>(nowYYMM());
   const [config, setConfig] = useState<EventConfig>({ deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
@@ -368,12 +367,24 @@ export default function ReviewEventPage() {
     } finally { setSaving(false); }
   }
 
+  // 2026-11-15 지금 어느 단계인지 한 줄로 — 준비 → 진행 중 → 추첨 → 발표 → 발송
+  const markCount = Object.keys(marks).length;
+  const stageIdx = config.status === 'announced' ? 3 : markCount > 0 ? 2 : config.status === 'live' ? 1 : 0;
+  const STAGES = ['준비', '진행 중', '추첨', '발표', '발송'];
+  const STAGE_HINT = [
+    '상품 · 마감일을 넣고 [진행중으로 게시]를 누르면 고객 페이지에 보입니다',
+    '응모를 받는 중입니다. 마감 뒤 오른쪽에서 당첨자를 뽑으세요',
+    '당첨자를 확인하고 [선정자 게시하기]를 누르면 고객에게 공개됩니다',
+    '발표했습니다. 아래 「당첨자 배송」에서 당첨 안내 → 송장 순서로 보내세요',
+  ];
+
   return (
+    <>
+    <Topbar title="리뷰 이벤트 관리" />
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
+      {/* 헤더 — 2026-11-15 제목은 다른 화면처럼 머리줄(Topbar)에. 여기는 돌아가기 · 고객 페이지 링크만 */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
         <Link href="/reviews" className="text-stone-500 hover:text-stone-800 flex items-center gap-1 text-sm"><ArrowLeft size={16} />리뷰관리</Link>
-        <h1 className="text-xl font-bold text-stone-900 flex items-center gap-2"><Trophy size={20} className="text-amber-500" />리뷰 이벤트 관리</h1>
         <a href={LIVE_PAGE} target="_blank" rel="noreferrer" className="ml-auto text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1"><ExternalLink size={13} />고객 페이지</a>
       </div>
 
@@ -384,6 +395,26 @@ export default function ReviewEventPage() {
         <button onClick={() => setMonth(shiftMonth(month, 1))} className="px-3 py-1.5 rounded-lg border border-stone-200 text-sm hover:bg-stone-50">다음달 →</button>
         {loading && <Loader2 size={16} className="animate-spin text-stone-400" />}
       </div>
+
+      {/* 단계 한 줄 */}
+      <div className="mb-4 rounded-xl border border-stone-200 bg-white px-4 py-3">
+        <ol className="flex items-center gap-1.5 flex-wrap text-xs">
+          {STAGES.map((st, i) => {
+            const cur = i === stageIdx || (i === 4 && stageIdx === 3);
+            const done = i < stageIdx;
+            return (
+              <li key={st} className="flex items-center gap-1.5">
+                <span className={`px-2.5 py-1 rounded-full font-semibold ${cur ? 'bg-stone-900 text-white' : done ? 'bg-stone-100 text-stone-500' : 'text-stone-400 border border-stone-200'}`}>{st}</span>
+                {i < STAGES.length - 1 && <span className="text-stone-300">→</span>}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="mt-2 text-xs text-stone-500">{STAGE_HINT[stageIdx]}</p>
+      </div>
+
+      {/* 발표한 달은 「당첨자 배송」이 지금 할 일 → 맨 위로 */}
+      {config.status === 'announced' && !dirty && <div className="mb-5"><EventShipmentsPanel key={month} month={month} /></div>}
 
       {msg && <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.includes('실패') ? 'bg-rose-100 text-rose-700 font-medium' : 'bg-stone-100 text-stone-700'}`}>{msg}</div>}
 
@@ -415,9 +446,12 @@ export default function ReviewEventPage() {
                   <input type="number" min={0} value={p.count} onChange={(e) => setPrize(idx, 'count', parseInt(e.target.value) || 0)} className="w-16 px-2 py-1 rounded border border-stone-200 text-sm" />
                   <span className="text-xs text-stone-500">명 추첨</span>
                 </div>
-                <input placeholder={`상 이름 (예: ${p.rank}등 · 아차상 · 정성상 — 비우면 '${p.rank}등')`} value={p.label || ''} onChange={(e) => setPrize(idx, 'label', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm font-medium" />
-                <input placeholder="상품명 (예: 프리미엄 가위 1자루)" value={p.name} onChange={(e) => setPrize(idx, 'name', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
-                <input placeholder="한 줄 설명 (선택)" value={p.desc} onChange={(e) => setPrize(idx, 'desc', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
+                <label className="block text-[11px] font-semibold text-stone-500 mb-0.5">상 이름</label>
+                <input placeholder={`예: ${p.rank}등 · 아차상 · 정성상 — 비우면 '${p.rank}등'`} value={p.label || ''} onChange={(e) => setPrize(idx, 'label', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm font-medium" />
+                <label className="block text-[11px] font-semibold text-stone-500 mb-0.5">상품명</label>
+                <input placeholder="예: 프리미엄 가위 1자루" value={p.name} onChange={(e) => setPrize(idx, 'name', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
+                <label className="block text-[11px] font-semibold text-stone-500 mb-0.5">설명 (선택)</label>
+                <input placeholder="한 줄 설명" value={p.desc} onChange={(e) => setPrize(idx, 'desc', e.target.value)} className="w-full mb-2 px-2.5 py-1.5 rounded border border-stone-200 text-sm" />
                 <div className="flex items-center gap-2 flex-wrap">
                   {prizeImgList(p).map((u, ui) => (
                     <div key={ui} className="relative">
@@ -598,18 +632,29 @@ export default function ReviewEventPage() {
         {/* 선정자 게시하기 — 선정 검토 후 고객 페이지에 공개(=발표됨). 선정 있고 아직 발표 전일 때만 노출 */}
         {config.status !== 'announced' && Object.keys(marks).length > 0 && (
           <button disabled={saving} onClick={() => changeStatus('announced')}
-            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5">
+            className="px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50 flex items-center gap-1.5">
             <PartyPopper size={15} />선정자 게시하기
           </button>
         )}
 
-        {/* 저장 (현재 상태 유지) */}
+        {/* 준비 단계의 다음 할 일 = 진행중으로 게시 */}
+        {stageIdx === 0 && (
+          <button disabled={saving} onClick={() => changeStatus('live')}
+            className="ml-auto px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50">
+            진행중으로 게시
+          </button>
+        )}
+
+        {/* 저장 (현재 상태 유지) — 다음 할 일 버튼이 따로 있는 단계에서는 흰 버튼(진한 버튼은 한 화면에 1개) */}
         <button disabled={saving} onClick={() => save()}
-          className={`${Object.keys(marks).length > 0 ? '' : 'ml-auto'} px-4 py-2 rounded-lg bg-stone-900 text-white text-sm font-semibold hover:bg-stone-800 disabled:opacity-50 flex items-center gap-1.5`}>
+          className={`${markCount > 0 || stageIdx === 0 ? '' : 'ml-auto'} px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-1.5 ${stageIdx === 0 || stageIdx === 2 ? 'border border-stone-300 bg-white text-stone-700 hover:bg-stone-50' : 'bg-stone-900 text-white hover:bg-stone-800'}`}>
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}저장
         </button>
       </div>
-      <p className="text-[11px] text-stone-400 mt-2 leading-relaxed">
+      {/* 2026-11-15 설명 6줄은 접어 둔다 */}
+      <details className="mt-2">
+        <summary className="text-xs font-semibold text-stone-500 cursor-pointer select-none py-1">도움말 — 저장 · 추첨 · 게시가 어떻게 다른가요?</summary>
+      <p className="text-[11px] text-stone-400 mt-1 leading-relaxed">
         · <b>저장</b> = 편집한 내용을 <b>현재 게시 상태 그대로</b> 저장합니다. (이미지·상품·당첨자 변경은 저장해야 반영돼요)<br />
         · <b>랜덤 룰렛</b> = 미당첨 후보 중 완전 랜덤 추첨(이미 뽑힌 사람 제외). 뽑아도 <b>바로 공개되지 않아요</b>. 잘못 뽑았으면 <b>[직접 지정]</b> 탭에서 되돌릴 수 있어요(룰렛 화면엔 제외 버튼을 숨겨 녹화 시 오해를 막습니다).<br />
         · 선정을 마치면 <b>[선정자 게시하기]</b>를 눌러야 고객 페이지 <b>지난 당첨자</b>에 공개(=발표됨)됩니다.<br />
@@ -617,9 +662,12 @@ export default function ReviewEventPage() {
         · 표시명을 비우면 자동 마스킹 — 예: <b>백*민 님 (3562)</b> (성 가운데 *, 전화 뒷 4자리).<br />
         · 응모 시작일을 앞당기거나 <b>[처음부터 전체]</b> 버튼을 누르면 지금까지의 <b>모든 후기</b>를 한 풀에서 선정합니다(라벨=“전체 기간”). 룰렛 화면 상단에 <b>선정 대상 인원</b>도 표시돼요(다크 릴 바깥이라 녹화엔 안 잡힘).
       </p>
+      </details>
 
-      {/* 2026-10-02 당첨자 배송 — 당첨 안내(주소 링크) → 배송지 → 송장 → 집하 시 출고 알림톡 */}
-      {(config.status === 'announced' || Object.keys(marks).length > 0) && !dirty && <EventShipmentsPanel key={month} month={month} />}
+      {/* 2026-10-02 당첨자 배송 — 당첨 안내(주소 링크) → 배송지 → 송장 → 집하 시 출고 알림톡
+          (발표한 달은 위쪽에 이미 보인다 — 여기는 발표 전 미리 보기용) */}
+      {config.status !== 'announced' && markCount > 0 && !dirty && <EventShipmentsPanel key={month} month={month} />}
     </div>
+    </>
   );
 }

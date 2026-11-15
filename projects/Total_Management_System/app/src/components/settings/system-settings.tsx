@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, RefreshCw, CheckCircle2, AlertCircle, Database, Upload, Star, GripVertical, X } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle2, AlertCircle, Database, Star, GripVertical, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useOrderSync, useProductSync } from '@/hooks/use-orders';
 import {  formatDateTimeShort } from '@/lib/utils/format';
@@ -83,7 +83,7 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
   const START_PAGES = [
     { value: '/dashboard', label: '대시보드' },
     { value: '/sales', label: '판매 조회' },
-    { value: '/orders/dashboard', label: '주문관리' },
+    { value: '/orders', label: '주문관리' },
     { value: '/repairs', label: '복원수리' },
     { value: '/consultations', label: '상담관리' },
   ];

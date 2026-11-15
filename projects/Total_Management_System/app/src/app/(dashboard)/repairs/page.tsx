@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
-import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
+import { RefreshCw, Scissors, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
 import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
 import { useListEscape } from '@/components/layout/list-keys';
@@ -27,13 +27,15 @@ export default function RepairsPage() {
   const isLg = useIsLg();
 
   // 상단 통계(매출 KPI + 상태 4카드) — 좌측 컬럼 상단에 배치(판매관리와 동일 IA: 상세가 우측 전체 높이 사용)
+  // 2026-11-15 모바일: 매출 카드를 목록 아래로 내린다(전엔 카드와 칸이 먼저 나와 첫 접수 건이 화면 맨 아래에 걸렸다)
+  //   max-lg:contents = 모바일에서는 이 묶음을 풀어 안의 두 덩어리가 목록과 같은 줄에서 순서를 바꿀 수 있게 한다
   const topStats = stats && (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5 max-lg:contents">
       {/* 매출 KPI + 오늘/이번주 (컴팩트) */}
       {(() => {
         const totalBags = (stats.monthRepairMamoru?.count || 0) + (stats.monthRepairOther?.count || 0) + (stats.monthRepairB2B?.count || 0);
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-2.5">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-2.5 max-lg:order-last">
             <RevenueDarkCard
               icon={TrendingUp}
               label="이번달 복원수리"
@@ -66,17 +68,29 @@ export default function RepairsPage() {
 
       {/* 상태 카드 — PC 4개. 모바일은 신규·진행을 뺀 2개
           (2026-10-19: 모바일은 목록 위 단계 버튼 판이 신규·진행 건수를 이미 보여줘 중복. 단계와 무관한 필터 2개만 남김) */}
-      <div className={`grid gap-2 ${isLg ? 'grid-cols-4' : 'grid-cols-2'}`}>
-        {isLg && <StatCard compact label="신규" icon={Inbox} accent="blue"
-          value={stats.intakeNew || 0} primarySub="확인 필요"
-          active={badgeFilter?.tab === 'intake'}
-          onClick={() => setBadgeFilter(badgeFilter?.tab === 'intake' ? null : { tab: 'intake' })}
-        />}
-        {isLg && <StatCard compact label="진행" icon={Loader} accent="amber"
-          value={stats.workingCount || 0} primarySub="작업 중"
-          active={badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly}
-          onClick={() => setBadgeFilter(badgeFilter?.tab === 'in_progress' && !badgeFilter.unpaidOnly ? null : { tab: 'in_progress' })}
-        />}
+      {/* 2026-11-15 PC: 신규 · 진행 카드는 아래 단계 탭과 같은 숫자라 뺐다. 단계와 무관한 「확인 필요 · 지연」만 탭 위에 작은 버튼으로 */}
+      {isLg ? (
+        ((stats.unpaidCount || 0) > 0 || (stats.staleCount || 0) > 0 || badgeFilter?.unpaidOnly || badgeFilter?.staleOnly) && (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-stone-400">확인 필요</span>
+            {((stats.unpaidCount || 0) > 0 || badgeFilter?.unpaidOnly) && (
+              <button type="button" aria-pressed={!!badgeFilter?.unpaidOnly}
+                onClick={() => setBadgeFilter(badgeFilter?.unpaidOnly ? null : { unpaidOnly: true })}
+                className={`h-8 px-3 rounded-lg text-xs font-semibold border transition ${badgeFilter?.unpaidOnly ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'}`}>
+                미입금 {stats.unpaidCount || 0}
+              </button>
+            )}
+            {((stats.staleCount || 0) > 0 || badgeFilter?.staleOnly) && (
+              <button type="button" aria-pressed={!!badgeFilter?.staleOnly}
+                onClick={() => setBadgeFilter(badgeFilter?.staleOnly ? null : { staleOnly: true })}
+                className={`h-8 px-3 rounded-lg text-xs font-semibold border transition ${badgeFilter?.staleOnly ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'}`}>
+                3일 넘게 멈춤 {stats.staleCount || 0}
+              </button>
+            )}
+          </div>
+        )
+      ) : (
+      <div className="grid gap-2 grid-cols-2">
         <StatCard compact label="미입금" icon={CreditCard} accent="rose" dimWhenZero
           value={stats.unpaidCount || 0} primarySub="확인 필요"
           active={badgeFilter?.unpaidOnly}
@@ -88,6 +102,7 @@ export default function RepairsPage() {
           onClick={() => setBadgeFilter(badgeFilter?.staleOnly ? null : { staleOnly: true })}
         />
       </div>
+      )}
     </div>
   );
 
@@ -134,7 +149,7 @@ export default function RepairsPage() {
         </div>
       ) : (
         /* 모바일: 통계 + 목록 + 슬라이드 패널 */
-        <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
+        <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 flex flex-col gap-3">
           {topStats}
           <RepairList
             onSelect={setSelectedId}

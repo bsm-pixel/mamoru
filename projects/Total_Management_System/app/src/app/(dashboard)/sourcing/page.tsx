@@ -9,6 +9,7 @@ import { ScanBox } from '@/components/sourcing/scan-box';
 import { Plus, Sparkles, PackageSearch, CheckCircle2, XCircle } from 'lucide-react';
 import { formatDate } from '@/lib/utils/format';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 /**
  * 샘플 소싱 — 발주 목록.
@@ -20,6 +21,8 @@ export default function SourcingListPage() {
   const create = useCreateSourcing();
 
   const handleNew = async () => {
+    // 2026-11-15 누르는 즉시 빈 건이 만들어져 실수로 생긴 빈 소싱이 쌓였다 → 한 번 묻고 만든다
+    if (!(await confirmAsk('새 소싱 만들기\n새 소싱 회차(번호)가 바로 만들어집니다. 만들까요?', { confirmLabel: '만들기' }))) return;
     const res = await create.mutateAsync({});
     router.push(`/sourcing/${res.id}`);
   };

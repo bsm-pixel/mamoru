@@ -31,7 +31,6 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '상담',
     items: [
       { label: '상담관리', href: '/consultations', icon: 'MessageSquare', matchPrefix: '/consultations' },
-      { label: '달력 관리', href: '/consultations/calendar', icon: 'CalendarOff', matchPrefix: '/consultations/calendar' },
       { label: '복원수리', href: '/repairs', icon: 'Wrench', matchPrefix: '/repairs' },
     ],
   },
@@ -85,6 +84,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     group: '',  // 시스템
     items: [
+      // 2026-11-15 「달력 관리」 → 「영업시간·휴무」: 실제로는 예약 받는 시간 · 쉬는 날 설정이라 이름을 바꾸고 설정 옆으로 옮겼다(주소는 그대로)
+      { label: '영업시간·휴무', href: '/consultations/calendar', icon: 'CalendarOff', matchPrefix: '/consultations/calendar' },
       { label: '설정', href: '/settings', icon: 'Settings', matchPrefix: '/settings' },
     ],
   },

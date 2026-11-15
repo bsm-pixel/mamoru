@@ -339,7 +339,7 @@ export default function DashboardPage() {
   const CARD_DEF: Record<string, React.ReactNode> = {
     orders: (
       <StatCard
-        key="orders" label="주문" icon={ShoppingCart} accent="blue" href="/orders/dashboard"
+        key="orders" label="주문" icon={ShoppingCart} accent="blue" href="/orders"
         value={stats?.orders.payDone || 0} primarySub="결제완료"
         secondarySub={stats ? `준비 ${stats.orders.preparing} · 완료 ${stats.orders.delivered}` : undefined}
       />
@@ -353,7 +353,7 @@ export default function DashboardPage() {
     ),
     repairs: (
       <StatCard
-        key="repairs" label="복원수리" icon={Wrench} accent="emerald" href="/repairs/dashboard"
+        key="repairs" label="복원수리" icon={Wrench} accent="emerald" href="/repairs"
         value={stats?.repairs.readyToShip || 0} primarySub="작업완료"
         secondarySub={stats ? `이번달 ${stats.repairs.monthRepairCount}자루` : undefined}
       />
