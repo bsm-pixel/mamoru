@@ -8,6 +8,7 @@ import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
 import BannerSettings from '@/components/settings/banner-settings';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -282,7 +283,7 @@ function DevicesPanel() {
   useEffect(() => { load(); }, []);
 
   const handleRemove = async (id: string, label: string) => {
-    if (!window.confirm(`"${label}" 기기의 알림을 해제합니다.\n이 기기에서 TMS를 다시 열면 자동으로 재등록됩니다.`)) return;
+    if (!(await confirmAsk(`"${label}" 기기의 알림을 해제합니다.\n이 기기에서 TMS를 다시 열면 자동으로 재등록됩니다.`))) return;
     setBusyId(id);
     try {
       const res = await fetch(`/api/push/devices?id=${id}`, { method: 'DELETE' });

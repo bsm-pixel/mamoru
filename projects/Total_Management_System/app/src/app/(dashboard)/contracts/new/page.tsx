@@ -14,6 +14,7 @@ import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
 import { Plus, X, Users } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
+import { MissingNote } from '@/components/ui/missing-note';
 
 /* -- 제품 행 -- */
 interface ProductRow {
@@ -459,6 +460,7 @@ export default function NewContractPage() {
 
         {/* -- 저장 버튼 -- */}
         <div className="max-w-[600px] mx-auto mt-4 pb-8">
+          <MissingNote className="mb-1.5 text-center" items={[!rows.some((r) => r.product) && '제품 1개 이상']} />
           <Button
             className="w-full"
             disabled={!canSubmit}

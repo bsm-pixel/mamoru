@@ -13,6 +13,8 @@ import { useSourcingByProduct } from '@/hooks/use-product-detail';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MissingNote } from '@/components/ui/missing-note';
 
 interface Supply {
   id: string;
@@ -143,7 +145,7 @@ export default function SuppliesPage() {
                             <ExternalLink size={12} />
                           </a>
                         )}
-                        <button onClick={(e) => { e.stopPropagation(); if (confirm(`"${s.name}" 삭제?`)) deleteSupply.mutate(s.id); }}
+                        <button onClick={async (e) => { e.stopPropagation(); if ((await confirmAsk(`"${s.name}" 삭제?`))) deleteSupply.mutate(s.id); }}
                           className="w-6 h-6 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-400 hover:text-red-500"
                           title="삭제">
                           <Trash2 size={12} />
@@ -229,7 +231,8 @@ function AddSupplyModal({ onClose }: { onClose: () => void }) {
               className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40" />
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+        <div className="px-5 py-4 border-t border-neutral-100 flex flex-wrap gap-2">
+          <MissingNote className="w-full" items={[!form.name.trim() && '이름']} />
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.name.trim() || submitting} onClick={handleSubmit}>
             {submitting ? '등록 중...' : '부자재 등록'}
@@ -328,7 +331,8 @@ function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => v
             </div>
           )}
         </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2">
+        <div className="px-5 py-4 border-t border-neutral-100 flex flex-wrap gap-2">
+          <MissingNote className="w-full" items={[!form.name.trim() && '이름']} />
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.name.trim() || submitting} onClick={handleSubmit}>
             {submitting ? '저장 중...' : '저장'}

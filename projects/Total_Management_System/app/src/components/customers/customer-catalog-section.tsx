@@ -7,6 +7,7 @@ import { useProducts } from '@/hooks/use-sales';
 import { useCustomerCatalog, useAddToCustomerCatalog, useUpdateCustomerCatalog, useRemoveFromCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { useEnterSelect } from '@/hooks/use-enter-select';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { matchSearch } from '@/lib/utils/search-match';
 
 /**
  * B2B 납품처(dealer/academy) 납품품목 카탈로그 UI
@@ -32,7 +33,7 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
   const catalogProductIds = new Set(catalog.map((c) => c.product_id));
   const availableProducts = products.filter((p) => !catalogProductIds.has(p.id) && p.category !== 'SUP');
   const filtered = productSearch.length >= 1
-    ? availableProducts.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(productSearch.toLowerCase())).slice(0, 10)
+    ? availableProducts.filter((p) => matchSearch(productSearch, p.name, p.sku)).slice(0, 10)
     : availableProducts.slice(0, 10);
 
   function startEdit(entry: typeof catalog[0]) {

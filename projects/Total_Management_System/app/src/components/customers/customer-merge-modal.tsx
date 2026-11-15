@@ -113,7 +113,7 @@ export function CustomerMergeModal({ open, onClose, primary, onMerged }: Props) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" {...backdropClose(onClose)}>
       <EscClose onClose={onClose} />
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-[460px] max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-[460px] h-[85vh] max-h-[640px] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">고객 병합</h3>

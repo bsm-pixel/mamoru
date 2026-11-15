@@ -23,6 +23,7 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { formatDateFull } from '@/lib/utils/format';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 export default function SourcingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -94,7 +95,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
   }
 
   const handleDelete = async () => {
-    if (!confirm(`${po.po_number} 소싱을 삭제할까요? (품목 전부 삭제)`)) return;
+    if (!(await confirmAsk(`${po.po_number} 소싱을 삭제할까요? (품목 전부 삭제)`))) return;
     await deletePo.mutateAsync(id);
     router.push('/sourcing');
   };
@@ -299,7 +300,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
                         </span>
                         <div className="flex items-center gap-1.5">
                           <button type="button" onClick={() => router.push(it.linked_product?.category === 'SUP' ? '/supplies' : '/products')} className="text-[10px] text-blue-600 hover:underline">보기</button>
-                          <button type="button" onClick={() => { if (confirm('연결을 해제할까요? (등록된 제품은 그대로 남습니다)')) linkItem.mutate({ itemId: it.id, linked_product_id: null }); }} className="text-[10px] text-neutral-400 hover:text-rose-500">연결해제</button>
+                          <button type="button" onClick={async () => { if ((await confirmAsk('연결을 해제할까요? (등록된 제품은 그대로 남습니다)'))) linkItem.mutate({ itemId: it.id, linked_product_id: null }); }} className="text-[10px] text-neutral-400 hover:text-rose-500">연결해제</button>
                         </div>
                       </>
                     ) : (
@@ -473,15 +474,16 @@ function ItemRow({ item, idx, exchangeRate, onAddImage, onRemoveImage, onPatch, 
             onBlur={(e) => e.target.value !== item.product_name && onPatch({ product_name: e.target.value })} className={cls} />
         </div>
         <div className="md:col-span-3">
-          <input type="number" step="0.01" defaultValue={item.unit_price || ''} placeholder="단가 ¥"
-            onBlur={(e) => { const v = Number(e.target.value) || 0; if (v !== item.unit_price) onPatch({ unit_price: v }); }} className={cls} />
+          <input type="number" step="0.01" min={0} defaultValue={item.unit_price || ''} placeholder="단가 ¥"
+            onBlur={(e) => { const v = Math.max(0, Number(e.target.value) || 0); if (Number(e.target.value) < 0) e.target.value = String(v); if (v !== item.unit_price) onPatch({ unit_price: v }); }} className={cls} />
           {item.unit_price > 0 && (
             <div className="mt-1 text-[11px] text-emerald-700 font-medium text-right">≈ ₩{krw.toLocaleString()}</div>
           )}
         </div>
         <div className="md:col-span-3">
-          <input type="number" defaultValue={item.moq ?? ''} placeholder="MOQ"
-            onBlur={(e) => { const v = e.target.value ? Number(e.target.value) : null; if (v !== item.moq) onPatch({ moq: v }); }} className={cls} />
+          <input type="number" min={0} defaultValue={item.moq ?? ''} placeholder="MOQ"
+            onBlur={(e) => { // 2026-11-15 음수 금지 — 음수를 치면 0으로 고쳐 저장
+              const v = e.target.value ? Math.max(0, Math.floor(Number(e.target.value) || 0)) : null; if (v !== null) e.target.value = String(v); if (v !== item.moq) onPatch({ moq: v }); }} className={cls} />
         </div>
         <div className="md:col-span-12">
           <input type="text" defaultValue={item.features_memo ?? ''} placeholder="특징 메모 (예: 날 광택 양호, 풀너트)"

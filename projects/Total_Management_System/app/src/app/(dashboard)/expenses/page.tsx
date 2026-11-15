@@ -6,7 +6,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatKRW, formatDate, toLocalDateString } from '@/lib/utils/format';
-import { Plus, Trash2, Wallet } from 'lucide-react';
+import { Plus, Trash2, Wallet, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { DEFAULT_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
@@ -16,6 +16,8 @@ import { PLAN_OPTIONS, fromPlan, planLabel, type ExpensePlan } from '@/lib/expen
 import { PROOF_OPTIONS, proofNeedsKeeping, type ProofType } from '@/lib/expenses/proof';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MissingNote } from '@/components/ui/missing-note';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -89,6 +91,20 @@ export default function ExpensesPage() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses'] }),
     onError: (err) => toast.error('증빙 저장 실패: ' + (err instanceof Error ? err.message : String(err))),
+  });
+
+  // 2026-11-15 경비 수정 — 전엔 잘못 넣으면 지우고 다시 넣어야 했다
+  const [editRow, setEditRow] = useState<{ id: string; expense_date: string; category: string; amount: string; memo: string } | null>(null);
+  const updateExpense = useMutation({
+    mutationFn: async (row: { id: string; expense_date: string; category: string; amount: string; memo: string }) => {
+      const res = await fetch('/api/expenses', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: row.id, expense_date: row.expense_date, category: row.category, amount: parseInt(row.amount) || 0, memo: row.memo.trim() }),
+      });
+      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || '수정 실패'); }
+    },
+    onSuccess: () => { toast.success('경비를 고쳤습니다'); setEditRow(null); queryClient.invalidateQueries({ queryKey: ['expenses'] }); },
+    onError: (err) => toast.error(err instanceof Error ? err.message : '수정 실패'),
   });
 
   const deleteExpense = useMutation({
@@ -259,6 +275,7 @@ export default function ExpensesPage() {
                   onChange={(e) => setMemo(e.target.value)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400" />
               </div>
+              <MissingNote items={[(!amount || parseInt(amount) <= 0) && '금액']} />
               <Button
                 className="w-full"
                 onClick={() => createExpense.mutate()}
@@ -287,7 +304,37 @@ export default function ExpensesPage() {
                 <EmptyState compact message="등록된 경비가 없습니다" />
               ) : (
                 <div className="divide-y divide-neutral-100">
-                  {data.expenses.map((e) => (
+                  {data.expenses.map((e) => editRow?.id === e.id ? (
+                    <div key={e.id} className="px-4 py-3 bg-stone-50 space-y-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label className="text-[11px] text-neutral-500">날짜
+                          <input type="date" value={editRow.expense_date} onChange={(ev) => setEditRow({ ...editRow, expense_date: ev.target.value })}
+                            className="mt-0.5 w-full h-9 px-2 rounded-lg border border-neutral-200 bg-white text-sm" />
+                        </label>
+                        <label className="text-[11px] text-neutral-500">분류
+                          <select value={editRow.category} onChange={(ev) => setEditRow({ ...editRow, category: ev.target.value })}
+                            className="mt-0.5 w-full h-9 px-2 rounded-lg border border-neutral-200 bg-white text-sm">
+                            {(CATEGORIES.includes(editRow.category) ? CATEGORIES : [editRow.category, ...CATEGORIES]).map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </label>
+                        <label className="text-[11px] text-neutral-500">금액
+                          <input type="number" min={1} value={editRow.amount} onChange={(ev) => setEditRow({ ...editRow, amount: ev.target.value })}
+                            className="mt-0.5 w-full h-9 px-2 rounded-lg border border-neutral-200 bg-white text-sm text-right" />
+                        </label>
+                        <label className="text-[11px] text-neutral-500">메모
+                          <input type="text" value={editRow.memo} onChange={(ev) => setEditRow({ ...editRow, memo: ev.target.value })}
+                            onKeyDown={(ev) => { if (ev.key === 'Enter') updateExpense.mutate(editRow); if (ev.key === 'Escape') setEditRow(null); }}
+                            className="mt-0.5 w-full h-9 px-2 rounded-lg border border-neutral-200 bg-white text-sm" />
+                        </label>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => setEditRow(null)}>닫기</Button>
+                        <Button size="sm" disabled={updateExpense.isPending || !(parseInt(editRow.amount) > 0)} onClick={() => updateExpense.mutate(editRow)}>
+                          {updateExpense.isPending ? '저장 중...' : '저장'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
                     <div key={e.id} className="flex items-center gap-3 px-4 py-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -314,8 +361,14 @@ export default function ExpensesPage() {
                         </p>
                       </div>
                       <p className="text-sm font-bold text-neutral-800 shrink-0">{formatKRW(e.amount)}</p>
+                      <button title="수정" aria-label="수정"
+                        onClick={() => setEditRow({ id: e.id, expense_date: String(e.expense_date).slice(0, 10), category: e.category, amount: String(e.amount), memo: e.memo || '' })}
+                        className="shrink-0 w-7 h-7 rounded flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
+                      >
+                        <Pencil size={14} />
+                      </button>
                       <button title="삭제" aria-label="삭제"
-                        onClick={() => { if (confirm('삭제하시겠습니까?')) deleteExpense.mutate(e.id); }}
+                        onClick={async () => { if ((await confirmAsk('삭제하시겠습니까?'))) deleteExpense.mutate(e.id); }}
                         className="shrink-0 w-7 h-7 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50 transition"
                       >
                         <Trash2 size={14} />
@@ -358,7 +411,7 @@ export default function ExpensesPage() {
                   <span className="text-sm text-neutral-700 flex-1 min-w-0 break-words">{item.memo || item.category}</span>
                   <span className="text-sm font-bold shrink-0 whitespace-nowrap">{formatKRW(item.amount)}</span>
                   <button title="삭제" aria-label="삭제"
-                    onClick={() => { if (confirm('고정 경비를 삭제하시겠습니까?')) deleteRecurring.mutate(item.id); }}
+                    onClick={async () => { if ((await confirmAsk('고정 경비를 삭제하시겠습니까?'))) deleteRecurring.mutate(item.id); }}
                     className="shrink-0 w-9 h-9 lg:w-6 lg:h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50"
                   >
                     <Trash2 size={12} />

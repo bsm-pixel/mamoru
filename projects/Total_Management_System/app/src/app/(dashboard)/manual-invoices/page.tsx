@@ -8,6 +8,7 @@ import type { ManualInvoice } from '@/lib/supabase/types';
 import { Truck, X, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 function formatTime(iso: string): string {
   try {
@@ -57,8 +58,8 @@ function TodayInvoiceRow({ invoice, onCancel, isCancelling }: {
       <span className="text-[11px] text-neutral-400 shrink-0">{formatTime(invoice.created_at)}</span>
       <button
         type="button"
-        onClick={() => {
-          if (window.confirm(`송장번호 ${invoice.invoice_number}을(를) 정말 취소하시겠습니까?\n\nALPS에 취소 요청이 전송됩니다.`)) {
+        onClick={async () => {
+          if ((await confirmAsk(`송장번호 ${invoice.invoice_number}을(를) 정말 취소하시겠습니까?\n\nALPS에 취소 요청이 전송됩니다.`))) {
             onCancel(invoice.id);
           }
         }}

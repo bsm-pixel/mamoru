@@ -27,6 +27,7 @@ import { isReturnableDeliveryItem } from '@/lib/deliveries/apply-return';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR } from '@/lib/returns/transitions';
 import type { ReturnStatus } from '@/lib/supabase/types';
 import Link from 'next/link';
+import { matchSearch } from '@/lib/utils/search-match';
 
 // 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
@@ -78,7 +79,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
     if (editItems.find((ei) => ei.product_id === p.id)) return false;
     const q = addSearch.trim().toLowerCase();
     if (!q) return true;
-    return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+    return matchSearch(q, p.name, p.sku);
   });
   // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
   const addPick = useEnterSelect(addableProducts, (p: Product) => { addEditItem(p); setAddSearch(''); });

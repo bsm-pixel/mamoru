@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/utils/format';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { EmptyState } from '@/components/ui/empty-state';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 interface Review {
   id: string;
@@ -522,7 +523,7 @@ export default function ReviewsPage() {
                     <div className="flex justify-end gap-1.5">
                       <button
                         onClick={async () => {
-                          if (!window.confirm(`${it.customerName}님 후기 요청 ${sentDate ? '재발송' : '발송'}하시겠습니까?`)) return;
+                          if (!(await confirmAsk(`${it.customerName}님 후기 요청 ${sentDate ? '재발송' : '발송'}하시겠습니까?`))) return;
                           const reviewType = it.source === 'consultation' ? 'consult' : it.source === 'repair' ? 'repair' : 'purchase';
                           const res = await fetch('/api/reviews/request', {
                             method: 'POST',
@@ -543,7 +544,7 @@ export default function ReviewsPage() {
                       </button>
                       <button
                         onClick={async () => {
-                          if (!window.confirm(`${it.customerName}님 건의 후기 자동발송을 해제하시겠습니까?\n\n(해제해도 수동 발송은 가능합니다)`)) return;
+                          if (!(await confirmAsk(`${it.customerName}님 건의 후기 자동발송을 해제하시겠습니까?\n\n(해제해도 수동 발송은 가능합니다)`))) return;
                           const res = await fetch('/api/reviews/promise', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },

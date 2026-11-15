@@ -11,6 +11,7 @@ import { formatKRW, toLocalDateString } from '@/lib/utils/format';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import { Package, Boxes, TrendingUp, Trophy, ArrowLeft, Search } from 'lucide-react';
+import { matchSearch } from '@/lib/utils/search-match';
 
 // 기간 프리셋 — toLocalDateString(KST). reports/page.tsx 와 동일 로직
 function getPreset(key: string): { from: string; to: string } {
@@ -89,7 +90,7 @@ export default function ProductSalesPage() {
     let list = data?.by_product ? [...data.by_product] : [];
     if (cat !== 'all') list = list.filter((p) => (p.category || '') === cat);
     const s = q.trim().toLowerCase();
-    if (s) list = list.filter((p) => (p.product_name || '').toLowerCase().includes(s) || (p.sku || '').toLowerCase().includes(s));
+    if (s) list = list.filter((p) => matchSearch(s, p.product_name, p.sku));
     if (channel !== 'all') list = list.filter((p) => { const v = viewOf(p, channel); return v.qty > 0 || v.revenue > 0; });
     list.sort((a, b) => {
       const va = viewOf(a, channel), vb = viewOf(b, channel);

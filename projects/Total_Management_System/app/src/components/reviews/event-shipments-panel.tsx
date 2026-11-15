@@ -15,6 +15,7 @@ import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { EscClose } from '@/components/ui/esc-close';
 import { formatDateTimeShort } from '@/lib/utils/format';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 interface Prefill { postcode: string; address_road: string; address_detail: string; source: string }
 interface Item {
@@ -83,7 +84,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
   async function notify(ids?: string[]) {
     const n = ids ? ids.length : items.filter((i) => !i.won_notified_at).length;
     if (!n) { toast('보낼 대상이 없습니다'); return; }
-    if (!window.confirm(`당첨 안내 알림톡을 ${n}명에게 보냅니다.\n(솔라피 템플릿 승인 + Make 연결 전이면 고객에게 도착하지 않습니다)`)) return;
+    if (!(await confirmAsk(`당첨 안내 알림톡을 ${n}명에게 보냅니다.\n(솔라피 템플릿 승인 + Make 연결 전이면 고객에게 도착하지 않습니다)`))) return;
     const r = await post({ action: 'notify', month, ids }, ids ? `notify-${ids[0]}` : 'notify-all');
     if (r) {
       if (r.failed?.length) toast.error(`${r.sent}명 발송 · 실패 ${r.failed.length}명: ${r.failed.join(', ')}`);
@@ -103,25 +104,25 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
   }
 
   async function makeInvoice(it: Item) {
-    if (!window.confirm(`${it.name}님 송장을 생성합니다.\n${[it.address_road, it.address_detail].filter(Boolean).join(' ')}`)) return;
+    if (!(await confirmAsk(`${it.name}님 송장을 생성합니다.\n${[it.address_road, it.address_detail].filter(Boolean).join(' ')}`))) return;
     const r = await post({ action: 'invoice', id: it.id }, `inv-${it.id}`);
     if (r) { toast.success(`송장 ${r.invoiceNumber} 생성 — ALPS에서 출력하세요`); load(); }
   }
 
   async function cancelInvoice(it: Item) {
-    if (!window.confirm(`송장 ${it.invoice_number} 을(를) 취소합니다.`)) return;
+    if (!(await confirmAsk(`송장 ${it.invoice_number} 을(를) 취소합니다.`))) return;
     const r = await post({ action: 'cancel_invoice', id: it.id }, `cinv-${it.id}`);
     if (r) { toast.success('송장을 취소했습니다'); load(); }
   }
 
   // ── 직접전달 (2026-10-08) ── 나중에 방문해서 받아가는 당첨자. 송장을 만들지 않는다
   async function directPlan(it: Item) {
-    if (!window.confirm(`${it.name}님을 직접전달(방문 수령)로 바꿉니다.\n송장을 만들지 않고, 건네신 뒤 [전달완료]를 누르면 끝납니다.`)) return;
+    if (!(await confirmAsk(`${it.name}님을 직접전달(방문 수령)로 바꿉니다.\n송장을 만들지 않고, 건네신 뒤 [전달완료]를 누르면 끝납니다.`))) return;
     const r = await post({ action: 'direct_plan', id: it.id }, `dp-${it.id}`);
     if (r) { toast.success('직접전달 예정으로 바꿨습니다'); load(); }
   }
   async function directDone(it: Item) {
-    if (!window.confirm(`${it.name}님께 ${it.prize || '당첨 상품'}을(를) 건넨 것으로 처리합니다.`)) return;
+    if (!(await confirmAsk(`${it.name}님께 ${it.prize || '당첨 상품'}을(를) 건넨 것으로 처리합니다.`))) return;
     const r = await post({ action: 'direct_done', id: it.id }, `dd-${it.id}`);
     if (r) { toast.success('전달완료 처리했습니다'); load(); }
   }
@@ -129,7 +130,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
     const msg = it.delivered_at
       ? `${it.name}님 전달완료를 취소하고 '직접전달 예정'으로 되돌립니다.`
       : `${it.name}님을 택배 발송으로 되돌립니다.\n(배송지 입력 → 송장 생성 흐름으로 돌아갑니다)`;
-    if (!window.confirm(msg)) return;
+    if (!(await confirmAsk(msg))) return;
     const r = await post({ action: 'direct_undo', id: it.id }, `du-${it.id}`);
     if (r) { toast.success(r.back === 'planned' ? '직접전달 예정으로 되돌렸습니다' : '택배 발송으로 되돌렸습니다'); load(); }
   }

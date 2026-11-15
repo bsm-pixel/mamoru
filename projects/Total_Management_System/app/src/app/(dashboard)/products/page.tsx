@@ -18,6 +18,7 @@ import type { Product } from '@/lib/supabase/types';
 
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+import { matchSearch } from '@/lib/utils/search-match';
 
 const CATEGORY_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
@@ -70,7 +71,7 @@ export default function ProductsPage() {
     if (search) {
       const q = search.toLowerCase();
       list = list.filter((p) =>
-        p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+        matchSearch(q, p.name, p.sku)
       );
     }
     return list;
@@ -121,7 +122,8 @@ export default function ProductsPage() {
             <div className="flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3 py-2 rounded-lg bg-blue-50 min-w-0 whitespace-nowrap">
               <Package size={14} className="hidden lg:block text-blue-600 shrink-0" />
               <span className="text-xs text-neutral-500">전체</span>
-              <span className="text-sm font-bold text-blue-700">{products.length}</span>
+              {/* 2026-11-15 아래 「전체」 칩과 같은 기준(부자재 제외) — 전엔 위 163 · 아래 155 로 달랐다 */}
+              <span className="text-sm font-bold text-blue-700">{products.filter((p) => p.category !== 'SUP').length}</span>
             </div>
             {lowStockCount > 0 && (
               <div className="flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-3 py-2 rounded-lg bg-red-50 min-w-0 whitespace-nowrap">

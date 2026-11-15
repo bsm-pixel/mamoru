@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import type { Order, OrderItem } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { matchSearch } from '@/lib/utils/search-match';
 
 /**
  * 주문 교환 모달 (아임웹 온라인 주문) — 매출·카드 불변, 상품/재고만 스왑.
@@ -62,7 +63,7 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
   const defaultReceived = diff;
 
   const filteredProducts = useMemo(() => (products as ProductLike[]).filter((p) =>
-    !prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()),
+    !prodSearch || matchSearch(prodSearch, p.name, p.sku),
   ).slice(0, 40), [products, prodSearch]);
 
   function setRow(key: number, patch: Partial<NewRow>) {

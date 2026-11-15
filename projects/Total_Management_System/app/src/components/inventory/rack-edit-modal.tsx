@@ -8,6 +8,7 @@ import {
   useMergeCells, useSplitCell, type LocationWithProducts,
 } from '@/hooks/use-warehouse';
 import { cellSpan, binLetter } from '@/lib/warehouse/location-code';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 /**
  * 렉 구조 수정 모달 — 115 / 116, 2026-07-18~20
@@ -218,9 +219,9 @@ export function RackEditModal({ rackNo, rackLabel, levels, onClose, onDeleteRack
                         return (
                           <button
                             key={cell.id}
-                            onClick={() => {
+                            onClick={async () => {
                               if (mergeMode) { toggleSel(cell.id); return; }
-                              if (hasProd && !window.confirm(`'${cell.code}' 에 제품 ${cell.product_count}종이 있습니다.\n삭제하면 그 제품들은 '위치 미지정'이 됩니다. 계속할까요?`)) return;
+                              if (hasProd && !(await confirmAsk(`'${cell.code}' 에 제품 ${cell.product_count}종이 있습니다.\n삭제하면 그 제품들은 '위치 미지정'이 됩니다. 계속할까요?`))) return;
                               deleteLocation.mutate({ id: cell.id });
                             }}
                             disabled={busy}
@@ -268,11 +269,11 @@ export function RackEditModal({ rackNo, rackLabel, levels, onClose, onDeleteRack
         {/* 렉 삭제 */}
         <div className="pt-3 border-t border-neutral-100">
           <button
-            onClick={() => {
+            onClick={async () => {
               const msg = assignedCells > 0
                 ? `${rackNo}번 렉을 통째로 삭제합니다.\n제품이 있는 자리 ${assignedCells}개의 제품은 '위치 미지정'으로 바뀝니다.\n\n계속할까요?`
                 : `${rackNo}번 렉을 통째로 삭제합니다. (자리 ${totalCells}개)\n\n계속할까요?`;
-              if (!window.confirm(msg)) return;
+              if (!(await confirmAsk(msg))) return;
               onDeleteRack();
             }}
             disabled={busy}

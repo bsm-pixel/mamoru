@@ -36,6 +36,7 @@ const STATUS_TABS = [
   { value: 'partial', label: '부분입고' },
   { value: 'received', label: '입고완료' },
   { value: 'balance_paid', label: '잔금완료' },
+  { value: 'cancelled', label: '취소' },   // 2026-11-15 취소한 발주만 따로 볼 수 있게
 ];
 
 /** 상태 표기 — 입고 전이지만 잔금까지 다 냈으면 '결제완료'(선납완료 오해 방지). PORow·그리드 공용(드리프트 0) */

@@ -7,6 +7,7 @@ import type { InventoryItem } from '@/hooks/use-inventory';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { SearchPick } from '@/components/ui/search-pick';
 
 const ADJUSTMENT_TYPES = [
   { value: 'correction', label: '실사 보정' },
@@ -24,7 +25,12 @@ interface AdjustModalProps {
 export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
   const [productId, setProductId] = useState('');
   const [adjustmentType, setAdjustmentType] = useState('correction');
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantityNum] = useState(0);
+  // 2026-11-15 수량 칸에 -5 를 직접 칠 수 있게 — 숫자 칸은 "-" 만 친 순간 0 으로 되돌아가 음수를 못 넣었다
+  const [qtyText, setQtyText] = useState('0');
+  const setQuantity = (v: number | ((q: number) => number)) => {
+    setQuantityNum((q) => { const n = typeof v === 'function' ? v(q) : v; setQtyText(String(n)); return n; });
+  };
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,18 +82,19 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
           {/* 제품 선택 */}
           <div>
             <label className="text-xs text-neutral-500 mb-1 block">제품 *</label>
-            <select
-              value={productId}
-              onChange={(e) => { setProductId(e.target.value); setQuantity(0); }}
-              className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
-            >
-              <option value="">제품 선택...</option>
-              {items.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.name} ({i.sku}) — 현재 {i.stock_quantity}개
-                </option>
-              ))}
-            </select>
+            {/* 2026-11-15 검색 없는 긴 목록 → 검색해서 고르기 (이름 · SKU · 초성) */}
+            <SearchPick
+              items={items}
+              value={selectedProduct || null}
+              onPick={(i) => { setProductId(i.id); setQuantity(0); }}
+              onClear={() => { setProductId(''); setQuantity(0); }}
+              getKey={(i) => i.id}
+              getLabel={(i) => i.name}
+              getSub={(i) => i.sku}
+              getRight={(i) => `현재 ${i.stock_quantity}개`}
+              placeholder="제품 이름 · SKU 검색"
+              autoFocus
+            />
           </div>
 
           {/* 조정 유형 */}
@@ -122,9 +129,16 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
                 <Minus size={18} />
               </button>
               <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
+                type="text"
+                inputMode="numeric"
+                aria-label="수량 변경 (줄이려면 -5 처럼)"
+                value={qtyText}
+                onChange={(e) => {
+                  const t = e.target.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, '');
+                  setQtyText(t);
+                  setQuantityNum(parseInt(t) || 0);
+                }}
+                onFocus={(e) => e.target.select()}
                 className="w-20 h-10 text-center rounded-lg border border-neutral-200 bg-warm-ivory text-lg font-bold focus:outline-none focus:ring-2 focus:ring-terracotta/40"
               />
               <button title="수량 늘리기" aria-label="수량 늘리기"

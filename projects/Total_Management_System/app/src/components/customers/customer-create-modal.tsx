@@ -11,7 +11,7 @@ import { TagSelector } from '@/components/shared/tag-selector';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
-import { phoneError, typingPhone } from '@/lib/utils/validate';
+import { phoneError, emailError, typingPhone } from '@/lib/utils/validate';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -22,6 +22,7 @@ const TYPE_OPTIONS = [
 interface CustomerCreateData {
   name: string;
   phone: string;
+  email: string;
   customer_type: string;
   postcode: string;
   address_road: string;
@@ -42,7 +43,7 @@ interface Props {
 }
 
 const BLANK: CustomerCreateData = {
-  name: '', phone: '', customer_type: 'retail',
+  name: '', phone: '', email: '', customer_type: 'retail',
   postcode: '', address_road: '', address_detail: '',
   company_name: '', activity_name: '', position: '', memo: '', tags: [],
 };
@@ -69,6 +70,8 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
     if (!form.phone.trim()) return toast.error('연락처를 입력해주세요');
     const phoneErr = phoneError(form.phone);   // 2026-11-15 서버와 같은 규칙으로 저장 전에 알려 준다
     if (phoneErr) return toast.error(phoneErr);
+    const emailErr = emailError(form.email.trim() || undefined);   // 이메일은 비워도 된다 — 넣었을 때만 모양 검사
+    if (emailErr) return toast.error(emailErr);
 
     setSaving(true);
     try {
@@ -78,6 +81,7 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
         body: JSON.stringify({
           name: form.name.trim(),
           phone: form.phone.trim(),
+          email: form.email.trim() || undefined,
           customer_type: form.customer_type,
           postcode: form.postcode || undefined,
           address_road: form.address_road || undefined,
@@ -201,6 +205,13 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
               <input type="text" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })}
                 placeholder="예) 원장 / 디자이너" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
+          </div>
+
+          {/* 이메일 (2026-11-15 추가 — 세금계산서 · 계약서 보낼 곳. 비워도 된다) */}
+          <div>
+            <label className="text-xs text-neutral-500 mb-1 block">이메일</label>
+            <input type="email" inputMode="email" autoComplete="off" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="선택 — 세금계산서 · 계약서 받을 주소" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
           </div>
 
           {/* 주소 */}

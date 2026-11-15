@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useCustomers } from '@/hooks/use-customers';
 import { ChevronDown, X } from 'lucide-react';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { matchSearch } from '@/lib/utils/search-match';
 
 interface SupplierSelectProps {
   value: string;          // supplier_id
@@ -21,10 +22,7 @@ export function SupplierSelect({ value, displayName, onChange, placeholder = 'ë§
   const suppliers = data?.customers || [];
 
   const filtered = search
-    ? suppliers.filter((s) =>
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        (s.company_name && s.company_name.toLowerCase().includes(search.toLowerCase()))
-      )
+    ? suppliers.filter((s) => matchSearch(search, s.name, s.company_name, s.phone))
     : suppliers;
 
   const selectedName = displayName || suppliers.find((s) => s.id === value)?.name || '';

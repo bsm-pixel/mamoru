@@ -17,6 +17,8 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { useEnterSelect } from '@/hooks/use-enter-select';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { confirmAsk } from '@/components/ui/confirm-ask';
+import { matchSearch } from '@/lib/utils/search-match';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -55,7 +57,7 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
     if (editItems.find((ei) => ei.product_id === p.id)) return false;
     const q = addSearch.trim().toLowerCase();
     if (!q) return true;
-    return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+    return matchSearch(q, p.name, p.sku);
   });
   function addEditItem(p: typeof products[number]) {
     setEditItems(prev => [...prev, { product_id: p.id, product_name: p.name, sku: p.sku, quantity: 1, unit_price: p.price_purchase || p.price }]);
@@ -399,8 +401,8 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
           <Button
             variant="ghost"
             className="w-full text-red-500 hover:text-red-600"
-            onClick={() => {
-              if (!confirm('이 발주를 영구 삭제합니다. 되돌릴 수 없습니다.')) return;
+            onClick={async () => {
+              if (!(await confirmAsk('이 발주를 영구 삭제합니다. 되돌릴 수 없습니다.'))) return;
               deletePO.mutate(purchaseId, {
                 onSuccess: () => {
                   queryClient.removeQueries({ queryKey: ['purchase-order', purchaseId] });
@@ -424,7 +426,7 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
           onConfirm={() => handleAction(pendingAction.status, pendingAction.extra)}
           title={pendingAction.label}
           message={<span className="whitespace-pre-wrap">{pendingAction.msg}</span>}
-          confirmLabel={pendingAction.label}
+          confirmLabel={pendingAction.status === 'cancelled' ? '취소 확정' : pendingAction.label}
           variant={pendingAction.variant || 'default'}
         />
       )}

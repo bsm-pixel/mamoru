@@ -119,6 +119,8 @@ export async function POST(req: NextRequest) {
         memo: memo || null,
         tags: Array.isArray(tags) ? tags : [],
         source: 'manual',
+        // 2026-11-15 매입처 등록 창이 받던 사업자 정보 — 전엔 칸만 있고 저장되지 않았다
+        ...Object.fromEntries(['business_number', 'representative', 'business_type', 'business_category', 'contact_channel'].filter((k) => typeof body[k] === 'string' && body[k].trim()).map((k) => [k, body[k].trim()])),
       })
       .select()
       .single();

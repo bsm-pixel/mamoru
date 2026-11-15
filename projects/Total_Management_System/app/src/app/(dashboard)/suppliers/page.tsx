@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { kstDate } from '@/lib/utils/kst';
+import { useState, useEffect, useMemo } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +11,7 @@ import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCustomers, useCreateCustomer } from '@/hooks/use-customers';
-import { formatKRW, formatPhone } from '@/lib/utils/format';
+import { formatKRW, formatPhone, formatDateFull } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Building2, Users, GraduationCap, Plus, X, Pencil, Package, Save, Trash2, Search, Printer, School, Briefcase, Building, Hospital, Store } from 'lucide-react';
@@ -26,6 +25,8 @@ import toast from 'react-hot-toast';
 import type { Customer } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { MissingNote } from '@/components/ui/missing-note';
+import { matchSearch } from '@/lib/utils/search-match';
 
 // 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
 // supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
@@ -131,7 +132,7 @@ export default function B2BPartnersPage() {
   const partnerColumns = useMemo<GridColumn<Customer>[]>(() => [
     { key: 'company', label: '거래처', render: (p) => <span className="font-semibold text-indigo-black truncate">{p.company_name || p.name}</span> },
     { key: 'type', label: '유형', render: (p) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${BADGE_STYLE[p.customer_type] || 'bg-neutral-100 text-neutral-600'}`}>{BADGE_LABEL[p.customer_type] || p.customer_type}</span> },
-    { key: 'name', label: '담당자', render: (p) => <span className="text-neutral-600 truncate">{p.company_name ? p.name : '—'}</span> },
+    { key: 'name', label: '담당자', render: (p) => <span className="text-neutral-600 truncate">{p.company_name && p.name !== p.company_name ? p.name : '—'}</span> },
     { key: 'phone', label: '연락처', render: (p) => <span className="text-neutral-500 tabular-nums">{p.phone ? formatPhone(p.phone) : '—'}</span> },
     { key: 'spent', label: '총거래', align: 'right', render: (p) => <span className="font-semibold tabular-nums text-indigo-black">{p.total_spent > 0 ? formatKRW(p.total_spent) : '—'}</span> },
     { key: 'outstanding', label: '미수금', align: 'right', render: (p) => (p.outstanding_balance > 0 ? <span className="font-bold tabular-nums text-red-500">{formatKRW(p.outstanding_balance)}</span> : <span className="text-neutral-300">—</span>) },
@@ -270,7 +271,7 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [detailTab, setDetailTab] = useState<'info' | 'catalog'>('info');
-  const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', memo: '', customer_type: '' });
+  const [form, setForm] = useState({ name: '', company_name: '', phone: '', email: '', memo: '', customer_type: '', business_number: '', representative: '', business_type: '', business_category: '' });
   const [showCollect, setShowCollect] = useState(false);
 
   useEffect(() => {
@@ -279,6 +280,8 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
       phone: p.phone || '', email: p.email || '',
       memo: p.memo || '',
       customer_type: p.customer_type || '',
+      business_number: p.business_number || '', representative: p.representative || '',
+      business_type: p.business_type || '', business_category: p.business_category || '',
     });
     setEditing(false);
     setDetailTab('info');
@@ -288,7 +291,8 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
     try {
       const res = await fetch(`/api/customers/${p.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        // 2026-11-15 담당자를 비우면 비워 둔다 — 저장은 업체명으로(이름 칸은 비울 수 없어서), 화면에는 「—」
+        body: JSON.stringify({ ...form, name: (form.name || '').trim() || form.company_name }),
       });
       if (!res.ok) throw new Error();
       toast.success('거래처 수정 완료');
@@ -375,6 +379,14 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
                 <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
               </div>
+              {/* 2026-11-15 사업자 정보 (세금계산서용) */}
+              {([['business_number', '사업자등록번호'], ['representative', '대표자명'], ['business_type', '업태'], ['business_category', '종목']] as const).map(([k, label]) => (
+                <div key={k}>
+                  <label className="text-xs text-neutral-500">{label}</label>
+                  <input value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                    className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
+                </div>
+              ))}
             </div>
             <div>
               <label className="text-xs text-neutral-500">메모</label>
@@ -389,10 +401,15 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><p className="text-xs text-neutral-400">담당자</p><p className="font-medium">{p.name}</p></div>
+              <div><p className="text-xs text-neutral-400">담당자</p><p className="font-medium">{p.name && p.name !== p.company_name ? p.name : '—'}</p></div>
               <div><p className="text-xs text-neutral-400">연락처</p><p className="font-medium">{p.phone ? formatPhone(p.phone) : '-'}</p></div>
               <div><p className="text-xs text-neutral-400">이메일</p><p>{p.email || '-'}</p></div>
-              <div><p className="text-xs text-neutral-400">등록일</p><p>{p.created_at ? kstDate(p.created_at) : '-'}</p></div>
+              <div><p className="text-xs text-neutral-400">등록일</p><p>{p.created_at ? formatDateFull(p.created_at) : '-'}</p></div>
+              {/* 2026-11-15 사업자 정보 — 넣은 것만 보인다 */}
+              {p.business_number && <div><p className="text-xs text-neutral-400">사업자등록번호</p><p className="tabular-nums">{p.business_number}</p></div>}
+              {p.representative && <div><p className="text-xs text-neutral-400">대표자</p><p>{p.representative}</p></div>}
+              {p.business_type && <div><p className="text-xs text-neutral-400">업태</p><p>{p.business_type}</p></div>}
+              {p.business_category && <div><p className="text-xs text-neutral-400">종목</p><p>{p.business_category}</p></div>}
             </div>
             {p.address_road && (
               <div className="text-sm">
@@ -455,7 +472,7 @@ function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: stri
   const catalogProductIds = new Set(catalog.map((c) => c.product_id));
   const availableProducts = products.filter((p) => !catalogProductIds.has(p.id) && p.category !== 'SUP');
   const filtered = productSearch.length >= 1
-    ? availableProducts.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(productSearch.toLowerCase())).slice(0, 10)
+    ? availableProducts.filter((p) => matchSearch(productSearch, p.name, p.sku)).slice(0, 10)
     : availableProducts.slice(0, 10);
 
   function startEdit(entry: typeof catalog[0]) {
@@ -629,6 +646,12 @@ function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; 
       address_road: form.address.trim() || undefined,
       memo: form.memo.trim() || undefined,
       customer_type: partnerType,
+      // 2026-11-15 사업자 정보 저장(전엔 입력만 받고 버려졌다)
+      business_number: form.businessNumber.trim() || undefined,
+      representative: form.representative.trim() || undefined,
+      business_type: form.businessType.trim() || undefined,
+      business_category: form.businessCategory.trim() || undefined,
+      contact_channel: form.contactChannel.trim() || undefined,
     });
     onClose();
   }
@@ -724,7 +747,8 @@ function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; 
               className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40 resize-none" />
           </div>
         </div>
-        <div className="px-5 py-4 border-t border-neutral-100 flex gap-2 sticky bottom-0 bg-white rounded-b-xl">
+        <div className="px-5 py-4 border-t border-neutral-100 flex flex-wrap gap-2 sticky bottom-0 bg-white rounded-b-xl">
+          <MissingNote className="w-full" items={[!form.companyName.trim() && '상호명']} />
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.companyName.trim() || createCustomer.isPending} onClick={handleSubmit}>
             {createCustomer.isPending ? '등록 중...' : '거래처 등록'}

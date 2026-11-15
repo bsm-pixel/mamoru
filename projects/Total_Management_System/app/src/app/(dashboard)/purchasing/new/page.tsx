@@ -15,6 +15,7 @@ import { LowStockPickerModal } from '@/components/purchasing/low-stock-picker-mo
 import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter, Search } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { matchSearch } from '@/lib/utils/search-match';
 
 interface POItem {
   product: Product | null;
@@ -59,8 +60,7 @@ export default function NewPurchaseOrderPage() {
       ? products.filter(p => catalogProductIds.has(p.id))
       : products;
     if (productSearch) {
-      const q = productSearch.toLowerCase();
-      list = list.filter(p => p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) || (p.product_group || '').toLowerCase().includes(q));
+      list = list.filter(p => matchSearch(productSearch, p.name, p.sku, p.product_group));
     }
     return list;
   })();

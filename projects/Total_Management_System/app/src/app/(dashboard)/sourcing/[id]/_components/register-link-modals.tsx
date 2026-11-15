@@ -8,6 +8,7 @@ import { useLinkSourcingItem, type SourcingItem } from '@/hooks/use-sourcing';
 import { useProducts } from '@/hooks/use-sales';
 import { useSetting } from '@/hooks/use-settings';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { matchSearch } from '@/lib/utils/search-match';
 
 type Mode = 'product' | 'supply' | 'link';
 
@@ -164,7 +165,7 @@ function LinkMode({ item, link, onClose }: {
     const s = q.trim().toLowerCase();
     if (!s) return products.slice(0, 40);
     return products
-      .filter((p) => (p.name || '').toLowerCase().includes(s) || (p.sku || '').toLowerCase().includes(s))
+      .filter((p) => matchSearch(s, p.name, p.sku))
       .slice(0, 40);
   }, [products, q]);
 

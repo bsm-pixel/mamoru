@@ -15,7 +15,7 @@ import { CustomerQuickModal } from '@/components/customers/customer-quick-modal'
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone, formatDateTimeShort, formatDateFull } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
-import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, MapPin } from 'lucide-react';
+import { RefreshCw, Undo2, Wrench, Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, MapPin } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
@@ -42,6 +42,8 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { todayKST } from '@/lib/utils/kst';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { confirmAsk } from '@/components/ui/confirm-ask';
+import { matchSearch } from '@/lib/utils/search-match';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -598,7 +600,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         <button
           type="button"
           onClick={async () => {
-            if (!window.confirm('상담 연결을 해제하시겠습니까? 후기 관리가 다시 이 판매에서 활성화됩니다.')) return;
+            if (!(await confirmAsk('상담 연결을 해제하시겠습니까? 후기 관리가 다시 이 판매에서 활성화됩니다.'))) return;
             const res = await fetch(`/api/sales/${saleId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
@@ -971,13 +973,13 @@ export function SaleDetailPanel({ saleId }: Props) {
         <div className="pt-2 border-t border-neutral-100">
           <MoreActions label="반품 · 교환 · 취소">
             <SubtleButton onClick={() => setShowExchange(true)}>
-              🔄 제품 교환 (구제품 반납 + 새 제품 배정)
+              <RefreshCw size={13} className="inline -mt-0.5 mr-1.5" />제품 교환 (구제품 반납 + 새 제품 배정)
             </SubtleButton>
             <SubtleButton onClick={() => setReturnMode(true)}>
-              ↩ 반품 처리
+              <Undo2 size={13} className="inline -mt-0.5 mr-1.5" />반품 처리
             </SubtleButton>
             <SubtleButton onClick={() => setShowAdjust(true)}>
-              🛠 점검·조정 후 재발송 (같은 제품 회수 → 손봐서 다시 보냄)
+              <Wrench size={13} className="inline -mt-0.5 mr-1.5" />점검·조정 후 재발송 (같은 제품 회수 → 손봐서 다시 보냄)
             </SubtleButton>
             <DangerZone>
               <DangerLink onClick={() => setShowCancelConfirm(true)}>판매 취소</DangerLink>
@@ -1288,7 +1290,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
   };
 
   const filteredProducts = productSearch.length >= 1
-    ? products.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(productSearch.toLowerCase())).slice(0, 8)
+    ? products.filter((p) => matchSearch(productSearch, p.name, p.sku)).slice(0, 8)
     : [];
 
   const handleSave = async () => {

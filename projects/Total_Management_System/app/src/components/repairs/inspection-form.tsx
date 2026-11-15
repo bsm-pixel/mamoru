@@ -13,6 +13,7 @@ import { CameraCapture } from '@/components/ui/camera-capture';
 import { COMMENT_PRESETS_BY_TYPE } from '@/lib/repair/comment-presets';
 import { SEGS, SEG_KO, kindsFor, checkIdsOf, normalizeChecks, woundLines } from '@/lib/repair/wound-catalog';
 import { WoundDiagram } from './wound-diagram';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const SCISSOR_TYPES = ['블런트', '틴닝', '장가위', '슬라이싱', '기타'];
 const MAX_ZOOM = 3;
@@ -133,10 +134,10 @@ export function InspectionForm({ repairId, existingInspections, totalScissors, o
   const patchActive = (patch: Partial<InspectionItem>) => patchAt(activeIdx, (it) => ({ ...it, ...patch }));
 
   const addScissor = () => { setItems((prev) => [...prev, newInspectionItem(prev.length + 1)]); setActiveIdx(items.length); };
-  const removeScissor = (idx: number) => {
+  const removeScissor = async (idx: number) => {
     if (items.length <= 1) return;
     // 중간 가위를 지우면 뒤 번호가 당겨져 이미 붙인 꼬리표(01/03 등)와 어긋난다 → 확인 후 진행
-    if (idx < items.length - 1 && !window.confirm(`#${idx + 1} 가위를 지우면 뒤 가위 번호가 하나씩 당겨집니다.\n꼬리표를 이미 붙였다면 지운 뒤 꼬리표를 다시 출력해 주세요.\n\n지울까요?`)) return;
+    if (idx < items.length - 1 && !(await confirmAsk(`#${idx + 1} 가위를 지우면 뒤 가위 번호가 하나씩 당겨집니다.\n꼬리표를 이미 붙였다면 지운 뒤 꼬리표를 다시 출력해 주세요.\n\n지울까요?`))) return;
     setItems((prev) => prev.filter((_, i) => i !== idx).map((it, i) => ({ ...it, scissor_number: i + 1 })));
     setActiveIdx(Math.max(0, activeIdx - 1));
   };

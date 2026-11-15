@@ -11,6 +11,7 @@ import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { useCampaigns } from '@/hooks/use-events';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { MissingNote } from '@/components/ui/missing-note';
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -312,13 +313,17 @@ export default function NewProductPage() {
           </div>
         </Card>
 
-        <Button
-          className="w-full"
-          disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending || skuStatus === 'duplicate'}
-          onClick={handleSubmit}
-        >
-          {createProduct.isPending ? '등록 중...' : '제품 등록'}
-        </Button>
+        {/* 2026-11-15 저장 버튼을 화면 아래에 고정 — 긴 입력 칸을 다 내려가지 않아도 보인다. 흐릴 때는 빠진 항목을 적는다 */}
+        <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 -mx-4 md:-mx-6 px-4 md:px-6 py-3 bg-white/95 backdrop-blur-sm border-t border-neutral-200 space-y-1.5">
+          <MissingNote items={[!form.sku.trim() && 'SKU', !form.name.trim() && '제품명', skuStatus === 'duplicate' && '이미 있는 SKU']} />
+          <Button
+            className="w-full"
+            disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending || skuStatus === 'duplicate'}
+            onClick={handleSubmit}
+          >
+            {createProduct.isPending ? '저장 중...' : '저장'}
+          </Button>
+        </div>
       </div>
     </>
   );

@@ -256,12 +256,14 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
             if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); return; }
             // Esc: 드롭다운만 닫음. preventDefault/stopPropagation 으로 모달(native dialog)이 함께 닫히는 것 방지
             if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); setActiveIdx(-1); return; }
+            // Tab = 고르고 다음 칸 (강조된 것, 없으면 첫 번째)
+            if (e.key === 'Tab' && !e.shiftKey && !isLoading && results.length > 0 && query.trim()) { handleSelect(results[activeIdx >= 0 ? activeIdx : 0]); return; }
             if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { // Ctrl+Enter 는 화면의 저장 키 — 여기서 고르지 않는다
               if (isLoading) { e.preventDefault(); return; }
               // ① ↑↓ 로 지정한 고객 선택
               if (activeIdx >= 0 && activeIdx < results.length) { e.preventDefault(); handleSelect(results[activeIdx]); return; }
-              // ② 지정 없이 결과가 딱 1명이면 그 고객 선택
-              if (results.length === 1) { e.preventDefault(); handleSelect(results[0]); return; }
+              // ② 지정이 없으면 첫 번째 고객 (2026-11-15 검색 칸 규칙 통일)
+              if (results.length >= 1) { e.preventDefault(); handleSelect(results[0]); return; }
               // ③ 결과 0명이면 신규 등록 폼 (인라인 허용 시)
               if (results.length === 0 && !disableInlineNewForm) { e.preventDefault(); openNewForm(); return; }
             }

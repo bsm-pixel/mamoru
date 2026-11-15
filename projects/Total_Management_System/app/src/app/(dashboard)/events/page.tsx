@@ -13,6 +13,7 @@ import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -493,11 +494,11 @@ function EventDetail({ ev, patch, del, onDone, goSales, isFree }: {
                 152: 무료 캠페인이면 "입금" 대신 "신청 확정" — 알림톡도 안 나간다 */}
             <button
               disabled={patch.isPending}
-              onClick={() => {
+              onClick={async () => {
                 const msg = isFree
                   ? `${ev.customer_name}님 신청을 확정하고 발송 준비 단계로 넘깁니다. (재고가 차감됩니다)\n무료 이벤트라 입금확인 알림톡은 나가지 않습니다.`
                   : `${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`;
-                if (!window.confirm(msg)) return;
+                if (!(await confirmAsk(msg))) return;
                 patch.mutate({ id: ev.id, action: 'confirm_payment' }, { onSuccess: onDone });
               }}
               className="w-full py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
@@ -519,8 +520,8 @@ function EventDetail({ ev, patch, del, onDone, goSales, isFree }: {
         {ev.status === 'payment_noticed' && (
           <button
             disabled={patch.isPending}
-            onClick={() => {
-              if (!window.confirm(`${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`)) return;
+            onClick={async () => {
+              if (!(await confirmAsk(`${ev.customer_name}님 입금을 확인하고 판매로 전환합니다. (재고가 차감됩니다)`))) return;
               patch.mutate({ id: ev.id, action: 'confirm_payment' }, { onSuccess: onDone });
             }}
             className="w-full py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
@@ -538,11 +539,11 @@ function EventDetail({ ev, patch, del, onDone, goSales, isFree }: {
         {ev.status !== 'cancelled' && (
           <button
             disabled={patch.isPending}
-            onClick={() => {
+            onClick={async () => {
               const msg = ev.status === 'converted'
                 ? '이 접수는 판매로 전환되었습니다.\n판매가 아직 살아있으면 취소가 막힙니다 — 판매관리에서 판매를 먼저 취소/반품하세요.\n계속하시겠습니까?'
                 : '이 접수를 취소합니다.';
-              if (!window.confirm(msg)) return;
+              if (!(await confirmAsk(msg))) return;
               patch.mutate({ id: ev.id, action: 'cancel' }, {
                 onSuccess: onDone,
                 onError: (e) => window.alert(e instanceof Error ? e.message : '취소 실패'),
@@ -558,8 +559,8 @@ function EventDetail({ ev, patch, del, onDone, goSales, isFree }: {
         {(ev.status === 'cancelled' || ev.status === 'converted') && (
           <button
             disabled={del.isPending}
-            onClick={() => {
-              if (!window.confirm('이 접수 기록을 완전히 삭제합니다. 되돌릴 수 없습니다.\n※ 연결된 판매 건은 판매관리에서 별도 관리됩니다.')) return;
+            onClick={async () => {
+              if (!(await confirmAsk('이 접수 기록을 완전히 삭제합니다. 되돌릴 수 없습니다.\n※ 연결된 판매 건은 판매관리에서 별도 관리됩니다.'))) return;
               del.mutate({ id: ev.id }, { onSuccess: onDone });
             }}
             className="w-full py-2 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 disabled:opacity-50 flex items-center justify-center gap-1.5"

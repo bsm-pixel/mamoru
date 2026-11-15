@@ -24,6 +24,7 @@ import toast from 'react-hot-toast';
 import { ReviewRequestModal } from '@/components/sales/review-request-modal';
 import type { ReviewSource } from '@/lib/notification/review-request';
 import { formatDate as fmtDate } from '@/lib/utils/format';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 interface RelatedActivity {
   source: ReviewSource;
@@ -325,7 +326,7 @@ export function ReviewManagementCard({
     if (!customerPhone) { toast.error('고객 연락처가 없어 발송할 수 없습니다'); return; }
     // 자동 발송 예정 confirm 가드 (compact 모드에서만 의미 — 기존 동작 유지)
     if (autoSendPending) {
-      const ok = confirm('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?');
+      const ok = (await confirmAsk('이 건은 배송완료 시 자동 발송될 예정입니다.\n\n지금 수동으로 발송하시겠습니까?'));
       if (!ok) return;
     }
     // 자동발송 OFF → 모달 열기 (유형 선택 → 발송)

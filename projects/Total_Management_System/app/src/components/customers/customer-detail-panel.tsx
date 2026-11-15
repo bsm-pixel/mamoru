@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react';
 import { daysSinceKST } from '@/lib/utils/kst';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -12,8 +12,8 @@ import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
 import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL, CUSTOMER_TYPE_COLOR, CONSULTATION_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
-  Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
-  Clock, Pencil, X, Truck, Copy, Merge, Package,
+  ShoppingBag, FileSignature, MessageSquare, Wrench,
+  Clock, Pencil, Truck, Copy, Merge, Package,
 } from 'lucide-react';
 import { TagBadges, TagSelector } from '@/components/shared/tag-selector';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
@@ -199,9 +199,11 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
   const lastSaleDate = (summary as Record<string, unknown>).lastSaleDate as string | null;
   // 2026-11-15 한국 날짜끼리 뺀다 — 전엔 UTC 자정 기준이라 오전 9시 전에는 「-1일 전」이 나왔다
   const daysSinceLastSale = lastSaleDate ? Math.max(0, daysSinceKST(lastSaleDate)) : 999;
+  // 2026-11-15 구매 0건은 「휴면」이 아니라 「신규」 (고객 미리 보기 창과 같은 기준 — 방금 등록한 고객에게 휴면이 붙던 문제)
   const rfmLabel = summary.totalSales >= 3 || summary.totalSalesAmount >= 500000 ? 'VIP'
+    : summary.totalSales === 0 ? '신규'
     : daysSinceLastSale > 180 ? '휴면' : '일반';
-  const rfmColor = rfmLabel === 'VIP' ? 'bg-amber-100 text-amber-700' : rfmLabel === '휴면' ? 'bg-neutral-200 text-neutral-500' : 'bg-blue-100 text-blue-700';
+  const rfmColor = rfmLabel === 'VIP' ? 'bg-amber-100 text-amber-700' : rfmLabel === '휴면' ? 'bg-neutral-200 text-neutral-500' : rfmLabel === '신규' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-100 text-blue-700';
 
   const tabs = [
     { key: 'profile' as const, label: '프로필' },
@@ -314,11 +316,12 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-stone-900">기본 정보</h3>
               {!editingInfo ? (
-                <button onClick={startInfoEdit} className="text-neutral-400 hover:text-neutral-600" title="고객 정보 수정"><Pencil size={14} /></button>
+                <button onClick={startInfoEdit} className="h-7 px-2.5 rounded-md text-xs font-semibold text-neutral-600 hover:bg-neutral-100 inline-flex items-center gap-1"><Pencil size={12} />수정</button>
               ) : (
                 <div className="flex gap-1">
-                  <button title="수정 취소" aria-label="수정 취소" onClick={() => setEditingInfo(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
-                  <button title="저장" aria-label="저장" onClick={saveInfo} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
+                  {/* 2026-11-15 아이콘만 있던 저장 · 닫기를 글자 버튼으로 */}
+                  <button onClick={() => setEditingInfo(false)} className="h-7 px-2.5 rounded-md text-xs font-semibold text-neutral-600 hover:bg-neutral-100">닫기</button>
+                  <button onClick={saveInfo} disabled={updateCustomer.isPending} className="h-7 px-2.5 rounded-md text-xs font-semibold bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50">저장</button>
                 </div>
               )}
             </div>
@@ -456,18 +459,14 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-stone-900">메모</h3>
               {!editingMemo ? (
-                <button title="수정" aria-label="수정" onClick={startMemoEdit} className="text-neutral-400 hover:text-neutral-600">
-                  <Pencil size={14} />
+                <button onClick={startMemoEdit} className="h-7 px-2.5 rounded-md text-xs font-semibold text-neutral-600 hover:bg-neutral-100 inline-flex items-center gap-1">
+                  <Pencil size={12} />수정
                 </button>
               ) : (
                 <div className="flex gap-1">
-                  <button title="수정 취소" aria-label="수정 취소" onClick={() => setEditingMemo(false)} className="text-neutral-400 hover:text-neutral-600">
-                    <X size={14} />
-                  </button>
-                  <button title="저장" aria-label="저장" onClick={saveMemo} disabled={updateCustomer.isPending}
-                    className="text-blue-600 hover:text-blue-700">
-                    <Save size={14} />
-                  </button>
+                  <button onClick={() => setEditingMemo(false)} className="h-7 px-2.5 rounded-md text-xs font-semibold text-neutral-600 hover:bg-neutral-100">닫기</button>
+                  <button onClick={saveMemo} disabled={updateCustomer.isPending}
+                    className="h-7 px-2.5 rounded-md text-xs font-semibold bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50">저장</button>
                 </div>
               )}
             </div>

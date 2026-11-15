@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { formatDate as fmtDate, formatDateTime as fmtDateTime } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
+import { matchSearch } from '@/lib/utils/search-match';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   in_stock: { label: '재고', color: 'bg-green-100 text-green-700' },
@@ -395,7 +396,7 @@ export default function SerialsPage() {
                     className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
                 <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 flex-1 overflow-y-auto">
-                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
+                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || matchSearch(prodSearch, p.name, p.sku))).map((p) => (
                     <button key={p.id} onClick={() => setSelectedProductId(p.id)} className={`w-full flex items-center justify-between px-4 py-3 text-left transition ${selectedProductId === p.id ? 'bg-stone-100 border-l-2 border-l-stone-900' : 'hover:bg-neutral-50'}`}>
                       <div className="flex items-center gap-2 min-w-0">
                         <Package size={15} className="text-neutral-400 shrink-0" />
@@ -454,7 +455,7 @@ export default function SerialsPage() {
                     className="w-full h-10 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
                 <div className="bg-white rounded-xl border border-neutral-200 divide-y divide-neutral-100 max-h-[60vh] overflow-y-auto">
-                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase()))).map((p) => (
+                  {products.filter((p) => p.category !== 'SUP' && (!prodSearch || matchSearch(prodSearch, p.name, p.sku))).map((p) => (
                     <button key={p.id} onClick={() => setSelectedProductId(p.id)} className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-neutral-50 transition">
                       <div className="flex items-center gap-2 min-w-0">
                         <Package size={15} className="text-neutral-400 shrink-0" />

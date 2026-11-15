@@ -10,6 +10,7 @@ import { FileText, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 export default function TaxInvoicesPage() {
   const queryClient = useQueryClient();
@@ -217,7 +218,7 @@ export default function TaxInvoicesPage() {
                     <td className="px-4 py-2.5 text-right text-neutral-600">{formatKRW(inv.tax_amount)}</td>
                     <td className="px-4 py-2.5 text-right font-bold">{formatKRW(inv.total_amount)}</td>
                     <td className="px-2 py-2.5">
-                      <button title="삭제" aria-label="삭제" onClick={() => { if (confirm('삭제?')) deleteInvoice.mutate(inv.id); }}
+                      <button title="삭제" aria-label="삭제" onClick={async () => { if ((await confirmAsk('삭제?'))) deleteInvoice.mutate(inv.id); }}
                         className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500">
                         <Trash2 size={12} />
                       </button>

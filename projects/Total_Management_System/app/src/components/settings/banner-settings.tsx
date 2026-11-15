@@ -27,6 +27,7 @@ import {
   useBanners, useUpdateBanner, useUploadBannerImage,
   type ImwebBanner, type BannerImage,
 } from '@/hooks/use-banner';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const BANNER_ID = 'main_modal';
 const MAX_IMAGES = 5;
@@ -74,7 +75,7 @@ export default function BannerSettings() {
     });
   }, [main]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // 노출 On인데 이미지 없으면 경고
     if (form.enabled && form.images.length === 0) {
       toast.error('이미지를 최소 1장 업로드해주세요');
@@ -85,13 +86,13 @@ export default function BannerSettings() {
     if (form.enabled && form.ends_at) {
       const endDate = new Date(form.ends_at);
       if (!isNaN(endDate.getTime()) && endDate.getTime() < Date.now()) {
-        const ok = window.confirm(
+        const ok = (await confirmAsk(
           `⚠️ 종료일시가 과거로 설정되어 있습니다.\n\n` +
           `종료일시: ${endDate.toLocaleString('ko-KR')}\n` +
           `현재:     ${new Date().toLocaleString('ko-KR')}\n\n` +
           `이 상태로 저장하면 배너가 고객에게 노출되지 않습니다.\n\n` +
           `계속 저장하시겠습니까?`
-        );
+        ));
         if (!ok) return;
       }
     }
@@ -143,7 +144,7 @@ export default function BannerSettings() {
 
   // 이미지 삭제
   const handleRemoveImage = async (idx: number) => {
-    if (!window.confirm('이 이미지를 삭제하시겠습니까?')) return;
+    if (!(await confirmAsk('이 이미지를 삭제하시겠습니까?'))) return;
     const newImages = form.images.filter((_, i) => i !== idx);
     setForm((f) => ({ ...f, images: newImages }));
     await update.mutateAsync({ id: BANNER_ID, images: newImages } as Partial<ImwebBanner> & { id: string });

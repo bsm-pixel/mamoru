@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink, RefreshCw, Unlink, AlertCircle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDateTime } from '@/lib/utils/format';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 interface StatusData {
   connected: boolean;
@@ -77,7 +78,7 @@ export default function GoogleCalendarSettings() {
   };
 
   const handleDisconnect = async () => {
-    if (!confirm('Google Calendar 연결을 해제하시겠습니까?\n이미 생성된 이벤트는 그대로 유지됩니다.')) return;
+    if (!(await confirmAsk('Google Calendar 연결을 해제하시겠습니까?\n이미 생성된 이벤트는 그대로 유지됩니다.'))) return;
     setBusy(true);
     try {
       const res = await fetch('/api/google/calendar/disconnect', { method: 'POST' });
@@ -94,7 +95,7 @@ export default function GoogleCalendarSettings() {
   };
 
   const handleResync = async () => {
-    if (!confirm('과거 60일 ~ 미래 180일의 확정/완료 건을 Google Calendar로 일괄 동기화합니다.\n진행하시겠습니까?')) return;
+    if (!(await confirmAsk('과거 60일 ~ 미래 180일의 확정/완료 건을 Google Calendar로 일괄 동기화합니다.\n진행하시겠습니까?'))) return;
     setBusy(true);
     try {
       const res = await fetch('/api/google/calendar/resync', { method: 'POST' });

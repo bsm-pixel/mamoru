@@ -27,7 +27,7 @@ export function ConfirmModal({
   title,
   message,
   confirmLabel = '확인',
-  cancelLabel = '취소',
+  cancelLabel = '닫기', // 2026-11-15 「취소」는 '취소하는 창'에서 어느 쪽인지 헷갈려 「닫기」로
   variant = 'default',
   loading: externalLoading,
 }: ConfirmModalProps) {

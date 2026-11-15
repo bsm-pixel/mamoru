@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from 'react-hot-toast';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { NotificationNavigator } from '@/components/notification-navigator';
+import { ConfirmAskHost } from '@/components/ui/confirm-ask';
 
 export const metadata: Metadata = {
   title: 'MAMORU TMS',
@@ -39,9 +40,11 @@ export default function RootLayout({
         <QueryProvider>
           {children}
           <NotificationNavigator />
+          <ConfirmAskHost />
         </QueryProvider>
         <Toaster
-          position="top-right"
+          position="top-center"
+          containerStyle={{ top: 64 }} // 2026-11-15 머리줄(새로고침 · 계정 아이콘)을 가리지 않게 가운데 · 머리줄 아래로
           toastOptions={{
             style: {
               background: 'var(--mm-card-white)',

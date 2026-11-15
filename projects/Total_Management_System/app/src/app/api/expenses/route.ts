@@ -125,6 +125,9 @@ export async function PATCH(req: NextRequest) {
     const { id, expense_date, category, amount, memo, kind, billing_cycle, proof_type } = body;
     if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
 
+    // 2026-11-15 경비 수정 — 금액은 1원 이상, 날짜는 YYYY-MM-DD
+    if (amount !== undefined && !(Number.isFinite(Number(amount)) && Number(amount) > 0)) return NextResponse.json({ error: '금액은 1원 이상이어야 합니다' }, { status: 400 });
+    if (expense_date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(expense_date))) return NextResponse.json({ error: '날짜 모양이 올바르지 않습니다' }, { status: 400 });
     const updateData: Record<string, unknown> = {};
     if (expense_date !== undefined) updateData.expense_date = expense_date;
     if (category !== undefined) updateData.category = category;

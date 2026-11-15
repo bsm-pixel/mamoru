@@ -7,6 +7,7 @@ import { resizeImage } from '@/lib/utils/resize-image';
 import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
 import EventShipmentsPanel from '@/components/reviews/event-shipments-panel';
 import { usePageTitle } from '@/hooks/use-page-title';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
 
@@ -330,11 +331,11 @@ export default function ReviewEventPage() {
     setConfig((c) => ({ ...c, prizes: c.prizes.map((p, i) => { if (i !== idx) return p; const arr = prizeImgList(p).slice(); arr.splice(imgIdx, 1); return { ...p, image_urls: arr, image_url: arr[0] || '' }; }) }));
   }
   // 게시 상태 변경(+저장) — 공개/발표는 확인
-  function changeStatus(s: EventConfig['status']) {
+  async function changeStatus(s: EventConfig['status']) {
     if (s === config.status) { save(s); return; }
-    if (s === 'announced' && !window.confirm('당첨자를 고객 페이지에 공개할까요?')) return;
-    if (s === 'live' && !window.confirm('이달의 이벤트를 고객에게 공개(진행중)할까요?')) return;
-    if (s === 'draft' && config.status !== 'draft' && !window.confirm('고객 페이지에서 내리고 비공개로 전환할까요?')) return;
+    if (s === 'announced' && !(await confirmAsk('당첨자를 고객 페이지에 공개할까요?'))) return;
+    if (s === 'live' && !(await confirmAsk('이달의 이벤트를 고객에게 공개(진행중)할까요?'))) return;
+    if (s === 'draft' && config.status !== 'draft' && !(await confirmAsk('고객 페이지에서 내리고 비공개로 전환할까요?'))) return;
     save(s);
   }
 

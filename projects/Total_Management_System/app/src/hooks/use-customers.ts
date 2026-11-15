@@ -136,6 +136,11 @@ export function useCreateCustomer() {
       company_name?: string;
       memo?: string;
       tags?: string[];
+      business_number?: string;
+      representative?: string;
+      business_type?: string;
+      business_category?: string;
+      contact_channel?: string;
     }) => {
       const res = await fetch('/api/customers', {
         method: 'POST',

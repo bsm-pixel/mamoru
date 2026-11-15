@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import type { ExpenseInboxItem } from '@/app/api/expenses/inbox/route';
 import { PLAN_OPTIONS, toPlan, fromPlan, type ExpensePlan } from '@/lib/expenses/plan';
 import { PROOF_OPTIONS, proofFromDocType, toProof, type ProofType } from '@/lib/expenses/proof';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 const DOC_LABEL: Record<ExpenseInboxItem['doc_type'], string> = {
   card: '카드결제',
@@ -136,7 +137,7 @@ export function ExpenseInbox({ categories }: { categories: string[] }) {
         // 기억된 거래처 = 한 번 [확인]해서 분류를 정한 곳. 중복 의심 건은 빼고 한 번에
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2 px-3 py-2 rounded-md bg-neutral-50">
           <p className="text-xs text-neutral-600">전에 확인한 거래처 <b>{knownCount}건</b>은 같은 분류로 한 번에 등록할 수 있어요</p>
-          <Button size="sm" onClick={() => { if (confirm(`${knownCount}건을 기억된 분류 그대로 경비로 등록할까요?`)) confirmKnown.mutate(); }} disabled={confirmKnown.isPending}>
+          <Button size="sm" onClick={async () => { if ((await confirmAsk(`${knownCount}건을 기억된 분류 그대로 경비로 등록할까요?`))) confirmKnown.mutate(); }} disabled={confirmKnown.isPending}>
             <CheckCheck size={13} />
             <span className="ml-1">{confirmKnown.isPending ? '등록 중...' : `${knownCount}건 한 번에 확인`}</span>
           </Button>
@@ -264,7 +265,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
         <button onClick={() => act.mutate({ action: 'ignore' })} disabled={act.isPending}
           className="h-8 px-2 rounded-md text-xs text-neutral-500 hover:bg-neutral-100">무시</button>
         <button
-          onClick={() => { if (confirm(`「${item.vendor}」은(는) 앞으로 목록에 올리지 않을까요? (지금 대기 중인 같은 거래처 건도 함께 무시)`)) act.mutate({ action: 'ignore', always: true }); }}
+          onClick={async () => { if ((await confirmAsk(`「${item.vendor}」은(는) 앞으로 목록에 올리지 않을까요? (지금 대기 중인 같은 거래처 건도 함께 무시)`))) act.mutate({ action: 'ignore', always: true }); }}
           disabled={act.isPending}
           className="h-8 px-2 rounded-md text-[11px] text-neutral-400 hover:bg-neutral-100"
           title="이 거래처 메일은 앞으로 자동 무시"

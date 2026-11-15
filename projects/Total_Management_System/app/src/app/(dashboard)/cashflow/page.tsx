@@ -12,6 +12,7 @@ import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CASHFLOW_INCOME_CATEGORIES, DEFAULT_CASHFLOW_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 export default function CashflowPage() {
   const queryClient = useQueryClient();
@@ -159,7 +160,7 @@ export default function CashflowPage() {
                       <p className={`text-sm font-bold shrink-0 ${tx.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
                         {tx.type === 'income' ? '+' : '-'}{formatKRW(tx.amount)}
                       </p>
-                      <button title="삭제" aria-label="삭제" onClick={() => { if (confirm('삭제?')) deleteTx.mutate(tx.id); }}
+                      <button title="삭제" aria-label="삭제" onClick={async () => { if ((await confirmAsk('삭제?'))) deleteTx.mutate(tx.id); }}
                         className="shrink-0 w-7 h-7 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50">
                         <Trash2 size={14} />
                       </button>

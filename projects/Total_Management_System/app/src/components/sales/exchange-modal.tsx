@@ -9,6 +9,7 @@ import { Search, RefreshCw, ArrowRight, Store, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { matchSearch } from '@/lib/utils/search-match';
 
 /**
  * 교환 모달 (2026-08-25 · Phase 1 매장 직접 교환)
@@ -111,7 +112,7 @@ export function ExchangeModal({ sale, items, serials, onClose, onDone }: {
 
   const filteredProducts = useMemo(() => (products as ProductLike[]).filter((p) =>
     p.id !== returnItem?.product_id &&
-    (!prodSearch || p.name.toLowerCase().includes(prodSearch.toLowerCase()) || (p.sku || '').toLowerCase().includes(prodSearch.toLowerCase())),
+    (!prodSearch || matchSearch(prodSearch, p.name, p.sku)),
   ).slice(0, 40), [products, prodSearch, returnItem]);
 
   const canConfirm = !!returnItem && !!newProduct && (availSerials.length === 0 || !!newSerialId) && !rebuild.isPending && !creating;

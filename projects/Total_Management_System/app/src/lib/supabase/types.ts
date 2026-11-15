@@ -162,6 +162,11 @@ export interface Database {
           source: 'imweb' | 'consultation' | 'as' | 'manual' | 'event' | 'stock_sale';   // 157
           customer_type: 'retail' | 'online' | 'dealer' | 'academy' | 'supplier';
           company_name: string | null;
+          business_number?: string | null;
+          representative?: string | null;
+          business_type?: string | null;
+          business_category?: string | null;
+          contact_channel?: string | null;
           activity_name: string | null;          // 102: 활동명(매장 사용 이름, 예 하은)
           position: string | null;               // 102: 직급(원장/디자이너 등)
           memo: string | null;

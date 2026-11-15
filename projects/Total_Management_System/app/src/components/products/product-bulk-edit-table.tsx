@@ -9,6 +9,7 @@ import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import type { Product } from '@/lib/supabase/types';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 /* ── 변경 추적 타입 ── */
 type EditedFields = {
@@ -236,8 +237,8 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
   };
 
   /* ── 닫기 (미저장 확인) ── */
-  const handleClose = () => {
-    if (dirtyCount > 0 && !confirm(`${dirtyCount}개 변경사항이 저장되지 않았습니다. 나가시겠습니까?`)) return;
+  const handleClose = async () => {
+    if (dirtyCount > 0 && !(await confirmAsk(`${dirtyCount}개 변경사항이 저장되지 않았습니다. 나가시겠습니까?`))) return;
     onClose();
   };
 

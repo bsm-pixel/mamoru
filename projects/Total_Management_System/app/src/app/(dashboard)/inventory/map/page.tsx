@@ -17,6 +17,8 @@ import { RackMapPrint } from '@/components/inventory/rack-map-print';
 import { cellGridPos, cellSpan, levelColumnCount } from '@/lib/warehouse/location-code';
 import { Modal } from '@/components/ui/modal';
 import { Boxes, MapPin, Plus, ArrowLeft, Trash2, PackageX, Printer, Settings2 } from 'lucide-react';
+import { confirmAsk } from '@/components/ui/confirm-ask';
+import { matchSearch } from '@/lib/utils/search-match';
 
 /**
  * 창고 배치도 (정위치 관리) — 112, 2026-07-18
@@ -46,7 +48,7 @@ export default function WarehouseLayoutPage() {
     if (!q) return new Set<string>();
     const s = new Set<string>();
     for (const loc of locations) {
-      if (loc.products.some((p) => p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q))) {
+      if (loc.products.some((p) => matchSearch(q, p.name, p.sku))) {
         s.add(loc.id);
       }
     }
@@ -144,8 +146,8 @@ export default function WarehouseLayoutPage() {
       />
 
       <button
-        onClick={() => {
-          if (!window.confirm(`'${selected.label || selected.code}' 칸을 삭제할까요?\n배정된 제품 ${selected.product_count}종은 '위치 미지정'으로 바뀝니다.`)) return;
+        onClick={async () => {
+          if (!(await confirmAsk(`'${selected.label || selected.code}' 칸을 삭제할까요?\n배정된 제품 ${selected.product_count}종은 '위치 미지정'으로 바뀝니다.`))) return;
           deleteLocation.mutate({ id: selected.id });
           setSelectedId(null);
         }}
@@ -394,7 +396,7 @@ function AddProductToLocation({ candidates, onAssign, pending }: {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     const base = s
-      ? candidates.filter((p) => p.name.toLowerCase().includes(s) || (p.sku || '').toLowerCase().includes(s))
+      ? candidates.filter((p) => matchSearch(s, p.name, p.sku))
       : candidates;
     return base.slice(0, 30);
   }, [q, candidates]);

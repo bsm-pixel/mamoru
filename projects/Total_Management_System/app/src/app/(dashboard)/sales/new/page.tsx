@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect, useRef } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
@@ -27,6 +27,7 @@ import { TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
 import type { Product } from '@/lib/supabase/types';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { matchSearch } from '@/lib/utils/search-match';
 
 interface CartItem {
   product: Product | null; // null이면 임시 제품
@@ -429,11 +430,10 @@ function NewSaleContent() {
 
   const filteredProducts = products.filter((p) => {
     if (p.category === 'RS') return false; // 복원수리는 상단 "복원수리" 모드로 입력 — 제품 선택 목록에서 제외
-    const matchSearch = !productSearch ||
-      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      (p.sku || '').toLowerCase().includes(productSearch.toLowerCase());
+    const hit = !productSearch ||
+      matchSearch(productSearch, p.name, p.sku); // 2026-11-15 초성 · 띄어쓰기/하이픈 무시
     const matchCat = productCategory === 'all' || p.category === productCategory;
-    return matchSearch && matchCat;
+    return hit && matchCat;
   });
 
   const submitDisabled = (!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending;
@@ -484,8 +484,8 @@ function NewSaleContent() {
                   if (c && (isMSerial(c) || exactSku)) { e.preventDefault(); handleScan(c); setProductSearch(''); setActiveIdx(-1); return; }
                   // ② ↑↓ 로 지정한 활성 행이 있으면 그 제품 담기
                   if (activeIdx >= 0 && activeIdx < filteredProducts.length) { e.preventDefault(); addToCart(filteredProducts[activeIdx]); setProductSearch(''); setActiveIdx(-1); return; }
-                  // ③ 지정 없이 결과가 딱 1개면 그것 담기(오담 방지 — 2개 이상은 무동작)
-                  if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); return; }
+                  // ③ 지정이 없으면 첫 번째 담기 (2026-11-15 검색 칸 규칙 통일 — 전엔 결과가 1개일 때만 담겼다)
+                  if (c && filteredProducts.length >= 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); return; }
                   // ④ 맞는 것이 하나도 없으면 알려 주고 글자를 통째로 선택 — 다음 스캔·입력이 그대로 덮어쓴다
                   if (c && filteredProducts.length === 0) { e.preventDefault(); toast.error(`맞는 제품이 없습니다: ${c}`); e.currentTarget.select(); }
                 }}
@@ -855,7 +855,8 @@ function NewSaleContent() {
           </div>
 
           {/* 우: 장바구니 + 판매등록 */}
-          <div className="space-y-3" id="mm-cart">
+          {/* 2026-11-15 PC: 제품 목록을 내려도 장바구니 · [판매 등록]이 화면에 남는다 */}
+          <div className="space-y-3 xl:sticky xl:top-[72px] xl:self-start xl:max-h-[calc(100vh-88px)] xl:overflow-y-auto" id="mm-cart">
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />

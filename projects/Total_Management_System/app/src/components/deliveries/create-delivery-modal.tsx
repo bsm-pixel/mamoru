@@ -25,6 +25,7 @@ import type { Product } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { matchSearch } from '@/lib/utils/search-match';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -88,7 +89,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   const filteredProducts = products.filter((p) => {
     if (!productSearch) return true;
     const q = productSearch.toLowerCase();
-    return p.name.toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+    return matchSearch(q, p.name, p.sku);
   });
 
   // 가격 결정: catalog.unit_price 우선 → 고객 유형별 → 기본가

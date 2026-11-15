@@ -24,6 +24,7 @@ import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { useCampaigns } from '@/hooks/use-events';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 // 2026-10-29 아임웹 연동 매칭 코드 안내 — 상품 동기화는 ①아임웹 상품번호 ②SKU = 아임웹 「자체 상품코드」 순으로 연결한다
 // (lib/imweb/product-sync.ts). 둘 다 안 맞으면 IW-번호 제품이 새로 생겨 중복되므로 어떤 코드를 맞춰야 하는지 보여준다.
@@ -244,10 +245,10 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       const d = await res.json();
       if (!res.ok) { toast.error(d.error || '재채번 실패'); return; }
       if (d.needConfirm) {
-        const ok = window.confirm(
+        const ok = (await confirmAsk(
           `이 제품은 ${(d.linked || []).join(', ')} 이력이 있습니다.\n` +
           `SKU를 바꾸면 이미 출력한 라벨·연동을 재확인해야 합니다. 계속할까요?`
-        );
+        ));
         if (ok) await handleRenumberSku(true);
         return;
       }
@@ -504,32 +505,32 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         <div className="flex items-center gap-1 shrink-0">
           {!editing ? (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeactivateConfirm(true)}
-                title={p.is_active ? '비활성화' : '활성화'}
-                className={p.is_active ? 'text-neutral-400' : 'text-red-500'}
-              >
-                {p.is_active ? <EyeOff size={14} /> : <Eye size={14} />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-                title="삭제"
-                className="text-neutral-400 hover:text-red-500"
-              >
-                <Trash2 size={14} />
-              </Button>
+              {/* 2026-11-15 아이콘만 있던 버튼에 글자를 붙이고, 삭제는 실수로 누르지 않게 맨 끝으로 떨어뜨린다 */}
+              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>수정</Button>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (onCreated && data?.product) {
                   onCreated('__duplicate__');
                 }
-              }} title="복제">
-                <Copy size={14} />
+              }}>
+                <Copy size={14} />복제
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>수정</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeactivateConfirm(true)}
+                className={p.is_active ? 'text-neutral-500' : 'text-red-500'}
+              >
+                {p.is_active ? <EyeOff size={14} /> : <Eye size={14} />}{p.is_active ? '숨김' : '다시 판매'}
+              </Button>
+              <span className="w-px h-4 bg-neutral-200 mx-1.5" aria-hidden />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-neutral-400 hover:text-red-500"
+              >
+                <Trash2 size={14} />삭제
+              </Button>
             </>
           ) : (
             <>

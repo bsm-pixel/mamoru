@@ -28,6 +28,7 @@ import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
 import { StageGrid } from '@/components/ui/stage-grid';
+import { matchSearch as matchText } from '@/lib/utils/search-match';
 
 interface RepairListProps {
   onSelect?: (id: string) => void;
@@ -94,13 +95,7 @@ function IntakeCell({ repair: r }: { repair: Repair }) {
 
 /** 검색 필터 (이름/전화/접수번호) */
 function matchSearch(r: Repair, q: string): boolean {
-  if (!q) return true;
-  const lower = q.toLowerCase();
-  return (
-    (r.name || '').toLowerCase().includes(lower) ||
-    (r.phone || '').includes(q) ||
-    (r.as_id || '').toLowerCase().includes(lower)
-  );
+  return matchText(q, r.name, r.phone, r.as_id); // 2026-11-15 공용 검색 규칙(초성 · 전화 뒤 4자리 · 하이픈 무시)
 }
 
 /** 여러 탭에 같은 건이 겹칠 수 있어 id 기준 중복 제거(처음 나온 순서 유지) */

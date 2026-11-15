@@ -11,8 +11,9 @@ import { useState, type KeyboardEvent } from 'react';
  *
  * 규칙
  *   ↑ ↓     : 활성 행 이동
- *   Enter   : ① 활성 행이 있으면 그것  ② 없고 결과가 **딱 1개**면 그것
- *             → 결과가 2개 이상인데 지정을 안 했으면 **아무 일도 안 한다**(오선택 방지)
+ *   Enter   : ① 활성 행이 있으면 그것  ② 없으면 **첫 번째** (2026-11-15 — 검색 칸 규칙 통일.
+ *             전엔 결과가 2개 이상이면 아무 일도 안 해서 "두 글자 → Enter" 가 먹지 않았다)
+ *             단, 검색어가 비어 있으면 아무 일도 안 한다(빈 칸에서 Enter 로 엉뚱한 것이 담기지 않게)
  *   🔑 한글 조합 중(isComposing) Enter 는 무시 — 조합 확정용 Enter 가 선택으로 새면 안 된다
  *
  * 사용
@@ -50,8 +51,8 @@ export function useEnterSelect<T>(items: T[], onPick: (item: T) => void) {
       setActiveIdx(-1);
       return;
     }
-    // 지정 없이 결과가 딱 1개일 때만 자동 선택 (2개 이상이면 무동작 — 오선택 방지)
-    if (items.length === 1) {
+    // 지정이 없으면 첫 번째 — 검색어가 있을 때만
+    if (items.length >= 1 && e.currentTarget.value.trim()) {
       e.preventDefault();
       onPick(items[0]);
       setActiveIdx(-1);

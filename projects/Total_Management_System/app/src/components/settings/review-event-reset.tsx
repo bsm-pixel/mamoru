@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 
 interface Preview {
   month: string;
@@ -63,7 +64,7 @@ export default function ReviewEventReset() {
   async function reset() {
     if (!pv || pv.blocked || pv.winners === 0) return;
     const ranks = Object.keys(pv.byRank).sort().map((r) => `${r}등 ${pv.byRank[r]}명`).join(' · ');
-    if (!window.confirm(`${title} 리뷰 이벤트 추첨을 초기화합니다.\n\n당첨 표시 ${pv.winners}명 (${ranks}) 이 모두 해제됩니다.\n상품·마감일 설정은 그대로 둡니다.\n\n계속할까요?`)) return;
+    if (!(await confirmAsk(`${title} 리뷰 이벤트 추첨을 초기화합니다.\n\n당첨 표시 ${pv.winners}명 (${ranks}) 이 모두 해제됩니다.\n상품·마감일 설정은 그대로 둡니다.\n\n계속할까요?`))) return;
     setBusy(true);
     try {
       const res = await fetch('/api/reviews/event/reset', {
