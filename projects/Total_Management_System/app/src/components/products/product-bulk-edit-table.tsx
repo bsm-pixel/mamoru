@@ -54,6 +54,13 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
   const [saveProgress, setSaveProgress] = useState({ done: 0, total: 0 });
   const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
   const tableRef = useRef<HTMLDivElement>(null);
+  // 2026-11-15 제품 전체(입력칸 1,700여 개)를 한 번에 그리지 않고 고른 분류만 그린다. 다른 분류에서 고친 내용은 그대로 남는다
+  const presentCats = categories.filter((c) => products.some((p) => p.category === c));
+  const otherCats = Array.from(new Set(products.map((p) => p.category))).filter((c) => !presentCats.includes(c));
+  const catTabs = [...presentCats, ...otherCats];
+  const [catFilter, setCatFilter] = useState<string | null>(null);
+  const activeCat = catFilter ?? catTabs[0] ?? '__all';
+  const shownProducts = activeCat === '__all' ? products : products.filter((p) => p.category === activeCat);
 
   const groupKeys = Object.keys(priceGroups); // e.g. ['dealer', 'academy']
   const dirtyCount = editedRows.size;
@@ -257,7 +264,7 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
         </button>
         <div className="flex-1 text-center">
           <span className="text-sm font-semibold text-neutral-700">일괄 수정</span>
-          <span className="ml-2 text-xs text-neutral-400">({products.length}개 제품)</span>
+          <span className="ml-2 text-xs text-neutral-400">({shownProducts.length} / {products.length}개 제품)</span>
         </div>
         <div className="flex items-center gap-2">
           {dirtyCount > 0 && (
@@ -275,6 +282,16 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
             {saving ? '저장 중...' : '저장'}
           </Button>
         </div>
+      </div>
+
+      {/* ── 분류 고르기 ── */}
+      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-neutral-200 bg-white overflow-x-auto shrink-0" role="radiogroup" aria-label="분류">
+        {[...catTabs, '__all'].map((c) => (
+          <button key={c} type="button" role="radio" aria-checked={activeCat === c} onClick={() => setCatFilter(c)}
+            className={`shrink-0 h-8 px-3 rounded-lg text-xs font-semibold border transition ${activeCat === c ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'}`}>
+            {c === '__all' ? `전체 ${products.length}` : `${catLabels[c] || c} ${products.filter((p) => p.category === c).length}`}
+          </button>
+        ))}
       </div>
 
       {/* ── 테이블 ── */}
@@ -304,7 +321,7 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
             </tr>
           </thead>
           <tbody>
-            {products.map(p => {
+            {shownProducts.map(p => {
               const isDirty = editedRows.has(p.id);
               const isFailed = failedIds.has(p.id);
               return (

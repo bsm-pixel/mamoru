@@ -349,7 +349,7 @@ export default function ReportsPage() {
                 onClick={() => downloadExcel('margin' as 'sales', period.from, period.to)}
               >
                 <BarChart3 size={14} />
-                마진 분석
+                마진 분석 엑셀 받기
                 <Download size={12} />
               </Button>
               {/* 2026-10-29 종소세 간편장부 — 선택 기간의 연도 1년치 (장부·월별 요약·증빙 챙길 것) */}

@@ -115,9 +115,11 @@ function GoalEditBox({
 }) {
   return (
     <div className="bg-white rounded-2xl border border-stone-200 p-5 h-full flex items-center gap-3">
-      <p className="text-xs text-stone-500 shrink-0">{isEdit ? '월 목표 수정' : '월 매출 목표 설정'}</p>
+      <label htmlFor="month-goal" className="text-xs font-semibold text-stone-600 shrink-0">{isEdit ? '이번 달 매출 목표 (원)' : '이번 달 매출 목표 정하기 (원)'}</label>
       <input
+        id="month-goal"
         type="number"
+        min={0}
         value={goalInput}
         onChange={(e) => setGoalInput(e.target.value)}
         placeholder="예: 5000000"

@@ -9,6 +9,8 @@ import GoogleCalendarSettings from '@/components/settings/google-calendar-settin
 import BannerSettings from '@/components/settings/banner-settings';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { SecretInput } from '@/components/ui/secret-input';
+import { Fold } from './fold';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -61,11 +63,8 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
     <div className="space-y-6">
       <h2 className="text-lg font-bold">알림·연동 설정</h2>
 
-      {/* ── Google Calendar 연동 ── */}
-      <GoogleCalendarSettings />
-
-      {/* ── 아임웹 배너/팝업 관리 ── */}
-      <BannerSettings />
+      {/* 2026-11-15 이 탭이 너무 길었다 → 「알림」(내가 받는 것)과 「연결」(바깥 서비스와 잇는 주소 · 키)로 나누고 접는 칸으로 */}
+      <p className="text-[11px] font-bold text-neutral-400 tracking-wider">알림</p>
 
       {/* ── 내 푸시 알림 (사장님이 받는 것) ── */}
       <div className="rounded-lg border border-neutral-200 bg-stone-50 p-4 space-y-3">
@@ -90,16 +89,24 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
           <Toggle checked={soundEnabled} onChange={setSoundEnabled} />
         </div>
 
-        {/* 테스트 발송 패널 */}
-        <PushTestPanel />
-
-        {/* 디바이스 정리 — 중복 알림 해결 */}
-        <DevicesPanel />
+        {/* 테스트 발송 · 기기 정리 — 가끔만 쓰므로 접어 둔다 */}
+        <Fold title="알림 테스트" desc="받는 사람: 이 계정에 등록된 내 기기 전부(휴대폰 · PC 크롬). 고객에게는 가지 않습니다">
+          <PushTestPanel />
+        </Fold>
+        <Fold title="등록된 기기 정리" desc="알림이 두 번 오거나 안 쓰는 기기가 남아 있을 때">
+          <DevicesPanel />
+        </Fold>
       </div>
 
-      <div className="pt-4 border-t border-neutral-100">
-        <h3 className="text-sm font-bold text-neutral-700 mb-3">💬 고객 알림톡 발송</h3>
-      </div>
+      <p className="text-[11px] font-bold text-neutral-400 tracking-wider pt-2">연결</p>
+      <Fold title="구글 캘린더" desc="상담 · 복원수리 일정을 구글 캘린더에 올리는 연결">
+        <GoogleCalendarSettings />
+      </Fold>
+      <Fold title="아임웹 배너 · 팝업" desc="쇼핑몰 메인 배너 · 팝업 이미지 관리">
+        <BannerSettings />
+      </Fold>
+
+      <Fold title="고객 알림톡 연결 (Make 웹훅 주소 · API 키)" desc="주소는 가려져 있습니다 — [보기]를 눌러야 보입니다">
 
       {/* 항상 발송 원칙 (2026-09-14) — on/off 토글 없음 */}
       <div className="rounded-lg border border-neutral-200 bg-stone-50 p-3 text-xs text-neutral-600 leading-relaxed">
@@ -111,43 +118,35 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
 
       {/* Make 웹훅 URL — 5개 시나리오 */}
       <Field label="Make 웹훅 URL (상담)" desc="상담 접수/확정/취소/리마인더/리뷰 등">
-        <input value={webhookConsultation} onChange={(e) => setWebhookConsultation(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookConsultation} onChange={setWebhookConsultation} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (AS접수)" desc="복원수리 접수 안내 (방문수거/직접발송/카운터)">
-        <input value={webhookAsReceived} onChange={(e) => setWebhookAsReceived(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookAsReceived} onChange={setWebhookAsReceived} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (AS상태변경)" desc="입고확인/입금안내/출고&송장/취소/만족도">
-        <input value={webhookRepair} onChange={(e) => setWebhookRepair(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookRepair} onChange={setWebhookRepair} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (이벤트)" desc="EVENT 접수확인/입금확인/출고완료 — 비우면 상담 웹훅으로 폴백">
-        <input value={webhookEvent} onChange={(e) => setWebhookEvent(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookEvent} onChange={setWebhookEvent} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (아임웹 주문)" desc="아임웹 주문 취소 접수·완료 / 반품 접수·승인·완료 — 비워 두면 발송하지 않음(폴백 없음). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
-        <input value={webhookImweb} onChange={(e) => setWebhookImweb(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookImweb} onChange={setWebhookImweb} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (판매·배송)" desc="출고 안내 · 구매후기 요청 — 아임웹 주문·오프라인 판매 공통. 비우면 상담 웹훅으로 감(지금과 동일)">
-        <input value={webhookSales} onChange={(e) => setWebhookSales(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookSales} onChange={setWebhookSales} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (반품·교환)" desc="TMS 반품 접수·입고 (오프라인 판매분) — 비우면 상담 웹훅으로 감. 아임웹 주문 반품은 위 「아임웹 주문」 담당">
-        <input value={webhookReturns} onChange={(e) => setWebhookReturns(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookReturns} onChange={setWebhookReturns} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       <Field label="Make 웹훅 URL (출장 수거·함께 출고)" desc="출장 현장 수거 확인 / 제품·복원수리 함께 출고 1통 — 비워 두면 맡김 확인은 안 나가고, 함께 출고는 지금처럼 2통(복원수리 출고 + 판매 출고). 솔라피 승인 + Make 분기 완성 후 입력 = 가동">
-        <input value={webhookFieldRepair} onChange={(e) => setWebhookFieldRepair(e.target.value)}
-          className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm font-mono text-xs" placeholder="https://hook.eu2.make.com/..." />
+        <SecretInput value={webhookFieldRepair} onChange={setWebhookFieldRepair} placeholder="https://hook.eu2.make.com/..." />
       </Field>
 
       {/* 11-12. API 키 (읽기전용) */}
@@ -163,7 +162,10 @@ export default function NotificationSettings({ settings, onSave, saving }: TabPr
         </p>
       </Field>
 
-      <div className="pt-4 border-t border-neutral-100">
+      </Fold>
+
+      {/* 저장은 화면 아래 고정 1개 (웹훅 주소 · 알림음 설정을 함께 저장) */}
+      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 -mx-1 px-1 py-3 bg-white/95 backdrop-blur-sm border-t border-neutral-200">
         <Button onClick={handleSave} disabled={saving}><Save size={14} />{saving ? '저장 중...' : '저장'}</Button>
       </div>
     </div>

@@ -20,6 +20,7 @@ import AccountingSettings from '@/components/settings/accounting-settings';
 import NotificationSettings from '@/components/settings/notification-settings';
 import SystemSettings from '@/components/settings/system-settings';
 import { SkeletonRows } from '@/components/ui/skeleton';
+import { useUrlSelection } from '@/hooks/use-url-selection';
 
 const TABS = [
   { key: 'dashboard', label: '대시보드', icon: LayoutDashboard },
@@ -56,7 +57,10 @@ export interface TabProps {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
+  // 2026-11-15 탭을 주소(?tab=)에 붙인다 — 새로 고쳐도 그 탭, 그 탭을 가리키는 링크도 만들 수 있다
+  const [tabParam, setTabParam] = useUrlSelection('tab');
+  const activeTab: TabKey = (TABS.find((t) => t.key === tabParam)?.key) ?? 'dashboard';
+  const setActiveTab = (k: TabKey) => setTabParam(k);
   const [isMd, setIsMd] = useState(false);
   const { data: settings, isLoading } = useSettings();
   const updateSettings = useUpdateSettings();

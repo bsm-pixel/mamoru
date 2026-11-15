@@ -57,10 +57,11 @@ export function Sidebar() {
   const showAll = favorites.length === 0 || moreOpen || (!onFavorite && !dashActive && !settingsActive);
 
   return (
-    <aside className="hidden md:flex flex-col w-56 h-screen sticky top-0 self-start bg-indigo-black text-cream border-r border-white/8">
+    <aside className="hidden md:flex flex-col w-14 xl:w-56 h-screen sticky top-0 self-start bg-indigo-black text-cream border-r border-white/8">
+      {/* 2026-11-15 폭 1280 아래(세로 모니터 · 작은 노트북)에서는 아이콘만 — 전엔 메뉴가 224px 을 차지해 목록 칸이 350px 로 좁아졌다 */}
       {/* 로고 + 대시보드(홈) 아이콘 — 대시보드는 메뉴 목록에서 빼고 여기로 */}
-      <div className="px-4 py-4 flex items-center justify-between flex-shrink-0">
-        <div>
+      <div className="px-2.5 xl:px-4 py-4 flex items-center justify-center xl:justify-between flex-shrink-0">
+        <div className="hidden xl:block">
           <h1 className="leading-none"><MamoruWordmark height={13} /></h1>
           <p className="text-[11px] text-cream/50 mt-0.5">TMS v1.0</p>
         </div>
@@ -80,8 +81,8 @@ export function Sidebar() {
       {/* MY MENU — 즐겨찾기 (스크롤 밖 상단 고정, 내부 스크롤 없음 · 평면 리스트) */}
       {favorites.length > 0 && (
         <div className="flex-shrink-0 px-2.5 pt-1">
-          <div className="rounded-xl bg-cream p-1.5 shadow-sm">
-            <div className="flex items-center gap-1.5 px-1.5 pt-0.5 pb-1.5 text-indigo-black/50">
+          <div className="rounded-xl bg-cream p-1 xl:p-1.5 shadow-sm">
+            <div className="hidden xl:flex items-center gap-1.5 px-1.5 pt-0.5 pb-1.5 text-indigo-black/50">
               <Star size={12} className="fill-current text-amber-500" />
               <span className="text-[11px] font-bold tracking-wider uppercase">MY MENU</span>
             </div>
@@ -93,13 +94,14 @@ export function Sidebar() {
                   <Link
                     key={`fav-${item.href}`}
                     href={item.href}
+                    title={item.label}
                     className={cn(
-                      'flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition',
+                      'flex items-center justify-center xl:justify-start gap-2.5 px-2 py-2 rounded-lg text-sm font-medium transition',
                       active ? 'bg-indigo-black text-cream' : 'text-indigo-black/70 hover:bg-black/5 hover:text-indigo-black'
                     )}
                   >
                     {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-55'} />}
-                    {item.label}
+                    <span className="hidden xl:inline">{item.label}</span>
                   </Link>
                 );
               })}
@@ -115,9 +117,10 @@ export function Sidebar() {
             type="button"
             onClick={toggleMore}
             aria-expanded={showAll}
-            className="w-full flex items-center justify-between px-2.5 mt-3 py-1.5 rounded-lg text-cream/60 hover:text-cream/90 hover:bg-white/8 transition"
+            title={showAll ? '메뉴 접기' : '더 보기'}
+            className="w-full flex items-center justify-center xl:justify-between px-2.5 mt-3 py-1.5 rounded-lg text-cream/60 hover:text-cream/90 hover:bg-white/8 transition"
           >
-            <span className="text-xs font-semibold">{showAll ? '메뉴 접기' : '더 보기'}</span>
+            <span className="hidden xl:inline text-xs font-semibold">{showAll ? '메뉴 접기' : '더 보기'}</span>
             <ChevronDown size={14} className={cn('transition-transform', showAll && 'rotate-180')} />
           </button>
         )}
@@ -133,9 +136,10 @@ export function Sidebar() {
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.group)}
-                  className="w-full flex items-center justify-between px-2.5 mt-3 mb-1 text-cream/45 hover:text-cream/75 transition"
+                  title={group.group}
+                  className="w-full flex items-center justify-center xl:justify-between px-2.5 mt-3 mb-1 text-cream/45 hover:text-cream/75 transition"
                 >
-                  <span className="text-[11px] font-semibold tracking-wider uppercase">{group.group}</span>
+                  <span className="hidden xl:inline text-[11px] font-semibold tracking-wider uppercase">{group.group}</span>
                   <ChevronDown size={13} className={cn('transition-transform', isCollapsed && '-rotate-90')} />
                 </button>
               )}
@@ -148,15 +152,16 @@ export function Sidebar() {
                       <Link
                         key={item.href}
                         href={item.href}
+                        title={item.label}
                         className={cn(
-                          'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
+                          'flex items-center justify-center xl:justify-start gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
                           active
                             ? 'bg-white/12 text-cream'
                             : 'text-cream/55 hover:text-cream/90 hover:bg-white/8'
                         )}
                       >
                         {Icon && <Icon size={18} className={active ? 'opacity-100' : 'opacity-50'} />}
-                        {item.label}
+                        <span className="hidden xl:inline">{item.label}</span>
                       </Link>
                     );
                   })}
@@ -171,13 +176,14 @@ export function Sidebar() {
         <div className="flex-shrink-0 px-2.5 pb-3 pt-1 border-t border-white/8">
           <Link
             href="/settings"
+            title="설정"
             className={cn(
-              'flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
+              'flex items-center justify-center xl:justify-start gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition',
               settingsActive ? 'bg-white/12 text-cream' : 'text-cream/55 hover:text-cream/90 hover:bg-white/8'
             )}
           >
             <Settings size={18} className={settingsActive ? 'opacity-100' : 'opacity-50'} />
-            설정
+            <span className="hidden xl:inline">설정</span>
           </Link>
         </div>
       )}

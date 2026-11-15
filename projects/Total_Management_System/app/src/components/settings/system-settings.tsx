@@ -299,17 +299,8 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
       {/* 2026-10-02 리뷰 추첨 초기화 — 추첨 화면(녹화 대상)엔 두지 않고 여기서만 */}
       <ReviewEventReset />
 
-      {/* 환경변수 */}
-      <div className="pt-4 border-t border-neutral-200">
-        <h3 className="text-base font-bold mb-2">환경변수</h3>
-        <div className="bg-indigo-black rounded-lg p-4 text-xs font-mono text-cream/80 space-y-0.5 overflow-x-auto">
-          {['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY',
-            'IMWEB_API_KEY', 'IMWEB_API_SECRET', 'LOTTE_API_URL', 'LOTTE_CLIENT_KEY',
-            'LOTTE_SENDER_NAME', 'LOTTE_SENDER_TEL', 'LOTTE_SENDER_ZIP', 'LOTTE_SENDER_ADDR',
-            'MAKE_WEBHOOK_URL', 'MAKE_REPAIR_WEBHOOK_URL', 'CRON_SECRET',
-          ].map((env) => <p key={env}>{env}=****</p>)}
-        </div>
-      </div>
+      {/* 2026-11-15 「환경변수」 칸은 뺐다 — 이름만 나열하고 값은 모두 **** 라 볼 것이 없었다.
+          키 · 비밀값은 Vercel 프로젝트 설정(Environment Variables)에서만 바꾼다 */}
     </div>
   );
 }

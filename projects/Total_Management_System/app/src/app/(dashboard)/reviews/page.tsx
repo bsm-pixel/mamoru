@@ -648,7 +648,7 @@ export default function ReviewsPage() {
                         onClick={() => setLightbox(url)}
                         className="w-16 h-16 rounded-lg overflow-hidden border border-neutral-100 hover:opacity-80 transition"
                       >
-                        <img src={url} alt="" className="w-full h-full object-cover" />
+                        <img src={url} alt="" loading="lazy" className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
