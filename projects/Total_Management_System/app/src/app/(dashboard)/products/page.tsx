@@ -407,6 +407,8 @@ function CompactProductCard({ product: p, isSelected, showCategory, onSelect }: 
   const isUnused = p.stock_quantity === -1;
   return (
     <Card
+      data-list-row=""
+      data-selected={isSelected ? 'true' : undefined}
       className={`cursor-pointer transition px-3 py-2 ${
         isSelected ? 'ring-2 ring-neutral-900 shadow-md' : 'hover:shadow-md'
       } ${!p.is_active ? 'opacity-50' : ''}`}

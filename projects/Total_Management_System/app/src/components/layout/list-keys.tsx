@@ -49,6 +49,9 @@ function findNextAction(row: HTMLElement | null): HTMLButtonElement | null {
   return cands[0] || null;
 }
 
+/** 마지막으로 고른 줄 — 고른 줄 표시(data-selected)가 없는 목록에서 방향키가 이어 갈 자리 */
+let lastRow: HTMLElement | null = null;
+
 export function ListKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -77,10 +80,13 @@ export function ListKeys() {
         if (onControl && t?.getAttribute('role') === 'radio') return; // 선택 버튼 묶음은 자기 방향키를 쓴다
         const rows = all('[data-list-row]');
         if (rows.length === 0) return;
-        const cur = rows.findIndex((r) => r.getAttribute('data-selected') === 'true');
+        let cur = rows.findIndex((r) => r.getAttribute('data-selected') === 'true');
+        // 고른 줄 표시가 없는 목록(상담 등)은 마지막으로 누른 줄을 기억해서 거기서 이어 간다
+        if (cur < 0 && lastRow) cur = rows.indexOf(lastRow);
         const next = e.key === 'ArrowDown' ? Math.min(cur + 1, rows.length - 1) : Math.max(cur - 1, 0);
         if (next === cur) return;
         e.preventDefault();
+        lastRow = rows[next];
         rows[next].click();
         rows[next].scrollIntoView({ block: 'nearest' });
         return;
@@ -109,8 +115,14 @@ export function ListKeys() {
         if (btn) { e.preventDefault(); btn.click(); }
       }
     };
+    // 마우스로 누른 줄도 기억한다
+    const onClick = (e: MouseEvent) => {
+      const row = (e.target as HTMLElement | null)?.closest?.('[data-list-row]');
+      if (row instanceof HTMLElement) lastRow = row;
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    document.addEventListener('click', onClick, true);
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('click', onClick, true); };
   }, []);
   return null;
 }

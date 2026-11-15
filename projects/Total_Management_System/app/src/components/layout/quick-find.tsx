@@ -11,6 +11,7 @@ import { formatPhone, formatDate } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { askBeforeLeave } from '@/hooks/use-unsaved-guard';
 import { backdropClose } from '@/lib/ui/backdrop';
+import { EscClose } from '@/components/ui/esc-close';
 
 /**
  * 빠른 찾기 (2026-11-15) — Ctrl+K 또는 머리줄의 [찾기]
@@ -59,6 +60,16 @@ export function QuickFind() {
     return () => { window.removeEventListener(OPEN_EVENT, onOpen); window.removeEventListener('keydown', onKey, true); };
   }, []);
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 0); }, [open]);
+  // 열려 있는 동안 초점이 뒤쪽 화면으로 넘어가면 찾기 칸으로 되돌린다(초점 가두기)
+  useEffect(() => {
+    if (!open) return;
+    const keep = (e: FocusEvent) => {
+      const t = e.target as Node | null;
+      if (t && inputRef.current && !inputRef.current.closest('[role=dialog]')?.contains(t)) inputRef.current.focus();
+    };
+    document.addEventListener('focusin', keep);
+    return () => document.removeEventListener('focusin', keep);
+  }, [open]);
   useEffect(() => { activeRef.current?.scrollIntoView({ block: 'nearest' }); }, [active]);
 
   const { data: products = [] } = useProducts();
@@ -122,7 +133,8 @@ export function QuickFind() {
 
   return (
     <div className="fixed inset-0 z-[150] flex items-start justify-center bg-black/40 p-4 pt-[12vh]" data-modal-open="" {...backdropClose(() => setOpen(false))}>
-      <div role="dialog" aria-label="빠른 찾기" className="w-full max-w-[520px] rounded-xl bg-white border border-neutral-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <EscClose onClose={() => setOpen(false)} />
+      <div role="dialog" aria-modal="true" aria-label="빠른 찾기" data-nodirty="" className="w-full max-w-[520px] rounded-xl bg-white border border-neutral-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="relative border-b border-neutral-100">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
@@ -134,7 +146,6 @@ export function QuickFind() {
               if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(idx + 1, hits.length - 1)); }
               else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(idx - 1, 0)); }
               else if (e.key === 'Enter') { e.preventDefault(); if (hits[idx]) go(hits[idx]); }
-              else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setOpen(false); }
             }}
             placeholder="고객 이름 · 전화 뒤 4자리 · 판매번호 · 제품 · 메뉴"
             className="w-full h-12 pl-11 pr-4 text-sm placeholder:text-neutral-400 focus:outline-none"

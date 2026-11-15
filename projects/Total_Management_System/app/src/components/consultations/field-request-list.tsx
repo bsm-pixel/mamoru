@@ -180,6 +180,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
         }`}
       >
         <div
+          data-list-row={onSelect ? '' : undefined}
           className="cursor-pointer"
           onClick={() => {
             onFieldSelect?.(c.id);

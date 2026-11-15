@@ -5,11 +5,14 @@ interface CardProps {
   className?: string;
   padding?: boolean;
   onClick?: () => void;
+  /** 목록 키보드 표시(data-list-row · data-selected) 같은 data-* 는 그대로 넘긴다 */
+  [key: `data-${string}`]: string | undefined;
 }
 
-export function Card({ children, className, padding = true, onClick }: CardProps) {
+export function Card({ children, className, padding = true, onClick, ...data }: CardProps) {
   return (
     <div
+      {...data}
       onClick={onClick}
       className={cn(
         'bg-card-white rounded-xl border border-neutral-200 shadow-sm',

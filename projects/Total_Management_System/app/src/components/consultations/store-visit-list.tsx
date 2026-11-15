@@ -122,6 +122,7 @@ export function StoreVisitList({
         }`}
       >
         <div
+          data-list-row={onSelect ? '' : undefined}
           className="flex-1 min-w-0 cursor-pointer"
           onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
         >

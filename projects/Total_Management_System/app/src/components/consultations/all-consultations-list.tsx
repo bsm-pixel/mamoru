@@ -135,6 +135,7 @@ export function AllConsultationsList({ onSelect, searchAction }: { onSelect?: (i
                   return (
                     <div
                       key={c.id}
+                      data-list-row={onSelect ? '' : undefined}
                       onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}
                       className="bg-white rounded-2xl border border-stone-200 overflow-hidden hover:border-stone-300 transition flex items-stretch group cursor-pointer"
                     >

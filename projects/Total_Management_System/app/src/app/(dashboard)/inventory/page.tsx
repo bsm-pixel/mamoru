@@ -446,6 +446,8 @@ function InventoryRow({ item, isSelected, onClick }: { item: InventoryItem; isSe
 
   return (
     <div
+      data-list-row
+      data-selected={isSelected ? 'true' : undefined}
       onClick={onClick}
       className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-warm-ivory/60 transition ${
         isSelected ? 'bg-terracotta/5 ring-1 ring-terracotta/20' : ''

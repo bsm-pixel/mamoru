@@ -138,7 +138,7 @@ export function TalkConsultList({ onSelect, searchAction }: { onSelect?: (id: st
                 : isCompleted ? 'border-l-2 border-l-green-400'
                 : ''
               }`}>
-                <div className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
+                <div data-list-row={onSelect ? '' : undefined} className="cursor-pointer" onClick={() => onSelect ? onSelect(c.id) : router.push(`/consultations/${c.id}`)}>
                   <div className="flex items-center gap-2">
                     <MessageCircle size={14} className={isCancelled ? 'text-neutral-400 shrink-0' : 'text-info shrink-0'} />
                     <CustomerNameButton customerId={c.customer_id} className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{activityDisplay(c.activity_name, c.name)}</CustomerNameButton>

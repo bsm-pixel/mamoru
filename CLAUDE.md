@@ -230,6 +230,7 @@
 1. `cd projects/Total_Management_System/app && npx tsc --noEmit` → **에러 0건**
 2. `npm run build` → **빌드 성공** (라우트/서버컴포넌트/import 등 tsc가 못 잡는 에러를 여기서 잡음. **생략 금지**)
 3. `npm run lint` → 에러 0
+4. `npm run check` (계산·흐름 45개) + **`npm run check:screen`** (실제 크롬으로 PC·휴대폰 폭 화면 점검 — 가짜 서버에 붙여 띄우므로 운영 자료에 닿지 않음, 2~3분). 목록·상세·뒤로 가기·창을 건드렸으면 `tests/screen/run.mjs`에 그 동작을 한 줄 추가한다 (2026-11-16 승인: PC로만 시험해 휴대폰 문제가 배포된 사고 재발 방지)
 
 **C. 실제 구동 검증 (tsc·빌드 통과 ≠ 동작 정상)**
 - **화면을 실제로 띄워서 확인한다.** 로직만 맞다고 "됐습니다" 금지.

@@ -9,6 +9,8 @@ import { todayKST } from '@/lib/utils/kst';
  *   날짜 칸    T = 오늘
  *   숫자 칸    - · e 는 막는다(금액 · 수량에 음수가 들어가던 문제). 음수가 필요한 칸은 data-allow-negative
  *   수량 칸    최솟값(min)이 정해진 숫자 칸에서는 + / - 키로 1씩 올리고 내린다(최솟값 아래로는 안 내려감)
+ *   큰 숫자    숫자 칸에 1,000 이상을 치면 칸 바로 위에 쉼표 붙은 값이 작게 뜬다(2026-11-16).
+ *              금액 칸 50여 곳을 하나씩 바꾸지 않고 전 화면에 한 번에 적용하려고 여기에 뒀다. 끄려면 data-no-comma
  *
  * React 가 값을 알아채도록 "브라우저가 직접 넣은 것처럼" 값을 넣는다(setNative).
  */
@@ -19,8 +21,38 @@ function setNative(el: HTMLInputElement, value: string) {
   el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+/** 숫자 칸 위에 뜨는 쉼표 표시 — 화면에 하나만 만들어 돌려 쓴다 */
+let bubble: HTMLDivElement | null = null;
+function hideBubble() {
+  if (bubble) bubble.style.display = 'none';
+}
+function showBubble(el: HTMLInputElement) {
+  const n = Number(el.value);
+  if (el.type !== 'number' || el.hasAttribute('data-no-comma') || !el.value || !Number.isFinite(n) || Math.abs(n) < 1000) { hideBubble(); return; }
+  if (!bubble) {
+    bubble = document.createElement('div');
+    bubble.setAttribute('aria-hidden', 'true');
+    bubble.style.cssText = 'position:fixed;z-index:400;pointer-events:none;background:#1A1A1A;color:#fff;font-size:11px;line-height:1;padding:4px 6px;border-radius:4px;font-variant-numeric:tabular-nums;white-space:nowrap';
+    document.body.appendChild(bubble);
+  }
+  bubble.textContent = n.toLocaleString('ko-KR');
+  bubble.style.display = 'block';
+  const r = el.getBoundingClientRect();
+  const top = r.top - bubble.offsetHeight - 4;
+  bubble.style.top = `${top < 4 ? r.bottom + 4 : top}px`;
+  bubble.style.left = `${Math.max(4, r.right - bubble.offsetWidth)}px`;
+}
+
 export function InputKeys() {
   useEffect(() => {
+    const onType = (e: Event) => { if (e.target instanceof HTMLInputElement && e.target.type === 'number') showBubble(e.target); };
+    const onMove = () => { const el = document.activeElement; if (el instanceof HTMLInputElement && el.type === 'number') showBubble(el); else hideBubble(); };
+    document.addEventListener('input', onType);
+    document.addEventListener('focusin', onType);
+    document.addEventListener('focusout', hideBubble);
+    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('resize', onMove);
+
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
       const t = e.target;
@@ -55,7 +87,15 @@ export function InputKeys() {
       }
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('input', onType);
+      document.removeEventListener('focusin', onType);
+      document.removeEventListener('focusout', hideBubble);
+      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('resize', onMove);
+      hideBubble();
+    };
   }, []);
   return null;
 }

@@ -9,6 +9,7 @@ import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
 import { Plus, X, CheckCircle2, RotateCcw } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
+import { CAUTION_NOTICE } from '@/lib/contracts/notice';
 
 /* ── 제품 행 ────────────────────────── */
 interface ProductRow {
@@ -28,12 +29,6 @@ const LEGAL_NOTICE = `마모루는 도움을 드리는 회사입니다.
 
 기본적인 관리, 재연마 방법은
 마모루에서 교육(무상) 해드리겠습니다.`;
-
-const CAUTION_NOTICE = `제품수령일 기준 5일 이내 제품 교환 및 반품 가능합니다.
-※ 어떠한 명분이든 교환 등 환불은 불가합니다 ※
-기간 내라도, 문구 각인이 진행된 경우
-고객님의 취급 부주의로 인한 제품의 사용성이 손실된 경우
-5일이 지난 이후의 반납은 교환 및 환불이 어렵습니다.`;
 
 export default function ContractStandalonePage() {
   const createContract = useCreateContract();

@@ -58,7 +58,7 @@ export default function ReturnsPage() {
   ) : (
     <div className="divide-y divide-neutral-100">
       {returns.map((r) => (
-        <button key={r.id} onClick={() => setSelectedId(r.id)}
+        <button key={r.id} data-list-row data-selected={selectedId === r.id ? 'true' : undefined} onClick={() => setSelectedId(r.id)}
           className={`w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition ${selectedId === r.id ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
