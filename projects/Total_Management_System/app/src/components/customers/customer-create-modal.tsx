@@ -12,6 +12,7 @@ import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { phoneError, emailError, typingPhone } from '@/lib/utils/validate';
+import { useCustomerSearch } from '@/hooks/use-customers';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -56,6 +57,10 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
   const [dup, setDup] = useState<DupCustomer | null>(null); // 같은 전화 중복 경고
   const queryClient = useQueryClient();
   const availableTags = useSetting<string[]>('customer.tags', []);
+  // 2026-11-15 전화번호를 치는 동안 같은 번호의 고객이 이미 있으면 바로 알려 준다(저장은 막지 않는다)
+  const phoneDigits = form.phone.replace(/\D/g, '');
+  const { data: phoneHits = [] } = useCustomerSearch(open && phoneDigits.length >= 10 ? phoneDigits : '');
+  const samePhone = phoneHits.filter((h) => (h.phone || '').replace(/\D/g, '') === phoneDigits);
 
   // 모달 열릴 때 prefill 적용 (복제 시 매장명·주소 등). open 변화에만 반응(편집 중 덮어쓰기 방지)
   useEffect(() => {
@@ -164,6 +169,15 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
             <div>
               <label className="text-xs text-neutral-500 mb-1 block">이름 <span className="text-red-500">*</span></label>
               <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onPaste={(e) => {
+                  // 2026-11-15 "홍길동 010-1234-5678 ○○헤어" 처럼 한 줄을 붙여 넣으면 이름 · 전화 · 매장으로 나눠 넣는다
+                  const text = e.clipboardData.getData('text').trim();
+                  const m = text.match(/(\+?\d[\d\- ]{7,}\d)/);
+                  if (!m) return; // 전화번호가 없으면 평소처럼 붙여 넣는다
+                  e.preventDefault();
+                  const rest = (text.slice(0, m.index) + ' ' + text.slice((m.index || 0) + m[0].length)).split(/[\s,/|]+/).filter(Boolean);
+                  setForm({ ...form, name: rest[0] || form.name, phone: typingPhone(m[0]), company_name: rest.slice(1).join(' ') || form.company_name });
+                }}
                 placeholder="홍길동" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
             <div>
@@ -172,6 +186,19 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
                 placeholder="010-1234-5678" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
           </div>
+          {samePhone.length > 0 && !dup && (
+            <div role="status" className="rounded-lg border border-neutral-200 bg-stone-50 px-3 py-2 text-xs text-neutral-600 space-y-1">
+              {samePhone.slice(0, 3).map((h) => (
+                <p key={h.id} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 truncate">이미 있는 고객: <b className="text-stone-900">{h.name}</b>{h.company_name ? ` · ${h.company_name}` : ''}</span>
+                  <button type="button" onClick={() => { onCreated({ id: h.id, name: h.name, phone: h.phone || '', customer_type: h.customer_type || 'retail' }); onClose(); }}
+                    className="shrink-0 h-7 px-2.5 rounded-md border border-neutral-300 bg-white font-semibold text-neutral-700 hover:bg-neutral-50">
+                    이 고객으로
+                  </button>
+                </p>
+              ))}
+            </div>
+          )}
 
           {/* 유형 + 매장명 */}
           <div className="grid grid-cols-2 gap-3">

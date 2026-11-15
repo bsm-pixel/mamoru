@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RepairStatusBadge } from './repair-status-badge';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
@@ -29,6 +28,8 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
 import { StageGrid } from '@/components/ui/stage-grid';
 import { matchSearch as matchText } from '@/lib/utils/search-match';
+import { DaysSince } from '@/components/ui/days-since';
+import { useSetting } from '@/hooks/use-settings';
 
 interface RepairListProps {
   onSelect?: (id: string) => void;
@@ -149,6 +150,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const repairActTypes = useActivityTypes(filteredRepairs.map((r) => r.phone));
 
   // PC 그리드 컬럼 — 고객(맨앞)·진행방법·접수일·수거요청일·입고일·수량·금액·상태·액션. 날짜는 2행(M/d · HH:mm)
+  const staleDays = useSetting<number>('repair.stale_days', 3); // 며칠째 표시가 굵어지는 기준(설정 > 복원수리 「체류 경고 일수」)
   const gridColumns = useMemo<GridColumn<Repair>[]>(() => [
     { key: 'customer', label: '고객', render: (r) => (
       <div className="min-w-0">
@@ -160,7 +162,13 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       </div>
     ) },
     { key: 'proceed', label: '진행방법', render: (r) => <ProceedBadge type={r.proceed_type} /> },
-    { key: 'received', label: '접수일', render: (r) => <TwoLineDate iso={r.received_at} /> },
+    { key: 'received', label: '접수일', render: (r) => (
+      <span className="inline-flex items-center gap-1.5">
+        <TwoLineDate iso={r.received_at} />
+        {/* 2026-11-15 끝나지 않은 건은 며칠째인지 — 설정 > 복원수리 「체류 경고 일수」를 넘기면 굵게 */}
+        {!['shipped', 'delivered', 'completed', 'cancelled'].includes(r.status) && <DaysSince date={r.received_at} warnDays={staleDays} />}
+      </span>
+    ) },
     { key: 'pickup', label: '수거·방문일', render: (r) => <IntakeCell repair={r} /> },
     { key: 'inbound', label: '입고일', render: (r) => <TwoLineDate iso={r.inbound_at ?? null} /> },
     { key: 'qty', label: '수량', render: (r) => (
@@ -179,7 +187,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     ) },
     { key: 'status', label: '상태', render: (r) => <RepairStatusBadge status={r.status} proceedType={r.proceed_type} /> },
     { key: 'action', label: '', align: 'right', render: (r) => <InlineAction repair={r} tab={activeTab} /> },
-  ], [activeTab, repairActTypes]);
+  ], [activeTab, repairActTypes, staleDays]);
 
   return (
     <div className="space-y-3">

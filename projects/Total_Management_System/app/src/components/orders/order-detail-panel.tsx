@@ -15,6 +15,7 @@ import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface Props {
   orderId: string;
@@ -94,7 +95,10 @@ export function OrderDetailPanel({ orderId }: Props) {
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold text-indigo-black truncate">{o.recipient_name || o.orderer_name}</span>
             {o.recipient_phone && (
-              <a href={`tel:${o.recipient_phone}`} className="text-xs text-blue-600 shrink-0">{formatPhone(o.recipient_phone)}</a>
+              <>
+                <a href={`tel:${o.recipient_phone}`} className="text-xs text-blue-600 shrink-0">{formatPhone(o.recipient_phone)}</a>
+                <CopyButton value={formatPhone(o.recipient_phone)} label="전화번호" />
+              </>
             )}
           </div>
           {ordererDiffers && (
@@ -243,6 +247,7 @@ export function OrderDetailPanel({ orderId }: Props) {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-semibold text-neutral-400">배송 추적</span>
             <span className="font-mono text-[11px] text-terracotta">{o.invoice_number}</span>
+            <CopyButton value={o.invoice_number} label="송장번호" />
           </div>
           <DeliveryTracker invNo={o.invoice_number} />
         </div>

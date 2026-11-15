@@ -26,6 +26,8 @@ import toast from 'react-hot-toast';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { DangerZone, DangerLink } from '@/components/ui/action-section';
 import Link from 'next/link';
+import { HIDDEN_TAG, isHiddenCustomer } from '@/lib/customer/hidden';
+import { CopyButton } from '@/components/ui/copy-button';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -407,7 +409,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <span className="text-xs text-neutral-500">연락처</span>
-                  <p>{formatPhone(c.phone) || '-'}</p>
+                  <p>{formatPhone(c.phone) || '-'}<CopyButton value={formatPhone(c.phone)} label="전화번호" className="ml-1" /></p>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">유형</span>
@@ -553,7 +555,22 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
       )}
       {/* 2026-11-15 고객 삭제 — 거래·이력이 없는 고객만. 있으면 서버가 무엇이 걸렸는지 알려 주고 막는다 */}
       <DangerZone>
-        <DangerLink onClick={() => setShowDelete(true)}>고객 삭제</DangerLink>
+        {/* 삭제 규칙: 거래 · 이력이 없으면 삭제, 있으면 숨기기(되살릴 수 있음) */}
+        <DangerLink onClick={async () => {
+          const hidden = isHiddenCustomer(c.tags);
+          const next = hidden ? (c.tags || []).filter((t: string) => t !== HIDDEN_TAG) : [...(c.tags || []), HIDDEN_TAG];
+          try {
+            const res = await fetch(`/api/customers/${customerId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tags: next }) });
+            if (!res.ok) throw new Error();
+            toast.success(hidden ? `「${c.name}」 고객을 다시 보이게 했습니다` : `「${c.name}」 고객을 숨겼습니다 — 고객 목록의 [숨긴 고객 보기]에서 되살릴 수 있습니다`, { duration: 5000 });
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['customer', customerId] });
+            if (!hidden) onDeleted?.();
+          } catch { toast.error('바꾸지 못했습니다. 연결을 확인해 주세요'); }
+        }}>
+          {isHiddenCustomer(c.tags) ? '숨김 해제 (다시 목록에 보이기)' : '고객 숨기기 (목록 · 검색에서 빼기, 기록은 그대로)'}
+        </DangerLink>
+        <DangerLink onClick={() => setShowDelete(true)}>고객 삭제 (거래가 없을 때만)</DangerLink>
       </DangerZone>
       <ConfirmModal
         open={showDelete}

@@ -44,6 +44,7 @@ import { todayKST } from '@/lib/utils/kst';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { matchSearch } from '@/lib/utils/search-match';
+import { CopyButton } from '@/components/ui/copy-button';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -211,6 +212,7 @@ export function SaleDetailPanel({ saleId }: Props) {
       <div className="@container">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <span className="text-sm font-bold text-stone-900">{s.sale_number}</span>
+          <CopyButton value={s.sale_number} label="판매번호" />
           <Badge className={PAYMENT_STATUS_COLOR[s.payment_status] || ''}>
             {PAYMENT_STATUS_LABEL[s.payment_status] || s.payment_status}
           </Badge>
@@ -252,7 +254,7 @@ export function SaleDetailPanel({ saleId }: Props) {
             </div>
             <div>
               <span className="text-xs text-neutral-500">연락처</span>
-              <p>{formatPhone(s.customer_phone) || '-'}</p>
+              <p>{formatPhone(s.customer_phone) || '-'}<CopyButton value={formatPhone(s.customer_phone)} label="전화번호" className="ml-1" /></p>
             </div>
             {/* 매장명 · 활동명 · 직급 — 고객 정보 함께 표시 (값 있을 때만) */}
             {hasStoreInfo && (
@@ -754,6 +756,7 @@ export function SaleDetailPanel({ saleId }: Props) {
               <div className="flex items-center gap-2">
                 <Package size={14} className="text-green-600" />
                 <span className="text-sm font-mono font-medium">{s.invoice_number}</span>
+                <CopyButton value={s.invoice_number} label="송장번호" />
                 <span className="text-xs text-neutral-400">{courierLabel(s.courier_name)}</span>
               </div>
               {/* 162 합포장 표시 — 출고·배송완료·알림톡은 건마다 같은 송장으로 함께 처리된다 */}

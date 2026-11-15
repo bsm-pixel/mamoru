@@ -9,6 +9,7 @@ import { calcTotalCost } from '@/lib/repair/cost-calculator';
 import type { Repair } from '@/lib/supabase/types';
 import { MapPin, Scissors, Pencil, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { CopyButton } from '@/components/ui/copy-button';
 
 interface RepairDetailCardProps {
   repair: Repair;
@@ -146,13 +147,13 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
 
         {/* 정보 — 2열 그리드 (라벨 위 / 값 아래, 판매 패널 방식) */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-sm">
-          <InfoField label="전화">{formatPhone(r.phone)}</InfoField>
+          <InfoField label="전화">{formatPhone(r.phone)}<CopyButton value={formatPhone(r.phone)} label="전화번호" className="ml-1" /></InfoField>
           <InfoField label="전달방법">{r.delivery_method || '-'}</InfoField>
           <InfoField label="마모루">{r.qty_mamoru}자루</InfoField>
           <InfoField label="타사">{r.qty_other}자루</InfoField>
           <InfoField label={visitOrPickup.label} valueClass={visitOrPickup.cls}>{visitOrPickup.value}</InfoField>
           <InfoField label="접수일시">{r.received_at ? formatDateTime(r.received_at) : '-'}</InfoField>
-          {addrText && <InfoField label="주소지" full>{addrText}</InfoField>}
+          {addrText && <InfoField label="주소지" full>{addrText}<CopyButton value={addrText} label="주소" className="ml-1" /></InfoField>}
         </div>
 
         {/* 비용 요약 — 한 줄 (수리비·수거비 → 합계 + 편집) */}

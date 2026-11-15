@@ -374,6 +374,10 @@ function NewSaleContent() {
       ...(takeAway ? { field_repair: { qty_mamoru: rep.mamoruQty, qty_other: rep.otherQty } } : {}),
     });
 
+    // 2026-11-15 다음 판매 입력 때 방금 고른 판매 채널 · 결제 수단이 먼저 골라져 있게 기억(복합 결제는 기억하지 않는다)
+    try {
+      localStorage.setItem('tms.sale.last', JSON.stringify({ channel: saleChannel, method: paymentMethod === 'mixed' ? 'card' : paymentMethod }));
+    } catch { /* 저장 못 해도 무시 */ }
     router.push('/sales');
   }
 
@@ -407,6 +411,19 @@ function NewSaleContent() {
     { combo: 'f8', allowInInput: true, handler: () => { if (!isDialogOpen()) focusCustomer(); } },
     { combo: 'f9', allowInInput: true, handler: () => { if (!isDialogOpen()) cyclePayment(); } },
   ]);
+  // 직전에 고른 판매 채널 · 결제 수단으로 시작 — 상담 · 계약서에서 넘어온 판매는 그쪽이 정한 값을 그대로 둔다
+  useEffect(() => {
+    if (fromConsultationId || contractId) return;
+    const t = setTimeout(() => {
+      try {
+        const last = JSON.parse(localStorage.getItem('tms.sale.last') || 'null') as { channel?: string; method?: string } | null;
+        if (last?.channel && ['store', 'field', 'talk', 'online'].includes(last.channel)) setSaleChannel(last.channel);
+        if (last?.method && ['card', 'cash', 'transfer'].includes(last.method)) setPaymentMethod(last.method);
+      } catch { /* 무시 */ }
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const productSearchRef = useRef<HTMLInputElement>(null);
   const payGroupRef = useRef<HTMLDivElement>(null);
   // 화면이 열리면 커서를 제품 검색 칸에(바코드 스캐너도 이 칸으로 들어온다). 터치 기기는 자판이 튀어나오므로 제외

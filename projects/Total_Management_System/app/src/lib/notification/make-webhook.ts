@@ -274,6 +274,23 @@ export async function sendNotification(payload: NotifyPayload): Promise<{
   success: boolean;
   error?: string;
 }> {
+  // 2026-11-15 발송에 실패하면 「오류 모아 보기」에 남긴다(무엇이 실패했는지만 — 고객 이름 · 번호는 남기지 않는다).
+  //   발송 흐름 자체는 그대로다(아래 sendNotificationInner 가 예전 본문).
+  const result = await sendNotificationInner(payload);
+  // 웹훅 주소를 일부러 비워 둔 경우(미설정)는 오류가 아니므로 남기지 않는다
+  if (!result.success && !(result.error || '').includes('미설정')) {
+    try {
+      const { logError } = await import('@/lib/log/error-log');
+      await logError('alimtalk', `${payload.template}: ${result.error || '원인 미상'}`);
+    } catch { /* 기록 실패는 발송 결과에 영향 주지 않는다 */ }
+  }
+  return result;
+}
+
+async function sendNotificationInner(payload: NotifyPayload): Promise<{
+  success: boolean;
+  error?: string;
+}> {
   // ── 1) 관리자 앱 푸시 — 고객 행동이면 무조건 발송 ──
   //  ⚠️ 웹훅 설정과 완전 독립. 반드시 함수 최상단에서 먼저 쏜다. (웹훅 미설정이어도 사장님 푸시는 항상 울림)
   //  🔔 새 고객 접수/행동 템플릿을 만들면 여기 한 줄만 추가하면 자동으로 울림.

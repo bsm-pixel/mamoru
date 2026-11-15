@@ -23,6 +23,7 @@ import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useStatusCounts } from '@/hooks/use-status-counts';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { useStickyState } from '@/hooks/use-sticky-state';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -61,9 +62,9 @@ const PO_COLUMNS: GridColumn<PurchaseOrder>[] = [
 
 export default function PurchasingPage() {
   const router = useRouter();
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useStickyState<string>('purchasing.status', '', STATUS_TABS.map((t) => t.value)); // 2026-11-15 탭 기억
   const [search, setSearch] = useState('');
-  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [dateRange, setDateRange] = useStickyState<'all' | 'today' | 'week' | 'month'>('purchasing.range', 'all', ['all', 'today', 'week', 'month']);
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기

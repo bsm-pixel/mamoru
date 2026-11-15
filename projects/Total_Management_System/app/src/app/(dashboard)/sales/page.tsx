@@ -32,6 +32,9 @@ import type { OfflineSale } from '@/lib/supabase/types';
 import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 import { KeyHint } from '@/components/ui/key-hint';
+import { DaysSince } from '@/components/ui/days-since';
+import { useSetting } from '@/hooks/use-settings';
+import { useStickyState } from '@/hooks/use-sticky-state';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -174,11 +177,12 @@ export default function SalesPage() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [tab, setTab] = useState<SalesTab>('all'); // 기본 탭: 전체
+  // 2026-11-15 탭 · 기간은 다시 들어와도 그대로(이 브라우저에 기억)
+  const [tab, setTab] = useStickyState<SalesTab>('sales.tab', 'all'); // 기본 탭: 전체
   const [section, setSection] = useState<SalesSection>('customer'); // 2026-05-26: default 고객
   // 2026-05-26 Phase G-2: 채널 칩 폐기 — channel state 는 hook 호환용으로 'all' 고정
   const channel: SalesChannel = 'all';
-  const [dateRange, setDateRange] = useState<SalesDateRange>('month');
+  const [dateRange, setDateRange] = useStickyState<SalesDateRange>('sales.range', 'month', ['all', 'today', 'week', 'month']);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   /** 2026-05-26 Phase B: 우측 상세 패널 — sourceType 분기. 'sale' → SaleDetailPanel / 'delivery' → DeliveryDetailPanel */
@@ -854,6 +858,7 @@ const SalesGridTable = memo(function SalesGridTable({
   toggleOnRow?: boolean; // 모바일 선택 모드 — 행을 눌러도 선택
   actLookup?: (phone?: string | null) => ActivityTypes | undefined;
 }) {
+  const unshippedDays = useSetting<number>('shipping.unshipped_warning_days', 2); // 며칠째 표시가 굵어지는 기준
   return (
     <table className="w-full text-sm border-collapse">
       <thead>
@@ -899,7 +904,7 @@ const SalesGridTable = memo(function SalesGridTable({
                     className="w-4 h-4 rounded border-neutral-300" />
                 </td>
               )}
-              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDateFull(item.date)}</td>
+              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDateFull(item.date)}{isSale && d.payment_status === 'paid' && !d.shipped_at && !d.delivered_at && !cancelled && <DaysSince date={item.date} warnDays={unshippedDays} className="ml-1.5" />}</td>
               <td className="px-3 py-2.5">
                 <div className="flex items-center gap-1 min-w-0">
                   <span className={`font-semibold text-indigo-black truncate ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</span>

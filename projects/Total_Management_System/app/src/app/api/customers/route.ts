@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { phoneError, emailError } from '@/lib/utils/validate';
+import { HIDDEN_TAG, NOT_HIDDEN_FILTER } from '@/lib/customer/hidden';
 
 /** GET /api/customers — 고객 목록 (검색/필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -36,6 +37,10 @@ export async function GET(req: NextRequest) {
         : `name.ilike.%${search}%,company_name.ilike.%${search}%`;
       query = query.or(orFilter);
     }
+
+    // 2026-11-15 숨긴 고객(꼬리표 「숨김」)은 목록에서 뺀다. ?hidden=1 이면 숨긴 고객만
+    if (url.searchParams.get('hidden') === '1') query = query.contains('tags', [HIDDEN_TAG]);
+    else query = query.or(NOT_HIDDEN_FILTER);
 
     if (customerType) {
       query = query.eq('customer_type', customerType);

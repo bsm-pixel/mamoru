@@ -27,6 +27,9 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { DaysSince } from '@/components/ui/days-since';
+import { useSetting } from '@/hooks/use-settings';
+import { useStickyState } from '@/hooks/use-sticky-state';
 
 const STATUS_TABS = [
   { value: 'all', label: '전체' },
@@ -41,9 +44,9 @@ const STATUS_TABS = [
 ];
 
 export default function OrdersPage() {
-  const [status, setStatus] = useState('all');
+  const [status, setStatus] = useStickyState<string>('orders.status', 'all', STATUS_TABS.map((t) => t.value)); // 2026-11-15 탭 기억
   const [search, setSearch] = useState('');
-  const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [dateRange, setDateRange] = useStickyState<'all' | 'today' | 'week' | 'month'>('orders.range', 'all', ['all', 'today', 'week', 'month']);
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
@@ -72,8 +75,9 @@ export default function OrdersPage() {
   const totalPages = Math.ceil(total / 20);
 
   // PC 그리드 컬럼 — 주문일·주문번호·주문자·상태·결제·금액·송장(액션)
+  const unshippedDays = useSetting<number>('shipping.unshipped_warning_days', 2); // 며칠째 표시가 굵어지는 기준(설정 > 주문·배송)
   const orderColumns: GridColumn<Order>[] = [
-    { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTimeShort(o.ordered_at)}</span> },
+    { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTimeShort(o.ordered_at)}{['pay_done', 'preparing', 'ready_to_ship'].includes(o.status) && <DaysSince date={o.ordered_at} warnDays={unshippedDays} className="ml-1.5" />}</span> },
     { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
     { key: 'name', label: '주문자', render: (o) => <span className="inline-flex items-center gap-1 min-w-0 max-w-full"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span> },
     { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },

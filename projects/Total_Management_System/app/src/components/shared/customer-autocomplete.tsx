@@ -92,8 +92,24 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // 2026-11-15 최근에 고른 고객 5명 — 검색 칸을 누르면(글자를 치기 전) 먼저 보여 준다. 이 브라우저에만 저장
+  const [recent, setRecent] = useState<CustomerResult[]>([]);
+  const [showRecent, setShowRecent] = useState(false);
+  const RECENT_KEY = 'tms.recent.customers';
+  function loadRecent(): CustomerResult[] {
+    try { const v = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(v) ? v.slice(0, 5) : []; } catch { return []; }
+  }
+  function rememberRecent(c: CustomerResult) {
+    try {
+      const next = [c, ...loadRecent().filter((x) => x.id !== c.id)].slice(0, 5);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+    } catch { /* 저장 못 해도 무시 */ }
+  }
+
   // 고객 선택
   function handleSelect(customer: CustomerResult) {
+    rememberRecent(customer);
+    setShowRecent(false);
     onSelect({
       id: customer.id,
       name: customer.name,
@@ -250,7 +266,11 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           type="text"
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
-          onFocus={() => { if (debouncedQuery.length >= 2) setShowDropdown(true); }}
+          onFocus={() => {
+            if (debouncedQuery.length >= 2) setShowDropdown(true);
+            else if (!query) { const r = loadRecent(); setRecent(r); setShowRecent(r.length > 0); }
+          }}
+          onBlur={() => setTimeout(() => setShowRecent(false), 150)}
           onKeyDown={(e) => {
             if (!showDropdown) return; // 드롭다운 없으면 기본 동작 유지
             if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, results.length - 1)); return; }
@@ -273,6 +293,20 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           className="w-full h-9 pl-8 pr-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40"
         />
       </div>
+
+      {/* 최근 고객 — 글자를 치기 전에만 */}
+      {showRecent && !query && recent.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg border border-neutral-200 max-h-64 overflow-y-auto">
+          <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-neutral-400">최근 고객</p>
+          {recent.map((c) => (
+            <button key={c.id} type="button" tabIndex={-1} onMouseDown={(e) => { e.preventDefault(); handleSelect(c); }}
+              className="w-full px-3 py-2 text-left border-t border-neutral-50 hover:bg-neutral-50 flex items-center gap-2">
+              <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
+              {c.phone && <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 드롭다운 */}
       {showDropdown && debouncedQuery.length >= 2 && (

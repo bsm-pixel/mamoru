@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { NOT_HIDDEN_FILTER } from '@/lib/customer/hidden';
 
 /** GET /api/customers/search?q=홍 — 고객 자동완성 검색 */
 export async function GET(req: NextRequest) {
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
       .or(orFilter)
       .neq('customer_type', 'supplier') // 판매 자동완성에서 매입처 제외
       .is('merged_into_id', null) // 병합으로 흡수된 고객 숨김
+      .or(NOT_HIDDEN_FILTER) // 2026-11-15 숨긴 고객(꼬리표 「숨김」) 제외
       .order('name')
       .limit(10);
 

@@ -30,6 +30,7 @@ import {
   CONSULTATION_STATUS_COLOR, formatDateTimeShort } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Store, Truck, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
+import { DaysSince } from '@/components/ui/days-since';
 
 // 진행 중 상태 — 전체 목록과 모바일 상단 종류 카드(consultations/page.tsx)가 같은 기준을 쓴다
 export const ACTIVE_STATUSES = [
@@ -161,7 +162,7 @@ export function AllConsultationsList({ onSelect, searchAction }: { onSelect?: (i
                               : <span className="text-stone-400">시간 미정</span>}
                             {/* 2026-11-14 일정 미정 건은 언제 접수됐는지로 구분 (같은 고객 2건일 때 앞뒤를 알 수 없었음) */}
                             {!c.visit_time && c.received_at && (
-                              <span className="text-stone-500">· 접수 {formatDateTimeShort(c.received_at)}</span>
+                              <span className="text-stone-500">· 접수 {formatDateTimeShort(c.received_at)} <DaysSince date={c.received_at} warnDays={3} /></span>
                             )}
                             {c.phone && <span className="text-stone-300">·</span>}
                             {c.phone && <span>{formatPhone(c.phone)}</span>}

@@ -184,7 +184,7 @@ export async function DELETE(
     });
     if (linked.length > 0) {
       return NextResponse.json({
-        error: `거래·이력이 있는 고객은 삭제할 수 없습니다 (${linked.join(', ')}).`,
+        error: `거래·이력이 있는 고객은 삭제할 수 없습니다 (${linked.join(', ')}). 대신 [고객 숨기기]를 쓰면 목록 · 검색에서 빠집니다.`,
         linked,
       }, { status: 400 });
     }

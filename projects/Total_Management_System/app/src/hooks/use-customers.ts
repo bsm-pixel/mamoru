@@ -43,6 +43,8 @@ export function useCustomers(filters?: {
   type?: string;
   page?: number;
   limit?: number;
+  /** 숨긴 고객만 보기 */
+  hidden?: boolean;
 }) {
   return useQuery({
     queryKey: ['customers', filters],
@@ -53,6 +55,7 @@ export function useCustomers(filters?: {
       if (filters?.type) params.set('type', filters.type);
       if (filters?.page) params.set('page', String(filters.page));
       if (filters?.limit) params.set('limit', String(filters.limit));
+      if (filters?.hidden) params.set('hidden', '1');
 
       const res = await fetch(`/api/customers?${params}`);
       if (!res.ok) throw new Error(await res.text());

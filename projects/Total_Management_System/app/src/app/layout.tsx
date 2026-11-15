@@ -8,6 +8,7 @@ import { ConfirmAskHost } from '@/components/ui/confirm-ask';
 export const metadata: Metadata = {
   title: 'MAMORU TMS',
   description: 'MAMORU 통합관리시스템',
+  robots: { index: false, follow: false }, // 2026-11-15 내부 도구 — 검색에 잡히지 않게
   manifest: '/manifest.json',
   icons: { apple: '/icon-192.png' },
 };

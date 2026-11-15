@@ -10,6 +10,7 @@ import { askBeforeLeave } from '@/hooks/use-unsaved-guard';
 import { ListKeys } from '@/components/layout/list-keys';
 import { QuickFind } from '@/components/layout/quick-find';
 import { InputKeys } from '@/components/layout/input-keys';
+import { OfflineBanner } from '@/components/layout/offline-banner';
 
 export default function DashboardLayout({
   children,
@@ -48,6 +49,7 @@ export default function DashboardLayout({
       <ListKeys />
       <QuickFind />
       <InputKeys />
+      <OfflineBanner />
     </div>
   );
 }

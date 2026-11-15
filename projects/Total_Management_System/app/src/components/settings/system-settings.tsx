@@ -12,6 +12,7 @@ import type { TabProps } from '@/app/(dashboard)/settings/page';
 import type { SyncLog } from '@/lib/supabase/types';
 import { NAV_GROUPS } from '@/lib/utils/constants';
 import ReviewEventReset from '@/components/settings/review-event-reset';
+import { ErrorLogSection } from './error-log-section';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -297,6 +298,8 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
       </div>
 
       {/* 2026-10-02 리뷰 추첨 초기화 — 추첨 화면(녹화 대상)엔 두지 않고 여기서만 */}
+      <ErrorLogSection />
+
       <ReviewEventReset />
 
       {/* 2026-11-15 「환경변수」 칸은 뺐다 — 이름만 나열하고 값은 모두 **** 라 볼 것이 없었다.
