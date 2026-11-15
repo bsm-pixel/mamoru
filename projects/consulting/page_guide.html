@@ -1891,11 +1891,10 @@ html, body {
       </div>
 
       <!-- ⑦ 이미지 영역 -->
-      <!-- [IMG] 사진 넣기: projects/consulting/images/복원수리.jpg 에 파일 저장 (가로:세로 3:2, 권장 1200×800px) -->
       <div class="about-image fade-in" style="margin-top: 32px;">
         <img src="images/복원수리.png" alt="마모루 복원수리 / 상담"
              onerror="if(!this.dataset.png){this.dataset.png=1;this.src='images/복원수리.png';}else{this.style.display='none';this.nextElementSibling.style.display='flex';}">
-        <div class="about-image-placeholder" style="display:none;">복원수리 / 상담 이미지<br>images/복원수리.jpg 또는 .png</div>
+        <div class="about-image-placeholder" style="display:none;"></div>
       </div>
 
       <!-- ⑧ 마모루에서 구매하시면 — 배경 구분 + 4카드 (위계: 번호 흐림 → 제목 진함 → 설명 회색·핵심어 볼드) -->
@@ -2408,5 +2407,18 @@ window.addEventListener('resize', function() {
 })();
 </script>
 
+<!-- 2026-11-15 이 페이지를 아임웹에 끼워 넣지 않고 직접 열었을 때: 「접수하기」 등 이동 버튼이 동작하지 않던 문제
+     (바깥 페이지에 이동을 부탁하는 방식이라 바깥이 없으면 아무 일도 안 일어났다) → 직접 mamoru.kr 로 이동 -->
+<script>
+(function () {
+  if (window.parent !== window) return; // 끼워 넣어진 상태면 바깥 페이지가 처리한다
+  window.addEventListener('message', function (e) {
+    if (e.source !== window || !e.data || e.data.type !== 'MAMORU_NAVIGATE') return;
+    var url = String(e.data.url || '');
+    if (url.charAt(0) === '/' && url.charAt(1) !== '/') location.href = 'https://mamoru.kr' + url;
+    else if (/^https:\/\/(www\.)?mamoru\.kr(\/|$)/.test(url)) location.href = url;
+  });
+})();
+</script>
 </body>
 </html>

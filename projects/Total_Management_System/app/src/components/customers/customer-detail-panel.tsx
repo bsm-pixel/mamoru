@@ -25,6 +25,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { DangerZone, DangerLink } from '@/components/ui/action-section';
+import Link from 'next/link';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -423,6 +424,13 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
                 <div>
                   <span className="text-xs text-neutral-500">등록일</span>
                   <p>{formatDateFull(c.created_at)}</p>
+                </div>
+                <div className="col-span-2">
+                  {/* 2026-11-15 거래내역서를 고객 상세에서 바로 — 전엔 회계 메뉴로 들어가 이름을 다시 쳐야 했다 */}
+                  <Link href={`/reports/transaction?customer=${encodeURIComponent(c.name)}`}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-neutral-200 text-xs font-semibold text-neutral-700 hover:bg-neutral-50">
+                    거래내역서 보기
+                  </Link>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">매장명 (근무지)</span>

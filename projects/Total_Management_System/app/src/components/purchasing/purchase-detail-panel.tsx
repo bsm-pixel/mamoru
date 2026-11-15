@@ -332,7 +332,7 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
                 <p className="text-[10px] text-green-600">지불완료 ✓ {formatDate(po.balance_paid_at)}</p>
               </>
             ) : (
-              <p className={`text-sm font-bold ${po.balance_amount > 0 ? 'text-red-500' : 'text-green-600'}`}>
+              <p className={`text-sm font-bold ${po.status === 'cancelled' ? 'text-neutral-300 line-through' : po.balance_amount > 0 ? 'text-red-500' : 'text-green-600'}`}>
                 {formatKRW(po.balance_amount)}
               </p>
             )}

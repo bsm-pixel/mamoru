@@ -29,7 +29,8 @@ function TransactionContent() {
   const now = new Date();
   const [from, setFrom] = useState(toLocalDateString(new Date(now.getFullYear(), now.getMonth(), 1)));  // KST 월초(UTC 슬라이스 버그 수정)
   const [to, setTo] = useState(toLocalDateString(now));
-  const [customerFilter, setCustomerFilter] = useState('');
+  // 2026-11-15 고객 상세의 [거래내역서]에서 넘어오면(?customer=이름) 그 고객으로 걸러서 연다
+  const [customerFilter, setCustomerFilter] = useState(searchParams?.get('customer') || '');
   const { data, isLoading } = useReportSummary(from, to);
 
   // 단건 모드: sale_id가 있으면 해당 건만 표시 (훅 호출 뒤 조기 반환)

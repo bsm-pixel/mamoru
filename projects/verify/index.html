@@ -174,7 +174,8 @@ body{ word-break:keep-all; overflow-wrap:break-word; }
       if (!token || token === 'index.html') {
         loadingEl.style.display = 'none';
         resultEl.style.display = 'block';
-        resultEl.innerHTML = renderInvalid('QR 코드를 스캔하여 접속해주세요.');
+        // 2026-11-15 QR 없이 들어온 경우 — '확인되지 않습니다 · 정식 구매처가 아닐 수 있습니다'는 틀린 안내였다(확인을 시도한 적이 없다)
+        resultEl.innerHTML = renderGuide();
         return;
       }
 
@@ -228,6 +229,20 @@ body{ word-break:keep-all; overflow-wrap:break-word; }
         <div class="foot">
           <div class="slogan">CUT THE FAKE, KEEP THE REAL</div>
           <div class="row2">필요할 때만 오시면 됩니다 · 문의 <a href="https://mamoru.kr">mamoru.kr</a></div>
+        </div>
+      `;
+    }
+
+    function renderGuide(){
+      return `
+        <div class="fail">
+          <div class="fail-top">
+            <div class="fail-title">제품의 QR을 찍어 주세요</div>
+            <div class="fail-sub">정품 확인은 제품에 붙은 QR 라벨을 찍으면 열립니다.</div>
+          </div>
+          <div class="fail-foot">
+            <p>QR이 없거나 읽히지 않으면 <a href="https://mamoru.kr">mamoru.kr</a> 로 문의해 주세요.</p>
+          </div>
         </div>
       `;
     }

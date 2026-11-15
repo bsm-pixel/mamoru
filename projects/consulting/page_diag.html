@@ -1978,5 +1978,18 @@ function diagGoToRecommend() {
 diagInit();
 </script>
 
+<!-- 2026-11-15 이 페이지를 아임웹에 끼워 넣지 않고 직접 열었을 때: 「접수하기」 등 이동 버튼이 동작하지 않던 문제
+     (바깥 페이지에 이동을 부탁하는 방식이라 바깥이 없으면 아무 일도 안 일어났다) → 직접 mamoru.kr 로 이동 -->
+<script>
+(function () {
+  if (window.parent !== window) return; // 끼워 넣어진 상태면 바깥 페이지가 처리한다
+  window.addEventListener('message', function (e) {
+    if (e.source !== window || !e.data || e.data.type !== 'MAMORU_NAVIGATE') return;
+    var url = String(e.data.url || '');
+    if (url.charAt(0) === '/' && url.charAt(1) !== '/') location.href = 'https://mamoru.kr' + url;
+    else if (/^https:\/\/(www\.)?mamoru\.kr(\/|$)/.test(url)) location.href = url;
+  });
+})();
+</script>
 </body>
 </html>

@@ -466,7 +466,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
         <div className="flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onClose}>취소</Button>
           <Button className="flex-1" disabled={!form.sku.trim() || !form.name.trim() || createProduct.isPending} onClick={handleCreate}>
-            {createProduct.isPending ? '등록 중...' : '제품 등록'}
+            {createProduct.isPending ? '저장 중...' : '저장'}
           </Button>
         </div>
       </div>
