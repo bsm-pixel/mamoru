@@ -772,7 +772,7 @@ function kstText(k){
   }
 
   function winnerCard(w){
-    var photos = (w.photos&&w.photos.length) ? '<div class="re-rc__photos">'+w.photos.map(function(u){return '<img class="re-rc__photo" src="'+esc(u)+'">';}).join('')+'</div>' : '';
+    var photos = (w.photos&&w.photos.length) ? '<div class="re-rc__photos">'+w.photos.map(function(u){return '<img class="re-rc__photo" src="'+esc(u)+'" alt="후기 사진">';}).join('')+'</div>' : '';
     return '<div class="re-rc" data-rank="'+esc(w.rank_label||(w.rank+'등'))+'" data-who="'+esc(w.name)+'" data-phone="'+esc(w.phone)+'" data-route="'+esc(w.route)+'">'
       +'<div class="re-rc__hd"><span class="re-rc__who">'+esc(w.name)+'</span>'+(w.phone?'<span class="re-rc__phone">'+esc(w.phone)+'</span>':'')+'</div>'
       +(w.route?'<div class="re-rc__route">'+esc(w.route)+'</div>':'')
