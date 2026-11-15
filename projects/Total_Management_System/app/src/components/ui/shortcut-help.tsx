@@ -38,9 +38,17 @@ export function ShortcutHelp() {
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">공통</p>
           <Row keys={['?']} desc="이 도움말 열기 / 닫기" />
           <Row keys={['Esc']} desc="열린 창·상세 닫기 / 검색어 지우기" />
+          <Row keys={['Ctrl', 'K']} desc="빠른 찾기 — 고객 · 판매번호 · 제품 · 메뉴" />
           <Row keys={['/']} desc="검색창으로 이동" />
           <Row keys={['Ctrl', '[']} desc="이전 화면으로 (뒤로)" />
           <Row keys={['Ctrl', ']']} desc="다음 화면으로 (앞으로)" />
+        </div>
+        <div className="py-2">
+          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">목록 화면</p>
+          <Row keys={['↑', '↓']} desc="줄 이동 (검색 칸에서 ↓ = 첫 줄)" />
+          <Row keys={['Enter']} desc="그 건의 「다음 할 일」 버튼으로" />
+          <Row keys={['N']} desc="새로 만들기" />
+          <Row keys={['1', '~', '9']} desc="상태 탭 바꾸기" />
         </div>
         <div className="py-2">
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">어느 화면에서나</p>

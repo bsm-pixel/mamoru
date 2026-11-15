@@ -25,6 +25,7 @@ import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Order } from '@/lib/supabase/types';
+import { useListEscape } from '@/components/layout/list-keys';
 
 const STATUS_TABS = [
   { value: 'all', label: '전체' },
@@ -45,6 +46,7 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   // 준비표 다중선택 (판매관리와 동일 UX)
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
@@ -216,7 +218,7 @@ export default function OrdersPage() {
 
         {/* 상태 탭 (PC) — 모바일은 위 StageGrid (2026-10-19) */}
         {isLg && (
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div data-status-tabs className="flex gap-1 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}

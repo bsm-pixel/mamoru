@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { typingPhone } from '@/lib/utils/validate';
 import { daysSinceKST } from '@/lib/utils/kst';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
@@ -336,7 +337,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
                   </div>
                   <div>
                     <label className="text-xs text-neutral-500">연락처</label>
-                    <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: typingPhone(e.target.value) })}
                       className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                   </div>
                   <div>

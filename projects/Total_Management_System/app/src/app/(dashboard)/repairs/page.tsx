@@ -14,10 +14,12 @@ import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
 import { RefreshCw, Scissors, Inbox, Loader, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
 import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
+import { useListEscape } from '@/components/layout/list-keys';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const [bookingOpen, setBookingOpen] = useState(false);   // 방문 예약 등록 모달
   const { data: stats } = useRepairDashboardStats();
   const [badgeFilter, setBadgeFilter] = useState<{ tab?: 'intake' | 'in_progress'; unpaidOnly?: boolean; staleOnly?: boolean } | null>(null);

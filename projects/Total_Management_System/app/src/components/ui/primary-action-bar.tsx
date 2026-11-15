@@ -23,7 +23,7 @@ export function PrimaryActionBar({ children, aside }: Props) {
           <p className="text-[10px] font-bold text-neutral-400 tracking-wide">⚡ 다음 할 일</p>
           {aside}
         </div>
-        <div className="flex flex-col gap-1.5">{children}</div>
+        <div className="flex flex-col gap-1.5" data-next-action>{children}</div>
       </div>
     </div>
   );

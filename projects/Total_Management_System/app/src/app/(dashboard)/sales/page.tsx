@@ -31,6 +31,7 @@ import { StageGrid } from '@/components/ui/stage-grid';
 import type { OfflineSale } from '@/lib/supabase/types';
 import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
+import { KeyHint } from '@/components/ui/key-hint';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -511,7 +512,8 @@ export default function SalesPage() {
 
       {/* PC 작업줄 — 2026-10-19 상단바에 있던 [판매 입력]·[거래처 매출]을 작업 영역 안으로 (다른 화면과 같은 위치: 검색 왼쪽) */}
       {isLg && <div className="flex items-center gap-2">
-        <Button onClick={() => router.push('/sales/new')} size="sm" title="단축키: F2" className="shrink-0">
+        <Button data-new-action onClick={() => router.push('/sales/new')} size="sm" title="단축키: F2" className="shrink-0">
+          <KeyHint className="order-last">F2</KeyHint>
           <Plus size={14} />
           판매 입력
           <kbd className="ml-1 px-1 py-0.5 text-[9px] font-sans font-semibold text-white/80 bg-white/15 border border-white/25 rounded">F2</kbd>
@@ -563,7 +565,7 @@ export default function SalesPage() {
       )}
 
       {/* 탭 바 — 상태 필터 (PC — 모바일은 위 상태 버튼판) */}
-      {isLg && <div className="flex items-end gap-1 border-b border-neutral-200">
+      {isLg && <div data-status-tabs className="flex items-end gap-1 border-b border-neutral-200">
         <span className="text-[11px] font-semibold text-neutral-400 pb-2 pr-1 shrink-0">상태</span>
         {TABS.map((t) => {
           /* 배지 숫자도 영역(고객/거래처/전체)을 따른다 — 거래처를 보는데 고객 건수가 떠 있으면 숫자를 믿을 수 없다.
@@ -884,6 +886,8 @@ const SalesGridTable = memo(function SalesGridTable({
           return (
             <tr
               key={`${item.sourceType}-${item.id}`}
+              data-list-row
+              data-selected={sel ? 'true' : undefined}
               onClick={toggleOnRow ? onCheck : () => onSelect(item.id, item.sourceType)}
               className={`border-b border-neutral-100 cursor-pointer transition ${
                 sel ? 'bg-[#F4F0EA] shadow-[inset_3px_0_0_#1A1A1A]' : 'hover:bg-warm-ivory/50'

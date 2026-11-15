@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, Suspense, useEffect, useRef } from 'react';
+import { KeyHint } from '@/components/ui/key-hint';
+import { MoneyInput } from '@/components/ui/money-input';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
@@ -808,7 +810,7 @@ function NewSaleContent() {
                         return (
                           <div key={label} className="flex items-center gap-1.5">
                             <span className="text-[10px] text-neutral-500 w-8">{label}</span>
-                            <input type="number" min={0} value={val || ''} onChange={(e) => setter(parseInt(e.target.value) || 0)}
+                            <MoneyInput value={val} onChange={setter}
                               className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs text-right bg-white focus:outline-none focus:ring-1 focus:ring-stone-400" placeholder="0" />
                           </div>
                         );
@@ -833,7 +835,7 @@ function NewSaleContent() {
                   </div>
                   {paymentStatus === 'partial' && (
                     <div className="mt-1.5">
-                      <input type="number" value={depositAmount || ''} onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)} placeholder="입금액"
+                      <MoneyInput value={depositAmount} onChange={setDepositAmount} placeholder="입금액"
                         className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                     </div>
                   )}
@@ -842,7 +844,7 @@ function NewSaleContent() {
                 )}
                 <div>
                   <label className="text-xs text-neutral-500">할인 금액</label>
-                  <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)} placeholder="0"
+                  <MoneyInput value={discount} onChange={setDiscount} placeholder="0"
                     className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
                 <div>
@@ -936,6 +938,7 @@ function NewSaleContent() {
                 disabled={submitDisabled}
                 onClick={handleSubmit}>
                 {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
+                <KeyHint>Ctrl Enter</KeyHint>
               </Button>
             </div>
           </div>

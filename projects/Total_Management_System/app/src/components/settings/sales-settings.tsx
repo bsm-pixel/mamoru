@@ -8,6 +8,7 @@ import { DEFAULT_PRICE_GROUPS } from '@/lib/utils/pricing';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
+import { typingPhone } from '@/lib/utils/validate';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -97,7 +98,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
             className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
           <input placeholder="대표자" value={businessInfo.representative} onChange={(e) => setBusinessInfo({ ...businessInfo, representative: e.target.value })}
             className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <input placeholder="연락처" value={businessInfo.phone} onChange={(e) => setBusinessInfo({ ...businessInfo, phone: e.target.value })}
+          <input placeholder="연락처" value={businessInfo.phone} onChange={(e) => setBusinessInfo({ ...businessInfo, phone: typingPhone(e.target.value) })}
             className="h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
           <input placeholder="주소" value={businessInfo.address} onChange={(e) => setBusinessInfo({ ...businessInfo, address: e.target.value })}
             className="col-span-2 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />

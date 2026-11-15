@@ -23,6 +23,7 @@ import { ContractDetailPanel } from '@/components/contracts/contract-detail-pane
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { useListEscape } from '@/components/layout/list-keys';
 
 const TABS: { key: ContractTab; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -64,6 +65,7 @@ export default function ContractsPage() {
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const isLg = useIsLg();
 
   const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
@@ -125,7 +127,7 @@ export default function ContractsPage() {
 
         {isLg && (
         <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => router.push('/contracts/new')}>
+          <Button data-new-action size="sm" onClick={() => router.push('/contracts/new')}>
             <Plus size={14} />
             계약서 작성
           </Button>
@@ -150,7 +152,7 @@ export default function ContractsPage() {
 
         {/* 탭 바 — 판매관리와 동일 패턴 (PC 전용, 모바일은 위 StageGrid 2026-10-19) */}
         {isLg && (
-        <div className="flex gap-1 border-b border-neutral-200">
+        <div data-status-tabs className="flex gap-1 border-b border-neutral-200">
           {TABS.map((t) => {
             const count = tabCounts?.[t.key] ?? 0;
             const active = tab === t.key;

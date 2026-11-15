@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Menu, LogOut, RefreshCw, User } from 'lucide-react';
+import { Menu, LogOut, RefreshCw, User, Search } from 'lucide-react';
+import { openQuickFind } from '@/components/layout/quick-find';
+import { KeyHint } from '@/components/ui/key-hint';
 import toast from 'react-hot-toast';
 import { usePageTitle } from '@/hooks/use-page-title';
 
@@ -60,6 +62,15 @@ export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false
 
       <div className="flex items-center gap-2">
         {action}
+        {/* 2026-11-15 빠른 찾기 — 고객 · 판매번호 · 제품 · 메뉴 */}
+        <button
+          type="button"
+          onClick={openQuickFind}
+          className="h-9 px-2.5 lg:px-3 flex items-center gap-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-500 hover:bg-warm-ivory transition"
+          title="빠른 찾기 (Ctrl+K)" aria-label="빠른 찾기"
+        >
+          <Search size={14} /><span className="hidden lg:inline">찾기</span><KeyHint>Ctrl K</KeyHint>
+        </button>
         {!hideRefresh && <button
           onClick={() => router.refresh()}
           className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"

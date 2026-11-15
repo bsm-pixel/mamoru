@@ -24,6 +24,7 @@ import { TagBadges } from '@/components/shared/tag-selector';
 import { NotePreview } from '@/components/shared/customer-notes';
 import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-notes';
 import { useSetting } from '@/hooks/use-settings';
+import { useListEscape } from '@/components/layout/list-keys';
 
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 const SOURCE_LABEL: Record<string, string> = {
@@ -71,6 +72,7 @@ export default function CustomersPage() {
   const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const limit = 20;
   const availableTags = useSetting<string[]>('customer.tags', []);
 
@@ -147,7 +149,7 @@ export default function CustomersPage() {
               placeholder="고객명, 전화번호, 업체명 검색"
             />
           </div>
-          <button type="button" onClick={() => setShowAdd(true)}
+          <button data-new-action type="button" onClick={() => setShowAdd(true)}
             className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
             <Plus size={14} />고객 추가
           </button>

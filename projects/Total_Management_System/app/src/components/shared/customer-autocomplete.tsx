@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, Plus, User, Loader2 } from 'lucide-react';
 import { useCustomerSearch, useCreateCustomer, type CustomerResult } from '@/hooks/use-customers';
 import { formatPhone } from '@/lib/utils/format';
+import { typingPhone } from '@/lib/utils/validate';
 
 export interface SelectedCustomer {
   id: string;
@@ -194,7 +195,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           <input
             type="tel"
             value={newPhone}
-            onChange={(e) => setNewPhone(e.target.value)}
+            onChange={(e) => setNewPhone(typingPhone(e.target.value))}
             placeholder="연락처 (010-0000-0000)"
             className="w-full h-8 px-3 rounded border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-terracotta/40"
           />

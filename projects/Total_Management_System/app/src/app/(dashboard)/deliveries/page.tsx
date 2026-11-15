@@ -24,6 +24,7 @@ import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { useListEscape } from '@/components/layout/list-keys';
 
 /* ── 상수 ── */
 const STATUS_LABEL: Record<string, string> = {
@@ -83,6 +84,7 @@ export default function DeliveriesPage() {
   const [dateRange, setDateRange] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const [addMenu, setAddMenu] = useState(false); // 2026-10-19 모바일 [+ 작성] 메뉴
   const limit = 20;
 
@@ -180,7 +182,7 @@ export default function DeliveriesPage() {
       {/* 검색 + 생성 버튼 — 2026-05-26 Phase E: 입력 진입점 /sales/new?mode=b2b 로 일원화 (PC) */}
       {isLg && (
       <div className="flex items-center gap-2">
-        <Button size="sm" onClick={() => router.push('/sales/new?mode=b2b')}>
+        <Button data-new-action size="sm" onClick={() => router.push('/sales/new?mode=b2b')}>
           <Plus size={14} />납품서 작성
         </Button>
         <Button size="sm" variant="secondary" onClick={() => router.push('/sales/new?mode=b2b&initial=repair')}>
@@ -196,7 +198,7 @@ export default function DeliveriesPage() {
 
       {/* 탭 바 (PC) */}
       {isLg && (
-      <div className="flex gap-1 border-b border-neutral-200">
+      <div data-status-tabs className="flex gap-1 border-b border-neutral-200">
         {STATUS_TABS.map((tab) => {
           const count = stats ? (tab.value === '' ? stats.all : stats[tab.value as keyof typeof stats] as number) : 0;
           const active = statusFilter === tab.value;

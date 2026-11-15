@@ -26,6 +26,7 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { useEnterSelect } from '@/hooks/use-enter-select';
 import { matchSearch } from '@/lib/utils/search-match';
+import { typingPhone } from '@/lib/utils/validate';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -287,7 +288,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="거래처명 직접 입력"
                   className="h-8 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
-                <input type="text" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)}
+                <input type="text" value={customerPhone} onChange={(e) => setCustomerPhone(typingPhone(e.target.value))}
                   placeholder="연락처"
                   className="h-8 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
               </div>

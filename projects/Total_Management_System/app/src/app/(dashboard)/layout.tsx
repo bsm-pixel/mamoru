@@ -7,6 +7,9 @@ import { ShortcutHelp } from '@/components/ui/shortcut-help';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
 import { askBeforeLeave } from '@/hooks/use-unsaved-guard';
+import { ListKeys } from '@/components/layout/list-keys';
+import { QuickFind } from '@/components/layout/quick-find';
+import { InputKeys } from '@/components/layout/input-keys';
 
 export default function DashboardLayout({
   children,
@@ -42,6 +45,9 @@ export default function DashboardLayout({
       </main>
       <MobileNav />
       <ShortcutHelp />
+      <ListKeys />
+      <QuickFind />
+      <InputKeys />
     </div>
   );
 }

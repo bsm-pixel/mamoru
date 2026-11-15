@@ -18,6 +18,7 @@ import { formatDate, formatPhone } from '@/lib/utils/format';
 import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ReturnRow } from '@/lib/supabase/types';
+import { useListEscape } from '@/components/layout/list-keys';
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -33,6 +34,7 @@ export default function ReturnsPage() {
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   // 주문/판매 상세의 [반품·교환에서 관리 →] 링크로 진입 시 검색어 프리필
   useEffect(() => {
     const s = new URLSearchParams(window.location.search).get('search');
@@ -93,7 +95,7 @@ export default function ReturnsPage() {
         )}
         {isLg && <SearchInput value={search} onChange={setSearch} placeholder="반품번호, 이름, 시리얼 검색" />}
         {isLg && (
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <div data-status-tabs className="flex gap-1 overflow-x-auto pb-1">
           {STATUS_TABS.map((t) => (
             <button key={t.value} onClick={() => setStatus(t.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${status === t.value ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}>

@@ -104,7 +104,7 @@ export default function SuppliesPage() {
               <Badge className="bg-amber-100 text-amber-700">주문완료 대기 {orderedCount}건</Badge>
             )}
           </div>
-          <button type="button" onClick={() => setShowAdd(true)}
+          <button data-new-action type="button" onClick={() => setShowAdd(true)}
             className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
             <Plus size={14} />부자재 추가
           </button>

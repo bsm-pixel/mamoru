@@ -19,6 +19,8 @@ import type { Product } from '@/lib/supabase/types';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import { matchSearch } from '@/lib/utils/search-match';
+import { useListEscape } from '@/components/layout/list-keys';
+import { OPEN_PRODUCT_KEY } from '@/components/layout/quick-find';
 
 const CATEGORY_COLOR: Record<string, string> = {
   BL: 'bg-blue-100 text-blue-700',
@@ -37,6 +39,16 @@ export default function ProductsPage() {
   const lowThreshold = useSetting<number>('inventory.low_stock_threshold', 3);  // 재고화면과 동일 기준
   const useGrouping = defaultSort === 'group';
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
+  // 2026-11-15 빠른 찾기(Ctrl+K)에서 고른 제품을 편다 — 제품은 상세 주소가 따로 없어 이렇게 넘겨받는다
+  useEffect(() => {
+    const take = () => {
+      try { const id = sessionStorage.getItem(OPEN_PRODUCT_KEY); if (id) { sessionStorage.removeItem(OPEN_PRODUCT_KEY); setSelectedId(id); } } catch { /* 무시 */ }
+    };
+    take();
+    window.addEventListener(OPEN_PRODUCT_KEY, take);
+    return () => window.removeEventListener(OPEN_PRODUCT_KEY, take);
+  }, []);
   const [panelMode, setPanelMode] = useState<'view' | 'create' | 'duplicate'>('view');
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | null>(null);
   const [category, setCategory] = useState('all');

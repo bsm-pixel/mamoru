@@ -16,6 +16,7 @@ export function SearchInput({ value, onChange, placeholder = '검색', inputRef 
       <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
       <input
         ref={inputRef}
+        data-list-search
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}

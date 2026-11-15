@@ -20,6 +20,7 @@ import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-pan
 import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { useListEscape } from '@/components/layout/list-keys';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -63,6 +64,7 @@ export default function PurchasingPage() {
   const [dateRange, setDateRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const limit = 20;
 
   const isLg = useIsLg();
@@ -134,7 +136,7 @@ export default function PurchasingPage() {
 
         {isLg && (
         <div className="flex items-center gap-3">
-          <Button size="sm" onClick={() => router.push('/purchasing/new')}>
+          <Button data-new-action size="sm" onClick={() => router.push('/purchasing/new')}>
             <Plus size={14} />
             발주 작성
           </Button>
@@ -157,7 +159,7 @@ export default function PurchasingPage() {
         )}
 
         {isLg && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
+        <div data-status-tabs className="flex gap-1.5 overflow-x-auto pb-1">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}

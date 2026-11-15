@@ -27,6 +27,8 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { MissingNote } from '@/components/ui/missing-note';
 import { matchSearch } from '@/lib/utils/search-match';
+import { useListEscape } from '@/components/layout/list-keys';
+import { typingPhone } from '@/lib/utils/validate';
 
 // 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
 // supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
@@ -85,6 +87,7 @@ export default function B2BPartnersPage() {
   const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const isLg = useIsLg();
 
   // 074: B2B 카테고리 동적 (사장님이 설정에서 추가/수정 가능)
@@ -161,7 +164,7 @@ export default function B2BPartnersPage() {
         <div className="flex-1 min-w-0">
           <SearchInput value={search} onChange={setSearch} placeholder={`${tabConfig.label}명, 담당자명, 전화번호 검색`} />
         </div>
-        <button type="button" onClick={() => setShowAdd(true)}
+        <button data-new-action type="button" onClick={() => setShowAdd(true)}
           className="shrink-0 h-9 px-3 rounded-xl bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
           <Plus size={14} />거래처 추가
         </button>
@@ -371,7 +374,7 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
               </div>
               <div>
                 <label className="text-xs text-neutral-500">연락처</label>
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: typingPhone(e.target.value) })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
               </div>
               <div>
@@ -719,7 +722,7 @@ function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; 
             </div>
             <div>
               <label className="text-xs text-neutral-500">전화번호</label>
-              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: typingPhone(e.target.value) })}
                 placeholder="010-0000-0000" className={inputCls} />
             </div>
             <div>

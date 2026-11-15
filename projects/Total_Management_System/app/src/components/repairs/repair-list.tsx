@@ -236,7 +236,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       )}
 
       {/* PC: 8탭 파이프라인 + 카운트 뱃지 */}
-      {gridMode && <div className="flex gap-1 overflow-x-auto border-b border-stone-200 scrollbar-hide">
+      {gridMode && <div data-status-tabs className="flex gap-1 overflow-x-auto border-b border-stone-200 scrollbar-hide">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           return (

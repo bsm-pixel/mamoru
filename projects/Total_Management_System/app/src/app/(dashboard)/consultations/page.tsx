@@ -175,7 +175,7 @@ export default function ConsultationsPage() {
 
         {/* 2행: 최상위 4탭 (전체+매장+출장+톡) + 일정 수동 등록 — PC */}
         {isLg && <div className="flex items-center justify-between gap-2 border-b border-stone-200">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
+          <div data-status-tabs className="flex gap-1 overflow-x-auto scrollbar-hide min-w-0">
             {TABS.map((tab) => (
               <button
                 key={tab.key}

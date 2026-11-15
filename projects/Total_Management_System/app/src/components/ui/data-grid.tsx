@@ -65,6 +65,8 @@ function DataGridInner<T>({
           return (
             <tr
               key={key}
+              data-list-row
+              data-selected={sel ? 'true' : undefined}
               onClick={() => onSelect?.(row)}
               className={cn(
                 'border-b border-neutral-100 transition',
