@@ -1730,6 +1730,13 @@ html, body {
   .consult-tab{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
 }
 .b-tag{ font-size:11px; }
+
+/* 모바일 좌우 여백 통일 — 상담철칙만 40px로 들어가 있던 것을 다른 구역과 같은 20px로 (2026-11-15) */
+@media screen and (max-width: 767px){
+  .mamoru-consult-page .mmt-bleed > .about-principles{ padding-left:0; padding-right:0; }
+}
+/* PC 본문 15px */
+@media screen and (min-width: 768px){ .about-benefit-desc{ font-size:15px; } }
 </style>
 
 </head>

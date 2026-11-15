@@ -302,6 +302,14 @@ body{ margin:0; } /* 원본은 body 기본 여백 8px 이 남아 띠(band)가 �
   .re-rc__more::before{ content:''; position:absolute; top:-13px; bottom:-13px; left:-8px; right:-8px; }
 }
 .re-count__l{ font-size:11px; }
+
+/* PC 읽기 편하게 — 본문 15px · 당첨 후기 2장씩 · 마우스로 넘길 수 있게 (2026-11-15) */
+@media(min-width:768px){
+  .re-rc__review{ font-size:15px; line-height:1.7; }
+  .re-notes li, .re-hint, .re-step__hint{ font-size:14px; }
+  .re-rank__scroll:has(.re-rc + .re-rc) .re-rc{ flex-basis:calc(50% - 6px); }
+  .re-rank__scroll{ scrollbar-width:thin; scrollbar-color:var(--sand) transparent; padding-bottom:10px; }
+}
 </style>
 </head>
 <body>
@@ -522,7 +530,7 @@ body{ margin:0; } /* 원본은 body 기본 여백 8px 이 남아 띠(band)가 �
       <p class="mm-label">NOTICE</p>
       <ul class="re-notes" style="margin-top:14px;">
         <!-- ✏️ 수정가능: 유의사항 (추첨일·추첨기준·당첨자 안내 포함) -->
-        <li>이번 회차는 8~9월 작성 후기를 함께 모아 선정합니다. (이후 매월 1일~말일 단위로 진행)</li>
+        <li>매월 1일~말일에 작성된 후기를 모아 선정합니다.</li>
         <li>응모 마감은 매월 말일 24시, 당첨 발표는 다음 달 <span class="b-nw">첫째 금요일</span> 오후 8시입니다.</li>
         <li>당첨자는 후기의 진정성을 기준으로 베스트를 선정합니다.</li>
         <li>부적절하거나 허위로 판단되는 후기는 선정에서 제외됩니다.</li>
