@@ -120,7 +120,7 @@ export interface ReturnRow {
 // R5: 오프라인 판매 ENUM
 export type PaymentMethod = 'card' | 'cash' | 'transfer' | 'mixed';
 export type PaymentStatus = 'paid' | 'unpaid' | 'partial';
-export type SaleChannel = 'offline' | 'online' | 'talk';
+export type SaleChannel = 'store' | 'field' | 'talk' | 'online' | 'offline';   // 2026-11-15 실제 쓰는 값으로 맞춤(매장·출장 누락돼 있었음). offline = 옛 자료
 // EcountSyncStatus 제거됨 (이카운트 연동 폐기)
 
 // R6: 전자 계약서 ENUM

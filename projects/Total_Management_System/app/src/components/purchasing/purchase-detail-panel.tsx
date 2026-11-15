@@ -30,9 +30,11 @@ const STATUS_COLOR: Record<string, string> = {
 
 interface Props {
   purchaseId: string;
+  /** 2026-11-15 발주를 지운 뒤 — 옆 상세 칸을 닫는다(전엔 지운 발주의 버튼이 그대로 남았다) */
+  onDeleted?: () => void;
 }
 
-export function PurchaseDetailPanel({ purchaseId }: Props) {
+export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
   const { data, isLoading } = usePurchaseOrder(purchaseId);
   const updatePO = useUpdatePurchaseOrder();
   const deletePO = useDeletePurchaseOrder();
@@ -401,7 +403,12 @@ export function PurchaseDetailPanel({ purchaseId }: Props) {
             className="w-full text-red-500 hover:text-red-600"
             onClick={() => {
               if (!confirm('이 발주를 영구 삭제합니다. 되돌릴 수 없습니다.')) return;
-              deletePO.mutate(purchaseId);
+              deletePO.mutate(purchaseId, {
+                onSuccess: () => {
+                  queryClient.removeQueries({ queryKey: ['purchase-order', purchaseId] });
+                  onDeleted?.();
+                },
+              });
             }}
             disabled={deletePO.isPending}
           >

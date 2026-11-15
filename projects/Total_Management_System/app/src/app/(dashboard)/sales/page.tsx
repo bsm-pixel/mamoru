@@ -119,6 +119,12 @@ function statusLabel(state: RowState): string {
   }
 }
 
+/** 2026-11-15 매장 판매는 택배가 아니라 건네는 것 — '처리 대기' 대신 '수령 확인 대기'로 보여 준다 (판정 기준은 그대로, 문구만) */
+function saleStatusText(state: RowState, sale: { sale_channel?: string | null }): string {
+  if (state === 'paid_unhandled' && sale.sale_channel === 'store') return '수령 확인 대기';
+  return statusLabel(state);
+}
+
 /** 그리드 '상태' 컬럼 전용 — '출고대기'는 별도 '배송상태' 컬럼이 담당하므로 상태엔 '준비중'으로 표기 */
 function gridStatusLabel(state: RowState): string {
   if (state === 'paid_wait_ship') return '준비중';
@@ -903,7 +909,7 @@ const SalesGridTable = memo(function SalesGridTable({
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
                   {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
-                  {gridStatusLabel(state)}
+                  {isSale ? (state === 'paid_unhandled' ? saleStatusText(state, d) : gridStatusLabel(state)) : gridStatusLabel(state)}
                 </span>
               </td>
               <td className="px-3 py-2.5 whitespace-nowrap">
@@ -963,7 +969,7 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
             <span className="text-neutral-300">·</span>
             <span>{channelLabel}</span>
             <span className="text-neutral-300">·</span>
-            <span className={statusTextClass(state)}>{statusLabel(state)}</span>
+            <span className={statusTextClass(state)}>{saleStatusText(state, sale)}</span>
           </div>
           <NotePreview note={note} className="mt-0.5" />
         </div>

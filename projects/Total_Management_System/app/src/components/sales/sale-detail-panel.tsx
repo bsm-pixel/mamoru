@@ -191,6 +191,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const showPayDone = notClosed && s.payment_status !== 'paid';
   const canCreateInvoice = notClosed && !s.invoice_number && !s.delivered_at;
   const canMarkShipped = notClosed && !!s.invoice_number && !s.shipped_at;
+  // 2026-11-15 매장 판매는 손에 건네는 것이 보통 — [고객 수령 완료]를 진한 버튼으로, 택배 발송은 보조로
+  const isStoreSale = s.sale_channel === 'store';
   const hasPrimaryAction = showPayDone || canCreateInvoice || canMarkShipped;
   // 2026-10-29 검은 버튼 1개 원칙: 롯데 송장은 기사님 수거 시 자동 출고완료라 수동 버튼은 보조로 내린다.
   // 발송 쪽 검은 버튼이 있으면 [결제완료]는 회색(입금은 자동확인·미수금 화면에서도 처리됨)
@@ -362,7 +364,13 @@ export function SaleDetailPanel({ saleId }: Props) {
           )}
           {canCreateInvoice && (
             <>
-              <Button size="sm" className="w-full" onClick={() => setShipAddrOpen(true)} disabled={shipSale.isPending}>
+              {isStoreSale && (
+                <Button size="sm" className="w-full" onClick={() => setShowPickupConfirm(true)} disabled={markDelivered.isPending}>
+                  <Package size={14} />
+                  고객 수령 완료
+                </Button>
+              )}
+              <Button variant={isStoreSale ? 'secondary' : 'primary'} size="sm" className="w-full" onClick={() => setShipAddrOpen(true)} disabled={shipSale.isPending}>
                 <Truck size={14} />
                 {shipSale.isPending ? '송장 생성 중...' : '택배 발송 (송장 생성)'}
               </Button>
@@ -373,10 +381,12 @@ export function SaleDetailPanel({ saleId }: Props) {
                   다른 송장에 같이 보내기
                 </Button>
               )}
-              <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickupConfirm(true)} disabled={markDelivered.isPending}>
-                <Package size={14} />
-                고객 수령 완료
-              </Button>
+              {!isStoreSale && (
+                <Button variant="secondary" size="sm" className="w-full" onClick={() => setShowPickupConfirm(true)} disabled={markDelivered.isPending}>
+                  <Package size={14} />
+                  고객 수령 완료
+                </Button>
+              )}
             </>
           )}
           {canMarkShipped && lotteAwaitPickup && (

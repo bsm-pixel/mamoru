@@ -200,7 +200,7 @@ export default function PurchasingPage() {
             </div>
             <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
-                <PurchaseDetailPanel purchaseId={selectedId} />
+                <PurchaseDetailPanel purchaseId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
                   <Truck size={28} className="mb-2 opacity-40" />
@@ -223,7 +223,7 @@ export default function PurchasingPage() {
       {/* 모바일 전용 슬라이드 패널 */}
       {!isLg && (
         <SlidePanel open={!!selectedId} onClose={() => setSelectedId(null)} title="발주 상세" className="sm:w-[640px]">
-          {selectedId && <PurchaseDetailPanel purchaseId={selectedId} />}
+          {selectedId && <PurchaseDetailPanel purchaseId={selectedId} onDeleted={() => setSelectedId(null)} />}
         </SlidePanel>
       )}
     </>

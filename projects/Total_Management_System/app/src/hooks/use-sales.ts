@@ -482,9 +482,12 @@ export function useCancelSale() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, vars) => {
       toast.success('판매가 취소되었습니다');
       invalidateFinancialQueries(queryClient);
+      // 2026-11-15 옆 상세 칸도 바로 다시 그린다 — 전엔 취소한 판매에 [택배 발송 (송장 생성)] 버튼이 살아 있었다
+      queryClient.invalidateQueries({ queryKey: ['sale', vars.id] });
+      queryClient.invalidateQueries({ queryKey: ['sale-merge'] });
     },
     onError: (err) => {
       toast.error('판매 취소 실패: ' + (err instanceof Error ? err.message : String(err)));
