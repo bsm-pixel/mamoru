@@ -12,7 +12,7 @@ import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { useCustomer } from '@/hooks/use-customers';
 import { ShipAddressModal, type ShipAddress } from '@/components/shared/ship-address-modal';
 import type { Product } from '@/lib/supabase/types';
-import { formatKRW, formatDate, calcVAT, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
+import { formatKRW, formatDate, calcVAT, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR, formatDateTimeShort, formatDateFull } from '@/lib/utils/format';
 import { useQueryClient } from '@tanstack/react-query';
 import { Package, Pencil, Save, X, Printer, Minus, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -335,12 +335,12 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           </div>
           <div>
             <span className="text-xs text-neutral-500">납품일</span>
-            <p>{formatDate(dl.delivery_date as string)}</p>
+            <p>{formatDateFull(dl.delivery_date as string)}</p>
           </div>
           {dl.expected_date && (
             <div>
               <span className="text-xs text-neutral-500">납품 예정일</span>
-              <p>{formatDate(dl.expected_date as string)}</p>
+              <p>{formatDateFull(dl.expected_date as string)}</p>
             </div>
           )}
           {/* 110: 출고일 — 집하 자동감지 건은 그 사실을 함께 표기 */}
@@ -388,7 +388,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
           {dl.delivered_at ? (
             <div>
               <span className="text-xs text-neutral-500">배송완료</span>
-              <p className="text-green-600 font-medium">{formatDate(dl.delivered_at as string, 'M월 d일 HH:mm')}</p>
+              <p className="text-green-600 font-medium">{formatDateTimeShort(dl.delivered_at as string)}</p>
             </div>
           ) : null}
           <div>

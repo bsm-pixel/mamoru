@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { usePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder } from '@/hooks/use-purchasing';
-import { formatKRW, formatDate, calcVAT } from '@/lib/utils/format';
+import { formatKRW, formatDate, calcVAT, formatDateFull } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { useQueryClient } from '@tanstack/react-query';
 import { Truck, Pencil, Minus, Plus, Trash2, X, Save, Printer } from 'lucide-react';
@@ -138,18 +138,18 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
           </div>
           <div>
             <span className="text-xs text-neutral-500">발주일</span>
-            <p>{formatDate(po.order_date)}</p>
+            <p>{formatDateFull(po.order_date)}</p>
           </div>
           {po.expected_date && (
             <div>
               <span className="text-xs text-neutral-500">입고 예정일</span>
-              <p>{formatDate(po.expected_date)}</p>
+              <p>{formatDateFull(po.expected_date)}</p>
             </div>
           )}
           {po.received_date && (
             <div>
               <span className="text-xs text-neutral-500">입고일</span>
-              <p>{formatDate(po.received_date)}</p>
+              <p>{formatDateFull(po.received_date)}</p>
             </div>
           )}
         </div>

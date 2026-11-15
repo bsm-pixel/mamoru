@@ -33,15 +33,15 @@ import {
   useWaybillAlert, useNewReviewAlert,
 } from '@/hooks/use-dashboard-stats';
 import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, formatKRW } from '@/lib/utils/format';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 
+// 2026-11-15 금액 표기 통일 — 전엔 여기만 「₩142만」으로 줄여 보여 다른 화면(910,000원)과 달랐다
 function fmtKRW(n: number) {
-  if (n >= 10000) return `₩${Math.round(n / 10000)}만`;
-  return `₩${n.toLocaleString()}`;
+  return formatKRW(n || 0);
 }
 
 /* ──────────────────────────────────────────────────────────

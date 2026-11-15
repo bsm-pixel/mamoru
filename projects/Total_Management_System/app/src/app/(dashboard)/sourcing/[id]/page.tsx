@@ -21,6 +21,7 @@ import {
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { formatDateFull } from '@/lib/utils/format';
 
 export default function SourcingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -143,7 +144,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
           </button>
           <div className="flex-1 min-w-0">
             <div className="font-mono text-base font-bold text-indigo-black">{po.po_number}</div>
-            <div className="text-[11px] text-neutral-400">{po.order_date} · 소싱 회차</div>
+            <div className="text-[11px] text-neutral-400">{formatDateFull(po.order_date)} · 소싱 회차</div>
           </div>
           <Button variant="secondary" size="sm" onClick={printPriceList}>
             <ListOrdered size={14} className="mr-1" /> 가격 리스트 (A4)

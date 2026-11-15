@@ -13,7 +13,7 @@ import { useSale, useCancelSale, useReturnSale, useUpdatePaymentStatus, useUpdat
 import { Modal } from '@/components/ui/modal';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { CustomerNotes } from '@/components/shared/customer-notes';
-import { formatKRW, formatDate, formatPhone } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, formatDateTimeShort, formatDateFull } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, MapPin } from 'lucide-react';
 import { PrepSheetModal } from './prep-sheet-modal';
@@ -272,7 +272,7 @@ export function SaleDetailPanel({ saleId }: Props) {
             )}
             <div>
               <span className="text-xs text-neutral-500">판매일</span>
-              <p>{formatDate(s.sale_date, 'yyyy.MM.dd')}</p>
+              <p>{formatDateFull(s.sale_date)}</p>
             </div>
             {/* 주소지 (고객 등록 주소) — 2026-07-14 */}
             {addressText && (
@@ -726,7 +726,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                 <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-200">
                   <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
                     <CheckCircle size={13} />
-                    준비완료 · 포장 끝 {formatDate(s.packed_at, 'M월 d일 HH:mm')}
+                    준비완료 · 포장 끝 {formatDateTimeShort(s.packed_at)}
                   </span>
                   <button
                     onClick={() => markPacked.mutate({ ids: [saleId], packed: false })}
@@ -794,7 +794,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                   {/* 109: 출고 알림톡 발송 여부 + 110/버그수정: 미발송 시 수동 발송 버튼 */}
                   {s.shipped_notified_at ? (
                     <p className="text-[11px] text-neutral-400">
-                      출고 알림톡 발송됨 {formatDate(s.shipped_notified_at, 'M월 d일 HH:mm')}
+                      출고 알림톡 발송됨 {formatDateTimeShort(s.shipped_notified_at)}
                     </p>
                   ) : isB2BCustomerType(s.customer_type) ? (
                     <p className="text-[11px] text-neutral-400">거래처(B2B) — 출고 알림톡 미발송</p>
@@ -814,7 +814,7 @@ export function SaleDetailPanel({ saleId }: Props) {
                   {s.delivered_at ? (
                     <p className="text-xs text-neutral-500 flex items-center gap-1">
                       <CheckCircle size={12} className="text-neutral-400" />
-                      배송완료 {formatDate(s.delivered_at, 'M월 d일 HH:mm')}
+                      배송완료 {formatDateTimeShort(s.delivered_at)}
                     </p>
                   ) : (
                     <div className="space-y-1 pt-1">
@@ -954,7 +954,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
           <Ban size={14} className="text-red-500 shrink-0" />
           <div className="text-xs">
-            <p className="font-semibold text-red-700">취소됨 — {formatDate(s.cancelled_at)}</p>
+            <p className="font-semibold text-red-700">취소됨 — {formatDateFull(s.cancelled_at)}</p>
             {s.cancelled_reason && <p className="text-red-600 mt-0.5">{s.cancelled_reason}</p>}
           </div>
         </div>
@@ -962,7 +962,7 @@ export function SaleDetailPanel({ saleId }: Props) {
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-purple-50 border border-purple-100">
           <Package size={14} className="text-purple-500 shrink-0" />
           <div className="text-xs">
-            <p className="font-semibold text-purple-700">반품 완료 — {formatDate((s as Record<string, unknown>).returned_at as string)}</p>
+            <p className="font-semibold text-purple-700">반품 완료 — {formatDateFull((s as Record<string, unknown>).returned_at as string)}</p>
             {(s as Record<string, unknown>).return_reason ? <p className="text-purple-600 mt-0.5">{String((s as Record<string, unknown>).return_reason)}</p> : null}
           </div>
         </div>
@@ -1771,7 +1771,7 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
             <span style={{ color: '#888' }}>고객명: </span>
             <strong>{sale.customer_name}</strong><span style={{ color: '#888', fontWeight: 'normal' }}> 님</span>
             {sale.customer_phone && (
-              <span style={{ marginLeft: '24px' }}><span style={{ color: '#888' }}>연락처: </span>{sale.customer_phone}</span>
+              <span style={{ marginLeft: '24px' }}><span style={{ color: '#888' }}>연락처: </span>{formatPhone(sale.customer_phone)}</span>
             )}
           </div>
 
@@ -1841,7 +1841,7 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
             <div style={{ flex: 1, border: '1px solid #ddd', borderRadius: '4px', padding: '10px' }}>
               <p style={{ fontWeight: 'bold', color: '#333', marginBottom: '4px' }}>공급받는자</p>
               <p>{sale.customer_name} <span style={{ color: '#888', fontWeight: 'normal' }}>님</span></p>
-              {sale.customer_phone && <p>TEL: {sale.customer_phone}</p>}
+              {sale.customer_phone && <p>TEL: {formatPhone(sale.customer_phone)}</p>}
             </div>
           </div>
 

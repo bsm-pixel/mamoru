@@ -102,7 +102,7 @@ export default function RepairsPage() {
     <>
       {/* 2026-10-19 상단바는 새로고침만 — 모바일에선 아이콘만(글자가 2줄로 꺾이던 문제).
           [방문 예약 등록]은 작업 영역(검색줄 수거 불가일 옆)으로 이동 */}
-      <Topbar title="복원수리" hideRefresh action={
+      <Topbar title="복원수리" count={stats?.workingCount} hideRefresh action={
         <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending} className="whitespace-nowrap" title="목록 새로고침">
           <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
           <span className="hidden sm:inline">{sync.isPending ? '새로고침 중...' : '새로고침'}</span>

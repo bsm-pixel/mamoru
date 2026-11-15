@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useSourcingList, useCreateSourcing } from '@/hooks/use-sourcing';
 import { ScanBox } from '@/components/sourcing/scan-box';
 import { Plus, Sparkles, PackageSearch, CheckCircle2, XCircle } from 'lucide-react';
+import { formatDate } from '@/lib/utils/format';
 
 /**
  * 샘플 소싱 — 발주 목록.
@@ -61,7 +62,7 @@ export default function SourcingListPage() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-mono text-sm font-bold text-indigo-black">{po.po_number}</span>
-                  <span className="text-[11px] text-neutral-400">{po.order_date}</span>
+                  <span className="text-[11px] text-neutral-400">{formatDate(po.order_date)}</span>
                 </div>
                 <div className="text-sm text-neutral-700 truncate mb-3">
                   {po.memo || <span className="text-neutral-400">샘플 {po.counts.total}종</span>}

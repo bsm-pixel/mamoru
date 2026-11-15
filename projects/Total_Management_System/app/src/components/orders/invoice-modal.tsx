@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { useBookInvoice } from '@/hooks/use-orders';
 import type { Order, OrderItem } from '@/lib/supabase/types';
+import { formatPhone } from '@/lib/utils/format';
 
 interface InvoiceModalProps {
   open: boolean;
@@ -50,7 +51,7 @@ export function InvoiceModal({ open, onClose, order, items }: InvoiceModalProps)
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">전화</span>
-            <span>{order.recipient_phone}</span>
+            <span>{formatPhone(order.recipient_phone)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">우편번호</span>

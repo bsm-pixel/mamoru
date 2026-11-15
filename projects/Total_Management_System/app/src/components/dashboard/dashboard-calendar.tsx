@@ -24,7 +24,7 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
 import { useScheduleEvents } from '@/lib/schedule/use-schedule-events';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
-import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
+import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR, CONSULTATION_TYPE_LABEL, formatDate, formatDateFull, formatKRW } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
@@ -342,7 +342,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                 <div className="flex items-center gap-2 text-sm">
                   <CalendarIcon size={15} className="text-stone-400 shrink-0" />
                   <span className="text-stone-500 w-12 shrink-0 text-xs">일시</span>
-                  <span className="font-medium text-stone-800">{detail.visit_date || '-'}{detail.visit_time ? ` ${detail.visit_time}` : ''}</span>
+                  <span className="font-medium text-stone-800">{formatDateFull(detail.visit_date) || '-'}{detail.visit_time ? ` ${detail.visit_time}` : ''}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone size={15} className="text-stone-400 shrink-0" />
@@ -396,8 +396,8 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                         {ctx.sales.map((s) => (
                           <button key={s.id} onClick={() => router.push(`/sales/${s.id}`)}
                             className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-stone-100 hover:bg-stone-50 hover:border-stone-200 text-left transition">
-                            <span className="text-xs text-stone-600 truncate">{s.sale_date} · {s.sale_number}</span>
-                            <span className="text-xs font-semibold text-stone-800 shrink-0">₩{(s.total_amount || 0).toLocaleString()}</span>
+                            <span className="text-xs text-stone-600 truncate">{formatDate(s.sale_date)} · {s.sale_number}</span>
+                            <span className="text-xs font-semibold text-stone-800 shrink-0">{formatKRW(s.total_amount || 0)}</span>
                           </button>
                         ))}
                       </div>
@@ -410,7 +410,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                         {ctx.pastConsults.map((pc) => (
                           <button key={pc.id} onClick={() => router.push(`/consultations/${pc.id}`)}
                             className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-stone-100 hover:bg-stone-50 hover:border-stone-200 text-left transition">
-                            <span className="text-xs text-stone-600 truncate">{pc.visit_date || '-'}{pc.visit_time ? ` ${pc.visit_time}` : ''} · {CONSULTATION_TYPE_LABEL[pc.consultation_type] || pc.consultation_type}</span>
+                            <span className="text-xs text-stone-600 truncate">{formatDate(pc.visit_date) || '-'}{pc.visit_time ? ` ${pc.visit_time}` : ''} · {CONSULTATION_TYPE_LABEL[pc.consultation_type] || pc.consultation_type}</span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${CONSULTATION_STATUS_COLOR[pc.status] || 'bg-stone-100 text-stone-600'}`}>{CONSULTATION_STATUS_LABEL[pc.status] || pc.status}</span>
                           </button>
                         ))}

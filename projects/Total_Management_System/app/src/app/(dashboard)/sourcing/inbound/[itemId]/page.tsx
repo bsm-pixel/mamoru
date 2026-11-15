@@ -7,6 +7,7 @@ import {
 } from '@/hooks/use-sourcing';
 import { Camera, X, ExternalLink, Check, ArrowLeft, Loader2 } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/camera-capture';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: '대기', matched: '매칭완료', selected: '채택', rejected: '탈락',
@@ -22,6 +23,7 @@ const STATUS_TONE: Record<string, string> = {
 export default function SourcingInboundPage({ params }: { params: Promise<{ itemId: string }> }) {
   const { itemId } = use(params);
   const router = useRouter();
+  usePageTitle('소싱 입고');
   const { data, isLoading, isError } = useSourcingItem(itemId);
   const update = useInboundItemUpdate(itemId);
   const upload = useUploadInboundPhoto(itemId);

@@ -241,7 +241,7 @@ function PartnerRow({ partner: s, tabConfig, badgeStyle, badgeLabel, selected, o
         </div>
         <div className="flex items-center gap-3 mt-0.5 text-xs text-neutral-500">
           {s.company_name && <span>담당: {s.name}</span>}
-          {s.phone && <span>{s.phone}</span>}
+          {s.phone && <span>{formatPhone(s.phone)}</span>}
           {s.memo && <span className="truncate max-w-[200px]">{s.memo}</span>}
         </div>
       </div>

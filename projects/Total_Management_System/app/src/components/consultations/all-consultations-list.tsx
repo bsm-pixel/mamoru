@@ -25,10 +25,9 @@ import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import {
   formatPhone,
-  formatDate,
+  
   CONSULTATION_STATUS_LABEL,
-  CONSULTATION_STATUS_COLOR,
-} from '@/lib/utils/format';
+  CONSULTATION_STATUS_COLOR, formatDateTimeShort } from '@/lib/utils/format';
 import { Search, ChevronLeft, ChevronRight, Store, Truck, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
 
@@ -162,7 +161,7 @@ export function AllConsultationsList({ onSelect, searchAction }: { onSelect?: (i
                               : <span className="text-stone-400">시간 미정</span>}
                             {/* 2026-11-14 일정 미정 건은 언제 접수됐는지로 구분 (같은 고객 2건일 때 앞뒤를 알 수 없었음) */}
                             {!c.visit_time && c.received_at && (
-                              <span className="text-stone-500">· 접수 {formatDate(c.received_at, 'M/d HH:mm')}</span>
+                              <span className="text-stone-500">· 접수 {formatDateTimeShort(c.received_at)}</span>
                             )}
                             {c.phone && <span className="text-stone-300">·</span>}
                             {c.phone && <span>{formatPhone(c.phone)}</span>}

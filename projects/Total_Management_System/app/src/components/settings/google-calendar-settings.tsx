@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink, RefreshCw, Unlink, AlertCircle, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatDateTime } from '@/lib/utils/format';
 
 interface StatusData {
   connected: boolean;
@@ -215,13 +216,13 @@ export default function GoogleCalendarSettings() {
               {status.connected_at && (
                 <div>
                   <span className="text-neutral-400">연결 일시:</span>{' '}
-                  <span>{new Date(status.connected_at).toLocaleString('ko-KR')}</span>
+                  <span>{formatDateTime(status.connected_at)}</span>
                 </div>
               )}
               {status.last_success_at && (
                 <div>
                   <span className="text-neutral-400">최근 동기화:</span>{' '}
-                  <span>{new Date(status.last_success_at).toLocaleString('ko-KR')}</span>
+                  <span>{formatDateTime(status.last_success_at)}</span>
                 </div>
               )}
             </div>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Save, Plus, X, Lock, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import { SYSTEM_CATEGORIES } from '@/lib/utils/setting-defaults';
+import { formatDateTime } from '@/lib/utils/format';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -115,7 +116,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
           </div>
           {imwebStatus && (
             <div className="mt-1.5 text-xs text-neutral-500 space-y-0.5">
-              {imwebStatus.updatedAt && <div>토큰 갱신: {new Date(imwebStatus.updatedAt).toLocaleString('ko-KR')} ({imwebStatus.ageMinutes != null ? `${imwebStatus.ageMinutes}분 전` : '-'})</div>}
+              {imwebStatus.updatedAt && <div>토큰 갱신: {formatDateTime(imwebStatus.updatedAt)} ({imwebStatus.ageMinutes != null ? `${imwebStatus.ageMinutes}분 전` : '-'})</div>}
               {imwebStatus.scope && <div>권한(scope): <span className="font-mono">{imwebStatus.scope}</span></div>}
               {!imwebStatus.connected && imwebStatus.error && <div className="text-red-600">사유: {imwebStatus.error}</div>}
               {!imwebStatus.connected && <div className="text-red-600 font-medium">→ 아래 &lsquo;아임웹 재연결&rsquo;을 눌러 토큰·권한을 재발급하세요. (product:write 권한 필수)</div>}

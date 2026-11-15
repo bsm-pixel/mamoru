@@ -10,7 +10,7 @@
 import type { ReactNode } from 'react';
 import { useConsultations } from '@/hooks/use-consultations';
 import type { Consultation, ConsultationHistory } from '@/lib/supabase/types';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, formatDate } from '@/lib/utils/format';
 
 export type PastFilter = 'all' | 'completed' | 'cancelled';
 
@@ -26,10 +26,9 @@ export function historyNoteText(h: Pick<ConsultationHistory, 'note' | 'to_status
   return null;
 }
 
-/** "11/9" */
+/** "11.09 (월)" · 오늘/어제는 글자로 */
 function md(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  return formatDate(iso); // 2026-11-15 날짜 표기 통일
 }
 
 /** 지난내역 행 보조줄: 처리일 · 예약일 + 사유 */

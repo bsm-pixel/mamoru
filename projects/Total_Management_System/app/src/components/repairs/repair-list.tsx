@@ -9,7 +9,7 @@ import { RepairStatusBadge } from './repair-status-badge';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useRepairTabData, useRepairShippedSearch, SHIPPED_WINDOW_DAYS } from '@/hooks/use-repair-tabs';
 import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair, useEpostPickup } from '@/hooks/use-repairs';
-import { formatKRW, formatPhone, formatDate, formatDateTime } from '@/lib/utils/format';
+import { formatKRW, formatPhone, formatDate,  formatDateTimeShort } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
   CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff, CalendarPlus, Tag,
@@ -52,7 +52,7 @@ function TwoLineDate({ iso }: { iso: string | null | undefined }) {
   if (!iso) return <span className="text-neutral-300">—</span>;
   return (
     <div className="leading-tight tabular-nums whitespace-nowrap">
-      <div className="text-[13px] text-neutral-700">{formatDate(iso, 'M/d')}</div>
+      <div className="text-[13px] text-neutral-700">{formatDate(iso)}</div>
       <div className="text-[10px] text-neutral-400">{formatDate(iso, 'HH:mm')}</div>
     </div>
   );
@@ -72,7 +72,7 @@ function ProceedBadge({ type }: { type: string | null }) {
 function DateLine({ dateStr, sub }: { dateStr: string; sub?: string }) {
   return (
     <div className="leading-tight tabular-nums whitespace-nowrap">
-      <div className="text-[13px] text-neutral-700">{formatDate(dateStr, 'M/d')}</div>
+      <div className="text-[13px] text-neutral-700">{formatDate(dateStr)}</div>
       {sub && <div className="text-[10px] text-neutral-400">{sub}</div>}
     </div>
   );
@@ -416,7 +416,7 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
             {/* 상단: 접수일 + 상태 + 진행방식 */}
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-xs text-neutral-400">
-                {formatDate(r.received_at, 'M/d HH:mm')}
+                {formatDateTimeShort(r.received_at)}
               </span>
               <RepairStatusBadge status={r.status} proceedType={r.proceed_type} />
               {r.proceed_type && (
@@ -474,12 +474,12 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
       if (r.proceed_type === '직접방문' && r.visit_date) {
         return (
           <div className="mt-1.5 text-xs text-emerald-600">
-            방문 {formatDate(r.visit_date, 'M/d')}{r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}
+            방문 {formatDate(r.visit_date)}{r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}
           </div>
         );
       }
       if (r.proceed_type === '방문수거' && r.pickup_date) {
-        return <div className="mt-1.5 text-xs text-neutral-500">수거요청 {formatDate(r.pickup_date, 'M/d')}</div>;
+        return <div className="mt-1.5 text-xs text-neutral-500">수거요청 {formatDate(r.pickup_date)}</div>;
       }
       return null;
 
@@ -544,11 +544,11 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
             </span>
           )}
           {r.shipped_at && (
-            <span>{formatDate(r.shipped_at, 'M/d')} 출고</span>
+            <span>{formatDate(r.shipped_at)} 출고</span>
           )}
           {/* 방문 건(송장 없이 손으로 건넴)은 출고일이 없다 → 전달일을 보여준다 */}
           {!r.shipped_at && !r.invoice_number && r.delivered_at && (
-            <span>{formatDate(r.delivered_at, 'M/d')} 전달</span>
+            <span>{formatDate(r.delivered_at)} 전달</span>
           )}
           {r.status === 'completed' && (
             <Badge className="bg-green-100 text-green-700 text-[10px]">완료</Badge>
@@ -575,7 +575,7 @@ function TabSpecificInfo({ repair: r, tab }: { repair: Repair; tab: RepairTabKey
             </span>
           )}
           {r.recall_booked_at && (
-            <span className="text-neutral-400">{formatDate(r.recall_booked_at, 'M/d')} 접수</span>
+            <span className="text-neutral-400">{formatDate(r.recall_booked_at)} 접수</span>
           )}
           <Badge className="bg-amber-100 text-amber-700 text-[10px]">재작업 시작 대기</Badge>
         </div>

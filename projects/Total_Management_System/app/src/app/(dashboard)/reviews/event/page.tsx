@@ -6,6 +6,7 @@ import { ArrowLeft, Star, Trophy, Calendar, ImagePlus, Save, Loader2, ExternalLi
 import { resizeImage } from '@/lib/utils/resize-image';
 import { maskNameEvent, maskPhoneEvent } from '@/lib/reviews/mask';
 import EventShipmentsPanel from '@/components/reviews/event-shipments-panel';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 const LIVE_PAGE = 'https://page.mamoru.kr/projects/reviews/page_review_event.html';
 
@@ -79,6 +80,7 @@ const EMPTY_PRIZES: Prize[] = [
 function prizeImgList(p: Prize): string[] { return (Array.isArray(p.image_urls) && p.image_urls.length) ? p.image_urls.filter(Boolean) : (p.image_url ? [p.image_url] : []); }
 
 export default function ReviewEventPage() {
+  usePageTitle('리뷰 이벤트 관리');
   const [month, setMonth] = useState<string>(nowYYMM());
   const [config, setConfig] = useState<EventConfig>({ deadline: null, announce_at: null, entry_start: null, hero_image_url: null, prizes: EMPTY_PRIZES, status: 'draft' });
   const [reviews, setReviews] = useState<ReviewRow[]>([]);

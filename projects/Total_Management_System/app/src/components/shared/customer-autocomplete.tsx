@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, Plus, User, Loader2 } from 'lucide-react';
 import { useCustomerSearch, useCreateCustomer, type CustomerResult } from '@/hooks/use-customers';
+import { formatPhone } from '@/lib/utils/format';
 
 export interface SelectedCustomer {
   id: string;
@@ -156,7 +157,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           <div className="flex-1 min-w-0">
             <span className="text-sm font-semibold text-indigo-black">{selectedCustomer.name}</span>
             {selectedCustomer.phone && (
-              <span className="text-xs text-neutral-500 ml-2">{selectedCustomer.phone}</span>
+              <span className="text-xs text-neutral-500 ml-2">{formatPhone(selectedCustomer.phone)}</span>
             )}
           </div>
           <button
@@ -170,7 +171,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
         {/* 선택된 고객의 연락처 (readonly) */}
         {selectedCustomer.phone && (
           <div className="text-xs text-neutral-500 px-1">
-            연락처: {selectedCustomer.phone}
+            연락처: {formatPhone(selectedCustomer.phone)}
           </div>
         )}
       </div>
@@ -294,7 +295,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
                     {c.phone && (
-                      <span className="text-xs text-neutral-500">{c.phone}</span>
+                      <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>
                     )}
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500 ml-auto">
                       {SOURCE_LABEL[c.source] || c.source}

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Topbar } from '@/components/layout/topbar';
 import { Upload, FileText, Plus, Trash2, Star, ImageIcon, X, Check, AlertCircle } from 'lucide-react';
+import { formatDate } from '@/lib/utils/format';
 
 type ReviewType = 'consult' | 'repair' | 'purchase';
 
@@ -574,7 +575,7 @@ export default function NaverReviewPage() {
                           <td className="px-3 py-2 font-medium">{r.name}</td>
                           <td className="px-3 py-2">{'★'.repeat(r.stars)}</td>
                           <td className="px-3 py-2 max-w-[200px] truncate">{r.content}</td>
-                          <td className="px-3 py-2 text-neutral-400">{r.created_at}</td>
+                          <td className="px-3 py-2 text-neutral-400">{formatDate(r.created_at)}</td>
                         </tr>
                       ))}
                     </tbody>

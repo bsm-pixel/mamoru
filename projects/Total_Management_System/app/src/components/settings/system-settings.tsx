@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Save, RefreshCw, CheckCircle2, AlertCircle, Database, Upload, Star, GripVertical, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useOrderSync, useProductSync } from '@/hooks/use-orders';
-import { formatDateTime } from '@/lib/utils/format';
+import {  formatDateTimeShort } from '@/lib/utils/format';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import type { SyncLog } from '@/lib/supabase/types';
 import { NAV_GROUPS } from '@/lib/utils/constants';
@@ -289,7 +289,7 @@ export default function SystemSettings({ settings, onSave, saving }: TabProps) {
                     {log.status === 'completed' ? '완료' : log.status === 'failed' ? '실패' : '진행중'}
                   </Badge>
                 </div>
-                <span className="text-xs text-neutral-400">{formatDateTime(log.started_at)}</span>
+                <span className="text-xs text-neutral-400">{formatDateTimeShort(log.started_at)}</span>
               </div>
             ))}
           </div>

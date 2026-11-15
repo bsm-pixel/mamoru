@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useConsultations } from '@/hooks/use-consultations';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, formatDateFull } from '@/lib/utils/format';
 import { Navigation, Copy, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 import { FieldDelayAction } from './field-delay-action';
@@ -23,11 +23,9 @@ function addDays(d: Date, n: number): Date {
   return r;
 }
 
-/** 날짜 라벨: "2/17 (월)" */
+/** 날짜 라벨: "02.17 (월)" */
 function dayLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00');
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  return `${d.getMonth() + 1}/${d.getDate()} (${dayNames[d.getDay()]})`;
+  return formatDateFull(dateStr).slice(5); // 2026-11-15 날짜 표기 통일 — "11.15 (일)" (날짜 이동 머리줄이라 오늘도 날짜로)
 }
 
 interface MobileFieldDayViewProps {

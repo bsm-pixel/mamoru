@@ -114,6 +114,7 @@ export default function ConsultationsPage() {
       {/* 2026-10-19 모바일: 새로고침은 상단바 아이콘 하나 (전엔 상단 아이콘 + 화면 폭 전체 새로고침 버튼 중복) */}
       <Topbar
         title="상담관리"
+        count={needAction.all}
         hideRefresh={!isLg}
         action={!isLg && (
           <button type="button" onClick={() => sync.mutate()} disabled={sync.isPending} aria-label="목록 새로고침"

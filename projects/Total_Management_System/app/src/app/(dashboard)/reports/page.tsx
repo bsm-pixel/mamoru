@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, downloadExcel } from '@/hooks/use-reports';
-import { formatKRW, toLocalDateString } from '@/lib/utils/format';
+import { formatKRW, toLocalDateString, formatDate } from '@/lib/utils/format';
 import { BookOpen, Download, FileSpreadsheet, TrendingUp, TrendingDown, Receipt, FileText, BarChart3, Truck, Wallet, Users } from 'lucide-react';
 
 const METHOD_LABEL: Record<string, string> = {
@@ -525,7 +525,7 @@ export default function ReportsPage() {
                     <Link key={s.id} href={`/sales/${s.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-stone-50/40 transition rounded px-1">
                       <div>
                         <p className="text-sm font-medium">{s.customer_name}</p>
-                        <p className="text-xs text-neutral-500">{s.sale_date}</p>
+                        <p className="text-xs text-neutral-500">{formatDate(s.sale_date)}</p>
                       </div>
                       <span className="text-sm font-bold">{formatKRW(s.total_amount)}</span>
                     </Link>
@@ -547,7 +547,7 @@ export default function ReportsPage() {
                     <Link key={p.id} href={`/purchasing/${p.id}`} className="flex items-center justify-between py-1.5 border-b border-neutral-50 last:border-0 hover:bg-stone-50/40 transition rounded px-1">
                       <div>
                         <p className="text-sm font-medium">{p.supplier_name}</p>
-                        <p className="text-xs text-neutral-500">{p.order_date}</p>
+                        <p className="text-xs text-neutral-500">{formatDate(p.order_date)}</p>
                       </div>
                       <span className="text-sm font-bold">{formatKRW(p.total_amount)}</span>
                     </Link>
@@ -586,7 +586,7 @@ function DailyChart({ sales, purchases }: { sales: Record<string, number>; purch
 
         return (
           <div key={date} className="flex items-center gap-2 text-xs">
-            <span className="w-14 text-neutral-500 shrink-0">{date.slice(5)}</span>
+            <span className="w-14 text-neutral-500 shrink-0">{date.slice(5).replace('-', '.')}</span>
             <div className="flex-1 space-y-0.5">
               {saleVal > 0 && (
                 <div className="flex items-center gap-1">

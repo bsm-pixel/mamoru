@@ -22,6 +22,7 @@ import {
 import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { formatDateTime, formatDateFull } from '@/lib/utils/format';
 import {
   useBanners, useUpdateBanner, useUploadBannerImage,
   type ImwebBanner, type BannerImage,
@@ -203,7 +204,7 @@ export default function BannerSettings() {
               <>
                 <br />
                 <span className="text-neutral-400">
-                  최종 수정: {new Date(main.updated_at).toLocaleString('ko-KR')}
+                  최종 수정: {formatDateTime(main.updated_at)}
                 </span>
               </>
             )}
@@ -509,7 +510,7 @@ function ScriptInstallSection({
           <span className="text-xs font-bold text-neutral-800">자동 설치 (Script API)</span>
           {installedAt && (
             <span className="ml-auto text-[10px] text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
-              ✓ 설치됨 {new Date(installedAt).toLocaleDateString('ko-KR')}
+              ✓ 설치됨 {formatDateFull(installedAt)}
             </span>
           )}
         </div>

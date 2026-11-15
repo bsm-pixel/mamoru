@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOrders, useOrderSync, useOrderCounts } from '@/hooks/use-orders';
 import { useIsLg } from '@/hooks/use-grid-mode';
-import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
+import { formatKRW,  ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, formatDateTimeShort } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -70,7 +70,7 @@ export default function OrdersPage() {
 
   // PC 그리드 컬럼 — 주문일·주문번호·주문자·상태·결제·금액·송장(액션)
   const orderColumns: GridColumn<Order>[] = [
-    { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTime(o.ordered_at)}</span> },
+    { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTimeShort(o.ordered_at)}</span> },
     { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
     { key: 'name', label: '주문자', render: (o) => <span className="inline-flex items-center gap-1 min-w-0 max-w-full"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span> },
     { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },
@@ -105,7 +105,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <Topbar title="주문관리" />
+      <Topbar title="주문관리" count={counts ? (counts.pay_done ?? 0) + (counts.cancel_pending ?? 0) : null} />
 
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 space-y-3">
         {/* 모바일 상단 (2026-10-19) — 동기화 버튼이 세로로 찌그러지던 문제: 상태 버튼판 + 검색·기간·[⋯] 작업줄 */}
@@ -361,7 +361,7 @@ const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice,
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-stone-500">
           <span>{order.imweb_order_no}</span>
-          <span>{formatDateTime(order.ordered_at)}</span>
+          <span>{formatDateTimeShort(order.ordered_at)}</span>
           {order.invoice_number && (
             <span className="text-stone-700 font-medium">{order.invoice_number}</span>
           )}

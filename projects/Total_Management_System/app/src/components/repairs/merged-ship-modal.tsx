@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Package, Truck, AlertCircle, CheckCircle } from 'lucide-react';
-import { formatKRW, formatDateTime } from '@/lib/utils/format';
+import { formatKRW,  formatDate, formatDateTimeShort, formatPhone } from '@/lib/utils/format';
 import toast from 'react-hot-toast';
 
 interface MergedShipModalProps {
@@ -182,7 +182,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
                 >
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-mono font-bold">{s.sale_number}</span>
-                    <span className="text-xs text-neutral-500">{s.sale_date}</span>
+                    <span className="text-xs text-neutral-500">{formatDate(s.sale_date)}</span>
                   </div>
                   <div className="text-xs text-neutral-600 mt-1 flex items-center gap-3">
                     <span className="font-mono">{s.invoice_number}</span>
@@ -221,7 +221,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-mono font-bold">{o.imweb_order_no}</span>
                     <span className="text-xs text-neutral-500">
-                      {o.shipped_at ? formatDateTime(o.shipped_at) : (o.paid_at ? formatDateTime(o.paid_at) : '-')}
+                      {o.shipped_at ? formatDateTimeShort(o.shipped_at) : (o.paid_at ? formatDateTimeShort(o.paid_at) : '-')}
                     </span>
                   </div>
                   <div className="text-xs text-neutral-600 mt-1 flex items-center gap-3">
@@ -243,7 +243,7 @@ export function MergedShipModal({ open, onClose, repairId, onSuccess }: MergedSh
         {/* 검색 결과 0건 */}
         {!loading && data && !hasResults && (
           <div className="text-sm text-neutral-500 text-center py-4 bg-neutral-50 rounded-lg">
-            같은 고객({data.name} / {data.phone})의 송장 보유 판매·주문건이 없습니다.
+            같은 고객({data.name} / {formatPhone(data.phone)})의 송장 보유 판매·주문건이 없습니다.
             <br />아래 직접 입력으로 진행해주세요.
           </div>
         )}

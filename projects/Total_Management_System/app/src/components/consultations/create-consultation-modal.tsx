@@ -23,7 +23,7 @@ import {
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, formatDate } from '@/lib/utils/format';
 
 interface Props {
   open: boolean;
@@ -368,7 +368,7 @@ function DuplicateWarningModal({
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">연락처</span>
-            <span className="font-mono text-neutral-700">{existing.phone}</span>
+            <span className="font-mono text-neutral-700">{formatPhone(existing.phone)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-neutral-500">유형</span>
@@ -377,7 +377,7 @@ function DuplicateWarningModal({
           <div className="flex justify-between">
             <span className="text-neutral-500">일시</span>
             <span className="font-semibold text-neutral-900">
-              {existing.visit_date} {existing.visit_time}
+              {formatDate(existing.visit_date)} {existing.visit_time}
             </span>
           </div>
           <div className="flex justify-between">

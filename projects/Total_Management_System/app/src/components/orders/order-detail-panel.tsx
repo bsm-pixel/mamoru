@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { DeliveryTracker } from './delivery-tracker';
 import { useOrderActions } from './order-action-bar';
 import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
-import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR } from '@/lib/utils/format';
+import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, formatPhone } from '@/lib/utils/format';
 import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
@@ -94,7 +94,7 @@ export function OrderDetailPanel({ orderId }: Props) {
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold text-indigo-black truncate">{o.recipient_name || o.orderer_name}</span>
             {o.recipient_phone && (
-              <a href={`tel:${o.recipient_phone}`} className="text-xs text-blue-600 shrink-0">{o.recipient_phone}</a>
+              <a href={`tel:${o.recipient_phone}`} className="text-xs text-blue-600 shrink-0">{formatPhone(o.recipient_phone)}</a>
             )}
           </div>
           {ordererDiffers && (

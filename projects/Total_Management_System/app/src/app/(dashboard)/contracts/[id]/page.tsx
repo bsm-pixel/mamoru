@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { useContract, useSendContractNotification, useDeleteContract } from '@/hooks/use-contracts';
-import { formatKRW, formatDate, formatDateTime } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatDateTime, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Send, Receipt, Image, ExternalLink, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -101,7 +101,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
             <div>
               <span className="text-xs text-neutral-500">연락처</span>
-              <p>{contract.customer_phone || '-'}</p>
+              <p>{formatPhone(contract.customer_phone) || '-'}</p>
             </div>
             <div>
               <span className="text-xs text-neutral-500">이메일</span>

@@ -18,6 +18,7 @@ import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
 import { buildVerifyQrZpl } from '@/lib/label/verify-qr-label';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { formatDate as fmtDate, formatDateTime as fmtDateTime } from '@/lib/utils/format';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   in_stock: { label: '재고', color: 'bg-green-100 text-green-700' },
@@ -34,17 +35,13 @@ const ZONE_LABEL: Record<string, { label: string; color: string }> = {
 };
 
 
+// 2026-11-15 날짜 표기 통일 — 공용 함수(lib/utils/format)로
 function formatDate(d: string | null) {
-  if (!d) return '-';
-  return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
+  return fmtDate(d) || '-';
 }
 
 function formatDateTime(d: string | null) {
-  if (!d) return '-';
-  return new Date(d).toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  });
+  return fmtDateTime(d) || '-';
 }
 
 const ACTION_LABEL: Record<string, { label: string; color: string }> = {

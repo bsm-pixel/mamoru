@@ -15,7 +15,7 @@ import { useSales, useSalesTabCounts, useSalesStats, useMarkSalePacked } from '@
 import type { SalesTab, SalesChannel, SalesDateRange } from '@/hooks/use-sales';
 import { useDeliveryStats, useDeliveries, useDeliveryTabCounts } from '@/hooks/use-deliveries';
 import { useContracts } from '@/hooks/use-contracts';
-import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL } from '@/lib/utils/format';
+import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -323,7 +323,7 @@ export default function SalesPage() {
     return section === 'partner' ? b2b : b2c + b2b;
   };
   const periodLabel = dateFrom || dateTo
-    ? `${dateFrom ? formatDate(dateFrom, 'M/d') : '…'}~${dateTo ? formatDate(dateTo, 'M/d') : '…'}`
+    ? `${dateFrom ? formatDate(dateFrom, 'M.d') : '…'}~${dateTo ? formatDate(dateTo, 'M.d') : '…'}`
     : (DATE_RANGES.find((d) => d.key === dateRange)?.label || '기간');
 
   /* --- 모바일 상단 (2026-10-19 재설계) ---
@@ -741,7 +741,7 @@ export default function SalesPage() {
   return (
     <>
       {/* 2026-10-19 상단바는 제목만 — 판매 입력·거래처 매출·보기 전환은 작업 영역 안으로 (모바일 [+ 입력], PC 작업줄) */}
-      <Topbar title="판매 관리" />
+      <Topbar title="판매 관리" count={tabCount('processing')} />
 
       {isLg ? (
         /* PC: 마스터-디테일 2컬럼. gridMode 면 목록(표)을 넓게, 상세를 고정폭으로 뒤집는다 */
@@ -895,7 +895,7 @@ const SalesGridTable = memo(function SalesGridTable({
                     className="w-4 h-4 rounded border-neutral-300" />
                 </td>
               )}
-              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(item.date, 'yy.MM.dd')}</td>
+              <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDateFull(item.date)}</td>
               <td className="px-3 py-2.5">
                 <div className="flex items-center gap-1 min-w-0">
                   <span className={`font-semibold text-indigo-black truncate ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</span>

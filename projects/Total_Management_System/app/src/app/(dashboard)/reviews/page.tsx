@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { REVIEW_SUBTYPE_OPTIONS, isAllowedReviewSubtype } from '@/lib/reviews/consult-subtype';
+import { formatDate } from '@/lib/utils/format';
 
 interface Review {
   id: string;
@@ -476,8 +477,8 @@ export default function ReviewsPage() {
               </div>
               {promisedItems.map((it) => {
                 const detailHref = it.source === 'consultation' ? `/consultations/${it.id}` : it.source === 'repair' ? `/repairs/${it.id}` : `/sales/${it.id}`;
-                const promisedDate = new Date(it.promisedAt).toLocaleDateString('ko-KR');
-                const sentDate = it.requestSentAt ? new Date(it.requestSentAt).toLocaleDateString('ko-KR') : null;
+                const promisedDate = formatDate(it.promisedAt);
+                const sentDate = it.requestSentAt ? formatDate(it.requestSentAt) : null;
                 const related = relatedByItem[`${it.source}-${it.id}`] || [];
                 return (
                   <div key={`${it.source}-${it.id}`} className="flex flex-col gap-1.5 md:grid md:grid-cols-[1fr_90px_90px_90px_120px] md:gap-3 md:items-center px-4 py-3 border-t border-neutral-100">
@@ -635,7 +636,7 @@ export default function ReviewsPage() {
                 {/* 하단: 날짜 + 액션 */}
                 <div className="flex items-center justify-between pt-2 border-t border-neutral-50">
                   <span className="text-[11px] text-neutral-400">
-                    {new Date(review.created_at).toLocaleDateString('ko-KR')}
+                    {formatDate(review.created_at)}
                     {review.source_id && ` · ${review.source_id}`}
                   </span>
                   <div className="flex gap-1.5">

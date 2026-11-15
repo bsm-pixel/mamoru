@@ -23,6 +23,7 @@ import { Star, MessageCircle, CheckCircle2, Send, Info, Clock } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { ReviewRequestModal } from '@/components/sales/review-request-modal';
 import type { ReviewSource } from '@/lib/notification/review-request';
+import { formatDate as fmtDate } from '@/lib/utils/format';
 
 interface RelatedActivity {
   source: ReviewSource;
@@ -110,13 +111,7 @@ const REPAIR_SUBTYPES: RepairSubtype[] = ['direct_visit', 'pickup', 'delivery'];
 const CONSULT_SUBTYPES: ConsultSubtype[] = ['store_visit', 'field_request', 'talk_consult'];
 
 function formatDate(iso: string | null): string {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  } catch {
-    return '';
-  }
+  return fmtDate(iso); // 2026-11-15 날짜 표기 통일
 }
 
 /** 같은 고객의 다른 source 활동 표시 영역 (자동 매칭 X — 정보 표시용) */

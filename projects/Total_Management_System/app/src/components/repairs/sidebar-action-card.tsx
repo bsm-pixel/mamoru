@@ -20,7 +20,7 @@ import {
 } from '@/hooks/use-repairs';
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL, getRepairDisplayLabel } from '@/lib/repair/transitions';
-import { formatKRW, formatDateTime } from '@/lib/utils/format';
+import { formatKRW, formatDateTime, formatDateFull, formatPhone } from '@/lib/utils/format';
 import type { Repair, RepairStatus, RepairInspection } from '@/lib/supabase/types';
 import { Package, Truck, Send, CheckCircle, CreditCard, ClipboardList } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -839,9 +839,9 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
           <div className="space-y-2 text-left">
             <p>아래 내용으로 <strong>인터넷우체국 방문접수</strong>를 예약합니다. (약 45초)</p>
             <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1 text-xs bg-neutral-50 rounded-lg p-3">
-              <dt className="text-neutral-500">보내는 분</dt><dd>{r.name} · {r.phone}</dd>
+              <dt className="text-neutral-500">보내는 분</dt><dd>{r.name} · {formatPhone(r.phone)}</dd>
               <dt className="text-neutral-500">주소</dt><dd>({r.postcode}) {r.address} <strong>{r.address_detail}</strong></dd>
-              <dt className="text-neutral-500">수거일</dt><dd><strong>{r.pickup_date}</strong></dd>
+              <dt className="text-neutral-500">수거일</dt><dd><strong>{formatDateFull(r.pickup_date)}</strong></dd>
               <dt className="text-neutral-500">보관장소</dt><dd><strong>{r.delivery_method}</strong></dd>
               <dt className="text-neutral-500">받는 분</dt><dd>마모루 매장 (우체국 이력)</dd>
               <dt className="text-neutral-500">물품</dt><dd>미용가위 · 사전결제(비대면)</dd>

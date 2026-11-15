@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReportSummary, type SaleDetail } from '@/hooks/use-reports';
 import { useSale } from '@/hooks/use-sales';
-import { formatKRW, toLocalDateString } from '@/lib/utils/format';
+import { formatKRW, toLocalDateString, formatPhone } from '@/lib/utils/format';
 import { ArrowLeft, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { todayKST } from '@/lib/utils/kst';
@@ -302,7 +302,7 @@ function SingleSaleReceipt({ saleId }: { saleId: string }) {
           <div className="border border-neutral-300 rounded p-3 mb-4 text-sm">
             <div className="flex gap-8">
               <div><span className="text-neutral-500">고객명:</span> <strong>{s.customer_name}</strong></div>
-              {s.customer_phone && <div><span className="text-neutral-500">연락처:</span> {s.customer_phone}</div>}
+              {s.customer_phone && <div><span className="text-neutral-500">연락처:</span> {formatPhone(s.customer_phone)}</div>}
             </div>
           </div>
 

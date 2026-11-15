@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers';
 import { useCustomerManualInvoices } from '@/hooks/use-manual-invoices';
-import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL, CUSTOMER_TYPE_COLOR, CONSULTATION_TYPE_LABEL } from '@/lib/utils/format';
+import { formatKRW, formatDate, formatPhone, ORDER_STATUS_LABEL, CUSTOMER_TYPE_COLOR, CONSULTATION_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { activitySuffix } from '@/lib/customer/display';
 import {
   Save, ShoppingBag, FileSignature, MessageSquare, Wrench,
@@ -419,7 +419,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">등록일</span>
-                  <p>{formatDate(c.created_at)}</p>
+                  <p>{formatDateFull(c.created_at)}</p>
                 </div>
                 <div>
                   <span className="text-xs text-neutral-500">매장명 (근무지)</span>

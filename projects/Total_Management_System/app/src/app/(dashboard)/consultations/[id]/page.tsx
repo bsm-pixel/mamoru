@@ -26,8 +26,7 @@ import {
   formatDday,
   CONSULTATION_STATUS_LABEL,
   CONSULTATION_STATUS_COLOR,
-  CONSULTATION_TYPE_LABEL,
-} from '@/lib/utils/format';
+  CONSULTATION_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle, FileSignature, ShoppingCart } from 'lucide-react';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
@@ -299,7 +298,7 @@ export default function ConsultationDetailPage() {
           <dl className="grid grid-cols-2 gap-y-2 text-sm">
             <dt className="text-neutral-500">방문 희망일</dt>
             <dd className="font-medium">
-              {c.visit_date ? formatDate(c.visit_date, 'yyyy년 M월 d일') : '-'}
+              {c.visit_date ? formatDateFull(c.visit_date) : '-'}
             </dd>
             <dt className="text-neutral-500">방문 시간</dt>
             <dd>{c.visit_time || '-'}</dd>
@@ -309,7 +308,7 @@ export default function ConsultationDetailPage() {
                 <dd className="col-span-1">
                   {((c.suggestions as { dates: { date: string; time: string }[] }).dates).map((d, i) => (
                     <span key={i} className="block text-xs text-info">
-                      {typeof d === 'string' ? d : `${d.date} ${d.time}`}
+                      {typeof d === 'string' ? d : `${formatDate(d.date)} ${d.time}`}
                     </span>
                   ))}
                 </dd>

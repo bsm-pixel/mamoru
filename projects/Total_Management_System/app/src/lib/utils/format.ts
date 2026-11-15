@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { todayKST, addDays } from '@/lib/utils/kst';
 
 /** 원 포맷: 350000 → "350,000원" */
 export function formatKRW(amount: number): string {
@@ -21,14 +22,69 @@ export function toLocalDateString(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 날짜 포맷: "2026-02-16" → "2월 16일" */
-export function formatDate(date: string | Date, fmt = 'M월 d일'): string {
-  return format(new Date(date), fmt, { locale: ko });
+/* ── 날짜 표기 (2026-11-15 통일) ─────────────────────────────────────────────
+ * 전엔 11월 15일 / 2026.11.15 / 11/15 / 2026-11-14 / 9/15 다섯 가지가 섞여 있었다. 화면에 날짜를 보일 때는 아래 넷만 쓴다.
+ *   목록   formatDate(d)           → 11.15 (일)        · 오늘 / 어제 / 내일은 글자로 · 올해가 아니면 2025.11.15 (토)
+ *   목록+시각 formatDateTimeShort(d) → 11.15 (일) 14:30  · 오늘 14:30
+ *   상세   formatDateFull(d)       → 2026.11.15 (일)
+ *   상세+시각 formatDateTime(d)     → 2026.11.15 (일) 14:30
+ * 모두 한국 시간 기준(브라우저·서버 시간대와 무관). 날짜가 비었거나 잘못됐으면 빈 글자.
+ * 달력 계산 · 서버로 보내는 값은 여기 말고 lib/utils/kst.ts 를 쓴다.
+ */
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const KST_MS = 9 * 60 * 60 * 1000;
+
+/** 어떤 값이든 한국 날짜('YYYY-MM-DD')와 시각('HH:mm')으로. 날짜만 있는 글자는 그대로 쓴다(시간대 변환 없음) */
+function kstParts(input: string | Date | number | null | undefined): { key: string; hm: string } | null {
+  if (input === null || input === undefined || input === '') return null;
+  if (typeof input === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(input)) return { key: input, hm: '' };
+  const t = input instanceof Date ? input.getTime() : new Date(input).getTime();
+  if (!Number.isFinite(t)) return null;
+  const iso = new Date(t + KST_MS).toISOString();
+  return { key: iso.slice(0, 10), hm: iso.slice(11, 16) };
 }
 
-/** 날짜 포맷 상세: "2026-02-16T10:00" → "2026.02.16 10:00" */
-export function formatDateTime(date: string | Date): string {
-  return format(new Date(date), 'yyyy.MM.dd HH:mm', { locale: ko });
+function dayLabel(key: string, full: boolean): string {
+  const today = todayKST();
+  if (!full) {
+    if (key === today) return '오늘';
+    if (key === addDays(today, -1)) return '어제';
+    if (key === addDays(today, 1)) return '내일';
+  }
+  const [y, m, d] = key.split('-').map(Number);
+  const dow = DOW[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const md = `${key.slice(5, 7)}.${key.slice(8, 10)} (${dow})`;
+  return full || key.slice(0, 4) !== today.slice(0, 4) ? `${y}.${md}` : md;
+}
+
+/** 목록용 날짜: "11.15 (일)" · 오늘/어제/내일은 글자로.
+ *  fmt 를 주면 예전처럼 그 모양 그대로(시각만 'HH:mm', 기간 표시 'M.d' 처럼 특수한 곳 전용) */
+export function formatDate(date: string | Date | number | null | undefined, fmt?: string): string {
+  if (fmt) {
+    if (date === null || date === undefined || date === '') return '';
+    const d = new Date(date);
+    return Number.isFinite(d.getTime()) ? format(d, fmt, { locale: ko }) : '';
+  }
+  const p = kstParts(date);
+  return p ? dayLabel(p.key, false) : '';
+}
+
+/** 상세용 날짜: "2026.11.15 (일)" */
+export function formatDateFull(date: string | Date | number | null | undefined): string {
+  const p = kstParts(date);
+  return p ? dayLabel(p.key, true) : '';
+}
+
+/** 목록용 날짜+시각: "11.15 (일) 14:30" · "오늘 14:30" */
+export function formatDateTimeShort(date: string | Date | number | null | undefined): string {
+  const p = kstParts(date);
+  return p ? `${dayLabel(p.key, false)}${p.hm ? ' ' + p.hm : ''}` : '';
+}
+
+/** 상세용 날짜+시각: "2026.11.15 (일) 14:30" */
+export function formatDateTime(date: string | Date | number | null | undefined): string {
+  const p = kstParts(date);
+  return p ? `${dayLabel(p.key, true)}${p.hm ? ' ' + p.hm : ''}` : '';
 }
 
 /** 상대 시간: "3분 전", "2시간 전" */
@@ -52,11 +108,16 @@ export function calcVAT(total: number, vatType: 'included' | 'separate' | 'none'
 }
 
 /** 전화번호 포맷: "01012345678" → "010-1234-5678" */
-export function formatPhone(phone: string | null): string {
+export function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '';
+  // 2026-11-15 보여 줄 때는 항상 하이픈 — 서울(02) · 대표번호(1588) · 안심번호(12자리)까지
+  if (phone.trim().startsWith('+')) return phone; // 해외 번호는 그대로
   const num = phone.replace(/\D/g, '');
+  if (num.startsWith('02') && (num.length === 9 || num.length === 10)) return `02-${num.slice(2, num.length - 4)}-${num.slice(-4)}`;
+  if (num.length === 12) return `${num.slice(0, 4)}-${num.slice(4, 8)}-${num.slice(8)}`;
   if (num.length === 11) return `${num.slice(0, 3)}-${num.slice(3, 7)}-${num.slice(7)}`;
   if (num.length === 10) return `${num.slice(0, 3)}-${num.slice(3, 6)}-${num.slice(6)}`;
+  if (num.length === 8 && num.startsWith('1')) return `${num.slice(0, 4)}-${num.slice(4)}`;
   return phone;
 }
 

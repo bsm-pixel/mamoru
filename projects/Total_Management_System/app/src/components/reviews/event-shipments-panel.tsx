@@ -13,6 +13,7 @@ import { Truck, Send, Link2, Loader2, MapPin, RotateCw, X, PackageCheck } from '
 import toast from 'react-hot-toast';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { EscClose } from '@/components/ui/esc-close';
+import { formatDateTimeShort } from '@/lib/utils/format';
 
 interface Prefill { postcode: string; address_road: string; address_detail: string; source: string }
 interface Item {
@@ -32,9 +33,7 @@ const isDirect = (it: Item) => (it.courier_name || '').trim() === '직접전달'
 const SRC: Record<string, string> = { customer: '고객정보', repair: '복원수리 접수', order: '아임웹 주문' };
 
 function fmt(iso: string | null): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return formatDateTimeShort(iso); // 2026-11-15 날짜 표기 통일
 }
 function phoneFmt(p: string): string {
   return p.length === 11 ? `${p.slice(0, 3)}-${p.slice(3, 7)}-${p.slice(7)}` : p;

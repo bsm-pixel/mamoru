@@ -18,8 +18,7 @@ import {
   formatDday,
   formatDateGroup,
   CONSULTATION_STATUS_LABEL,
-  CONSULTATION_STATUS_COLOR,
-} from '@/lib/utils/format';
+  CONSULTATION_STATUS_COLOR, formatDate } from '@/lib/utils/format';
 import { Calendar, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
@@ -153,7 +152,7 @@ export function StoreVisitList({
             {c.visit_date && (
               <span className="flex items-center gap-1">
                 <Calendar size={12} />
-                {c.visit_date} {c.visit_time || ''}
+                {formatDate(c.visit_date)} {c.visit_time || ''}
               </span>
             )}
           </div>

@@ -15,8 +15,7 @@ import { formatDate,
   formatDday,
   toLocalDateString,
   CONSULTATION_STATUS_LABEL,
-  CONSULTATION_STATUS_COLOR,
-} from '@/lib/utils/format';
+  CONSULTATION_STATUS_COLOR, formatDateTimeShort } from '@/lib/utils/format';
 import { MapPin, Search, ChevronLeft, ChevronRight, Navigation, CalendarCheck, LayoutGrid } from 'lucide-react';
 import { MobileFieldDayView } from './mobile-field-day-view';
 import { activityDisplay } from '@/lib/customer/display';
@@ -207,9 +206,9 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           {tab === 'past' && (isCancelled || isCompleted) && <ClosedMeta c={c} h={closingMap?.get(c.id)} />}
           <div className={`${tab === 'past' && (isCancelled || isCompleted) ? 'hidden' : 'flex'} items-center gap-3 mt-1 text-xs text-neutral-500`}>
             <span>{formatPhone(c.phone)}</span>
-            {c.visit_date && <span>{c.visit_date} {c.visit_time || ''}</span>}
+            {c.visit_date && <span>{formatDate(c.visit_date)} {c.visit_time || ''}</span>}
             {/* 2026-11-14 일정 미정 건은 접수 시각으로 구분 */}
-            {!c.visit_date && c.received_at && <span>접수 {formatDate(c.received_at, 'M/d HH:mm')}</span>}
+            {!c.visit_date && c.received_at && <span>접수 {formatDateTimeShort(c.received_at)}</span>}
             {/* 제안중: suggestions에서 제안 시간 표시 */}
             {!c.visit_date && c.status === 'suggested' && (c as any).suggestions && (() => {
               const raw = (c as any).suggestions;
@@ -217,7 +216,7 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
               if (dates.length === 0) return null;
               return (
                 <span className="text-amber-600 font-medium">
-                  제안: {dates.map((d, i) => `${d.date} ${d.time}`).join(' / ')}
+                  제안: {dates.map((d, i) => `${formatDate(d.date)} ${d.time}`).join(' / ')}
                 </span>
               );
             })()}

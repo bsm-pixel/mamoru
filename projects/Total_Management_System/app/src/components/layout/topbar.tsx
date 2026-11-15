@@ -4,17 +4,21 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Menu, LogOut, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 interface TopbarProps {
   title: string;
+  /** 이 화면에서 처리할 건수 — 브라우저 탭 이름에 「화면 이름 (3) · TMS」로 붙는다 */
+  count?: number | null;
   onMenuToggle?: () => void;
   action?: React.ReactNode;
   /** 페이지가 자체 새로고침 버튼을 action 으로 줄 때 공통 새로고침 아이콘을 숨긴다 (아이콘 2개 중복 방지) */
   hideRefresh?: boolean;
 }
 
-export function Topbar({ title, onMenuToggle, action, hideRefresh = false }: TopbarProps) {
+export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false }: TopbarProps) {
   const router = useRouter();
+  usePageTitle(title, count);
 
   const handleLogout = async () => {
     const supabase = createClient();

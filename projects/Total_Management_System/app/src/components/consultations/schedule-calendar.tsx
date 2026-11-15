@@ -9,7 +9,7 @@ import { activityDisplay } from '@/lib/customer/display';
 import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
 import { useScheduleEvents } from '@/lib/schedule/use-schedule-events';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
-import { formatPhone } from '@/lib/utils/format';
+import { formatPhone, formatDateFull } from '@/lib/utils/format';
 import { ChevronLeft, ChevronRight, Calendar, Store, Truck, Wrench, Package } from 'lucide-react';
 
 // 2026-05-25 Phase 3-A: 달력 일정 통합 (매장방문 / 출장 / 직접방문)
@@ -157,7 +157,7 @@ export function ScheduleCalendar({ onSelect }: ScheduleCalendarProps = {}) {
       {selectedDate && (
         <div className="mt-4 border-t border-neutral-100 pt-3">
           <h4 className="text-xs font-bold text-neutral-600 mb-2">
-            {selectedDate} 일정 ({selectedConsultations.length}건)
+            {formatDateFull(selectedDate)} 일정 ({selectedConsultations.length}건)
           </h4>
           {selectedConsultations.length === 0 ? (
             <p className="text-xs text-neutral-400">일정이 없습니다</p>

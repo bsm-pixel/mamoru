@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SuggestTimeModal } from './suggest-time-modal';
 import { ManualConfirmModal } from './manual-confirm-modal';
 import { FieldDelayAction } from './field-delay-action';
-import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
+import { formatPhone, formatDate, CONSULTATION_STATUS_LABEL, formatDateTimeShort, formatDateFull } from '@/lib/utils/format';
 import { Calendar, MapPin, Phone, User, Clock, FileSignature, ShoppingCart, CheckCircle2, CheckCircle } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { Modal } from '@/components/ui/modal';
@@ -176,7 +176,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         </div>
         <div className="flex items-center gap-2 text-xs text-neutral-500">
           <Badge className="bg-neutral-100 text-neutral-600">{TYPE_LABEL[c.consultation_type] || c.consultation_type}</Badge>
-          <span>접수 {formatDate(c.received_at, 'M월 d일 HH:mm')}</span>
+          <span>접수 {formatDateTimeShort(c.received_at)}</span>
         </div>
       </div>
 
@@ -195,7 +195,7 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
         {c.visit_date && (
           <div className="flex items-center gap-2 text-sm">
             <Calendar size={14} className="text-neutral-400" />
-            <span>{c.visit_date} {c.visit_time || ''}</span>
+            <span>{formatDateFull(c.visit_date)} {c.visit_time || ''}</span>
           </div>
         )}
         {c.address_road && (

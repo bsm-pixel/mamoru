@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
 import { Button } from '@/components/ui/button';
-import { formatPhone, formatKRW, formatDate } from '@/lib/utils/format';
+import { formatPhone, formatKRW,  formatDateTime, formatDateFull } from '@/lib/utils/format';
 import { calcTotalCost } from '@/lib/repair/cost-calculator';
 import type { Repair } from '@/lib/supabase/types';
 import { MapPin, Scissors, Pencil, Check, X } from 'lucide-react';
@@ -116,8 +116,8 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
   const previewCost = editQty ? calcTotalCost(qtyMamoru, qtyOther, r.proceed_type) : null;
 
   const visitOrPickup = r.proceed_type === '직접방문'
-    ? { label: '방문 예정', value: r.visit_date ? `${formatDate(r.visit_date, 'yyyy.MM.dd')}${r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}` : '매장방문 (일시 미정)', cls: 'text-emerald-700 font-medium' }
-    : { label: '수거요청일', value: r.pickup_date ? formatDate(r.pickup_date, 'yyyy.MM.dd') : '-', cls: '' };
+    ? { label: '방문 예정', value: r.visit_date ? `${formatDateFull(r.visit_date)}${r.visit_time ? ` ${String(r.visit_time).slice(0, 5)}` : ''}` : '매장방문 (일시 미정)', cls: 'text-emerald-700 font-medium' }
+    : { label: '수거요청일', value: r.pickup_date ? formatDateFull(r.pickup_date) : '-', cls: '' };
   const addrText = r.address ? `${r.address}${r.address_detail ? ' ' + r.address_detail : ''}${r.postcode ? ` (${r.postcode})` : ''}` : '';
   const anyEdit = editQty || editAddr || editCost;
 
@@ -151,7 +151,7 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
           <InfoField label="마모루">{r.qty_mamoru}자루</InfoField>
           <InfoField label="타사">{r.qty_other}자루</InfoField>
           <InfoField label={visitOrPickup.label} valueClass={visitOrPickup.cls}>{visitOrPickup.value}</InfoField>
-          <InfoField label="접수일시">{r.received_at ? formatDate(r.received_at, 'yyyy.MM.dd HH:mm') : '-'}</InfoField>
+          <InfoField label="접수일시">{r.received_at ? formatDateTime(r.received_at) : '-'}</InfoField>
           {addrText && <InfoField label="주소지" full>{addrText}</InfoField>}
         </div>
 
