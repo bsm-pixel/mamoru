@@ -1771,6 +1771,9 @@ body.pc .memo-note{ padding:2px 0 2px 16px; }
 .postcode-wrap{ border-radius:4px; }
 /* 간편진단 미완성 → 임시 숨김(2026-10-23 사장님): 미첨부·진단완료 상자 모두. 재개 시 이 줄 삭제 (진단 내용 memo 첨부 로직은 그대로) */
 #diagnosis-banner, #diagnosis-banner-empty{ display:none !important; }
+
+/* 동의 체크 줄 — 글자 줄 전체가 44px 높이로 눌리게 (2026-11-15) */
+.privacy-check label{ display:flex; align-items:center; min-height:44px; flex:1 1 auto; cursor:pointer; }
 </style>
 </head>
 <body>

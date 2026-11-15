@@ -337,7 +337,9 @@ body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-s
     var allowedMonths = [];   // [{ y, m }] 제안이 있는 월 목록
 
     /* ── Data Load ── */
-    fetch(API_BASE + '/suggest-data?t=' + encodeURIComponent(token))
+    /* 2026-11-15 링크에 값이 없으면 서버 문구(token 필수) 대신 안내 문장 */
+    if (!token) { showError('알림톡의 버튼으로 다시 들어와 주세요.'); }
+    else fetch(API_BASE + '/suggest-data?t=' + encodeURIComponent(token))
       .then(function(r){ return r.json(); })
       .then(function(res){
         if (!res.ok || !res.data) { showError(res.error || '유효하지 않거나 만료된 링크입니다.'); return; }
@@ -621,7 +623,7 @@ body{ font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-s
     function showError(msg) {
       document.getElementById('root').innerHTML =
         '<div class="state-view">' +
-          '<h1>오류</h1>' +
+          '<h1>확인할 수 없습니다</h1>' +
           '<p>' + escHtml(msg) + '</p>' +
         '</div>';
     }
