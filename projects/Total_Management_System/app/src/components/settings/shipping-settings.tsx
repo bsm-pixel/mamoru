@@ -110,7 +110,7 @@ export default function ShippingSettings({ settings, onSave, saving }: TabProps)
           {memoPresets.map((m, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="flex-1 text-sm bg-neutral-50 rounded-lg px-3 py-1.5">{m}</span>
-              <button onClick={() => setMemoPresets(memoPresets.filter((_, j) => j !== i))}
+              <button title="삭제" aria-label="삭제" onClick={() => setMemoPresets(memoPresets.filter((_, j) => j !== i))}
                 className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
             </div>
           ))}

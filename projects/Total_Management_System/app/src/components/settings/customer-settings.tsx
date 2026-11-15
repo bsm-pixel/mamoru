@@ -231,7 +231,7 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
           {memoTemplates.map((m, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="flex-1 text-sm bg-neutral-50 rounded px-2 py-1">{m}</span>
-              <button onClick={() => setMemoTemplates(memoTemplates.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setMemoTemplates(memoTemplates.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
             </div>
           ))}
         </div>
@@ -244,7 +244,7 @@ export default function CustomerSettings({ settings, onSave, saving }: TabProps)
           {tags.map((t, i) => (
             <span key={i} className="flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded-full">
               {t}
-              <button onClick={() => setTags(tags.filter((_, j) => j !== i))} className="hover:text-red-500"><X size={10} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setTags(tags.filter((_, j) => j !== i))} className="hover:text-red-500"><X size={10} /></button>
             </span>
           ))}
         </div>
@@ -268,7 +268,7 @@ function ChipList({ items, labels, onRemove }: { items: string[]; labels: Record
       {items.map((item, i) => (
         <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
           {labels[item] || item}
-          <button onClick={() => onRemove(i)} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+          <button title="삭제" aria-label="삭제" onClick={() => onRemove(i)} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
         </span>
       ))}
     </div>
@@ -281,7 +281,7 @@ function AddInput({ value, onChange, onAdd, placeholder }: { value: string; onCh
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm"
         onKeyDown={(e) => { if (e.key === 'Enter') onAdd(); }} />
-      <button onClick={onAdd} className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
+      <button title="추가" aria-label="추가" onClick={onAdd} className="px-2 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
     </div>
   );
 }

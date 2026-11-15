@@ -71,7 +71,7 @@ export function LabelPrintModal({ template, data, title, onClose }: Props) {
       <div className="bg-white rounded-xl shadow-2xl w-[420px] max-w-[95vw]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">{title || '라벨 출력'}</h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 
         <div className="p-5 space-y-4">

@@ -7,6 +7,7 @@ import { useTodayManualInvoices, useCancelManualInvoice } from '@/hooks/use-manu
 import type { ManualInvoice } from '@/lib/supabase/types';
 import { Truck, X, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 function formatTime(iso: string): string {
   try {
@@ -104,7 +105,7 @@ export default function ManualInvoicesPage() {
           </div>
 
           {isLoading ? (
-            <div className="py-8 text-center text-xs text-neutral-400">불러오는 중...</div>
+            <SkeletonRows rows={4} />
           ) : invoices.length === 0 ? (
             <div className="py-8 text-center text-xs text-neutral-400">
               오늘 발급한 별도 송장이 없습니다.

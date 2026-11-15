@@ -14,6 +14,8 @@ import { useSetting } from '@/hooks/use-settings';
 import { ExpenseInbox } from '@/components/expenses/expense-inbox';
 import { PLAN_OPTIONS, fromPlan, planLabel, type ExpensePlan } from '@/lib/expenses/plan';
 import { PROOF_OPTIONS, proofNeedsKeeping, type ProofType } from '@/lib/expenses/proof';
+import { SkeletonRows } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -280,9 +282,9 @@ export default function ExpensesPage() {
 
             <Card padding={false}>
               {isLoading ? (
-                <div className="p-6 text-center text-sm text-neutral-400">로딩중...</div>
+                <SkeletonRows rows={4} />
               ) : !data?.expenses.length ? (
-                <div className="p-6 text-center text-sm text-neutral-400">등록된 경비가 없습니다</div>
+                <EmptyState compact message="등록된 경비가 없습니다" />
               ) : (
                 <div className="divide-y divide-neutral-100">
                   {data.expenses.map((e) => (
@@ -312,7 +314,7 @@ export default function ExpensesPage() {
                         </p>
                       </div>
                       <p className="text-sm font-bold text-neutral-800 shrink-0">{formatKRW(e.amount)}</p>
-                      <button
+                      <button title="삭제" aria-label="삭제"
                         onClick={() => { if (confirm('삭제하시겠습니까?')) deleteExpense.mutate(e.id); }}
                         className="shrink-0 w-7 h-7 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50 transition"
                       >
@@ -355,7 +357,7 @@ export default function ExpensesPage() {
                   {/* 2026-10-19 모바일: 긴 메모 줄바꿈 허용·삭제버튼 탭 타겟 확대 */}
                   <span className="text-sm text-neutral-700 flex-1 min-w-0 break-words">{item.memo || item.category}</span>
                   <span className="text-sm font-bold shrink-0 whitespace-nowrap">{formatKRW(item.amount)}</span>
-                  <button
+                  <button title="삭제" aria-label="삭제"
                     onClick={() => { if (confirm('고정 경비를 삭제하시겠습니까?')) deleteRecurring.mutate(item.id); }}
                     className="shrink-0 w-9 h-9 lg:w-6 lg:h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50"
                   >

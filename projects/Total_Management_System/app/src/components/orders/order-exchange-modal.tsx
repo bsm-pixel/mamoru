@@ -237,7 +237,7 @@ export function OrderExchangeModal({ order, items, onClose }: { order: Order; it
                         <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold mr-1.5">{ri + 1}</span>
                         {p ? <>{p.name} <span className="text-neutral-400 ml-1">{formatKRW(p.price || 0)}</span></> : '제품 미선택'}
                       </span>
-                      {rows.length > 1 && <button onClick={() => removeRow(r.key)} className="text-neutral-300 hover:text-red-500"><X size={14} /></button>}
+                      {rows.length > 1 && <button title="삭제" aria-label="삭제" onClick={() => removeRow(r.key)} className="text-neutral-300 hover:text-red-500"><X size={14} /></button>}
                     </div>
                     {activeRow === r.key || !r.productId ? (
                       <>

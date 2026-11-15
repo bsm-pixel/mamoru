@@ -19,6 +19,7 @@ import InventorySettings from '@/components/settings/inventory-settings';
 import AccountingSettings from '@/components/settings/accounting-settings';
 import NotificationSettings from '@/components/settings/notification-settings';
 import SystemSettings from '@/components/settings/system-settings';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 const TABS = [
   { key: 'dashboard', label: '대시보드', icon: LayoutDashboard },
@@ -78,9 +79,7 @@ export default function SettingsPage() {
     return (
       <>
         <Topbar title="설정" />
-        <div className="flex items-center justify-center h-64 text-sm text-neutral-400">
-          설정 불러오는 중...
-        </div>
+        <SkeletonRows rows={4} />
       </>
     );
   }

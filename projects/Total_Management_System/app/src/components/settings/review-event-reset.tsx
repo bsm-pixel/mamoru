@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface Preview {
   month: string;
@@ -106,7 +107,7 @@ export default function ReviewEventReset() {
 
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm">
         {loading ? (
-          <p className="text-neutral-400">불러오는 중…</p>
+          <SkeletonRows rows={4} />
         ) : !pv ? (
           <p className="text-neutral-400">불러오지 못했습니다</p>
         ) : (

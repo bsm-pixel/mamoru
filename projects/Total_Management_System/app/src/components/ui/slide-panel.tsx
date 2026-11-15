@@ -77,7 +77,7 @@ export function SlidePanel({ open, onClose, children, title, className }: SlideP
         {title && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
             <h2 className="text-sm font-bold text-indigo-black">{title}</h2>
-            <button
+            <button title="닫기" aria-label="닫기"
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
             >

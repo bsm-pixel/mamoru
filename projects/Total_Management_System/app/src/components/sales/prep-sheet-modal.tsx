@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { todayKST } from '@/lib/utils/kst';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /** 2026-05-26 Phase D: B2C(sale) + B2B(delivery) 통합 준비표 출력
  *  2026-07-23: 트레이형 추가 — A4 1장에 주문 2건(좌·우), 중앙 절취선. 반쪽(105×297mm) 트레이용. */
@@ -358,7 +359,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
         {/* 콘텐츠 */}
         <div className="overflow-y-auto flex-1 p-5">
           {loading ? (
-            <div className="flex items-center justify-center h-32 text-sm text-neutral-400">데이터 로딩 중...</div>
+            <SkeletonRows rows={4} />
           ) : salesData.length === 0 ? (
             <div className="flex items-center justify-center h-32 text-sm text-neutral-400">선택된 건이 없습니다</div>
           ) : (

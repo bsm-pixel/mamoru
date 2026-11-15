@@ -133,7 +133,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
           {paymentMethods.map((m) => (
             <span key={m} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {METHOD_LABELS[m] || m}
-              <button onClick={() => setPaymentMethods(paymentMethods.filter((x) => x !== m))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setPaymentMethods(paymentMethods.filter((x) => x !== m))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>
@@ -152,7 +152,7 @@ export default function SalesSettings({ settings, onSave, saving }: TabProps) {
           {channels.map((c) => (
             <span key={c} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {CHANNEL_LABELS[c] || c}
-              <button onClick={() => setChannels(channels.filter((x) => x !== c))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setChannels(channels.filter((x) => x !== c))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>

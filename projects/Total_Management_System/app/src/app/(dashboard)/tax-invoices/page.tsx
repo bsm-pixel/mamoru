@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { formatKRW, formatDate, toLocalDateString } from '@/lib/utils/format';
 import { FileText, Trash2, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { SkeletonRows } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export default function TaxInvoicesPage() {
   const queryClient = useQueryClient();
@@ -175,9 +177,9 @@ export default function TaxInvoicesPage() {
         {/* 목록 */}
         <Card padding={false}>
           {isLoading ? (
-            <div className="p-6 text-center text-sm text-neutral-400">로딩중...</div>
+            <SkeletonRows rows={4} />
           ) : !data?.invoices.length ? (
-            <div className="p-6 text-center text-sm text-neutral-400">세금계산서가 없습니다</div>
+            <EmptyState compact message="세금계산서가 없습니다" />
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-neutral-50">
@@ -215,7 +217,7 @@ export default function TaxInvoicesPage() {
                     <td className="px-4 py-2.5 text-right text-neutral-600">{formatKRW(inv.tax_amount)}</td>
                     <td className="px-4 py-2.5 text-right font-bold">{formatKRW(inv.total_amount)}</td>
                     <td className="px-2 py-2.5">
-                      <button onClick={() => { if (confirm('삭제?')) deleteInvoice.mutate(inv.id); }}
+                      <button title="삭제" aria-label="삭제" onClick={() => { if (confirm('삭제?')) deleteInvoice.mutate(inv.id); }}
                         className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 hover:text-red-500">
                         <Trash2 size={12} />
                       </button>

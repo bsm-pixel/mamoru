@@ -22,23 +22,16 @@ import { historyNoteText } from './closed-info';
 import { getAllowedTransitions } from '@/lib/consultation/transitions';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
+import { toneClasses } from '@/lib/ui/status-tone';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
   talk_consult: '온라인상담',
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  pending_admin: 'bg-yellow-100 text-yellow-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  suggested: 'bg-orange-100 text-orange-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  on_hold: 'bg-neutral-100 text-neutral-600',
-  reschedule_requested: 'bg-orange-100 text-orange-700',
-  change_requested: 'bg-orange-100 text-orange-700',
-};
+const STATUS_COLOR: Record<string, string> = toneClasses({
+  pending_admin: 'wait', suggested: 'wait', assigned: 'progress', confirmed: 'progress', cancelled: 'cancel', reschedule_requested: 'wait', change_requested: 'wait', on_hold: 'cancel', in_progress: 'progress', completed: 'done',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 interface Props {
   consultationId: string;

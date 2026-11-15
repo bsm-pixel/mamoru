@@ -6,6 +6,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { useProducts } from '@/hooks/use-sales';
 import { useCustomerCatalog, useAddToCustomerCatalog, useUpdateCustomerCatalog, useRemoveFromCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { useEnterSelect } from '@/hooks/use-enter-select';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /**
  * B2B 납품처(dealer/academy) 납품품목 카탈로그 UI
@@ -122,7 +123,7 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
 
       {/* 카탈로그 목록 */}
       {isLoading ? (
-        <div className="text-xs text-neutral-400 text-center py-8">로딩중...</div>
+        <SkeletonRows rows={4} />
       ) : catalog.length === 0 ? (
         <div className="text-xs text-neutral-400 text-center py-8">등록된 납품품목이 없습니다<br />위 버튼으로 제품을 추가해주세요</div>
       ) : (
@@ -185,7 +186,7 @@ export function CustomerCatalogSection({ customerId }: { customerId: string }) {
                       {entry.features && <span>특징: {entry.features}</span>}
                     </div>
                   </div>
-                  <button onClick={() => handleRemove(entry.id)} className="text-neutral-300 hover:text-red-500 ml-2 shrink-0">
+                  <button title="삭제" aria-label="삭제" onClick={() => handleRemove(entry.id)} className="text-neutral-300 hover:text-red-500 ml-2 shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>

@@ -363,7 +363,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
       <div className="flex-1 overflow-y-auto space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-stone-900">{mode === 'duplicate' ? '제품 복제' : '제품 등록'}</h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
         </div>
         <Card>
           <div className="space-y-3">
@@ -540,7 +540,7 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
               </Button>
             </>
           )}
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
             <X size={16} />
           </button>
         </div>

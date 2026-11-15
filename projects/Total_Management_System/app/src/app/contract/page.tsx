@@ -344,7 +344,7 @@ export default function ContractStandalonePage() {
                     </td>
                     <td className="text-center py-3">
                       {rows.length > 1 && (
-                        <button onClick={() => removeRow(row.id)} className="text-neutral-400 hover:text-red-500">
+                        <button title="삭제" aria-label="삭제" onClick={() => removeRow(row.id)} className="text-neutral-400 hover:text-red-500">
                           <X size={14} />
                         </button>
                       )}

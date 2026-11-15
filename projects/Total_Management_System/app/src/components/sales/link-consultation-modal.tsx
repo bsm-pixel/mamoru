@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface ConsultationItem {
   id: string;
@@ -123,7 +124,7 @@ export function LinkConsultationModal({ saleId, customerPhone, onClose, onLinked
             <Link2 size={16} className="text-blue-600" />
             <h3 className="font-semibold text-sm">상담과 연결</h3>
           </div>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
             <X size={18} />
           </button>
         </div>
@@ -133,7 +134,7 @@ export function LinkConsultationModal({ saleId, customerPhone, onClose, onLinked
         </div>
 
         {loading ? (
-          <div className="text-center py-8 text-sm text-neutral-400">불러오는 중...</div>
+          <SkeletonRows rows={4} />
         ) : !customerPhone ? (
           <div className="flex items-center gap-2 px-3 py-3 rounded-lg bg-amber-50 border border-amber-200">
             <AlertCircle size={14} className="text-amber-600 shrink-0" />

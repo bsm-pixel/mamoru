@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { EscClose } from '@/components/ui/esc-close';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface Slot { time: string; available: boolean; past?: boolean; conflicts?: string[] }
 
@@ -111,7 +112,7 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
             <CalendarPlus size={18} className="text-neutral-700" />
             <h2 className="text-base font-bold text-neutral-900">방문 예약 등록</h2>
           </div>
-          <button type="button" onClick={close} className="p-1 rounded text-neutral-400 hover:text-neutral-700"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" type="button" onClick={close} className="p-1 rounded text-neutral-400 hover:text-neutral-700"><X size={18} /></button>
         </div>
 
         <div className="px-5 py-4 space-y-5">
@@ -158,7 +159,7 @@ export function VisitBookingModal({ open, onClose, onCreated }: { open: boolean;
             )}
             <div className="mt-3">
               {loadingSlots ? (
-                <p className="text-xs text-neutral-400">시간표 불러오는 중…</p>
+                <SkeletonRows rows={2} className="p-0 py-1" />
               ) : visible.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {visible.map((s) => (

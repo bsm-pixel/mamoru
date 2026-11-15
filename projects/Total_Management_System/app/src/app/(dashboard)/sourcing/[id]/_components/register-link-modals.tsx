@@ -43,7 +43,7 @@ export function RegisterLinkModal({ mode, item, poId, exchangeRate, onClose }: {
           <span className="font-bold text-indigo-black">
             {mode === 'product' ? '제품으로 등록' : mode === 'supply' ? '부자재로 등록' : '기존 제품 연결'}
           </span>
-          <button type="button" onClick={onClose} className="text-neutral-400 hover:text-neutral-700"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" type="button" onClick={onClose} className="text-neutral-400 hover:text-neutral-700"><X size={18} /></button>
         </div>
         <div className="p-5">
           {mode === 'link' ? (

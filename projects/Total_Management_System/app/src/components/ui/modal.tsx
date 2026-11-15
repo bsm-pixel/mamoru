@@ -90,7 +90,7 @@ export function Modal({ open, onClose, title, children, className, preventAutoCl
       {/* 헤더 */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
         <h2 className="text-base font-bold text-indigo-black">{title}</h2>
-        <button
+        <button title="닫기" aria-label="닫기"
           onClick={requestClose}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
         >

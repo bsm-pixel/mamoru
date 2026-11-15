@@ -113,7 +113,7 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
             <div key={i} className="flex items-center gap-2">
               <span className="flex-1 text-sm">{s.name}</span>
               <span className="text-sm font-mono">{s.price.toLocaleString()}원</span>
-              <button onClick={() => setExtraServices(extraServices.filter((_, j) => j !== i))}
+              <button title="삭제" aria-label="삭제" onClick={() => setExtraServices(extraServices.filter((_, j) => j !== i))}
                 className="text-neutral-400 hover:text-red-500"><X size={14} /></button>
             </div>
           ))}
@@ -123,7 +123,7 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
             className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm" />
           <input type="number" value={newServicePrice || ''} onChange={(e) => setNewServicePrice(Number(e.target.value))} placeholder="금액"
             className="w-24 h-8 px-2 rounded-lg border border-neutral-200 text-sm" step={1000} />
-          <button onClick={addExtraService} className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
+          <button title="추가" aria-label="추가" onClick={addExtraService} className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
         </div>
       </Field>
 

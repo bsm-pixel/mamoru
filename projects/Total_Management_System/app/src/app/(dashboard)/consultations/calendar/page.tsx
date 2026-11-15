@@ -30,6 +30,7 @@ import {
   type BlockedSlot,
 } from '@/hooks/use-blackouts';
 import { formatPhone } from '@/lib/utils/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -431,7 +432,7 @@ export default function CalendarManagePage() {
 
         {isLoading && (
           <Card>
-            <p className="text-center text-sm text-neutral-400 py-4">로딩 중...</p>
+            <SkeletonRows rows={4} />
           </Card>
         )}
       </div>

@@ -8,6 +8,7 @@ import {
 import { Camera, X, ExternalLink, Check, ArrowLeft, Loader2 } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/camera-capture';
 import { usePageTitle } from '@/hooks/use-page-title';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: '대기', matched: '매칭완료', selected: '채택', rejected: '탈락',
@@ -36,7 +37,7 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
   useEffect(() => { if (item) setMemo(item.inbound_memo ?? ''); }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
-    return <div className="min-h-screen bg-neutral-50 flex items-center justify-center text-sm text-neutral-400">불러오는 중…</div>;
+    return <SkeletonRows rows={4} className="max-w-xl mx-auto pt-16" />;
   }
   if (isError || !item) {
     return (
@@ -71,7 +72,7 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
     <div className="min-h-screen bg-neutral-50 pb-28">
       {/* 헤더 */}
       <div className="sticky top-0 z-10 bg-white border-b border-neutral-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.push('/sourcing')} className="text-neutral-600"><ArrowLeft size={20} /></button>
+        <button title="뒤로" aria-label="뒤로" onClick={() => router.push('/sourcing')} className="text-neutral-600"><ArrowLeft size={20} /></button>
         <div className="flex-1 min-w-0">
           <div className="text-[10px] text-neutral-400 font-mono">{item.sticker_no}</div>
           <div className="text-sm font-bold text-neutral-900">입고매칭 #{seq}</div>
@@ -120,7 +121,7 @@ export default function SourcingInboundPage({ params }: { params: Promise<{ item
             <div className="mt-3 grid grid-cols-3 gap-2">
               {photos.map((p, i) => (
                 <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-neutral-200 bg-cover bg-center" style={{ backgroundImage: `url(${p})` }}>
-                  <button
+                  <button title="삭제" aria-label="삭제"
                     type="button"
                     onClick={() => removePhoto.mutate(p)}
                     className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center active:bg-black"

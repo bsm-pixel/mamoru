@@ -22,6 +22,7 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 const TABS: { key: ContractTab; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -30,13 +31,9 @@ const TABS: { key: ContractTab; label: string }[] = [
   { key: 'cancelled', label: '취소' },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  signed: 'bg-blue-100 text-blue-700',
-  sent: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
+const STATUS_COLOR: Record<string, string> = toneClasses({
+  draft: 'cancel', signed: 'progress', sent: 'progress', completed: 'done', cancelled: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중',
@@ -235,7 +232,7 @@ export default function ContractsPage() {
                   ))}
                 </div>
               ) : contracts.length === 0 ? (
-                <EmptyState icon={FileText} message="계약서가 없습니다" />
+                <EmptyState icon={FileText} message="계약서가 없습니다" action={{ label: '계약서 작성', onClick: () => router.push('/contracts/new') }} />
               ) : (
                 <div className="divide-y divide-neutral-100">
                   {contracts.map((c) => (

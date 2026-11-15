@@ -160,7 +160,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
               <span className="text-xs text-neutral-500 ml-2">{formatPhone(selectedCustomer.phone)}</span>
             )}
           </div>
-          <button
+          <button title="선택 지우기" aria-label="선택 지우기"
             type="button"
             onClick={onClear}
             className="w-5 h-5 rounded-full bg-neutral-200 flex items-center justify-center hover:bg-neutral-300"

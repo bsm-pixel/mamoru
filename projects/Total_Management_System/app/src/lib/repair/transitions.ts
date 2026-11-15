@@ -4,6 +4,7 @@
  */
 
 import type { RepairStatus } from '@/lib/supabase/types';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 type TransitionMap = Record<string, RepairStatus[]>;
 
@@ -66,21 +67,9 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
 };
 
 /** 상태 색상 (Tailwind 클래스) */
-export const REPAIR_STATUS_COLOR: Record<string, string> = {
-  intake: 'bg-info-soft text-info',
-  pickup_scheduled: 'bg-info-soft text-info',
-  cost_notified: 'bg-terracotta-soft/30 text-terracotta-deep',
-  payment_confirmed: 'bg-terracotta-soft/30 text-terracotta-deep',
-  repairing: 'bg-terracotta-soft/30 text-terracotta-deep',
-  shipped: 'bg-success-soft text-success',
-  delivered: 'bg-success-soft text-success',
-  completed: 'bg-neutral-100 text-neutral-500',
-  cancelled: 'bg-error-soft text-error',
-  // 레거시
-  picked_up: 'bg-info-soft text-info',
-  inspecting: 'bg-warning-soft text-warning',
-  ready_to_ship: 'bg-success-soft text-success',
-};
+export const REPAIR_STATUS_COLOR: Record<string, string> = toneClasses({
+  intake: 'progress', pickup_scheduled: 'progress', cost_notified: 'wait', payment_confirmed: 'progress', repairing: 'progress', shipped: 'done', delivered: 'done', completed: 'done', cancelled: 'cancel', picked_up: 'progress', inspecting: 'progress', ready_to_ship: 'wait',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 /** 상태 전이 → 버튼 라벨 매핑 */
 export const REPAIR_ACTION_LABEL: Record<string, string> = {

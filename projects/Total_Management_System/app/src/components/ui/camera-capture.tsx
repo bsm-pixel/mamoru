@@ -97,7 +97,7 @@ export function CameraCapture({ open, onCapture, onClose, square = false, hiRes 
       {/* 상단 바 */}
       <div className="flex items-center justify-between px-4 py-3 text-white shrink-0">
         <span className="text-sm font-medium">사진 촬영</span>
-        <button onClick={handleClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
+        <button title="닫기" aria-label="닫기" onClick={handleClose} className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
           <X size={20} />
         </button>
       </div>

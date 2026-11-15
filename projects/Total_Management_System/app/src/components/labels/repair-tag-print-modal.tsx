@@ -82,7 +82,7 @@ export function RepairTagPrintModal({ entries, onClose }: Props) {
           <h3 className="text-sm font-bold text-neutral-800">
             꼬리표 출력 · {multi ? `${entries.length}건` : `${entries[0]?.name ?? ''} 님`}
           </h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 
         <div className="p-5 space-y-4 overflow-y-auto">

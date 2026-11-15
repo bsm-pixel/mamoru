@@ -191,7 +191,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">거래처 매출 입력</h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 
         {/* 본문 */}
@@ -213,7 +213,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               {selectedCustomer && (
-                <button onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); setCustomerName(''); }}
+                <button title="선택 지우기" aria-label="선택 지우기" onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); setCustomerName(''); }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
                   <X size={14} />
                 </button>

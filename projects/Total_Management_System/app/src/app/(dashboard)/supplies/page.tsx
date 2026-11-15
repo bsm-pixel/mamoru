@@ -115,7 +115,7 @@ export default function SuppliesPage() {
               {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : supplies.length === 0 ? (
-            <EmptyState icon={Package} message="등록된 부자재가 없습니다" />
+            <EmptyState icon={Package} message="등록된 부자재가 없습니다" action={{ label: '부자재 추가', onClick: () => setShowAdd(true) }} />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-3">
               {supplies.map((s) => {
@@ -207,7 +207,7 @@ function AddSupplyModal({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 className="text-sm font-bold text-indigo-black">부자재 추가</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <div>
@@ -282,7 +282,7 @@ function EditSupplyModal({ supply, onClose }: { supply: Supply; onClose: () => v
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 className="text-sm font-bold text-indigo-black">부자재 수정</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center"><X size={16} /></button>
         </div>
         <div className="px-5 py-4 space-y-3">
           <div>

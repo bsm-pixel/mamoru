@@ -11,14 +11,11 @@ import { formatKRW, formatDate, formatDateTime, formatPhone } from '@/lib/utils/
 import { Send, Receipt, Image, ExternalLink, FileText, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useState } from 'react';
+import { toneClasses } from '@/lib/ui/status-tone';
 
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  signed: 'bg-blue-100 text-blue-700',
-  sent: 'bg-purple-100 text-purple-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
+const STATUS_COLOR: Record<string, string> = toneClasses({
+  draft: 'cancel', signed: 'progress', sent: 'progress', completed: 'done', cancelled: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', signed: '서명완료', sent: '발송완료', completed: '완료', cancelled: '취소',

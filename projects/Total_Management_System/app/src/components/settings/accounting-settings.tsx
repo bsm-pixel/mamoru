@@ -94,7 +94,7 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
           {expenseCategories.map((c, i) => (
             <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {c}
-              <button onClick={() => setExpenseCategories(expenseCategories.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setExpenseCategories(expenseCategories.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>
@@ -113,7 +113,7 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
           {cashflowIncomeCats.map((c, i) => (
             <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {c}
-              <button onClick={() => setCashflowIncomeCats(cashflowIncomeCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setCashflowIncomeCats(cashflowIncomeCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>
@@ -132,7 +132,7 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
           {cashflowExpenseCats.map((c, i) => (
             <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {c}
-              <button onClick={() => setCashflowExpenseCats(cashflowExpenseCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setCashflowExpenseCats(cashflowExpenseCats.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>
@@ -161,7 +161,7 @@ export default function AccountingSettings({ settings, onSave, saving }: TabProp
             <div key={i} className="flex items-center gap-2 text-sm">
               <span>{acc.name}</span>
               <span className="text-neutral-500">{acc.bank} {acc.number}</span>
-              <button onClick={() => setBankAccounts(bankAccounts.filter((_, j) => j !== i))}
+              <button title="삭제" aria-label="삭제" onClick={() => setBankAccounts(bankAccounts.filter((_, j) => j !== i))}
                 className="ml-auto text-neutral-400 hover:text-red-500"><X size={14} /></button>
             </div>
           ))}

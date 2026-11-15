@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { formatDateFull } from '@/lib/utils/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 export default function SourcingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -87,7 +88,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
     return (
       <div className="min-h-screen bg-warm-ivory">
         <Topbar title="샘플 소싱" />
-        <div className="p-6 text-center text-sm text-neutral-400">불러오는 중…</div>
+        <SkeletonRows rows={4} />
       </div>
     );
   }
@@ -139,7 +140,7 @@ export default function SourcingDetailPage({ params }: { params: Promise<{ id: s
       <div className="p-4 sm:p-6 max-w-5xl mx-auto space-y-5">
         {/* 헤더 — 소싱 회차 (매입처는 제품별 1688 링크로 분산, 단일 매입처 헤더 제거) */}
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => router.push('/sourcing')} className="text-neutral-500 hover:text-indigo-black">
+          <button title="뒤로" aria-label="뒤로" type="button" onClick={() => router.push('/sourcing')} className="text-neutral-500 hover:text-indigo-black">
             <ArrowLeft size={20} />
           </button>
           <div className="flex-1 min-w-0">

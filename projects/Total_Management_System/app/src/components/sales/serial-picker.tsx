@@ -5,6 +5,7 @@ import { useAvailableSerials } from '@/hooks/use-serials';
 import { Hash, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSerialConflictPrompt } from './serial-conflict-dialog';
 import { formatSerial, currentYear2, incrementSerial, normalizeSerial } from '@/lib/serial/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface Props {
   productId: string;
@@ -159,7 +160,7 @@ export function SerialPicker({ productId, quantity, selectedSerialIds, onSelect,
           {!manualMode && (
             <>
               {isLoading ? (
-                <p className="text-xs text-neutral-400 text-center py-2">로딩중...</p>
+                <SkeletonRows rows={2} className="p-0 py-1" />
               ) : serials.length === 0 ? (
                 <p className="text-xs text-neutral-400 text-center py-2">재고 시리얼 없음</p>
               ) : (

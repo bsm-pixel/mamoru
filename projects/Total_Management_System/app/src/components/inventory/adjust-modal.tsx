@@ -66,7 +66,7 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
         {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
           <h2 className="text-sm font-bold text-indigo-black">재고 조정</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
             <X size={16} />
           </button>
         </div>
@@ -114,7 +114,7 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
           <div>
             <label className="text-xs text-neutral-500 mb-1 block">수량 변경 *</label>
             <div className="flex items-center gap-3">
-              <button
+              <button title="수량 줄이기" aria-label="수량 줄이기"
                 onClick={() => setQuantity((q) => q - 1)}
                 disabled={!selectedProduct || newQty <= 0}
                 className="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center hover:bg-red-100 disabled:opacity-30"
@@ -127,7 +127,7 @@ export function AdjustModal({ items, onClose, onSuccess }: AdjustModalProps) {
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 0)}
                 className="w-20 h-10 text-center rounded-lg border border-neutral-200 bg-warm-ivory text-lg font-bold focus:outline-none focus:ring-2 focus:ring-terracotta/40"
               />
-              <button
+              <button title="수량 늘리기" aria-label="수량 늘리기"
                 onClick={() => setQuantity((q) => q + 1)}
                 disabled={!selectedProduct}
                 className="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-100 disabled:opacity-30"

@@ -29,6 +29,7 @@ import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, 
 import type { Consultation } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 // 상담유형 라벨은 format.ts SSOT(CONSULTATION_TYPE_LABEL) 사용
@@ -419,7 +420,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                   )}
                 </div>
               ) : ctxLoading ? (
-                <div className="px-4 pb-4 text-xs text-stone-400 border-t border-stone-100 pt-3">이력 불러오는 중…</div>
+                <SkeletonRows rows={2} className="p-0 py-1" />
               ) : null}
 
               {/* 푸터 */}

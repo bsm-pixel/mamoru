@@ -97,7 +97,7 @@ export function SuggestTimeModal({ open, onClose, consultationId, prefDays, pref
               className="w-32 h-9 px-3 rounded-lg border border-neutral-200 bg-warm-ivory text-sm focus:outline-none focus:ring-2 focus:ring-terracotta/40"
             />
             {slots.length > 1 && (
-              <button
+              <button title="삭제" aria-label="삭제"
                 onClick={() => removeSlot(idx)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-error-soft transition text-neutral-400 hover:text-error"
               >

@@ -676,7 +676,7 @@ export default function SalesPage() {
             ))}
           </div>
         ) : unifiedItems.length === 0 ? (
-          <EmptyState icon={Receipt} message="판매/거래 기록이 없습니다" />
+          <EmptyState icon={Receipt} message="판매 기록이 없습니다" action={{ label: '판매 입력', onClick: () => router.push('/sales/new') }} />
         ) : gridMode && isLg ? (
           <div className="overflow-x-auto">
             <SalesGridTable

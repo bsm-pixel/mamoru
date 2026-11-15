@@ -19,17 +19,15 @@ import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { PurchaseDetailPanel } from '@/components/purchasing/purchase-detail-panel';
 import { Plus, Truck } from 'lucide-react';
 import type { PurchaseOrder } from '@/lib/supabase/types';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
   partial: '부분입고', received: '입고완료', balance_paid: '잔금완료', cancelled: '취소',
 };
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600', ordered: 'bg-blue-100 text-blue-700',
-  deposit_paid: 'bg-yellow-100 text-yellow-700', partial: 'bg-orange-100 text-orange-700',
-  received: 'bg-green-100 text-green-700',
-  balance_paid: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-700',
-};
+const STATUS_COLOR: Record<string, string> = toneClasses({
+  draft: 'cancel', ordered: 'progress', deposit_paid: 'progress', partial: 'wait', received: 'done', balance_paid: 'done', cancelled: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 const STATUS_TABS = [
   { value: '', label: '전체' },
   { value: 'draft', label: '작성중' },
@@ -86,7 +84,7 @@ export default function PurchasingPage() {
       ))}
     </div>
   ) : orders.length === 0 ? (
-    <EmptyState icon={Truck} message="발주 내역이 없습니다" />
+    <EmptyState icon={Truck} message="발주 내역이 없습니다" action={{ label: '발주 작성', onClick: () => router.push('/purchasing/new') }} />
   ) : (
     <div className="divide-y divide-neutral-100">
       {orders.map((po) => (

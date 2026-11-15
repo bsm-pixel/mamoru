@@ -317,8 +317,8 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
                 <button onClick={startInfoEdit} className="text-neutral-400 hover:text-neutral-600" title="고객 정보 수정"><Pencil size={14} /></button>
               ) : (
                 <div className="flex gap-1">
-                  <button onClick={() => setEditingInfo(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
-                  <button onClick={saveInfo} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
+                  <button title="수정 취소" aria-label="수정 취소" onClick={() => setEditingInfo(false)} className="text-neutral-400 hover:text-neutral-600"><X size={14} /></button>
+                  <button title="저장" aria-label="저장" onClick={saveInfo} disabled={updateCustomer.isPending} className="text-blue-600 hover:text-blue-700"><Save size={14} /></button>
                 </div>
               )}
             </div>
@@ -456,15 +456,15 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-stone-900">메모</h3>
               {!editingMemo ? (
-                <button onClick={startMemoEdit} className="text-neutral-400 hover:text-neutral-600">
+                <button title="수정" aria-label="수정" onClick={startMemoEdit} className="text-neutral-400 hover:text-neutral-600">
                   <Pencil size={14} />
                 </button>
               ) : (
                 <div className="flex gap-1">
-                  <button onClick={() => setEditingMemo(false)} className="text-neutral-400 hover:text-neutral-600">
+                  <button title="수정 취소" aria-label="수정 취소" onClick={() => setEditingMemo(false)} className="text-neutral-400 hover:text-neutral-600">
                     <X size={14} />
                   </button>
-                  <button onClick={saveMemo} disabled={updateCustomer.isPending}
+                  <button title="저장" aria-label="저장" onClick={saveMemo} disabled={updateCustomer.isPending}
                     className="text-blue-600 hover:text-blue-700">
                     <Save size={14} />
                   </button>

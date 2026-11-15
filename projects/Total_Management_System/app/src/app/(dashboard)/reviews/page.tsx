@@ -9,6 +9,9 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { REVIEW_SUBTYPE_OPTIONS, isAllowedReviewSubtype } from '@/lib/reviews/consult-subtype';
 import { formatDate } from '@/lib/utils/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
+import { toneClasses } from '@/lib/ui/status-tone';
+import { EmptyState } from '@/components/ui/empty-state';
 
 interface Review {
   id: string;
@@ -74,11 +77,9 @@ function getSubChip(review: Review): string | null {
   return SUBTYPE_LABELS[review.subtype] || review.subtype;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-yellow-50 text-yellow-700',
-  approved: 'bg-green-50 text-green-700',
-  hidden: 'bg-neutral-100 text-neutral-500',
-};
+const STATUS_STYLES: Record<string, string> = toneClasses({
+  pending: 'wait', approved: 'done', hidden: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 function renderStars(n: number) {
   return Array.from({ length: 5 }, (_, i) => (
@@ -463,9 +464,9 @@ export default function ReviewsPage() {
         {/* 후기 대기 탭 — 별도 리스트 */}
         {activeTab === 'promised' && (
           loading ? (
-            <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
+            <SkeletonRows rows={4} />
           ) : promisedItems.length === 0 ? (
-            <div className="text-center py-16 text-neutral-400 text-sm">후기 요청 대기 중인 고객이 없습니다</div>
+            <EmptyState message="후기 요청을 기다리는 고객이 없습니다" />
           ) : (
             <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
               <div className="hidden md:grid grid-cols-[1fr_90px_90px_90px_120px] gap-3 px-4 py-2.5 bg-neutral-50 text-[11px] font-semibold text-neutral-500">
@@ -565,7 +566,7 @@ export default function ReviewsPage() {
 
         {/* 리뷰 카드 리스트 (promised 외 탭) */}
         {activeTab !== 'promised' && (loading ? (
-          <div className="text-center py-16 text-neutral-400 text-sm">불러오는 중...</div>
+          <SkeletonRows rows={4} />
         ) : visibleReviews.length === 0 ? (
           <div className="text-center py-16 text-neutral-400 text-sm">
             {reviews.length === 0 ? '리뷰가 없습니다' : '해당 유형의 리뷰가 없습니다'}
@@ -696,7 +697,7 @@ export default function ReviewsPage() {
           >
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-sm">리뷰 수정</h3>
-              <button onClick={() => setEditReview(null)} className="text-neutral-400 hover:text-neutral-600">
+              <button title="닫기" aria-label="닫기" onClick={() => setEditReview(null)} className="text-neutral-400 hover:text-neutral-600">
                 <X size={18} />
               </button>
             </div>
@@ -819,7 +820,7 @@ export default function ReviewsPage() {
                 {(editForm.photo_urls || []).map((url, i) => (
                   <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-100 group">
                     <img src={url} alt="" className="w-full h-full object-cover" />
-                    <button
+                    <button title="삭제" aria-label="삭제"
                       onClick={() => setEditForm(prev => ({
                         ...prev,
                         photo_urls: (prev.photo_urls || []).filter((_, idx) => idx !== i),

@@ -384,7 +384,7 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
                 <span className="text-[11px] text-neutral-400">자루↑</span>
                 <input type="number" value={r.bundle_price || ''} onChange={(e) => setRule(i, 'bundle_price', parseInt(e.target.value) || 0)}
                   placeholder="묶음가" className="flex-1 min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
-                <button onClick={() => setRules(rules.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500 shrink-0"><X size={14} /></button>
+                <button title="삭제" aria-label="삭제" onClick={() => setRules(rules.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500 shrink-0"><X size={14} /></button>
               </div>
             ))}
           </div>

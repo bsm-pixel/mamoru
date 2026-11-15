@@ -10,6 +10,8 @@ import { ArrowDownCircle, ArrowUpCircle, Trash2, TrendingUp, TrendingDown } from
 import toast from 'react-hot-toast';
 import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CASHFLOW_INCOME_CATEGORIES, DEFAULT_CASHFLOW_EXPENSE_CATEGORIES } from '@/lib/utils/setting-defaults';
+import { SkeletonRows } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export default function CashflowPage() {
   const queryClient = useQueryClient();
@@ -137,9 +139,9 @@ export default function CashflowPage() {
             </div>
             <Card padding={false}>
               {isLoading ? (
-                <div className="p-6 text-center text-sm text-neutral-400">로딩중...</div>
+                <SkeletonRows rows={4} />
               ) : !data?.transactions.length ? (
-                <div className="p-6 text-center text-sm text-neutral-400">입출금 내역이 없습니다</div>
+                <EmptyState compact message="입출금 내역이 없습니다" />
               ) : (
                 <div className="divide-y divide-neutral-100">
                   {data.transactions.map((tx) => (
@@ -157,7 +159,7 @@ export default function CashflowPage() {
                       <p className={`text-sm font-bold shrink-0 ${tx.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
                         {tx.type === 'income' ? '+' : '-'}{formatKRW(tx.amount)}
                       </p>
-                      <button onClick={() => { if (confirm('삭제?')) deleteTx.mutate(tx.id); }}
+                      <button title="삭제" aria-label="삭제" onClick={() => { if (confirm('삭제?')) deleteTx.mutate(tx.id); }}
                         className="shrink-0 w-7 h-7 rounded flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-50">
                         <Trash2 size={14} />
                       </button>

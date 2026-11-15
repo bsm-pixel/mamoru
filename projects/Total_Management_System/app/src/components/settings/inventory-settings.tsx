@@ -189,7 +189,7 @@ export default function InventorySettings({ settings, onSave, saving }: TabProps
           {adjustReasons.map((r, i) => (
             <span key={i} className="flex items-center gap-1 px-2 py-1 text-xs bg-neutral-100 rounded-lg">
               {r}
-              <button onClick={() => setAdjustReasons(adjustReasons.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
+              <button title="삭제" aria-label="삭제" onClick={() => setAdjustReasons(adjustReasons.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500"><X size={12} /></button>
             </span>
           ))}
         </div>

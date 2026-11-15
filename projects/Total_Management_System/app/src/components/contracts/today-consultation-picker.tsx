@@ -7,6 +7,7 @@ import { X, MapPin, Phone } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { todayKST } from '@/lib/utils/kst';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface TodayConsultationPickerProps {
   open: boolean;
@@ -77,7 +78,7 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">오늘 예약 고객</h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600">
             <X size={18} />
           </button>
         </div>
@@ -85,7 +86,7 @@ export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsul
         {/* 목록 */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-6 text-center text-sm text-neutral-400">로딩중...</div>
+            <SkeletonRows rows={4} />
           ) : consultations.length === 0 ? (
             <div className="p-6 text-center text-sm text-neutral-400">오늘 예약 고객이 없습니다</div>
           ) : (

@@ -116,7 +116,7 @@ export default function CustomersPage() {
       ))}
     </div>
   ) : customers.length === 0 ? (
-    <EmptyState icon={Users} message="고객이 없습니다" />
+    <EmptyState icon={Users} message="고객이 없습니다" action={{ label: '고객 등록', onClick: () => setShowAdd(true) }} />
   ) : (
     <div className="divide-y divide-neutral-100">
       {customers.map((c) => (

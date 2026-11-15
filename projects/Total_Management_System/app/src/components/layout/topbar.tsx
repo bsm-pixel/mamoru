@@ -32,7 +32,7 @@ export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 md:px-6 bg-card-white/90 backdrop-blur-sm border-b border-neutral-200">
       <div className="flex items-center gap-3">
         {/* 모바일 메뉴 버튼 */}
-        <button
+        <button title="메뉴" aria-label="메뉴"
           onClick={onMenuToggle}
           className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
         >

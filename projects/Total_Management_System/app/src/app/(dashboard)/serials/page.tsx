@@ -19,6 +19,7 @@ import { buildVerifyQrZpl } from '@/lib/label/verify-qr-label';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { formatDate as fmtDate, formatDateTime as fmtDateTime } from '@/lib/utils/format';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   in_stock: { label: '재고', color: 'bg-green-100 text-green-700' },
@@ -405,7 +406,7 @@ export default function SerialsPage() {
                     </button>
                   ))}
                   {products.filter((p) => p.category !== 'SUP').length === 0 && (
-                    <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+                    <EmptyState compact message="제품이 없습니다" />
                   )}
                 </div>
               </div>
@@ -464,7 +465,7 @@ export default function SerialsPage() {
                     </button>
                   ))}
                   {products.filter((p) => p.category !== 'SUP').length === 0 && (
-                    <div className="px-4 py-8 text-center text-sm text-neutral-400">제품이 없습니다</div>
+                    <EmptyState compact message="제품이 없습니다" />
                   )}
                 </div>
               </div>

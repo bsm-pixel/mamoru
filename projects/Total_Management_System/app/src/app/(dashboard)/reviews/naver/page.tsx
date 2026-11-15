@@ -439,7 +439,7 @@ export default function NaverReviewPage() {
                 {review.photo_urls.map((url, i) => (
                   <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-100 group">
                     <img src={url} alt="" className="w-full h-full object-cover" />
-                    <button
+                    <button title="삭제" aria-label="삭제"
                       onClick={() => removePhoto(i)}
                       className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 opacity-100 md:opacity-70 md:hover:opacity-100 transition flex items-center justify-center"
                     >

@@ -7,6 +7,7 @@ import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /**
  * 복원수리 준비표 (트레이형) — 2026-07-23
@@ -194,7 +195,7 @@ export function RepairPrepSheetModal({ repairIds, onClose }: Props) {
 
         <div className="overflow-y-auto flex-1 p-5">
           {loading ? (
-            <div className="flex items-center justify-center h-32 text-sm text-neutral-400">데이터 로딩 중...</div>
+            <SkeletonRows rows={4} />
           ) : repairs.length === 0 ? (
             <div className="flex items-center justify-center h-32 text-sm text-neutral-400">선택된 건이 없습니다</div>
           ) : (

@@ -61,7 +61,7 @@ export function SupplierSelect({ value, displayName, onChange, placeholder = '�
         {value && selectedName ? (
           <div className="flex items-center justify-between w-full">
             <span className="truncate">{selectedName}</span>
-            <button
+            <button title="선택 지우기" aria-label="선택 지우기"
               onClick={(e) => { e.stopPropagation(); handleClear(); }}
               className="w-5 h-5 rounded flex items-center justify-center hover:bg-neutral-200"
             >

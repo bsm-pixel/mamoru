@@ -26,6 +26,7 @@ import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
 import type { Product } from '@/lib/supabase/types';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface CartItem {
   product: Product | null; // null이면 임시 제품
@@ -519,7 +520,7 @@ function NewSaleContent() {
             <>
             {/* 제품 목록 테이블 */}
             {productsLoading ? (
-              <div className="text-sm text-neutral-400 py-4">로딩중...</div>
+              <SkeletonRows rows={4} />
             ) : (
               <Card padding={false}>
                 <div className="flex-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 320px)', minHeight: '300px' }}>
@@ -879,12 +880,12 @@ function NewSaleContent() {
                             <p className="text-xs text-neutral-500">{formatKRW(item.unitPrice)} x {item.quantity} = {formatKRW(item.unitPrice * item.quantity)}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => updateQuantity(key, -1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={12} /></button>
+                            <button title="수량 줄이기" aria-label="수량 줄이기" onClick={() => updateQuantity(key, -1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={12} /></button>
                             <input type="number" min="1" value={item.quantity}
                               onChange={(e) => { const val = parseInt(e.target.value) || 1; setCart((prev) => prev.map((it) => cartItemKey(it) === key ? { ...it, quantity: Math.max(1, val) } : it)); }}
                               className="w-10 h-8 xl:h-6 text-center text-sm font-semibold border border-neutral-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-neutral-300 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
-                            <button onClick={() => updateQuantity(key, 1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={12} /></button>
-                            <button onClick={() => removeFromCart(key)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
+                            <button title="수량 늘리기" aria-label="수량 늘리기" onClick={() => updateQuantity(key, 1)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={12} /></button>
+                            <button title="삭제" aria-label="삭제" onClick={() => removeFromCart(key)} className="w-8 h-8 xl:w-6 xl:h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
                           </div>
                         </div>
                         {item.product && customerType !== 'dealer' && customerType !== 'academy' ? (

@@ -48,7 +48,7 @@ export default function ReturnsPage() {
   const listContent = isLoading ? (
     <div className="p-4 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
   ) : returns.length === 0 ? (
-    <EmptyState icon={Undo2} message="반품·교환수거 건이 없습니다" />
+    <EmptyState icon={Undo2} message="반품 · 교환 건이 없습니다" />
   ) : (
     <div className="divide-y divide-neutral-100">
       {returns.map((r) => (

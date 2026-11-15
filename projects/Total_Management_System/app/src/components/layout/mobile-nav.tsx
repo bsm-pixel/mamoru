@@ -37,7 +37,7 @@ export function MobileNav() {
           <div className="absolute bottom-0 left-0 right-0 bg-card-white rounded-t-2xl safe-area-bottom animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between px-4 pt-4 pb-2">
               <span className="text-sm font-bold text-indigo-black">메뉴</span>
-              <button
+              <button title="닫기" aria-label="닫기"
                 onClick={() => setShowMore(false)}
                 className="w-7 h-7 rounded-full bg-neutral-100 flex items-center justify-center"
               >

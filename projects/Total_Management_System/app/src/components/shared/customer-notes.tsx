@@ -12,6 +12,7 @@ import { useCustomerNotes, useAddCustomerNote, useDeleteCustomerNote, type Lates
 import { StickyNote, X, Plus } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /** 목록 행용 최종 메모 한 줄 미리보기 (없으면 아무것도 렌더 안 함) */
 export function NotePreview({ note, className = '' }: { note?: LatestNote; className?: string }) {
@@ -91,7 +92,7 @@ export function CustomerNotes({ customerId, compact, collapsed }: { customerId?:
 
       {/* 타임라인 (collapsed면 최종만 + '이전 메모' 버튼 → 모달) */}
       {isLoading ? (
-        <p className="text-xs text-stone-400">불러오는 중…</p>
+        <SkeletonRows rows={2} className="p-0 py-1" />
       ) : notes.length === 0 ? (
         <p className="text-xs text-stone-400">아직 메모가 없습니다.</p>
       ) : collapsed ? (

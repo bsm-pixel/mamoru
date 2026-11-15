@@ -1,5 +1,6 @@
 // 반품·교환수거 상태 전이 SSOT (2026-08-25 Phase 2) — 복원수리 transitions 패턴 복제
 import type { ReturnStatus } from '@/lib/supabase/types';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 /** 허용 전이 맵 */
 export const RETURN_TRANSITIONS: Record<ReturnStatus, ReturnStatus[]> = {
@@ -34,14 +35,9 @@ export const RETURN_STATUS_LABEL: Record<ReturnStatus, string> = {
 };
 
 /** 상태 색 (Tailwind) */
-export const RETURN_STATUS_COLOR: Record<ReturnStatus, string> = {
-  requested: 'bg-amber-100 text-amber-700',
-  pickup_scheduled: 'bg-blue-100 text-blue-700',
-  inbound: 'bg-purple-100 text-purple-700',
-  inspected: 'bg-indigo-100 text-indigo-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  cancelled: 'bg-red-100 text-red-700',
-};
+export const RETURN_STATUS_COLOR: Record<ReturnStatus, string> = toneClasses({
+  requested: 'wait', pickup_scheduled: 'progress', inbound: 'progress', inspected: 'progress', completed: 'done', cancelled: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 /** 액션 버튼 라벨 (해당 상태로 전이하는 버튼 텍스트 — 무엇을 하는지 명확히) */
 export const RETURN_ACTION_LABEL: Record<ReturnStatus, string> = {

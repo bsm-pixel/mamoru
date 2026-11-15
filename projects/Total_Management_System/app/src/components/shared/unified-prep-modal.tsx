@@ -7,6 +7,7 @@ import { repairSlip, saleSlip, wrapTray, buildListDoc, esc, type PrepInspection,
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { inspectionNote } from '@/lib/repair/wound-catalog';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /**
  * 통합 준비표 — 복원수리(작업완료)·주문(배송대기)·판매(미출고)를 탭으로 모아 체크 → 한 번에 인쇄.
@@ -252,7 +253,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         {/* 체크리스트 */}
         <div className="overflow-y-auto flex-1 p-3">
           {loading ? (
-            <div className="flex items-center justify-center h-32 text-sm text-neutral-400">불러오는 중…</div>
+            <SkeletonRows rows={4} />
           ) : active.length === 0 ? (
             <div className="flex items-center justify-center h-32 text-sm text-neutral-400">준비 대기 건이 없습니다</div>
           ) : (

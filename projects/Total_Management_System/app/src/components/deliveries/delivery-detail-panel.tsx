@@ -1,5 +1,6 @@
 'use client';
 
+import { toneClasses } from '@/lib/ui/status-tone';
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +30,7 @@ import Link from 'next/link';
 
 // 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
-const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
+const PAYMENT_COLOR: Record<string, string> = toneClasses({ unpaid: 'problem', partial: 'wait', paid: 'done' }); // 2026-11-15 상태 색 표
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
 // 고객유형 라벨/색은 format.ts SSOT 사용
 
@@ -434,15 +435,15 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   <p className="text-xs font-medium truncate">{item.product_name}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))}
+                  <button title="수량 줄이기" aria-label="수량 줄이기" onClick={() => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, it.quantity - 1) } : it))}
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Minus size={10} /></button>
                   <span className="text-xs font-semibold w-6 text-center">{item.quantity}</span>
-                  <button onClick={() => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it))}
+                  <button title="수량 늘리기" aria-label="수량 늘리기" onClick={() => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it))}
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
                 </div>
                 <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
                   className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right" />
-                <button onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}
+                <button title="삭제" aria-label="삭제" onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}
                   className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>
               </div>
             ))}

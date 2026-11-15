@@ -84,7 +84,7 @@ export function OrderSerialModal({ orderId, items, serials, onClose }: Props) {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
           <h3 className="text-sm font-bold">시리얼 배정</h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">

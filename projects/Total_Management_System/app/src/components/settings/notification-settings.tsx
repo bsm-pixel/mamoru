@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
 import GoogleCalendarSettings from '@/components/settings/google-calendar-settings';
 import BannerSettings from '@/components/settings/banner-settings';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -319,7 +320,7 @@ function DevicesPanel() {
       </div>
 
       {loading ? (
-        <p className="text-[11px] text-neutral-400">불러오는 중…</p>
+        <SkeletonRows rows={2} className="p-0 py-1" />
       ) : devices.length === 0 ? (
         <p className="text-[11px] text-amber-600 leading-relaxed bg-amber-50 rounded-lg px-2.5 py-2">
           등록된 기기가 없습니다. 알림이 오지 않습니다.<br />

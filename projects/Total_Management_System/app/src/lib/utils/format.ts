@@ -1,6 +1,7 @@
 import { format, formatDistanceToNow, differenceInCalendarDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { todayKST, addDays } from '@/lib/utils/kst';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 /** 원 포맷: 350000 → "350,000원" */
 export function formatKRW(amount: number): string {
@@ -137,19 +138,9 @@ export const ORDER_STATUS_LABEL: Record<string, string> = {
 };
 
 /** 주문 상태 색상 매핑 (Tailwind 클래스) */
-export const ORDER_STATUS_COLOR: Record<string, string> = {
-  pay_wait: 'bg-warning-soft text-warning',
-  pay_done: 'bg-info-soft text-info',
-  preparing: 'bg-info-soft text-info',
-  ready_to_ship: 'bg-warning-soft text-warning',
-  shipping: 'bg-terracotta-soft/30 text-terracotta-deep',
-  delivered: 'bg-success-soft text-success',
-  confirmed: 'bg-success-soft text-success',
-  cancel_pending: 'bg-warning-soft text-warning',
-  cancelled: 'bg-error-soft text-error',
-  refund_request: 'bg-error-soft text-error',
-  refunded: 'bg-neutral-100 text-neutral-500',
-};
+export const ORDER_STATUS_COLOR: Record<string, string> = toneClasses({
+  pay_wait: 'wait', pay_done: 'progress', preparing: 'progress', ready_to_ship: 'wait', shipping: 'progress', delivered: 'done', confirmed: 'done', cancel_pending: 'wait', cancelled: 'cancel', refund_request: 'problem', refunded: 'cancel',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 // ============================================
 // Phase 2-1: 상담 상태 라벨/색상
@@ -170,18 +161,9 @@ export const CONSULTATION_STATUS_LABEL: Record<string, string> = {
 };
 
 /** 상담 상태 색상 매핑 (Tailwind 클래스) */
-export const CONSULTATION_STATUS_COLOR: Record<string, string> = {
-  pending_admin: 'bg-warning-soft text-warning',
-  suggested: 'bg-info-soft text-info',
-  assigned: 'bg-terracotta-soft/30 text-terracotta-deep',
-  confirmed: 'bg-success-soft text-success',
-  cancelled: 'bg-error-soft text-error',
-  reschedule_requested: 'bg-warning-soft text-warning',
-  change_requested: 'bg-warning-soft text-warning',
-  on_hold: 'bg-neutral-100 text-neutral-500',    // Phase 2-2
-  in_progress: 'bg-info-soft text-info',          // Phase 2-2
-  completed: 'bg-success-soft text-success',      // Phase 2-2
-};
+export const CONSULTATION_STATUS_COLOR: Record<string, string> = toneClasses({
+  pending_admin: 'wait', suggested: 'wait', assigned: 'progress', confirmed: 'progress', cancelled: 'cancel', reschedule_requested: 'wait', change_requested: 'wait', on_hold: 'cancel', in_progress: 'progress', completed: 'done',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 // ============================================
 // D-day / 날짜 그룹 유틸
@@ -277,18 +259,6 @@ export const REPAIR_STATUS_LABEL: Record<string, string> = {
 };
 
 /** 복원수리 상태 색상 매핑 (Tailwind 클래스) */
-export const REPAIR_STATUS_COLOR: Record<string, string> = {
-  intake: 'bg-info-soft text-info',
-  pickup_scheduled: 'bg-info-soft text-info',
-  cost_notified: 'bg-terracotta-soft/30 text-terracotta-deep',
-  payment_confirmed: 'bg-terracotta-soft/30 text-terracotta-deep',
-  repairing: 'bg-terracotta-soft/30 text-terracotta-deep',
-  shipped: 'bg-success-soft text-success',
-  delivered: 'bg-success-soft text-success',
-  completed: 'bg-neutral-100 text-neutral-500',
-  cancelled: 'bg-error-soft text-error',
-  // 레거시
-  picked_up: 'bg-info-soft text-info',
-  inspecting: 'bg-warning-soft text-warning',
-  ready_to_ship: 'bg-success-soft text-success',
-};
+export const REPAIR_STATUS_COLOR: Record<string, string> = toneClasses({
+  intake: 'progress', pickup_scheduled: 'progress', cost_notified: 'wait', payment_confirmed: 'progress', repairing: 'progress', shipped: 'done', delivered: 'done', completed: 'done', cancelled: 'cancel', picked_up: 'progress', inspecting: 'progress', ready_to_ship: 'wait',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)

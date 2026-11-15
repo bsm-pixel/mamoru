@@ -8,6 +8,7 @@ import { useSourcingList, useCreateSourcing } from '@/hooks/use-sourcing';
 import { ScanBox } from '@/components/sourcing/scan-box';
 import { Plus, Sparkles, PackageSearch, CheckCircle2, XCircle } from 'lucide-react';
 import { formatDate } from '@/lib/utils/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 /**
  * 샘플 소싱 — 발주 목록.
@@ -42,7 +43,7 @@ export default function SourcingListPage() {
         <ScanBox />
 
         {isLoading ? (
-          <div className="text-center py-16 text-sm text-neutral-400">불러오는 중…</div>
+          <SkeletonRows rows={4} />
         ) : orders.length === 0 ? (
           <Card className="text-center py-16">
             <Sparkles className="mx-auto text-neutral-300 mb-3" size={32} />

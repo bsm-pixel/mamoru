@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { EscClose } from '@/components/ui/esc-close';
 import { formatDateTimeShort } from '@/lib/utils/format';
+import { SkeletonRows } from '@/components/ui/skeleton';
 
 interface Prefill { postcode: string; address_road: string; address_detail: string; source: string }
 interface Item {
@@ -180,7 +181,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
       </div>
 
       {loading ? (
-        <p className="px-4 py-6 text-sm text-stone-400">불러오는 중…</p>
+        <SkeletonRows rows={4} />
       ) : total === 0 ? (
         <p className="px-4 py-6 text-sm text-stone-400">이 달에 저장된 당첨자가 없습니다. 위에서 선정 후 [저장]하면 여기에 나타납니다.</p>
       ) : (
@@ -300,7 +301,7 @@ export default function EventShipmentsPanel({ month }: { month: string }) {
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold text-stone-900">{editing.name}님 배송지</p>
-              <button type="button" onClick={() => setEditing(null)} className="p-1 text-stone-400 hover:text-stone-700"><X size={16} /></button>
+              <button title="수정 취소" aria-label="수정 취소" type="button" onClick={() => setEditing(null)} className="p-1 text-stone-400 hover:text-stone-700"><X size={16} /></button>
             </div>
             <div className="flex gap-2 mb-2">
               <input value={form.postcode} readOnly placeholder="우편번호"

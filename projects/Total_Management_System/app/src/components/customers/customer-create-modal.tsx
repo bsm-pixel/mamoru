@@ -128,7 +128,7 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
       <div className="bg-white rounded-xl shadow-xl w-[95vw] max-w-[480px] max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200">
           <h3 className="text-sm font-bold text-neutral-800">{prefill?.company_name ? '복제 등록 (같은 매장)' : '고객 등록'}</h3>
-          <button onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="text-neutral-400 hover:text-neutral-600"><X size={18} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">

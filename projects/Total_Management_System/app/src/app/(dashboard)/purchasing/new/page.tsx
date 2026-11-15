@@ -313,13 +313,13 @@ export default function NewPurchaseOrderPage() {
                     <div key={idx} className="border-b border-neutral-50 pb-2 last:border-0">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium truncate flex-1">{item.product_name}</p>
-                        <button onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500">
+                        <button title="삭제" aria-label="삭제" onClick={() => removeItem(idx)} className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500">
                           <Trash2 size={12} />
                         </button>
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex items-center gap-1">
-                          <button onClick={() => updateItemQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
+                          <button title="수량 줄이기" aria-label="수량 줄이기" onClick={() => updateItemQty(idx, -1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
                             <Minus size={12} />
                           </button>
                           <input
@@ -331,7 +331,7 @@ export default function NewPurchaseOrderPage() {
                             }}
                             className="w-10 h-6 text-sm font-semibold text-center rounded border border-neutral-200 bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                          <button onClick={() => updateItemQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
+                          <button title="수량 늘리기" aria-label="수량 늘리기" onClick={() => updateItemQty(idx, 1)} className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200">
                             <Plus size={12} />
                           </button>
                         </div>

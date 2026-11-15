@@ -41,16 +41,15 @@ import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { todayKST } from '@/lib/utils/kst';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
 };
 
-const PAYMENT_STATUS_COLOR: Record<string, string> = {
-  paid: 'bg-green-100 text-green-700',
-  unpaid: 'bg-red-100 text-red-700',
-  partial: 'bg-yellow-100 text-yellow-700',
-};
+const PAYMENT_STATUS_COLOR: Record<string, string> = toneClasses({
+  paid: 'done', unpaid: 'problem', partial: 'wait',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 
 const PAYMENT_STATUS_LABEL: Record<string, string> = {
   paid: '결제완료', unpaid: '미결제', partial: '부분결제',
@@ -339,13 +338,13 @@ export function SaleDetailPanel({ saleId }: Props) {
                 className="flex-1 h-8 px-2 rounded border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
                 autoFocus
               />
-              <button onClick={handleSaveMemo} className="p-1 hover:bg-neutral-100 rounded"><Save size={14} className="text-stone-900" /></button>
+              <button title="저장" aria-label="저장" onClick={handleSaveMemo} className="p-1 hover:bg-neutral-100 rounded"><Save size={14} className="text-stone-900" /></button>
               <button onClick={() => setEditingMemo(false)} className="p-1 hover:bg-neutral-100 rounded text-xs text-neutral-500">취소</button>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-sm text-neutral-600">
               <span>{s.memo || '메모 없음'}</span>
-              <button onClick={() => { setMemoValue(s.memo || ''); setEditingMemo(true); }} className="p-0.5 hover:bg-neutral-100 rounded">
+              <button title="수정" aria-label="수정" onClick={() => { setMemoValue(s.memo || ''); setEditingMemo(true); }} className="p-0.5 hover:bg-neutral-100 rounded">
                 <Pencil size={11} className="text-neutral-400" />
               </button>
             </div>

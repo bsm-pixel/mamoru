@@ -6,7 +6,7 @@ import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton, SkeletonRows } from '@/components/ui/skeleton';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useIsLg } from '@/hooks/use-grid-mode';
@@ -170,7 +170,7 @@ export default function B2BPartnersPage() {
         {isLoading ? (
           <div className="p-4 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
         ) : partners.length === 0 ? (
-          <EmptyState icon={tabConfig.icon} message={`등록된 ${tabConfig.label}가 없습니다`} />
+          <EmptyState icon={tabConfig.icon} message={`등록된 ${tabConfig.label}가 없습니다`} action={{ label: `${tabConfig.label} 추가`, onClick: () => setShowAdd(true) }} />
         ) : isLg ? (
           <DataGrid
             columns={partnerColumns}
@@ -310,7 +310,7 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
             <Badge className={badgeStyle[p.customer_type] || 'bg-neutral-100 text-neutral-600'}>{badgeLabel[p.customer_type] || p.customer_type}</Badge>
           </div>
         </div>
-        <button onClick={() => setEditing(!editing)} className="text-sm text-neutral-500 hover:text-neutral-700">
+        <button title="수정" aria-label="수정" onClick={() => setEditing(!editing)} className="text-sm text-neutral-500 hover:text-neutral-700">
           <Pencil size={14} />
         </button>
       </div>
@@ -539,7 +539,7 @@ function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: stri
 
       {/* 카탈로그 목록 */}
       {isLoading ? (
-        <div className="text-xs text-neutral-400 text-center py-8">로딩중...</div>
+        <SkeletonRows rows={4} />
       ) : catalog.length === 0 ? (
         <div className="text-xs text-neutral-400 text-center py-8">등록된 매입품목이 없습니다<br />위 버튼으로 제품을 추가해주세요</div>
       ) : (
@@ -587,7 +587,7 @@ function SupplierCatalogSection({ supplierId, supplierName }: { supplierId: stri
                       <span>특징: {entry.features || <em className="text-neutral-300">미입력</em>}</span>
                     </div>
                   </div>
-                  <button onClick={() => handleRemove(entry.id)} className="text-neutral-300 hover:text-red-500 ml-2 shrink-0">
+                  <button title="삭제" aria-label="삭제" onClick={() => handleRemove(entry.id)} className="text-neutral-300 hover:text-red-500 ml-2 shrink-0">
                     <Trash2 size={12} />
                   </button>
                 </div>
@@ -639,7 +639,7 @@ function AddPartnerModal({ defaultType, tabs, onClose }: { defaultType: string; 
       <div className="bg-white rounded-xl w-full max-w-md mx-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 sticky top-0 bg-white rounded-t-xl z-10">
           <h2 className="text-sm font-bold text-indigo-black">거래처 추가</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
+          <button title="닫기" aria-label="닫기" onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center">
             <X size={16} />
           </button>
         </div>

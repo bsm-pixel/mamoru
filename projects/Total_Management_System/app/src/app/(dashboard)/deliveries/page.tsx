@@ -23,19 +23,17 @@ import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
 import { Package, Plus, AlertCircle, Calendar, TrendingUp } from 'lucide-react';
+import { toneClasses } from '@/lib/ui/status-tone';
 
 /* ── 상수 ── */
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', confirmed: '납품확정', shipped: '출고완료', settled: '정산완료',
 };
-const STATUS_COLOR: Record<string, string> = {
-  draft: 'bg-neutral-100 text-neutral-600',
-  confirmed: 'bg-blue-100 text-blue-700',
-  shipped: 'bg-green-100 text-green-700',
-  settled: 'bg-emerald-100 text-emerald-700',
-};
+const STATUS_COLOR: Record<string, string> = toneClasses({
+  draft: 'cancel', confirmed: 'progress', shipped: 'progress', settled: 'done',
+}); // 2026-11-15 상태 색 표(lib/ui/status-tone.ts)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
-const PAYMENT_COLOR: Record<string, string> = { unpaid: 'bg-red-100 text-red-600', partial: 'bg-yellow-100 text-yellow-700', paid: 'bg-green-100 text-green-700' };
+const PAYMENT_COLOR: Record<string, string> = toneClasses({ unpaid: 'problem', partial: 'wait', paid: 'done' });
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 /** 배송상태 tone → 텍스트 색 (sales SHIP_TONE 과 동일) */
@@ -252,7 +250,7 @@ export default function DeliveriesPage() {
             ))}
           </div>
         ) : deliveries.length === 0 ? (
-          <EmptyState icon={Package} message="납품 내역이 없습니다" />
+          <EmptyState icon={Package} message="납품 내역이 없습니다" action={{ label: '거래처 매출 입력', onClick: () => router.push('/sales/new?mode=b2b') }} />
         ) : isLg ? (
           <DataGrid
             columns={columns}
