@@ -20,6 +20,10 @@ import { CustomerNotes } from '@/components/shared/customer-notes';
 import { CustomerMergeModal } from '@/components/customers/customer-merge-modal';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { useSetting } from '@/hooks/use-settings';
+import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { DangerZone, DangerLink } from '@/components/ui/action-section';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -43,6 +47,8 @@ interface Props {
   customerId: string;
   /** 풀페이지(/customers/[id])에서 래퍼로 쓸 때 '상세 페이지' 자기링크 버튼 숨김 */
   hideDetailLink?: boolean;
+  /** 2026-11-15 고객을 지운 뒤 — 옆 상세 칸을 닫거나 목록으로 돌아가게 */
+  onDeleted?: () => void;
 }
 
 const EMPTY_FORM = {
@@ -53,7 +59,7 @@ const EMPTY_FORM = {
   tags: [] as string[],
 };
 
-export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
+export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: Props) {
   const router = useRouter();
   const { data, isLoading } = useCustomer(customerId);
   const { data: manualInvoicesData } = useCustomerManualInvoices(customerId);
@@ -65,6 +71,8 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [showDuplicate, setShowDuplicate] = useState(false);
   const [showMerge, setShowMerge] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const queryClient = useQueryClient();
   const [editMemo, setEditMemo] = useState('');
 
   if (isLoading) {
@@ -534,6 +542,33 @@ export function CustomerDetailPanel({ customerId, hideDetailLink }: Props) {
           )}
         </div>
       )}
+      {/* 2026-11-15 고객 삭제 — 거래·이력이 없는 고객만. 있으면 서버가 무엇이 걸렸는지 알려 주고 막는다 */}
+      <DangerZone>
+        <DangerLink onClick={() => setShowDelete(true)}>고객 삭제</DangerLink>
+      </DangerZone>
+      <ConfirmModal
+        open={showDelete}
+        onClose={() => setShowDelete(false)}
+        title="고객 삭제"
+        message={<>「{c.name}」 고객을 삭제합니다. 되돌릴 수 없습니다.<br />판매·복원수리·상담 등 거래 기록이 있으면 삭제되지 않습니다.</>}
+        confirmLabel="삭제"
+        cancelLabel="닫기"
+        variant="danger"
+        onConfirm={async () => {
+          try {
+            const res = await fetch(`/api/customers/${customerId}`, { method: 'DELETE' });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) { toast.error(data.error || '삭제하지 못했습니다', { duration: 6000 }); return; }
+            toast.success(`「${c.name}」 고객을 삭제했습니다`);
+            setShowDelete(false);
+            queryClient.invalidateQueries({ queryKey: ['customers'] });
+            queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+            onDeleted?.();
+          } catch {
+            toast.error('삭제하지 못했습니다. 연결을 확인해 주세요');
+          }
+        }}
+      />
     </div>
   );
 }

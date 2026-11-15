@@ -218,7 +218,7 @@ export default function CustomersPage() {
             {/* 우측: 고객 상세 모니터 (고정폭) */}
             <div className="w-[440px] shrink-0 overflow-y-auto">
               {selectedId ? (
-                <CustomerDetailPanel customerId={selectedId} />
+                <CustomerDetailPanel customerId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-60 text-neutral-400">
                   <Users size={28} className="mb-2 opacity-40" />
@@ -252,7 +252,7 @@ export default function CustomersPage() {
           title="고객 상세"
           className="sm:w-[640px]"
         >
-          {selectedId && <CustomerDetailPanel customerId={selectedId} />}
+          {selectedId && <CustomerDetailPanel customerId={selectedId} onDeleted={() => setSelectedId(null)} />}
         </SlidePanel>
       )}
     </>

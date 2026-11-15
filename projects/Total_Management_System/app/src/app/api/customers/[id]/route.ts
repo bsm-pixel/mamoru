@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { phoneError, emailError } from '@/lib/utils/validate';
 
 /** GET /api/customers/[id] — 고객 상세 (판매내역 포함) */
 export async function GET(
@@ -104,6 +105,10 @@ export async function PATCH(
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: '수정할 항목이 없습니다' }, { status: 400 });
     }
+    // 2026-11-15 서버에서도 검사 (바꾸려는 칸만)
+    const inputErr = ('phone' in updates ? phoneError(updates.phone) : null) || ('email' in updates ? emailError(updates.email) : null)
+      || ('name' in updates && !String(updates.name ?? '').trim() ? '고객명은 비워 둘 수 없습니다' : null);
+    if (inputErr) return NextResponse.json({ error: inputErr }, { status: 400 });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
@@ -126,6 +131,74 @@ export async function PATCH(
     }
 
     return NextResponse.json({ customer });
+  } catch (err) {
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/customers/[id] — 고객 삭제 (2026-11-15)
+ * 거래·이력이 하나도 없는 고객만 지운다. 하나라도 있으면 무엇이 걸려 있는지 사람 말로 알려 주고 막는다.
+ * (잘못 만든 고객·중복 등록을 정리하는 용도. 거래가 있는 고객을 감추는 「숨기기」는 표에 칸이 필요해 따로 진행)
+ */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    const { data: target } = await db.from('customers').select('id, name').eq('id', id).maybeSingle();
+    if (!target) return NextResponse.json({ error: '고객을 찾을 수 없습니다' }, { status: 404 });
+
+    // 이 고객을 가리키는 기록 — [표, 칸, 화면에 보일 이름]
+    const LINKS: Array<[string, string, string]> = [
+      ['offline_sales', 'customer_id', '판매'],
+      ['deliveries', 'customer_id', '납품'],
+      ['orders', 'customer_id', '주문'],
+      ['repairs', 'customer_id', '복원수리'],
+      ['consultations', 'customer_id', '상담'],
+      ['contracts', 'customer_id', '계약서'],
+      ['returns', 'customer_id', '반품·교환'],
+      ['event_submissions', 'customer_id', '이벤트 접수'],
+      ['purchase_orders', 'supplier_id', '발주'],
+      ['products', 'supplier_id', '공급 제품'],
+      ['customer_product_catalog', 'customer_id', '거래처 단가'],
+      ['supplier_product_catalog', 'supplier_id', '매입 단가'],
+      ['customers', 'merged_into_id', '병합된 고객'],
+    ];
+    const counts = await Promise.all(
+      LINKS.map(([t, col]) => db.from(t).select('id', { count: 'exact', head: true }).eq(col, id)),
+    );
+    const linked: string[] = [];
+    counts.forEach((r: { count: number | null; error: unknown }, i: number) => {
+      // 조회 자체가 실패하면(칸 이름 차이 등) 안전하게 "있을 수 있다"로 보고 막는다
+      if (r.error) linked.push(`${LINKS[i][2]} 확인 실패`);
+      else if ((r.count || 0) > 0) linked.push(`${LINKS[i][2]} ${r.count}건`);
+    });
+    if (linked.length > 0) {
+      return NextResponse.json({
+        error: `거래·이력이 있는 고객은 삭제할 수 없습니다 (${linked.join(', ')}).`,
+        linked,
+      }, { status: 400 });
+    }
+
+    // 메모는 거래가 아니므로 같이 지운다
+    await db.from('customer_notes').delete().eq('customer_id', id);
+    const { error } = await db.from('customers').delete().eq('id', id);
+    if (error) {
+      if (error.code === '23503') {
+        return NextResponse.json({ error: '다른 기록이 이 고객을 쓰고 있어 삭제할 수 없습니다.' }, { status: 400 });
+      }
+      throw error;
+    }
+    return NextResponse.json({ deleted: true, name: target.name });
   } catch (err) {
     return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }

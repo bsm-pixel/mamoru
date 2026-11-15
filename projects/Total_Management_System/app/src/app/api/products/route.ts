@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { amountError } from '@/lib/utils/validate';
 
 /** GET /api/products — 제품 목록 */
 export async function GET(req: NextRequest) {
@@ -81,6 +82,10 @@ export async function POST(req: NextRequest) {
     if (!sku?.trim() || !name?.trim()) {
       return NextResponse.json({ error: 'SKU와 제품명은 필수입니다' }, { status: 400 });
     }
+    // 2026-11-15 가격 검사 — 전엔 음수(-100원)와 빈 가격이 그대로 등록됐다. 소매가는 필수
+    const priceErr = amountError(price, '소매가', { required: true })
+      || amountError(price_dealer, '딜러가') || amountError(price_academy, '아카데미가') || amountError(price_purchase, '매입가');
+    if (priceErr) return NextResponse.json({ error: priceErr }, { status: 400 });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

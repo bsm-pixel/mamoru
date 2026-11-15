@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { amountError } from '@/lib/utils/validate';
 
 /** GET /api/products/[id] — 제품 상세 */
 export async function GET(
@@ -124,6 +125,13 @@ export async function PATCH(
       const n = Number(updates.price);
       if (!Number.isFinite(n) || n < 0) return NextResponse.json({ error: '판매가가 올바르지 않습니다' }, { status: 400 });
       updates.price = Math.round(n);
+    }
+    // 2026-11-15 나머지 가격도 0 이상 (전엔 음수가 그대로 저장됐다)
+    for (const [key, label] of [['price_dealer', '딜러가'], ['price_academy', '아카데미가'], ['price_purchase', '매입가']] as const) {
+      if (key in updates) {
+        const e = amountError(updates[key], label);
+        if (e) return NextResponse.json({ error: e }, { status: 400 });
+      }
     }
 
     if (Object.keys(updates).length === 0) {

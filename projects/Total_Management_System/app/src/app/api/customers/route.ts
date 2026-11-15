@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { phoneError, emailError } from '@/lib/utils/validate';
 
 /** GET /api/customers — 고객 목록 (검색/필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -78,6 +79,9 @@ export async function POST(req: NextRequest) {
     if (!name?.trim()) {
       return NextResponse.json({ error: '고객명은 필수입니다' }, { status: 400 });
     }
+    // 2026-11-15 서버에서도 검사 — 전엔 연락처 abc123 · 이메일 notanemail 이 그대로 저장됐다
+    const inputErr = phoneError(phone) || emailError(email);
+    if (inputErr) return NextResponse.json({ error: inputErr }, { status: 400 });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

@@ -11,6 +11,7 @@ import { TagSelector } from '@/components/shared/tag-selector';
 import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { phoneError, typingPhone } from '@/lib/utils/validate';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -66,6 +67,8 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
   async function handleSave(force = false) {
     if (!form.name.trim()) return toast.error('이름을 입력해주세요');
     if (!form.phone.trim()) return toast.error('연락처를 입력해주세요');
+    const phoneErr = phoneError(form.phone);   // 2026-11-15 서버와 같은 규칙으로 저장 전에 알려 준다
+    if (phoneErr) return toast.error(phoneErr);
 
     setSaving(true);
     try {
@@ -161,7 +164,7 @@ export function CustomerCreateModal({ open, onClose, onCreated, prefill }: Props
             </div>
             <div>
               <label className="text-xs text-neutral-500 mb-1 block">연락처 <span className="text-red-500">*</span></label>
-              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: typingPhone(e.target.value) })}
                 placeholder="010-1234-5678" className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
           </div>

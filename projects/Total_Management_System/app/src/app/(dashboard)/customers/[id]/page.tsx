@@ -20,7 +20,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
           <ArrowLeft size={14} />
           목록으로
         </Button>
-        <CustomerDetailPanel customerId={id} hideDetailLink />
+        <CustomerDetailPanel customerId={id} hideDetailLink onDeleted={() => router.push('/customers')} />
       </div>
     </>
   );
