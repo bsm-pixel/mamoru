@@ -3,7 +3,8 @@
 import { useState, Suspense, useEffect, useRef } from 'react';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useHotkeys } from '@/hooks/use-hotkeys';
+import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
+import { groupArrowKeys } from '@/lib/ui/group-keys';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Topbar } from '@/components/layout/topbar';
@@ -12,11 +13,10 @@ import { Button } from '@/components/ui/button';
 import { CreateDeliveryModal } from '@/components/deliveries/create-delivery-modal';
 import { useProducts, useCreateSale } from '@/hooks/use-sales';
 import { formatKRW, calcVAT, toLocalDateString, channelFromConsultationType } from '@/lib/utils/format';
-import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { Minus, Plus, ScanLine, ShoppingBag, Trash2 } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { CustomerCreateModal } from '@/components/customers/customer-create-modal';
 import { SerialPicker } from '@/components/sales/serial-picker';
-import { ScanInput } from '@/components/sales/scan-input';
 import { resolveScan } from '@/lib/sales/resolve-scan';
 import { useSerialConflictPrompt } from '@/components/sales/serial-conflict-dialog';
 import { formatSerial, currentYear2, incrementSerial, normalizeSerial, isMSerial } from '@/lib/serial/format';
@@ -375,9 +375,40 @@ function NewSaleContent() {
   // 저장 가능 여부 — 하단 버튼 disabled 와 동일 기준. Ctrl+S 단축키와 공유
   const canSubmit = (!!selectedCustomer || !!customerName.trim()) && (cart.length > 0 || hasRepair) && !createSale.isPending;
   // Ctrl+S = 저장(등록). 폼 입력 중에도 동작(allowInInput) + 브라우저 저장창 차단(preventDefault)
+  // 2026-11-15 Ctrl+Enter = 판매 등록(창의 "Ctrl+Enter = 저장"과 같은 키). 창이 떠 있으면 창에 양보한다.
+  //   못 누르는 상태면 무엇이 빠졌는지 알려 준다(키보드만 쓸 때 버튼이 흐린 이유를 알 수 없어서).
+  function submitByKey() {
+    if (isDialogOpen() || createSale.isPending) return;
+    if (!selectedCustomer && !customerName.trim()) { toast.error('고객을 먼저 골라 주세요 (F8)'); focusCustomer(); return; }
+    if (cart.length === 0 && !hasRepair) { toast.error('제품을 먼저 담아 주세요'); productSearchRef.current?.focus(); return; }
+    if (canSubmit) handleSubmit();
+  }
+  // F8 = 고객 칸으로. 이미 고른 고객이 있으면 그대로 두고 알려만 준다(실수로 지워지지 않게)
+  function focusCustomer() {
+    const el = document.getElementById('sale-customer-input') as HTMLInputElement | null;
+    if (el) { el.focus(); el.select(); }
+    else if (selectedCustomer) toast('고객이 이미 선택돼 있습니다 — 바꾸려면 이름 옆 X');
+  }
+  // F9 = 결제 수단 바꾸기 (카드 → 현금 → 이체 → 복합 → 카드). 버튼을 누른 것과 같은 길로 처리
+  function cyclePayment() {
+    const btns = Array.from(payGroupRef.current?.querySelectorAll<HTMLButtonElement>('button') || []);
+    if (btns.length === 0) return;
+    const i = btns.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+    btns[(i + 1) % btns.length].click();
+  }
   useHotkeys([
-    { combo: 'ctrl+s', allowInInput: true, handler: () => { if (canSubmit) handleSubmit(); } },
+    { combo: 'ctrl+s', allowInInput: true, handler: submitByKey },
+    { combo: 'ctrl+enter', allowInInput: true, handler: submitByKey },
+    { combo: 'f8', allowInInput: true, handler: () => { if (!isDialogOpen()) focusCustomer(); } },
+    { combo: 'f9', allowInInput: true, handler: () => { if (!isDialogOpen()) cyclePayment(); } },
   ]);
+  const productSearchRef = useRef<HTMLInputElement>(null);
+  const payGroupRef = useRef<HTMLDivElement>(null);
+  // 화면이 열리면 커서를 제품 검색 칸에(바코드 스캐너도 이 칸으로 들어온다). 터치 기기는 자판이 튀어나오므로 제외
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) return;
+    productSearchRef.current?.focus();
+  }, []);
 
   // 제품 검색/필터
   const [productSearch, setProductSearch] = useState('');
@@ -430,13 +461,14 @@ function NewSaleContent() {
         {/* 제목 + 검색 (그리드 밖, 좌열 너비만큼만) */}
         <div className="xl:w-[33.33%]">
             <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>
-            {/* 바코드 스캔 — SKU=품목 / 시리얼=시리얼 배정 자동 추가 */}
-            <div className="mb-2">
-              <ScanInput onScan={handleScan} />
-            </div>
+            {/* 2026-11-15 바코드 칸과 제품 검색 칸을 하나로 — 정확히 맞는 코드(SKU·바코드·시리얼)면 바로 담고, 아니면 이름 검색 */}
             {/* 검색 + 카테고리 필터 — 모바일은 카테고리를 검색 아래 줄로 (전엔 한 줄에 몰려 검색칸이 80px 로 줄었다) */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="relative w-full sm:flex-1 min-w-0">
+              <ScanLine size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
               <input
+                ref={productSearchRef}
+                tabIndex={1}
                 type="text"
                 value={productSearch}
                 onChange={(e) => { setProductSearch(e.target.value); setActiveIdx(-1); }}
@@ -444,19 +476,22 @@ function NewSaleContent() {
                   // ↓/↑ : 결과 행 이동(활성 지정)
                   if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, filteredProducts.length - 1)); return; }
                   if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); return; }
-                  if (e.key !== 'Enter') return;
+                  if (e.key !== 'Enter' || e.ctrlKey || e.metaKey) return; // Ctrl+Enter 는 판매 등록 — 여기서 담지 않는다
                   const c = productSearch.trim();
-                  // ① 코드 스캔(시리얼/정확 SKU) 우선 — 타이핑한 제품명은 무시
-                  const exactSku = c ? products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase()) : undefined;
+                  // ① 코드 스캔(시리얼/정확 SKU·바코드) 우선 — 타이핑한 제품명은 무시
+                  const exactSku = c ? products.find((p) => (p.sku || '').toLowerCase() === c.toLowerCase() || ((p.barcode || '') as string).toLowerCase() === c.toLowerCase()) : undefined;
                   if (c && (isMSerial(c) || exactSku)) { e.preventDefault(); handleScan(c); setProductSearch(''); setActiveIdx(-1); return; }
                   // ② ↑↓ 로 지정한 활성 행이 있으면 그 제품 담기
                   if (activeIdx >= 0 && activeIdx < filteredProducts.length) { e.preventDefault(); addToCart(filteredProducts[activeIdx]); setProductSearch(''); setActiveIdx(-1); return; }
                   // ③ 지정 없이 결과가 딱 1개면 그것 담기(오담 방지 — 2개 이상은 무동작)
-                  if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); }
+                  if (filteredProducts.length === 1) { e.preventDefault(); addToCart(filteredProducts[0]); setProductSearch(''); setActiveIdx(-1); return; }
+                  // ④ 맞는 것이 하나도 없으면 알려 주고 글자를 통째로 선택 — 다음 스캔·입력이 그대로 덮어쓴다
+                  if (c && filteredProducts.length === 0) { e.preventDefault(); toast.error(`맞는 제품이 없습니다: ${c}`); e.currentTarget.select(); }
                 }}
-                placeholder="제품명 또는 SKU 검색 (스캔도 가능)"
-                className="w-full sm:flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
+                placeholder="제품 이름 · SKU 검색 또는 바코드 스캔"
+                className="w-full h-9 pl-9 pr-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
+              </div>
               <div className="flex flex-wrap gap-1 sm:shrink-0">
                 <button
                   onClick={() => { setProductCategory('all'); setActiveIdx(-1); }}
@@ -527,6 +562,8 @@ function NewSaleContent() {
                             <td className="px-3 py-2.5 text-right text-xs text-neutral-500">{p.stock_quantity ?? '-'}</td>
                             <td className="px-3 py-2.5 text-center">
                               <button
+                                tabIndex={-1} // 2026-11-15 제품마다 있는 버튼이라 Tab 에서 뺀다(키보드는 ↑↓ + Enter)
+                                aria-label={`${p.name} 담기`}
                                 onClick={(e) => { e.stopPropagation(); addToCart(p); }}
                                 className="w-7 h-7 rounded-md bg-neutral-100 hover:bg-neutral-200 text-neutral-600 text-sm font-bold transition"
                               >+</button>
@@ -664,8 +701,14 @@ function NewSaleContent() {
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3">고객 정보</h3>
               <CustomerAutocomplete
+                inputId="sale-customer-input"
+                inputTabIndex={2}
                 selectedCustomer={selectedCustomer}
-                onSelect={(c) => { setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type); }}
+                onSelect={(c) => {
+                  setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type);
+                  // 고르면 검색 칸이 사라진다 → 커서를 다음 칸(결제 수단)으로 넘겨 Tab 흐름이 끊기지 않게
+                  requestAnimationFrame(() => payGroupRef.current?.querySelector<HTMLButtonElement>('button[aria-checked="true"]')?.focus());
+                }}
                 onClear={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); recalcCartPrices(undefined); }}
               />
               {!selectedCustomer && (
@@ -734,23 +777,23 @@ function NewSaleContent() {
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">판매 채널</label>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" role="radiogroup" aria-label="판매 채널" onKeyDown={groupArrowKeys}>
                     {([
                       { value: 'store', label: '매장', color: 'bg-neutral-800 text-white' },
                       { value: 'field', label: '출장', color: 'bg-emerald-600 text-white' },
                       { value: 'talk', label: '톡', color: 'bg-yellow-500 text-white' },
                       { value: 'online', label: '온라인(아임웹)', color: 'bg-blue-600 text-white' },
                     ] as const).map((ch) => (
-                      <button key={ch.value} onClick={() => setSaleChannel(ch.value)}
+                      <button key={ch.value} type="button" role="radio" aria-checked={saleChannel === ch.value} tabIndex={saleChannel === ch.value ? 0 : -1} onClick={() => setSaleChannel(ch.value)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${saleChannel === ch.value ? ch.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ch.label}</button>
                     ))}
                   </div>
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">결제 수단</label>
-                  <div className="flex gap-1">
+                  <div ref={payGroupRef} className="flex gap-1" role="radiogroup" aria-label="결제 수단 (F9)" onKeyDown={groupArrowKeys}>
                     {(['card', 'cash', 'transfer', 'mixed'] as const).map((method) => (
-                      <button key={method} onClick={() => { setPaymentMethod(method); if (method === 'mixed') { setMixedCard(0); setMixedCash(0); setMixedTransfer(0); } }}
+                      <button key={method} type="button" role="radio" aria-checked={paymentMethod === method} tabIndex={paymentMethod === method ? 3 : -1} onClick={() => { setPaymentMethod(method); if (method === 'mixed') { setMixedCard(0); setMixedCash(0); setMixedTransfer(0); } }}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentMethod === method ? 'bg-stone-900 text-white' : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>
                         {{ card: '카드', cash: '현금', transfer: '이체', mixed: '복합' }[method]}
                       </button>
@@ -781,9 +824,9 @@ function NewSaleContent() {
                 {!isMixedPay && (
                 <div>
                   <label className="text-xs text-neutral-500 mb-1 block">결제 상태</label>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" role="radiogroup" aria-label="결제 상태" onKeyDown={groupArrowKeys}>
                     {([{ value: 'paid' as const, label: '결제완료', color: 'bg-green-600 text-white' }, { value: 'partial' as const, label: '부분결제', color: 'bg-yellow-500 text-white' }, { value: 'unpaid' as const, label: '미결제', color: 'bg-red-500 text-white' }]).map((ps) => (
-                      <button key={ps.value} onClick={() => setPaymentStatus(ps.value)}
+                      <button key={ps.value} type="button" role="radio" aria-checked={paymentStatus === ps.value} tabIndex={paymentStatus === ps.value ? 0 : -1} onClick={() => setPaymentStatus(ps.value)}
                         className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${paymentStatus === ps.value ? ps.color : 'bg-neutral-100 text-neutral-500 hover:bg-neutral-200'}`}>{ps.label}</button>
                     ))}
                   </div>
@@ -803,7 +846,7 @@ function NewSaleContent() {
                 </div>
                 <div>
                   <label className="text-xs text-neutral-500">메모</label>
-                  <input type="text" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="메모 (선택)"
+                  <input type="text" tabIndex={4} value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="메모 (선택)"
                     className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               </div>
@@ -887,7 +930,7 @@ function NewSaleContent() {
             </Card>
 
             <div className="hidden xl:block">
-              <Button className="w-full"
+              <Button className="w-full" tabIndex={5} title="Ctrl+Enter"
                 disabled={submitDisabled}
                 onClick={handleSubmit}>
                 {createSale.isPending ? '등록 중...' : `판매 등록 (${formatKRW(paidAmount)})`}
@@ -906,7 +949,7 @@ function NewSaleContent() {
           </p>
           <p className="text-base font-bold tabular-nums truncate">{formatKRW(paidAmount)}</p>
         </button>
-        <button type="button" disabled={submitDisabled} onClick={handleSubmit}
+        <button type="button" tabIndex={5} disabled={submitDisabled} onClick={handleSubmit}
           className="h-11 px-5 rounded-xl bg-white text-stone-900 text-sm font-bold disabled:opacity-40 whitespace-nowrap">
           {createSale.isPending ? '등록 중...' : '판매 등록'}
         </button>
@@ -968,7 +1011,7 @@ function ManualSerialInput({ serials, onChange, onTransferConsent, reservedSeria
           ))}
           <div className="flex gap-1.5">
             <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) { e.preventDefault(); addSerial(input); } }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && input.trim()) { e.preventDefault(); addSerial(input); } }}
               placeholder="시리얼 번호 입력 후 엔터"
               className="flex-1 h-7 px-2 rounded border border-neutral-200 text-xs font-mono placeholder:text-neutral-400" />
             <button type="button" onClick={() => addSerial(input)}

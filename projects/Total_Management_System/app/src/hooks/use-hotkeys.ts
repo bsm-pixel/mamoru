@@ -43,6 +43,7 @@ export function useHotkeys(hotkeys: Hotkey[], enabled = true) {
 
   useEffect(() => {
     if (!enabled) return;
+    bindDialogSnapshot();
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return; // 키 홀드 반복 무시
       const combo = comboOf(e);
@@ -60,8 +61,27 @@ export function useHotkeys(hotkeys: Hotkey[], enabled = true) {
   }, [enabled]);
 }
 
-/** 모달(native <dialog>)이 열려 있으면 true — 페이지 Esc 단축키가 모달에 양보하도록 판정 */
-export function isDialogOpen(): boolean {
+function queryDialogOpen(): boolean {
   if (typeof document === 'undefined') return false;
-  return !!document.querySelector('dialog[open]');
+  // native <dialog> + 손으로 짠 창(EscClose 가 표시를 남김) + "버릴까요?" 창
+  return !!document.querySelector('dialog[open], [data-modal-open]');
+}
+
+// 2026-11-15 키를 누른 "그 순간" 창이 열려 있었는지 기억한다.
+//   창이 Ctrl+Enter 로 저장하고 곧바로 닫히면, 뒤이어 도는 화면 단축키가 "창 없음"으로 보고
+//   같은 키로 화면의 저장(판매 등록)까지 눌러 버릴 수 있다 → 캡처 단계에서 먼저 찍어 둔다.
+let dialogAtKeydown = false;
+let snapshotBound = false;
+function bindDialogSnapshot() {
+  if (snapshotBound || typeof window === 'undefined') return;
+  snapshotBound = true;
+  window.addEventListener('keydown', () => {
+    dialogAtKeydown = queryDialogOpen();
+    setTimeout(() => { dialogAtKeydown = false; }, 0);
+  }, true);
+}
+
+/** 창(모달)이 열려 있으면 true — 화면 단축키가 창에 양보하도록 판정 */
+export function isDialogOpen(): boolean {
+  return dialogAtKeydown || queryDialogOpen();
 }

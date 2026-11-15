@@ -16,6 +16,7 @@ export function DiscardAsk({ onKeep, onDiscard, fixed, title = '입력한 내용
   return (
     <div
       data-modal-ignore
+      data-modal-open=""
       className={`${fixed ? 'fixed' : 'absolute'} inset-0 z-[200] flex items-center justify-center bg-black/40 p-4`}
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}

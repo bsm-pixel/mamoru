@@ -43,15 +43,29 @@ export function ShortcutHelp() {
           <Row keys={['Ctrl', ']']} desc="다음 화면으로 (앞으로)" />
         </div>
         <div className="py-2">
-          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">판매 관리</p>
+          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">어느 화면에서나</p>
           <Row keys={['F2']} desc="판매 입력 열기" />
           <Row keys={['F4']} desc="거래처 매출 열기" />
+        </div>
+        <div className="py-2">
+          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">판매 입력</p>
+          <Row keys={['Ctrl', 'Enter']} desc="판매 등록" />
+          <Row keys={['F8']} desc="고객 칸으로" />
+          <Row keys={['F9']} desc="결제 수단 바꾸기" />
+          <Row keys={['←', '→']} desc="선택 버튼 묶음에서 옆으로 고르기" />
+          <Row keys={['Tab']} desc="제품 → 고객 → 결제 수단 → 메모 → 판매 등록" />
+        </div>
+        <div className="py-2">
+          <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">입력 창</p>
+          <Row keys={['Ctrl', 'Enter']} desc="저장" />
+          <Row keys={['Enter']} desc="다음 칸으로 (한 줄 칸)" />
+          <Row keys={['Esc']} desc="닫기 — 넣은 내용이 있으면 한 번 묻기" />
         </div>
         <div className="pt-2">
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">입력 폼 · 제품 검색</p>
           <Row keys={['Ctrl', 'S']} desc="저장 / 등록" />
           <Row keys={['↑', '↓']} desc="검색 결과 행 이동(지정)" />
-          <Row keys={['Enter']} desc="지정한 행(또는 결과 1개) 담기" />
+          <Row keys={['Enter']} desc="지정한 행(또는 결과 1개) 담기 · 정확한 코드는 바로 담기" />
         </div>
       </div>
       <p className="mt-4 text-[11px] text-neutral-400">

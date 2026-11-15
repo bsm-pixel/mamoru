@@ -281,11 +281,9 @@ export default function SalesPage() {
     router.push('/sales/new?mode=b2b');
   };
 
-  // 단축키 — 이 화면(판매관리)에서만 동작. F2/F4 는 기능키라 입력창 포커스 중에도 안전
+  // 단축키 — F2/F4 는 2026-11-15 어느 화면에서나 동작하도록 (dashboard)/layout.tsx 로 옮김
   const searchRef = useRef<HTMLInputElement>(null);
   useHotkeys([
-    { combo: 'f2', allowInInput: true, handler: () => router.push('/sales/new') },
-    { combo: 'f4', allowInInput: true, handler: handlePartnerSaleClick },
     { combo: '/', handler: () => searchRef.current?.focus() },
     {
       combo: 'escape', allowInInput: true, preventDefault: false,

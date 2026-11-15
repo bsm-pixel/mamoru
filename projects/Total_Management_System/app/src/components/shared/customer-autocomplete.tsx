@@ -26,6 +26,9 @@ interface Props {
   showExtendedFields?: boolean;
   /** 인라인 신규등록 버튼/폼 숨김. 외부에서 CustomerCreateModal 등으로 처리할 때 사용. */
   disableInlineNewForm?: boolean;
+  /** 검색 칸의 id · Tab 순서 — 화면이 단축키(F8)나 Tab 순서로 이 칸을 짚을 때 */
+  inputId?: string;
+  inputTabIndex?: number;
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -37,7 +40,7 @@ const SOURCE_LABEL: Record<string, string> = {
   stock_sale: '재고판매',
 };
 
-export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, showExtendedFields, disableInlineNewForm }: Props) {
+export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, showExtendedFields, disableInlineNewForm, inputId, inputTabIndex }: Props) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -240,6 +243,8 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
         <input
+          id={inputId}
+          tabIndex={inputTabIndex}
           type="text"
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
@@ -250,7 +255,7 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
             if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); return; }
             // Esc: 드롭다운만 닫음. preventDefault/stopPropagation 으로 모달(native dialog)이 함께 닫히는 것 방지
             if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); setShowDropdown(false); setActiveIdx(-1); return; }
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { // Ctrl+Enter 는 화면의 저장 키 — 여기서 고르지 않는다
               if (isLoading) { e.preventDefault(); return; }
               // ① ↑↓ 로 지정한 고객 선택
               if (activeIdx >= 0 && activeIdx < results.length) { e.preventDefault(); handleSelect(results[activeIdx]); return; }

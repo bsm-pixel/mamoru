@@ -15,6 +15,14 @@ import { DiscardAsk } from '@/components/ui/discard-ask';
  *
  * 사용:  const guard = useUnsavedGuard(cart.length > 0 || !!memo.trim());   …   {guard}
  */
+
+// 지금 떠 있는 화면의 "나가도 되나요?" 창구 — 단축키(F2·F4)처럼 링크가 아닌 이동이 먼저 물어본다
+let leaveAsker: ((to: string) => boolean) | null = null;
+
+/** 저장하지 않은 내용이 있으면 묻는 창을 띄우고 true(=이동 보류). 없으면 false → 부른 쪽이 그대로 이동 */
+export function askBeforeLeave(to: string): boolean {
+  return leaveAsker ? leaveAsker(to) : false;
+}
 export function useUnsavedGuard(dirty: boolean): ReactNode {
   const router = useRouter();
   const dirtyRef = useRef(dirty);
@@ -40,9 +48,16 @@ export function useUnsavedGuard(dirty: boolean): ReactNode {
       e.stopPropagation();
       setPending(url.pathname + url.search + url.hash);
     };
+    const asker = (to: string) => {
+      if (!dirtyRef.current) return false;
+      setPending(to);
+      return true;
+    };
+    leaveAsker = asker;
     window.addEventListener('beforeunload', onBeforeUnload);
     document.addEventListener('click', onClick, true);   // 화면 부품보다 먼저 받아야 이동을 멈출 수 있다
     return () => {
+      if (leaveAsker === asker) leaveAsker = null;
       window.removeEventListener('beforeunload', onBeforeUnload);
       document.removeEventListener('click', onClick, true);
     };

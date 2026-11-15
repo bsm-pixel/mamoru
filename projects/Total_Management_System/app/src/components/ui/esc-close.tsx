@@ -73,7 +73,7 @@ export function EscClose({ onClose, disabled }: { onClose: () => void; disabled?
 
   return (
     <>
-      <span ref={anchor} hidden data-modal-ignore />
+      <span ref={anchor} hidden data-modal-ignore data-modal-open={disabled ? undefined : ''} />
       {asking && <DiscardAsk fixed onKeep={() => setAsking(false)} onDiscard={() => { setAsking(false); onCloseRef.current(); }} />}
     </>
   );
