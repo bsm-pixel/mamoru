@@ -20,6 +20,7 @@ import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import crypto from 'crypto';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting';
 
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     const dbAny = db as any;
 
     const phoneNorm = phone.replace(/\D/g, '');
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKST();
 
     // ── 중복 체크: 오늘 이후 · 같은 번호 · 같은 일시 ──────────
     const { data: dupes } = await dbAny

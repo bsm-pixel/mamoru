@@ -7,6 +7,7 @@ import { updateImwebStock } from '@/lib/imweb/client';
 import type { EventItem } from './types';
 import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
+import { todayKST } from '@/lib/utils/kst';
 
 interface EventRow {
   id: string;
@@ -35,7 +36,7 @@ export interface ConvertOptions {
 export async function convertEventToSale(db: any, ev: EventRow, opts?: ConvertOptions): Promise<string> {
   const category = opts?.category ?? 'EVENT';
   const memoLabel = opts?.memoLabel ?? 'EVENT 전환';
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKST();
 
   // 정가 합계(품목 라인 합 = 단가×수량 + 슬라이싱) → 묶음 할인 = 정가합 − 최종금액
   const slicingQtyAll = ev.items.reduce((s, it) => s + (it.slicing ? Math.max(1, it.qty || 1) : 0), 0);

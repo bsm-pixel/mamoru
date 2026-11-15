@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { todayKST, addDays } from '@/lib/utils/kst';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { COURIER_LOTTE, isAlpsTrackable } from '@/lib/shipping/couriers';
 import { errMsg } from '@/lib/utils/err';
@@ -51,7 +52,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     // 후보: 이 판매가 송장 없음·진행 중일 때만 — 최근 30일, 롯데 송장 있고 배송 안 끝난 원 송장 판매
     let candidates: Array<SaleRow & { same_address: boolean; same_customer: boolean; address: string }> = [];
     if (!sale.invoice_number && !sale.cancelled_at && !sale.returned_at && !sale.delivered_at) {
-      const since = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+      const since = addDays(todayKST(), -30);
       const { data: rows } = await db.from('offline_sales').select(COLS)
         .neq('id', id)
         .not('invoice_number', 'is', null)

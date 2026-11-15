@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
 import { saleChannelToConsultSubtype } from '@/lib/reviews/consult-subtype';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -24,7 +25,7 @@ function proceedToSubtype(pt: string | null | undefined): string {
 
 /** 리뷰 ID 자동 채번: RV-YYYYMMDD-NNN */
 async function generateReviewId(db: ReturnType<typeof createServiceClient>): Promise<string> {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const today = todayKST().replace(/-/g, '');
   const prefix = `RV-${today}-`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

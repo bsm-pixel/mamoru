@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +28,7 @@ export async function GET() {
       .single();
 
     // 휴무일 조회 (오늘 이후만)
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKST();
     const { data: closedDates } = await dbAny
       .from('closed_dates')
       .select('date, reason')

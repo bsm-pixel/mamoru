@@ -6,6 +6,7 @@ import { formatPhone } from '@/lib/utils/format';
 import { X, MapPin, Phone } from 'lucide-react';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { todayKST } from '@/lib/utils/kst';
 
 interface TodayConsultationPickerProps {
   open: boolean;
@@ -23,7 +24,7 @@ interface TodayConsultationPickerProps {
 /** 오늘 예약 고객 목록 모달 */
 export function TodayConsultationPicker({ open, onClose, onSelect }: TodayConsultationPickerProps) {
   const supabase = createClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKST();
 
   const { data: consultations = [], isLoading } = useQuery({
     queryKey: ['today-consultations', today],

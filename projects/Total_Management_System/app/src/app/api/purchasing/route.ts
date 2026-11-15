@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST, addDays, addMonths } from '@/lib/utils/kst';
 
 /** GET /api/purchasing — 발주 목록 */
 export async function GET(req: NextRequest) {
@@ -32,11 +33,10 @@ export async function GET(req: NextRequest) {
     }
     const dateRange = url.searchParams.get('date_range');
     if (dateRange && dateRange !== 'all') {
-      const now = new Date();
       let dateFrom: string;
-      if (dateRange === 'today') dateFrom = now.toISOString().slice(0, 10);
-      else if (dateRange === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
-      else { const d = new Date(now); d.setMonth(d.getMonth() - 1); dateFrom = d.toISOString().slice(0, 10); }
+      if (dateRange === 'today') dateFrom = todayKST();
+      else if (dateRange === 'week') dateFrom = addDays(todayKST(), -7);
+      else dateFrom = addMonths(todayKST(), -1);
       query = query.gte('order_date', dateFrom);
     }
 
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     const db = supabase as any;
 
     // 발주번호 생성: PO-YYYYMMDD-NNN
-    const poDate = order_date || new Date().toISOString().slice(0, 10);
+    const poDate = order_date || todayKST();
     const dateStr = poDate.replace(/-/g, '');
     const { count } = await db
       .from('purchase_orders')

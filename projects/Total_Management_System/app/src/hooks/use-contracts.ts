@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { todayKST, addDays, addMonths } from '@/lib/utils/kst';
 import { createClient } from '@/lib/supabase/client';
 import type { Contract, ContractItem } from '@/lib/supabase/types';
 import toast from 'react-hot-toast';
@@ -56,11 +57,10 @@ export function useContracts(filters?: {
         );
       }
       if (filters?.dateRange && filters.dateRange !== 'all') {
-        const now = new Date();
         let dateFrom: string;
-        if (filters.dateRange === 'today') dateFrom = now.toISOString().slice(0, 10);
-        else if (filters.dateRange === 'week') { const d = new Date(now); d.setDate(d.getDate() - 7); dateFrom = d.toISOString().slice(0, 10); }
-        else { const d = new Date(now); d.setMonth(d.getMonth() - 1); dateFrom = d.toISOString().slice(0, 10); }
+        if (filters.dateRange === 'today') dateFrom = todayKST();
+        else if (filters.dateRange === 'week') dateFrom = addDays(todayKST(), -7);
+        else dateFrom = addMonths(todayKST(), -1);
         query = query.gte('created_at', dateFrom);
       }
 

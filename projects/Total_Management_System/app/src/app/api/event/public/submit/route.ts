@@ -7,6 +7,7 @@ import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
 import { computeEventPricing } from '@/lib/event/pricing';
 import type { EventItem } from '@/lib/event/types';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -21,7 +22,7 @@ export function OPTIONS() {
 /** EV-YYYYMMDD-NNN 자동 채번 */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function generateEventNumber(db: any): Promise<string> {
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const today = todayKST().replace(/-/g, '');
   const prefix = `EV-${today}-`;
   const { data } = await db
     .from('event_submissions')

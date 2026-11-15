@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { toProof } from '@/lib/expenses/proof';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/expenses — 경비 목록 (기간 필터) */
 export async function GET(req: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     // 167: 월 환산 고정비 = 기간 안 매달 고정비 + (기간 끝 기준 최근 1년 연간 결제 ÷ 12 × 기간 개월 수)
     //   연간 결제가 결제한 달에만 크게 잡혀 "한 달 고정비"가 들쭉날쭉해 보이는 것을 보정한 참고값. 장부·리포트엔 안 쓴다.
-    const endDate = to || new Date().toISOString().slice(0, 10);
+    const endDate = to || todayKST();
     const startDate = from || endDate;
     const months = Math.max(1, Math.round(((Date.parse(endDate) - Date.parse(startDate)) / 86400000 + 1) / 30.44));
     const yearAgo = new Date(Date.parse(endDate) - 365 * 86400000).toISOString().slice(0, 10);
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await (supabase as any)
       .from('expenses')
       .insert({
-        expense_date: expense_date || new Date().toISOString().slice(0, 10),
+        expense_date: expense_date || todayKST(),
         category: category || '기타',
         amount,
         memo: memo || null,

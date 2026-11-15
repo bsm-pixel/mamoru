@@ -6,6 +6,7 @@
 
 import { mamoruWordmarkSvg } from '@/lib/brand/logo-svg';
 import { inspectionNote } from '@/lib/repair/wound-catalog';
+import { todayKST } from '@/lib/utils/kst';
 
 export function esc(s: unknown): string {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -168,7 +169,7 @@ const LIST_CSS = `
   .mem { color:#666; font-size:10.5px; white-space:pre-wrap; }
   @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } thead { display:table-header-group; } tr { break-inside:avoid; } }`;
 export function buildListDoc(rows: PrepListRow[], title = '통합 준비표'): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKST();
   let body = '';
   let curGroup = '';
   rows.forEach((r) => {

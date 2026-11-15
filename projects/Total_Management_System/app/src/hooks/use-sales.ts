@@ -7,6 +7,7 @@ import type { OfflineSale, OfflineSaleItem, Product } from '@/lib/supabase/types
 import toast from 'react-hot-toast';
 // 075: cross-domain invalidation 일원화 — mutation 후 대시보드/통계가 즉각 갱신되도록
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
+import { todayKST } from '@/lib/utils/kst';
 
 /** 판매 탭 타입 */
 export type SalesTab = 'all' | 'today' | 'unpaid' | 'processing' | 'cancelled';
@@ -46,7 +47,7 @@ export function useSales(filters?: {
       //   (2026-08-02) 반품(returned_at)도 취소와 동일한 종결 상태로 취급 — 처리필요/미수금에 안 뜨게.
       const tab = filters?.tab || 'all';
       if (tab === 'today') {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = todayKST();
         query = query.eq('sale_date', today).is('cancelled_at', null).is('returned_at', null);
       } else if (tab === 'unpaid') {
         query = query.in('payment_status', ['unpaid', 'partial']).is('cancelled_at', null).is('returned_at', null);
@@ -103,7 +104,7 @@ export function useSalesTabCounts(filters?: { dateRange?: SalesDateRange; dateFr
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = supabase as any;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayKST();
       const { from: df, to: dt } = resolveDateRange(filters);
 
       const base = () => {

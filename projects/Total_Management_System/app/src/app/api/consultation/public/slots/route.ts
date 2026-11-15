@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -227,7 +228,7 @@ export async function GET(req: NextRequest) {
 
     // 5. 전체 가능 슬롯 생성
     const allSlots = generateTimeSlots(startHour, endHour, stepMin, durMin);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKST();
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
 

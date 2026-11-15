@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { kstDate } from '@/lib/utils/kst';
 import { Topbar } from '@/components/layout/topbar';
 import { Star, Eye, EyeOff, RefreshCw, Image as ImageIcon, Award, Plus, Pencil, X, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
@@ -266,7 +267,7 @@ export default function ReviewsPage() {
       content: review.content,
       photo_urls: [...(review.photo_urls || [])],
       product: review.product || '',
-      created_at: review.created_at?.slice(0, 10) || '',
+      created_at: review.created_at ? kstDate(review.created_at) : '',
       is_best: review.is_best,
     });
   };

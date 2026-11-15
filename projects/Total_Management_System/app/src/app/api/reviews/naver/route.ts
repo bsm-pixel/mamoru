@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { todayKST, kstDate } from '@/lib/utils/kst';
 import { createServerSupabaseClient, createServiceClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 
@@ -8,8 +9,8 @@ async function generateReviewId(
   dbAny: any,
   date?: string
 ): Promise<string> {
-  const d = date ? new Date(date) : new Date();
-  const today = d.toISOString().slice(0, 10).replace(/-/g, '');
+  // 2026-11-15 한국 날짜 기준 (전엔 UTC 라 오전 9시 전 등록분의 번호가 전날로 찍혔다)
+  const today = (date ? (/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : kstDate(date)) : todayKST()).replace(/-/g, '');
   const prefix = `RV-${today}-`;
 
   const { data } = await dbAny

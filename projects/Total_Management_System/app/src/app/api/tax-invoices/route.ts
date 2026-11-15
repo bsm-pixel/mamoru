@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/tax-invoices — 세금계산서 목록 */
 export async function GET(req: NextRequest) {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).from('tax_invoices').insert({
       invoice_type: invoice_type || 'sales',
-      issue_date: issue_date || new Date().toISOString().slice(0, 10),
+      issue_date: issue_date || todayKST(),
       counterparty_name,
       counterparty_biz_no: counterparty_biz_no || null,
       supply_amount: supply_amount || 0,

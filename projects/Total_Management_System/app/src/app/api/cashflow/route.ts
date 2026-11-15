@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/cashflow — 입출금 내역 + 잔고 */
 export async function GET(req: NextRequest) {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any).from('cash_transactions').insert({
-      transaction_date: transaction_date || new Date().toISOString().slice(0, 10),
+      transaction_date: transaction_date || todayKST(),
       type,
       category: category || '기타',
       amount,

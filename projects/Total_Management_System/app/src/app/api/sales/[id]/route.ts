@@ -5,6 +5,7 @@ import { sendSalesShippedNotification } from '@/lib/notification/sales-shipped';
 import { sendReviewRequestNotification } from '@/lib/notification/review-request';
 import { recalcOutstanding } from '@/lib/outstanding';
 import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
+import { todayKST } from '@/lib/utils/kst';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
 export async function PATCH(
@@ -136,7 +137,7 @@ export async function PATCH(
       if (sale.paid_amount > 0) {
         try {
           await db.from('cash_transactions').insert({
-            transaction_date: new Date().toISOString().slice(0, 10),
+            transaction_date: todayKST(),
             type: 'expense',
             category: '매출취소환불',
             amount: sale.paid_amount,
@@ -250,7 +251,7 @@ export async function PATCH(
       if (sale.paid_amount > 0) {
         try {
           await db.from('cash_transactions').insert({
-            transaction_date: new Date().toISOString().slice(0, 10),
+            transaction_date: todayKST(),
             type: 'expense',
             category: '매출반품환불',
             amount: sale.paid_amount,
@@ -891,7 +892,7 @@ export async function PATCH(
         if (diff !== 0) {
           try {
             await db.from('cash_transactions').insert({
-              transaction_date: new Date().toISOString().slice(0, 10),
+              transaction_date: todayKST(),
               type: diff > 0 ? 'income' : 'expense',
               category: '매출교환차액',
               amount: Math.abs(diff),

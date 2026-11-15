@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/auth/require-user';
 import { createServiceClient } from '@/lib/supabase/server';
 import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST, monthStartKST } from '@/lib/utils/kst';
 
 /**
  * GET /api/reports/summary — 매출/매입/VAT 기간별 집계
@@ -19,8 +20,8 @@ export async function GET(req: NextRequest) {
   const deny = await requireUser(); if (deny) return deny; // 2026-10-29 로그인 없이 열려 있던 관리자 API 차단
   const supabase = createServiceClient();
   const sp = req.nextUrl.searchParams;
-  const fromDate = sp.get('from') || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10);
-  const toDate = sp.get('to') || new Date().toISOString().slice(0, 10);
+  const fromDate = sp.get('from') || monthStartKST();
+  const toDate = sp.get('to') || todayKST();
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -10,6 +10,7 @@ import { applyDeliveryReturn, isReturnableDeliveryItem, summarizeReturnItems, ty
 import { toLocalDateString } from '@/lib/utils/format';
 import { bookReturnPickupFor } from '@/lib/returns/book-pickup';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/deliveries/[id] — 납품 상세 */
 export async function GET(
@@ -151,7 +152,7 @@ export async function PATCH(
         : (body.courier_name || dl.courier_name || (trackingNumber ? COURIER_LOTTE : null));
       const shipFields = {
         status: 'shipped',
-        shipped_date: new Date().toISOString().slice(0, 10),
+        shipped_date: todayKST(),
         tracking_number: trackingNumber,
         courier_name: courierName,
         shipped_source: 'manual',   // 110: 집하 자동감지와 구분
@@ -204,7 +205,7 @@ export async function PATCH(
       if (target.status === 'shipped') {
         await db.from('deliveries').update({
           status: 'shipped',
-          shipped_date: target.shipped_date || new Date().toISOString().slice(0, 10),
+          shipped_date: target.shipped_date || todayKST(),
           shipped_source: target.shipped_source || 'manual',
         }).eq('id', id);
       }

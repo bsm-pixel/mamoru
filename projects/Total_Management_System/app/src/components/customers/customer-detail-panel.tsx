@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState } from 'react';
+import { daysSinceKST } from '@/lib/utils/kst';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -196,7 +197,8 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
 
   // RFM 분류 (풀페이지에서 흡수)
   const lastSaleDate = (summary as Record<string, unknown>).lastSaleDate as string | null;
-  const daysSinceLastSale = lastSaleDate ? Math.floor((Date.now() - new Date(lastSaleDate).getTime()) / (1000 * 60 * 60 * 24)) : 999;
+  // 2026-11-15 한국 날짜끼리 뺀다 — 전엔 UTC 자정 기준이라 오전 9시 전에는 「-1일 전」이 나왔다
+  const daysSinceLastSale = lastSaleDate ? Math.max(0, daysSinceKST(lastSaleDate)) : 999;
   const rfmLabel = summary.totalSales >= 3 || summary.totalSalesAmount >= 500000 ? 'VIP'
     : daysSinceLastSale > 180 ? '휴면' : '일반';
   const rfmColor = rfmLabel === 'VIP' ? 'bg-amber-100 text-amber-700' : rfmLabel === '휴면' ? 'bg-neutral-200 text-neutral-500' : 'bg-blue-100 text-blue-700';

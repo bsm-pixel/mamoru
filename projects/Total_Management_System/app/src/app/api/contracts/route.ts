@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/contracts — 계약서 목록 */
 export async function GET(req: NextRequest) {
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
     const { contract, items } = body;
 
     // 계약번호: CT-YYYYMMDD-NNN
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKST();
     const todayCompact = today.replace(/-/g, '');
     const { count } = await db
       .from('contracts')

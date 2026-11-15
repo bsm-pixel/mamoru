@@ -7,6 +7,7 @@ import {
 } from '@/lib/reviews/event-shipments';
 import { COURIER_DIRECT, isDirectHandover } from '@/lib/shipping/couriers';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /**
  * 리뷰 이벤트 당첨자 배송 — 관리 API (2026-10-02, 마이그 156)
@@ -158,7 +159,7 @@ export async function POST(req: NextRequest) {
       const r = await cancelShipment(row.invoice_number);
       if (!r.success) return NextResponse.json({ error: `ALPS 송장 취소 실패: ${r.error} — ALPS에서 직접 취소 후 다시 시도하세요` }, { status: 502 });
       await db.from('review_event_shipments')
-        .update({ invoice_number: null, invoice_created_at: null, updated_at: new Date().toISOString(), memo: `송장 ${row.invoice_number} 취소 (${new Date().toISOString().slice(0, 10)})` })
+        .update({ invoice_number: null, invoice_created_at: null, updated_at: new Date().toISOString(), memo: `송장 ${row.invoice_number} 취소 (${todayKST()})` })
         .eq('id', id);
       return NextResponse.json({ ok: true });
     }

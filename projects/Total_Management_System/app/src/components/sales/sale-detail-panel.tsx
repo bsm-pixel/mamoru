@@ -40,6 +40,7 @@ import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { todayKST } from '@/lib/utils/kst';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -1457,7 +1458,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-neutral-500 mb-1 block">판매일</label>
-              <input type="date" value={saleDate} max={new Date().toISOString().slice(0, 10)}
+              <input type="date" value={saleDate} max={todayKST()}
                 onChange={(e) => setSaleDate(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
@@ -1751,7 +1752,7 @@ function ReceiptModal({ sale, items, customerType, onClose }: {
             <div style={{ textAlign: 'right' }}>
               <p>판매번호: {sale.sale_number}</p>
               <p>판매일: {sale.sale_date}</p>
-              <p>발행일: {new Date().toISOString().slice(0, 10)}</p>
+              <p>발행일: {todayKST()}</p>
             </div>
           </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { kstDate } from '@/lib/utils/kst';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -391,7 +392,7 @@ function PartnerDetailPanel({ partner: p, tabConfig, badgeStyle, badgeLabel, all
               <div><p className="text-xs text-neutral-400">담당자</p><p className="font-medium">{p.name}</p></div>
               <div><p className="text-xs text-neutral-400">연락처</p><p className="font-medium">{p.phone ? formatPhone(p.phone) : '-'}</p></div>
               <div><p className="text-xs text-neutral-400">이메일</p><p>{p.email || '-'}</p></div>
-              <div><p className="text-xs text-neutral-400">등록일</p><p>{p.created_at?.slice(0, 10) || '-'}</p></div>
+              <div><p className="text-xs text-neutral-400">등록일</p><p>{p.created_at ? kstDate(p.created_at) : '-'}</p></div>
             </div>
             {p.address_road && (
               <div className="text-sm">

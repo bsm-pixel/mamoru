@@ -7,6 +7,7 @@ import { Printer } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
+import { todayKST } from '@/lib/utils/kst';
 
 /** 2026-05-26 Phase D: B2C(sale) + B2B(delivery) 통합 준비표 출력
  *  2026-07-23: 트레이형 추가 — A4 1장에 주문 2건(좌·우), 중앙 절취선. 반쪽(105×297mm) 트레이용. */
@@ -221,7 +222,7 @@ export function PrepSheetModal({ saleIds, deliveryIds = [], orderIds = [], prelo
       .map((s) => s.serial_number);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKST();
 
   // ── 트레이형 인쇄 HTML: A4 1장 = 슬립 2개(좌·우), 중앙 절취선 ──
   const buildTrayHtml = () => {

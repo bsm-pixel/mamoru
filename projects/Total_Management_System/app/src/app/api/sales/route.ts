@@ -6,6 +6,7 @@ import { insertOfflineSale } from '@/lib/sales/insert-offline-sale';
 import { createFieldRepairFromSale } from '@/lib/repair/intake';
 import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
 import { errMsg } from '@/lib/utils/err';
+import { todayKST } from '@/lib/utils/kst';
 
 /** GET /api/sales — 오프라인 판매 목록 */
 export async function GET(req: NextRequest) {
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const saleDate = sale.sale_date || new Date().toISOString().slice(0, 10);
+    const saleDate = sale.sale_date || todayKST();
 
     // 복합결제 서버 안전망: payment_detail 합계 = 실제 수납액 → paid_amount/status 강제(클라 값 무시, 회계 정합)
     let effPaidAmount = sale.paid_amount;

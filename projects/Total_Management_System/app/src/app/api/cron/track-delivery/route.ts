@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse, after } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
+import { todayKST, addDays } from '@/lib/utils/kst';
 import { createServiceClient } from '@/lib/supabase/server';
 import { queryStatus } from '@/lib/lotte/client';
 import { queryTrackingStatus } from '@/lib/lotte/alps-client';
@@ -405,7 +406,7 @@ export async function GET(request: NextRequest) {
     //      신건이 밀리는 적체를 막는다. 30일 넘은 미출고 건은 데이터 오류 → 사장님 수동 정리.
     //   ⚠️ 반드시 [3] 앞에 둔다: 여기서 shipped_at 을 채우면 [3] 의 SELECT 가 그 건을 바로 주워
     //      같은 사이클에 delivered_at 까지 처리한다(집하+배달완료가 함께 잡힌 건).
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const thirtyDaysAgo = addDays(todayKST(), -30);
     const { data: pickupTargets, error: pickupErr } = await db
       .from('offline_sales')
       .select('id, sale_number, invoice_number, customer_name, customer_phone, customer_type, courier_name')

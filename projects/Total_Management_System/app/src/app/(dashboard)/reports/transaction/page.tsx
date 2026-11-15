@@ -11,6 +11,7 @@ import { useSale } from '@/hooks/use-sales';
 import { formatKRW, toLocalDateString } from '@/lib/utils/format';
 import { ArrowLeft, Printer } from 'lucide-react';
 import Link from 'next/link';
+import { todayKST } from '@/lib/utils/kst';
 
 export default function TransactionPage() {
   return (
@@ -139,7 +140,7 @@ function TransactionContent() {
                 </div>
                 <div className="text-right">
                   <p>기간: {from} ~ {to}</p>
-                  <p>발행일: {new Date().toISOString().slice(0, 10)}</p>
+                  <p>발행일: {todayKST()}</p>
                 </div>
               </div>
             </div>
@@ -292,7 +293,7 @@ function SingleSaleReceipt({ saleId }: { saleId: string }) {
               <div className="text-right">
                 <p>판매번호: {s.sale_number}</p>
                 <p>판매일: {s.sale_date}</p>
-                <p>발행일: {new Date().toISOString().slice(0, 10)}</p>
+                <p>발행일: {todayKST()}</p>
               </div>
             </div>
           </div>
