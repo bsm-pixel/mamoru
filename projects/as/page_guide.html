@@ -2152,6 +2152,15 @@ img[src=""], video[src=""] {
 /* ── 10. 하단 플로팅 CTA — 그림자 대신 가는 선 ── */
 .mamoru-as-page .as-floating-cta{ border-top:1px solid rgba(0,0,0,.08); }
 .mamoru-as-page .as-floating-cta.dark{ border-top-color:rgba(255,255,255,.10); }
+
+/* 터치 영역 44px · 라벨 11px 하한 (Brand Guide) — 2026-11-15 */
+@media screen and (max-width: 767px){
+  .as-tab{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+  .as-cta-top{ min-height:44px; }
+  .intro-ba-dot{ position:relative; }
+  .intro-ba-dot::before{ content:''; position:absolute; top:-18px; bottom:-18px; left:-4px; right:-4px; }
+}
+.b-tag{ font-size:11px; }
 </style>
 
 </head>

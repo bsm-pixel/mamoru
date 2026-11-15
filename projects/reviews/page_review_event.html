@@ -294,6 +294,14 @@ body{ margin:0; } /* 원본은 body 기본 여백 8px 이 남아 띠(band)가 �
 .re-modal__close{ border-radius:2px; }
 .re-modal__rank{ border-radius:2px; }
 .re-modal__photos img{ border-radius:2px; }
+
+/* 터치 영역 44px · 라벨 11px 하한 (Brand Guide) — 2026-11-15 */
+@media screen and (max-width: 767px){
+  .re-tab{ min-height:44px; display:inline-flex; align-items:center; }
+  .re-rc__more{ position:relative; }
+  .re-rc__more::before{ content:''; position:absolute; top:-13px; bottom:-13px; left:-8px; right:-8px; }
+}
+.re-count__l{ font-size:11px; }
 </style>
 </head>
 <body>

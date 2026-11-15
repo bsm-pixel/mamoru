@@ -1724,6 +1724,12 @@ html, body {
 #consultFloatingCta button{ border-radius:2px !important; }
 /* 간편진단 미완성 → 임시 숨김(2026-10-23 사장님). 재개 시 이 줄과 data-diag-off 요소의 style 삭제 */
 .mamoru-consult-page [data-diag-off], [data-diag-off]{ display:none !important; }
+
+/* 터치 영역 44px · 라벨 11px 하한 (Brand Guide) — 2026-11-15 */
+@media screen and (max-width: 767px){
+  .consult-tab{ min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+}
+.b-tag{ font-size:11px; }
 </style>
 
 </head>
