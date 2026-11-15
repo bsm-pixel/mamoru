@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -134,8 +135,12 @@ export default function NewPurchaseOrderPage() {
   // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
   const productPick = useEnterSelect(displayProducts, (p) => { addProduct(p); setProductSearch(''); });
 
+  // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
+  const unsavedGuard = useUnsavedGuard(items.length > 0 || !!memo.trim());
+
   return (
     <>
+      {unsavedGuard}
       <Topbar title="발주 작성" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">

@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { attachModalKeys, type ModalKeys } from '@/lib/ui/modal-keys';
+import { DiscardAsk } from './discard-ask';
 
 interface ModalProps {
   open: boolean;
@@ -34,6 +36,17 @@ export function Modal({ open, onClose, title, children, className, preventAutoCl
     }
   }, [open]);
 
+  // 2026-11-15 입력 창 공통 키보드 동작 — 첫 입력 칸으로 초점, Ctrl+Enter 저장, Enter 다음 칸, 입력 여부 기억
+  //   (Tab 가두기·닫힐 때 초점 되돌리기는 <dialog> 가 이미 한다)
+  const keys = useRef<ModalKeys | null>(null);
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!open || !el) return;
+    keys.current = attachModalKeys(el, { trapTab: false, isTop: () => !el.querySelector('dialog[open]') });
+    return () => { keys.current?.dispose(); keys.current = null; setAsking(false); };
+  }, [open]);
+
   if (!open) return null;
 
   const requestClose = () => {
@@ -55,7 +68,18 @@ export function Modal({ open, onClose, title, children, className, preventAutoCl
       }}
       onCancel={(e) => {
         // preventAutoClose: Escape 로 인한 닫힘 방지 (X 버튼으로만 닫기)
-        if (preventAutoClose) e.preventDefault();
+        if (preventAutoClose) { e.preventDefault(); return; }
+        // 입력한 내용이 있으면 브라우저가 창을 그냥 닫지 못하게 (Esc 는 아래 onKeyDown 이 처리)
+        if (asking || keys.current?.isDirty()) e.preventDefault();
+      }}
+      onKeyDown={(e) => {
+        // 2026-11-15 Esc 를 여기서 직접 받는다 — 브라우저 기본 닫기는 Esc 를 연달아 누르면 막을 수 없어 입력이 날아간다
+        if (e.key !== 'Escape' || e.nativeEvent.isComposing) return;
+        e.preventDefault();
+        if (preventAutoClose) return;
+        if (asking) { setAsking(false); return; }           // 묻는 중의 Esc = 계속 입력
+        if (keys.current?.isDirty()) { setAsking(true); return; }
+        requestClose();
       }}
       className={cn(
         'backdrop:bg-indigo-black/50 bg-card-white rounded-2xl border border-neutral-200 shadow-xl',
@@ -75,6 +99,7 @@ export function Modal({ open, onClose, title, children, className, preventAutoCl
       </div>
       {/* 본문 */}
       <div className="p-5">{children}</div>
+      {asking && <DiscardAsk onKeep={() => setAsking(false)} onDiscard={() => { setAsking(false); requestClose(); }} />}
     </dialog>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { MamoruWordmark } from '@/components/ui/mamoru-logo';
+import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
@@ -201,8 +202,12 @@ export default function NewContractPage() {
   /* -- 입력 스타일 -- */
   const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-1 text-sm focus:outline-none focus:border-neutral-800 w-full';
 
+  // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
+  const unsavedGuard = useUnsavedGuard(!!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim() || !!buyerSignature);
+
   return (
     <>
+      {unsavedGuard}
       <Topbar title="계약서 작성" />
 
       <div className="px-3 py-4">

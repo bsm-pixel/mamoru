@@ -113,3 +113,13 @@ body {
 .animate-fadeIn {
   animation: fadeInUp 0.3s ease-out;
 }
+
+/* 키보드 초점 테두리 (2026-11-15) — Tab 으로 초점이 가면 2px 검정 테두리.
+   마우스로 눌렀을 때는 나오지 않는다(:focus-visible). 어두운 바탕(사이드바·검은 버튼)에서도 보이도록 흰 띠를 같이 둔다.
+   글자 입력 칸은 각자 테두리 색으로 초점을 보여 주므로 여기서 다루지 않는다. */
+:where(button, a[href], summary, [role="button"], [role="tab"], [role="menuitem"], [tabindex]:not([tabindex="-1"]),
+       input[type="checkbox"], input[type="radio"], select):focus-visible {
+  outline: 2px solid #1A1A1A !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px #FFFFFF;
+}

@@ -51,7 +51,8 @@ export function ConfirmModal({
       <div className="space-y-4">
         <div className="text-sm text-neutral-600">{message}</div>
         <div className="flex gap-2 justify-end">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading}>
+          {/* 2026-11-15 확인 창은 커서를 안전한 쪽(닫기·취소)에 둔다 — lib/ui/modal-keys.ts 가 data-safe 를 먼저 찾는다 */}
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={isLoading} data-safe>
             {cancelLabel}
           </Button>
           <Button

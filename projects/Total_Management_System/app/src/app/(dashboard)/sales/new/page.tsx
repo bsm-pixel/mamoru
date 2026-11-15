@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, Suspense, useEffect, useRef } from 'react';
+import { useState, Suspense, useEffect, useRef } from 'react';
+import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys } from '@/hooks/use-hotkeys';
 import Link from 'next/link';
@@ -405,8 +406,12 @@ function NewSaleContent() {
 
   const submitDisabled = (!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending;
 
+  // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
+  const unsavedGuard = useUnsavedGuard(!createSale.isPending && !createSale.isSuccess && (cart.length > 0 || hasRepair || !!customerName.trim() || !!memo.trim()));
+
   return (
     <>
+      {unsavedGuard}
       <Topbar title="판매 입력" />
 
       {/* 2026-10-19 모바일: 하단 고정 바(장바구니·합계·판매 등록) 높이만큼 아래 여백 */}
