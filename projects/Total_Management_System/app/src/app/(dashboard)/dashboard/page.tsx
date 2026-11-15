@@ -14,13 +14,13 @@
  */
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
+  ExternalLink,
   ShoppingCart, MessageSquare, Wrench, Store,
-  CheckCircle2, AlertTriangle,
+  AlertTriangle,
   PackageX, Truck, PackageOpen, Star, ClipboardList,
-  Plus,
 } from 'lucide-react';
 
 import { Topbar } from '@/components/layout/topbar';
@@ -33,11 +33,10 @@ import {
   useWaybillAlert, useNewReviewAlert,
 } from '@/hooks/use-dashboard-stats';
 import { useSetting, useUpdateSettings } from '@/hooks/use-settings';
-import { formatPhone, formatKRW } from '@/lib/utils/format';
+import { formatPhone, formatKRW, formatDate } from '@/lib/utils/format';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
-import { backdropClose } from '@/lib/ui/backdrop';
-import { EscClose } from '@/components/ui/esc-close';
+import { NowTodoCard } from '@/components/dashboard/now-todo-card';
 
 // 2026-11-15 금액 표기 통일 — 전엔 여기만 「₩142만」으로 줄여 보여 다른 화면(910,000원)과 달랐다
 function fmtKRW(n: number) {
@@ -185,10 +184,9 @@ function OutstandingCard({
  * 할 일 메모 카드 (3행 중)
  * ──────────────────────────────────────────────────────── */
 function TodoCard() {
-  const queryClient = useQueryClient();
-  const [input, setInput] = useState('');
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-
+  // 2026-11-15 할 일은 작업실 한 곳에서 관리한다 → 여기서는 더 받지 않고 [작업실 열기]만 둔다.
+  //   전에 적어 둔 메모는 지우지 않고 읽기만 할 수 있게 접어 둔다(작업실로 옮기기 전까지).
+  const [open, setOpen] = useState(false);
   const { data } = useQuery({
     queryKey: ['dashboard-todos'],
     staleTime: 30_000,
@@ -198,98 +196,33 @@ function TodoCard() {
       return res.json() as Promise<{ todos: Array<{ id: string; text: string; created_at: string }> }>;
     },
   });
-
-  const addTodo = useMutation({
-    mutationFn: async (text: string) => {
-      const res = await fetch('/api/dashboard/todos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] });
-      setInput('');
-    },
-  });
-
-  const deleteTodo = useMutation({
-    mutationFn: async (id: string) => {
-      await fetch('/api/dashboard/todos', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-todos'] });
-      setConfirmId(null);
-    },
-  });
-
   const todos = data?.todos || [];
 
   return (
     <div className="bg-white rounded-2xl border border-stone-200 p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 size={13} className="text-stone-400" />
-          <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">할 일 메모</p>
-        </div>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 font-semibold">{todos.length}</span>
-      </div>
-      <div className="flex gap-1.5 mb-3">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && input.trim()) addTodo.mutate(input.trim()); }}
-          placeholder="할 일 입력..."
-          className="flex-1 h-7 px-2.5 rounded-lg border border-stone-200 text-xs placeholder:text-stone-400 focus:outline-none focus:border-stone-400 transition"
-        />
-        <button
-          onClick={() => { if (input.trim()) addTodo.mutate(input.trim()); }}
-          disabled={!input.trim() || addTodo.isPending}
-          className="px-2 h-7 rounded-lg bg-stone-900 text-white text-[10px] font-semibold hover:bg-stone-800 transition disabled:opacity-40 flex items-center gap-0.5"
-        >
-          <Plus size={11} />추가
-        </button>
-      </div>
-      {todos.length === 0 ? (
-        <div className="py-2 text-center text-xs text-stone-400 flex-1">등록된 할 일이 없습니다</div>
-      ) : (
-        <div className="space-y-1 flex-1">
-          {todos.map((todo) => (
-            <div key={todo.id} className="flex items-center gap-2 py-1 group">
-              <button
-                onClick={() => setConfirmId(todo.id)}
-                className="w-3.5 h-3.5 rounded border border-stone-300 shrink-0 hover:border-emerald-500 hover:bg-emerald-50 transition flex items-center justify-center"
-                aria-label="완료"
-              />
-              <span className="text-xs text-stone-700 flex-1">{todo.text}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* 완료 확인 모달 */}
-      {confirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" {...backdropClose(() => setConfirmId(null))}>
-          <EscClose onClose={() => setConfirmId(null)} />
-          <div className="bg-white rounded-2xl shadow-xl p-5 w-72" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm font-semibold mb-3 text-stone-800">이 할일을 완료했습니까?</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => deleteTodo.mutate(confirmId)}
-                className="flex-1 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition"
-              >완료</button>
-              <button
-                onClick={() => setConfirmId(null)}
-                className="flex-1 py-2 rounded-lg bg-stone-100 text-stone-600 text-xs font-semibold hover:bg-stone-200 transition"
-              >취소</button>
-            </div>
-          </div>
+      <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold mb-2">할 일</p>
+      <p className="text-xs text-stone-500 leading-relaxed">할 일은 「마모루 작업실」 한 곳에서 관리합니다.</p>
+      <a
+        href="https://claude.ai/artifact/NXww8NJQV6hKwayGHQHs5K" target="_blank" rel="noopener noreferrer"
+        className="mt-3 inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition self-start"
+      >
+        작업실 열기 <ExternalLink size={12} />
+      </a>
+      {todos.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-stone-100">
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+            className="text-[11px] font-semibold text-stone-500 hover:text-stone-900">
+            전에 적어 둔 메모 {todos.length}개 {open ? '접기' : '보기'}
+          </button>
+          {open && (
+            <ul className="mt-2 space-y-1.5">
+              {todos.map((t) => (
+                <li key={t.id} className="text-xs text-stone-700 leading-relaxed break-keep">
+                  <span className="text-stone-400 tabular-nums mr-1.5">{formatDate(t.created_at)}</span>{t.text}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>
@@ -319,11 +252,14 @@ function AlertsCard({
     active: boolean; color: 'rose' | 'amber' | 'yellow' | 'blue' | 'stone';
   }> = [
     { icon: PackageX,      label: '저재고',   count: lowStockCount,  href: '/inventory?low=1', active: lowStockCount > 0,  color: 'rose'   },
-    { icon: Truck,         label: '운송장',   count: waybillCount,    href: '/settings',       active: waybillCount < 100, color: 'amber'  },
+    // 2026-11-15 「운송장 1157」이 무엇의 수인지 알 수 없었다 → 롯데에서 받아 둔 송장 번호 중 남은 개수
+    { icon: Truck,         label: '남은 송장 번호', count: waybillCount, href: '/settings',      active: waybillCount < 100, color: 'amber'  },
     { icon: Star,          label: '신규 후기', count: reviewCount,     href: '/reviews',        active: reviewCount > 0,    color: 'yellow' },
     { icon: PackageOpen,   label: '매입 대기', count: purchasingCount, href: '/purchasing',     active: purchasingCount > 0,color: 'blue'   },
     { icon: ClipboardList, label: '부자재',   count: suppliesCount,    href: '/supplies',       active: suppliesCount > 0,  color: 'stone'  },
   ];
+
+  const shown = alerts.filter((a) => a.count > 0 || (a.label === '남은 송장 번호' && !!waybill));
 
   const palette = {
     rose:   { text: 'text-rose-700',   bg: 'bg-rose-50',   icon: 'text-rose-500'   },
@@ -339,8 +275,10 @@ function AlertsCard({
       <div className="flex items-center justify-between mb-3">
         <p className="text-[11px] text-stone-500 uppercase tracking-wider font-semibold">시스템 알림</p>
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
-        {alerts.map((a) => {
+      {/* 2026-11-15 0인 칸은 숨긴다 (남은 송장 번호는 0일 때가 가장 급하므로 항상 보인다) */}
+      {shown.length === 0 && <p className="py-4 text-center text-xs text-stone-400">알릴 것이 없습니다</p>}
+      <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.max(shown.length, 2)}, minmax(0, 1fr))` }}>
+        {shown.map((a) => {
           const c = a.active ? palette[a.color] : inactivePalette;
           return (
             <Link
@@ -458,6 +396,9 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-3">
+            {/* 0행: 지금 처리할 것 (2026-11-15) */}
+            <NowTodoCard />
+
             {/* 1행: 매출 KPI + 4카드 */}
             <div className="grid grid-cols-12 gap-3">
               <div className="col-span-12 lg:col-span-5">

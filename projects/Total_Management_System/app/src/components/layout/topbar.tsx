@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Menu, LogOut, RefreshCw } from 'lucide-react';
+import { Menu, LogOut, RefreshCw, User } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePageTitle } from '@/hooks/use-page-title';
 
@@ -19,6 +20,22 @@ interface TopbarProps {
 export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false }: TopbarProps) {
   const router = useRouter();
   usePageTitle(title, count);
+
+  // 2026-11-15 로그아웃이 새로고침 바로 옆이라 잘못 누르기 쉬웠다 → 사람 아이콘 안으로
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    if (email === null) {
+      createClient().auth.getUser().then(({ data }) => setEmail(data.user?.email || '')).catch(() => setEmail(''));
+    }
+    const onDown = (e: MouseEvent) => { if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [menuOpen, email]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -50,13 +67,29 @@ export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false
         >
           <RefreshCw size={16} className="text-neutral-500" />
         </button>}
-        <button
-          onClick={handleLogout}
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
-          title="로그아웃"
-        >
-          <LogOut size={16} className="text-neutral-500" />
-        </button>
+        <div ref={menuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-haspopup="menu" aria-expanded={menuOpen}
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-warm-ivory transition"
+            title="내 계정" aria-label="내 계정"
+          >
+            <User size={16} className="text-neutral-500" />
+          </button>
+          {menuOpen && (
+            <div role="menu" className="absolute right-0 top-full mt-1 w-52 rounded-xl border border-neutral-200 bg-white p-1.5 z-40">
+              {email && <p className="px-2.5 py-1.5 text-[11px] text-neutral-400 truncate">{email}</p>}
+              <button
+                type="button" role="menuitem"
+                onClick={handleLogout}
+                className="w-full h-9 px-2.5 flex items-center gap-2 rounded-lg text-sm font-semibold text-neutral-700 hover:bg-warm-ivory transition"
+              >
+                <LogOut size={14} className="text-neutral-500" />로그아웃
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

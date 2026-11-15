@@ -206,9 +206,9 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
         </div>
       </div>
 
-      {/* 우측: 선택일 타임라인 */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-4">
-        <div className="flex items-center justify-between mb-3">
+      {/* 우측: 선택일 타임라인 — 2026-11-15 일정이 없으면 달력 높이만큼 늘어난 빈칸 대신 한 줄로 접는다 */}
+      <div className={`bg-white rounded-2xl border border-stone-200 ${selectedEvents.length === 0 ? 'px-4 py-3 lg:self-start' : 'p-4'}`}>
+        <div className={`flex items-center justify-between ${selectedEvents.length === 0 ? '' : 'mb-3'}`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-stone-900">
               {selectedLabel.month}월 {selectedLabel.day}일
@@ -218,14 +218,10 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">오늘</span>
             )}
           </div>
-          <span className="text-[10px] text-stone-500">{selectedEvents.length}건</span>
+          <span className="text-[10px] text-stone-500">{selectedEvents.length === 0 ? '일정이 없습니다' : `${selectedEvents.length}건`}</span>
         </div>
 
-        {selectedEvents.length === 0 ? (
-          <div className="py-4 text-center text-xs text-stone-400">
-            일정이 없습니다
-          </div>
-        ) : (
+        {selectedEvents.length === 0 ? null : (
           <div className="relative pl-4">
             <div className="absolute left-1 top-1.5 bottom-1.5 w-px bg-stone-200" />
             <div className="space-y-2.5">
