@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Menu, LogOut, RefreshCw, User, Search } from 'lucide-react';
+import { Menu, LogOut, RefreshCw, User, Search, ClipboardList } from 'lucide-react';
+import { openUnifiedPrep } from '@/components/shared/unified-prep-host';
 import { openQuickFind } from '@/components/layout/quick-find';
 import { KeyHint } from '@/components/ui/key-hint';
 import toast from 'react-hot-toast';
@@ -70,6 +71,15 @@ export function Topbar({ title, count, onMenuToggle, action, hideRefresh = false
           title="빠른 찾기 (Ctrl+K)" aria-label="빠른 찾기"
         >
           <Search size={14} /><span className="hidden lg:inline">찾기</span><KeyHint>Ctrl K</KeyHint>
+        </button>
+        {/* 2026-11-16 전체 출고 준비표 — 전엔 주문 · 판매 · 복원수리 세 화면에 따로 있던 버튼을 여기 하나로 */}
+        <button
+          type="button"
+          onClick={openUnifiedPrep}
+          className="h-9 px-2.5 lg:px-3 flex items-center gap-1.5 rounded-lg border border-neutral-200 text-xs text-neutral-500 hover:bg-warm-ivory transition"
+          title="전체 출고 준비표 — 복원수리·주문·판매의 출고 준비를 한 장에" aria-label="전체 출고 준비표"
+        >
+          <ClipboardList size={14} /><span className="hidden lg:inline">출고 준비표</span>
         </button>
         {!hideRefresh && <button
           onClick={() => router.refresh()}

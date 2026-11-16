@@ -22,9 +22,8 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
-import { Plus, FileSignature, Receipt, ClipboardList, LayoutGrid, Package } from 'lucide-react';
+import { Plus, FileSignature, Receipt, LayoutGrid, Package } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
-import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { SelectionBar } from '@/components/ui/selection-bar';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import { StageGrid } from '@/components/ui/stage-grid';
@@ -196,7 +195,6 @@ export default function SalesPage() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [checkedDeliveryIds, setCheckedDeliveryIds] = useState<Set<string>>(new Set()); // 2026-05-26 Phase D: 거래처 납품 준비표 통합
   const [showPrepSheet, setShowPrepSheet] = useState(false);
-  const [showUnified, setShowUnified] = useState(false);
   // 2026-10-19 모바일 전용 — 기간 선택창 / [+ 입력] 메뉴 / [⋯] 메뉴
   const [periodOpen, setPeriodOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState<'add' | 'more' | null>(null);
@@ -428,18 +426,11 @@ export default function SalesPage() {
             </div>
           )}
         </div>
-        <div className="relative shrink-0">
-          <button type="button" aria-label="준비표 메뉴" onClick={() => setMobileMenu(mobileMenu === 'more' ? null : 'more')}
-            className="h-9 w-9 rounded-xl border border-stone-200 bg-white text-stone-600 flex items-center justify-center">
-            <ClipboardList size={16} />
-          </button>
-          {mobileMenu === 'more' && (
-            <div className="absolute right-0 top-11 z-40 w-40 rounded-xl border border-stone-200 bg-white shadow-lg overflow-hidden">
-              <button type="button" onClick={() => { setMobileMenu(null); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50">전체 출고 준비표</button>
-              <button type="button" onClick={() => { setMobileMenu(null); setPrepMode(true); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">선택</button>
-            </div>
-          )}
-        </div>
+        {/* 2026-11-16 전체 출고 준비표가 머리줄로 옮겨 가면서 이 메뉴엔 「선택」 하나만 남았다 → 메뉴 없이 바로 누르는 버튼으로 */}
+        <button type="button" onClick={() => { setMobileMenu(null); setPrepMode(true); setCheckedIds(new Set()); setCheckedDeliveryIds(new Set()); }}
+          className="shrink-0 h-9 px-3 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-stone-600">
+          선택
+        </button>
       </div>
       {/* 메뉴 바깥 누르면 닫기 */}
       {mobileMenu && <button type="button" aria-label="메뉴 닫기" className="fixed inset-0 z-30 cursor-default" onClick={() => setMobileMenu(null)} />}
@@ -537,13 +528,6 @@ export default function SalesPage() {
 
       {/* 준비표 도구 + 보기 전환 (PC — 모바일은 위 작업줄 [📋]) */}
       {isLg && <div className="flex items-center gap-2">
-        <button
-          onClick={() => setShowUnified(true)}
-          title="복원수리·주문·판매의 출고 준비를 한 장에"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition shrink-0"
-        >
-          <ClipboardList size={14} /> 전체 출고 준비표
-        </button>
         {/* 2026-07-14 PC 그리드(베타) 토글 — 상단바에서 이동 */}
         <button onClick={toggleGrid} title="목록을 밀집 표로 보기"
           className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-600 border border-neutral-200 bg-white hover:bg-neutral-50 transition shrink-0">
@@ -821,7 +805,6 @@ export default function SalesPage() {
           onClose={() => setShowPrepSheet(false)}
         />
       )}
-      {showUnified && <UnifiedPrepModal initialTab="sale" onClose={() => setShowUnified(false)} />}
     </>
   );
 }

@@ -28,6 +28,7 @@ import { DangerZone, DangerLink } from '@/components/ui/action-section';
 import Link from 'next/link';
 import { HIDDEN_TAG, isHiddenCustomer } from '@/lib/customer/hidden';
 import { CopyButton } from '@/components/ui/copy-button';
+import { MoneyInput } from '@/components/ui/money-input';
 
 const TYPE_OPTIONS = [
   { value: 'retail', label: '일반' },
@@ -398,7 +399,7 @@ export function CustomerDetailPanel({ customerId, hideDetailLink, onDeleted }: P
                 {(form.customer_type === 'dealer' || form.customer_type === 'academy') && (
                   <div>
                     <label className="text-xs text-neutral-500">복원수리 기본 단가 (자루당)</label>
-                    <input type="number" value={form.default_repair_price || ''} onChange={(e) => setForm({ ...form, default_repair_price: parseInt(e.target.value) || 0 })}
+                    <MoneyInput value={form.default_repair_price} onChange={(val) => setForm({ ...form, default_repair_price: val })}
                       placeholder="예: 8000 — 납품 복원수리 입력 시 자동 적용"
                       className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                     <p className="text-[10px] text-neutral-400 mt-1">납품 → 복원수리 입력 시 이 단가가 자동으로 채워집니다 (비워두면 기본 8,000원)</p>

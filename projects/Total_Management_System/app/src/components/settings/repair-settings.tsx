@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, X } from 'lucide-react';
 import type { TabProps } from '@/app/(dashboard)/settings/page';
+import { MoneyInput } from '@/components/ui/money-input';
 
 function parse<T>(raw: unknown, fb: T): T {
   if (raw === undefined || raw === null) return fb;
@@ -76,8 +77,8 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
       {/* 1. 마모루 수리비 */}
       <Field label="마모루 가위 수리비 (개당)" desc="비용안내 자동 계산에 적용됩니다.">
         <div className="flex items-center gap-2">
-          <input type="number" value={priceMamoru} onChange={(e) => setPriceMamoru(Number(e.target.value))}
-            className="w-32 h-9 px-3 rounded-lg border border-neutral-200 text-sm" step={1000} />
+          <MoneyInput value={priceMamoru} showZero onChange={(val) => setPriceMamoru(val)}
+            className="w-32 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
           <span className="text-sm text-neutral-500">원</span>
         </div>
       </Field>
@@ -85,8 +86,8 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
       {/* 2. 타사 수리비 */}
       <Field label="타사 가위 수리비 (개당)" desc="">
         <div className="flex items-center gap-2">
-          <input type="number" value={priceOther} onChange={(e) => setPriceOther(Number(e.target.value))}
-            className="w-32 h-9 px-3 rounded-lg border border-neutral-200 text-sm" step={1000} />
+          <MoneyInput value={priceOther} showZero onChange={(val) => setPriceOther(val)}
+            className="w-32 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
           <span className="text-sm text-neutral-500">원</span>
         </div>
       </Field>
@@ -97,9 +98,9 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
           {shippingFees.map((sf, i) => (
             <div key={i} className="flex items-center gap-2">
               <span className="text-sm w-16">{sf.qty}개{sf.qty >= 3 ? '+' : ''}</span>
-              <input type="number" value={sf.fee} onChange={(e) => {
-                const next = [...shippingFees]; next[i] = { ...sf, fee: Number(e.target.value) }; setShippingFees(next);
-              }} className="w-24 h-8 px-2 rounded-lg border border-neutral-200 text-sm" step={1000} />
+              <MoneyInput value={sf.fee} showZero onChange={(val) => {
+                const next = [...shippingFees]; next[i] = { ...sf, fee: val }; setShippingFees(next);
+              }} className="w-24 h-8 px-2 rounded-lg border border-neutral-200 text-sm" />
               <span className="text-xs text-neutral-500">원</span>
             </div>
           ))}
@@ -121,8 +122,8 @@ export default function RepairSettings({ settings, onSave, saving }: TabProps) {
         <div className="flex gap-2">
           <input value={newServiceName} onChange={(e) => setNewServiceName(e.target.value)} placeholder="서비스명"
             className="flex-1 h-8 px-3 rounded-lg border border-neutral-200 text-sm" />
-          <input type="number" value={newServicePrice || ''} onChange={(e) => setNewServicePrice(Number(e.target.value))} placeholder="금액"
-            className="w-24 h-8 px-2 rounded-lg border border-neutral-200 text-sm" step={1000} />
+          <MoneyInput value={newServicePrice} onChange={(val) => setNewServicePrice(val)} placeholder="금액"
+            className="w-24 h-8 px-2 rounded-lg border border-neutral-200 text-sm" />
           <button title="추가" aria-label="추가" onClick={addExtraService} className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200"><Plus size={14} /></button>
         </div>
       </Field>

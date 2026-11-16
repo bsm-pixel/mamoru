@@ -17,6 +17,7 @@ import type { ExpenseInboxItem } from '@/app/api/expenses/inbox/route';
 import { PLAN_OPTIONS, toPlan, fromPlan, type ExpensePlan } from '@/lib/expenses/plan';
 import { PROOF_OPTIONS, proofFromDocType, toProof, type ProofType } from '@/lib/expenses/proof';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MoneyText } from '@/components/ui/money-input';
 
 const DOC_LABEL: Record<ExpenseInboxItem['doc_type'], string> = {
   card: '카드결제',
@@ -234,7 +235,7 @@ function InboxRow({ item, categories }: { item: ExpenseInboxItem; categories: st
       <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 shrink-0">
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
           className="h-8 px-2 rounded-md border border-neutral-200 text-xs min-w-0" />
-        <input type="number" value={amount} placeholder="금액(원)" onChange={(e) => setAmount(e.target.value)}
+        <MoneyText value={amount} placeholder="금액(원)" onChange={(val) => setAmount(val)}
           className="h-8 px-2 rounded-md border border-neutral-200 text-xs text-right sm:w-24 min-w-0" />
         <select value={category} onChange={(e) => setCategory(e.target.value)}
           className="h-8 px-1.5 rounded-md border border-neutral-200 text-xs min-w-0">

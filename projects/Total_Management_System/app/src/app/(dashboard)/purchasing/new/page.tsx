@@ -16,6 +16,7 @@ import { ArrowLeft, Minus, Plus, Trash2, AlertTriangle, Filter, Search } from 'l
 import type { Product } from '@/lib/supabase/types';
 import { useEnterSelect } from '@/hooks/use-enter-select';
 import { matchSearch } from '@/lib/utils/search-match';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface POItem {
   product: Product | null;
@@ -356,10 +357,9 @@ export default function NewPurchaseOrderPage() {
                           </button>
                         </div>
                         <span className="text-xs text-neutral-500">x</span>
-                        <input
-                          type="number"
-                          value={item.unit_price || ''}
-                          onChange={(e) => updateItemPrice(idx, parseInt(e.target.value) || 0)}
+                        <MoneyInput
+                          value={item.unit_price}
+                          onChange={(val) => updateItemPrice(idx, val)}
                           className="w-24 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right"
                         />
                         <span className="text-xs font-semibold ml-auto">

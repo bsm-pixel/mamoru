@@ -10,6 +10,7 @@ import { askBeforeLeave } from '@/hooks/use-unsaved-guard';
 import { ListKeys } from '@/components/layout/list-keys';
 import { QuickFind } from '@/components/layout/quick-find';
 import { InputKeys } from '@/components/layout/input-keys';
+import { UnifiedPrepHost } from '@/components/shared/unified-prep-host';
 import { OfflineBanner } from '@/components/layout/offline-banner';
 
 export default function DashboardLayout({
@@ -49,6 +50,7 @@ export default function DashboardLayout({
       <ListKeys />
       <QuickFind />
       <InputKeys />
+      <UnifiedPrepHost />
       <OfflineBanner />
     </div>
   );

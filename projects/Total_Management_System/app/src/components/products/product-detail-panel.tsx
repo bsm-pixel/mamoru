@@ -25,6 +25,7 @@ import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { useCampaigns } from '@/hooks/use-events';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MoneyInput } from '@/components/ui/money-input';
 
 // 2026-10-29 아임웹 연동 매칭 코드 안내 — 상품 동기화는 ①아임웹 상품번호 ②SKU = 아임웹 「자체 상품코드」 순으로 연결한다
 // (lib/imweb/product-sync.ts). 둘 다 안 맞으면 IW-번호 제품이 새로 생겨 중복되므로 어떤 코드를 맞춰야 하는지 보여준다.
@@ -405,19 +406,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
-                <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                <MoneyInput value={form.price} onChange={(val) => setForm({ ...form, price: val })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               {Object.entries(priceGroups).map(([key, def]) => (
                 <div key={key}>
                   <label className="text-xs text-neutral-500">{def.label}</label>
-                  <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                  <MoneyInput value={form.price_group_values[key]?.price} onChange={(val) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: val, display_name: form.price_group_values[key]?.display_name || '' } } })}
                     className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
-                <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                <MoneyInput value={form.price_purchase} onChange={(val) => setForm({ ...form, price_purchase: val })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
             </div>
@@ -600,19 +601,19 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-neutral-500">소매가</label>
-                <input type="number" value={form.price || ''} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                <MoneyInput value={form.price} onChange={(val) => setForm({ ...form, price: val })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
               {Object.entries(priceGroups).map(([key, def]) => (
                 <div key={key}>
                   <label className="text-xs text-neutral-500">{def.label}</label>
-                  <input type="number" value={form.price_group_values[key]?.price || ''} onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                  <MoneyInput value={form.price_group_values[key]?.price} onChange={(val) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: val, display_name: form.price_group_values[key]?.display_name || '' } } })}
                     className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 </div>
               ))}
               <div>
                 <label className="text-xs text-neutral-500">매입가</label>
-                <input type="number" value={form.price_purchase || ''} onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+                <MoneyInput value={form.price_purchase} onChange={(val) => setForm({ ...form, price_purchase: val })}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400" />
               </div>
             </div>

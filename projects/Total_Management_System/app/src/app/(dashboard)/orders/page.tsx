@@ -20,7 +20,6 @@ import { StageGrid } from '@/components/ui/stage-grid';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
-import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
@@ -55,7 +54,6 @@ export default function OrdersPage() {
   const [prepMode, setPrepMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrepSheet, setShowPrepSheet] = useState(false);
-  const [showUnified, setShowUnified] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false); // 2026-10-19 모바일 [⋯] 메뉴
   const toggleCheck = (id: string) => setCheckedIds((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const togglePrepMode = () => { setPrepMode((v) => !v); setCheckedIds(new Set()); };
@@ -156,7 +154,6 @@ export default function OrdersPage() {
                     <button type="button" disabled={sync.isPending} onClick={() => { setMobileMenu(false); sync.mutate(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 disabled:opacity-40">
                       {sync.isPending ? '동기화 중...' : '아임웹 동기화'}
                     </button>
-                    <button type="button" onClick={() => { setMobileMenu(false); setShowUnified(true); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">전체 출고 준비표</button>
                     <button type="button" onClick={() => { setMobileMenu(false); if (!prepMode) togglePrepMode(); }} className="w-full h-11 px-3 text-left text-sm font-semibold text-stone-800 hover:bg-stone-50 border-t border-stone-100">선택</button>
                   </div>
                 )}
@@ -204,9 +201,6 @@ export default function OrdersPage() {
             <option value="week">이번주</option>
             <option value="month">이번달</option>
           </select>
-          <Button variant="secondary" size="sm" className="shrink-0" onClick={() => setShowUnified(true)} title="복원수리·주문·판매의 출고 준비를 한 장에">
-            <Printer size={14} />전체 출고 준비표
-          </Button>
         </div>
         )}
         {/* PC 선택 막대 — 체크박스로 고르면 나타남(상세와 같은 이름) */}
@@ -330,7 +324,6 @@ export default function OrdersPage() {
           onClose={() => setShowPrepSheet(false)}
         />
       )}
-      {showUnified && <UnifiedPrepModal initialTab="order" onClose={() => setShowUnified(false)} />}
     </>
   );
 }

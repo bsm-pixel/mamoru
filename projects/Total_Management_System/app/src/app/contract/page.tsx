@@ -10,6 +10,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { Plus, X, CheckCircle2, RotateCcw } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 import { CAUTION_NOTICE } from '@/lib/contracts/notice';
+import { MoneyInput } from '@/components/ui/money-input';
 
 /* ── 제품 행 ────────────────────────── */
 interface ProductRow {
@@ -259,10 +260,9 @@ export default function ContractStandalonePage() {
               </div>
               <div>
                 <label className="text-[10px] text-neutral-500">선납금</label>
-                <input
-                  type="number"
-                  value={depositAmount || ''}
-                  onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                <MoneyInput
+                  value={depositAmount}
+                  onChange={(val) => setDepositAmount(val)}
                   placeholder="0"
                   className={inputClass}
                 />
@@ -275,10 +275,9 @@ export default function ContractStandalonePage() {
 
             <div>
               <label className="text-[10px] text-neutral-500">할인</label>
-              <input
-                type="number"
-                value={discount || ''}
-                onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
+              <MoneyInput
+                value={discount}
+                onChange={(val) => setDiscount(val)}
                 placeholder="0"
                 className={inputClass + ' max-w-[140px]'}
               />

@@ -10,6 +10,7 @@ import type { Repair } from '@/lib/supabase/types';
 import { MapPin, Scissors, Pencil, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CopyButton } from '@/components/ui/copy-button';
+import { MoneyInput } from '@/components/ui/money-input';
 
 interface RepairDetailCardProps {
   repair: Repair;
@@ -241,10 +242,10 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
             <p className="text-xs font-semibold text-neutral-500">비용 수정</p>
             <div className="flex items-center gap-3 text-sm">
               <label className="flex items-center gap-1.5">수리비
-                <input type="number" min={0} step={1000} value={serviceCost} onChange={(e) => setServiceCost(parseInt(e.target.value) || 0)} className="w-24 h-8 px-2 rounded border border-neutral-200 text-right" />원
+                <MoneyInput value={serviceCost} showZero onChange={(val) => setServiceCost(val)} className="w-24 h-8 px-2 rounded border border-neutral-200 text-right" />원
               </label>
               <label className="flex items-center gap-1.5">수거비
-                <input type="number" min={0} step={1000} value={shippingFee} onChange={(e) => setShippingFee(parseInt(e.target.value) || 0)} className="w-24 h-8 px-2 rounded border border-neutral-200 text-right" />원
+                <MoneyInput value={shippingFee} showZero onChange={(val) => setShippingFee(val)} className="w-24 h-8 px-2 rounded border border-neutral-200 text-right" />원
               </label>
             </div>
             <div className="text-xs bg-neutral-50 rounded-lg p-2">

@@ -20,6 +20,7 @@ import { toneClasses } from '@/lib/ui/status-tone';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { matchSearch } from '@/lib/utils/search-match';
 import { DangerZone, DangerLink } from '@/components/ui/action-section';
+import { MoneyInput, MoneyText } from '@/components/ui/money-input';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -216,7 +217,7 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
                   <button title="수량 늘리기" aria-label="수량 늘리기" onClick={() => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it))}
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
                 </div>
-                <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
+                <MoneyInput value={item.unit_price} onChange={(val) => setEditItems(prev => prev.map((it, i) => i === idx ? { ...it, unit_price: val } : it))}
                   className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right" />
                 <button title="삭제" aria-label="삭제" onClick={() => setEditItems(prev => prev.filter((_, i) => i !== idx))}
                   className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>
@@ -352,7 +353,7 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
             )}
             {(po.status === 'ordered' || po.status === 'draft') && (
               <div className="flex gap-2">
-                <input type="number" value={depositInput} onChange={(e) => setDepositInput(e.target.value)}
+                <MoneyText value={depositInput} onChange={(val) => setDepositInput(val)}
                   placeholder={`선납금`}
                   className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400" />
                 <Button variant="secondary" onClick={() => setPendingAction({

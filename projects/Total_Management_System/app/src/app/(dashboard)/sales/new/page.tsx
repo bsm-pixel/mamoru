@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect, useRef } from 'react';
 import { KeyHint } from '@/components/ui/key-hint';
-import { MoneyInput } from '@/components/ui/money-input';
+import { MoneyInput, MoneyText } from '@/components/ui/money-input';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
@@ -658,10 +658,9 @@ function NewSaleContent() {
                   placeholder="제품명"
                   className="flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
-                <input
-                  type="number"
+                <MoneyText
                   value={customProductPrice}
-                  onChange={(e) => setCustomProductPrice(e.target.value)}
+                  onChange={(val) => setCustomProductPrice(val)}
                   placeholder="금액"
                   className="w-24 sm:w-28 shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
                 />
@@ -696,8 +695,8 @@ function NewSaleContent() {
                       </div>
                       <div>
                         <label className="text-[10px] text-neutral-500 block mb-0.5">단가 (원)</label>
-                        <input type="number" value={r.price}
-                          onChange={(e) => { const v = parseInt(e.target.value) || 0; setRep((p) => r.key === 'mamoru' ? { ...p, mamoruPrice: v } : { ...p, otherPrice: v }); }}
+                        <MoneyInput value={r.price} showZero
+                          onChange={(val) => { const v = val; setRep((p) => r.key === 'mamoru' ? { ...p, mamoruPrice: v } : { ...p, otherPrice: v }); }}
                           className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300" />
                       </div>
                     </div>

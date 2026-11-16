@@ -27,6 +27,7 @@ import { EscClose } from '@/components/ui/esc-close';
 import { useEnterSelect } from '@/hooks/use-enter-select';
 import { matchSearch } from '@/lib/utils/search-match';
 import { typingPhone } from '@/lib/utils/validate';
+import { MoneyInput, MoneyText } from '@/components/ui/money-input';
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -357,7 +358,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             <div className="flex gap-2 mt-2">
               <input type="text" value={customName} onChange={(e) => setCustomName(e.target.value)}
                 placeholder="품목명 직접 입력" className="flex-1 min-w-0 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
-              <input type="number" value={customPrice} onChange={(e) => setCustomPrice(e.target.value)}
+              <MoneyText value={customPrice} onChange={(val) => setCustomPrice(val)}
                 placeholder="금액" className="w-20 sm:w-24 shrink-0 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
               <button onClick={() => {
                 if (!customName.trim() || !parseInt(customPrice)) return;
@@ -393,10 +394,9 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                       <button onClick={() => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, quantity: c.quantity + 1 } : c))}
                         className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200 text-xs">+</button>
                     </div>
-                    <input
-                      type="number"
-                      value={item.unit_price || ''}
-                      onChange={(e) => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, unit_price: parseInt(e.target.value) || 0 } : c))}
+                    <MoneyInput
+                      value={item.unit_price}
+                      onChange={(val) => setCart((prev) => prev.map((c, i) => i === idx ? { ...c, unit_price: val } : c))}
                       className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right"
                     />
                     <span className="text-xs text-neutral-500 w-20 text-right">{formatKRW(item.quantity * item.unit_price)}</span>
@@ -420,8 +420,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
               </div>
               <div>
                 <label className="text-[10px] text-neutral-500 block mb-0.5">단가 (원)</label>
-                <input type="number" value={repairUnitPrice}
-                  onChange={(e) => setRepairUnitPrice(parseInt(e.target.value) || 0)}
+                <MoneyInput value={repairUnitPrice} showZero
+                  onChange={(val) => setRepairUnitPrice(val)}
                   className="w-full h-8 px-2 rounded border border-neutral-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
               </div>
             </div>
@@ -434,7 +434,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
             <div className="flex gap-2">
               <input type="text" value={repairExtraName} onChange={(e) => setRepairExtraName(e.target.value)}
                 placeholder="추가 항목 (예: 급행료)" className="flex-1 min-w-0 h-7 px-2 rounded border border-neutral-200 text-xs placeholder:text-neutral-400" />
-              <input type="number" value={repairExtraPrice} onChange={(e) => setRepairExtraPrice(e.target.value)}
+              <MoneyText value={repairExtraPrice} onChange={(val) => setRepairExtraPrice(val)}
                 placeholder="금액" className="w-20 sm:w-24 shrink-0 h-7 px-2 rounded border border-neutral-200 text-xs text-right placeholder:text-neutral-400" />
               <button onClick={() => {
                 if (!repairExtraName.trim() || !parseInt(repairExtraPrice)) return;
@@ -514,7 +514,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 ))}
               </div>
               {paymentStatus === 'partial' && (
-                <input type="number" value={paidAmount || ''} onChange={(e) => setPaidAmount(parseInt(e.target.value) || 0)}
+                <MoneyInput value={paidAmount} onChange={(val) => setPaidAmount(val)}
                   placeholder="선납금 입력"
                   className="w-full h-7 px-2 mt-2 rounded border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-1 focus:ring-neutral-300" />
               )}
@@ -540,7 +540,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-neutral-500 mb-1 block">할인금액</label>
-              <input type="number" value={discount || ''} onChange={(e) => setDiscount(parseInt(e.target.value) || 0)}
+              <MoneyInput value={discount} onChange={(val) => setDiscount(val)}
                 placeholder="0"
                 className="w-full h-8 px-2 rounded-lg border border-neutral-200 bg-stone-50 text-xs focus:outline-none focus:ring-2 focus:ring-neutral-300" />
             </div>

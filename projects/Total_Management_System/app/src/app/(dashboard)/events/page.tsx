@@ -14,6 +14,7 @@ import { ActivityChips } from '@/components/shared/activity-chips';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MoneyInput } from '@/components/ui/money-input';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -377,13 +378,13 @@ function CampaignFormModal({ campaign, onClose, create, update }: {
           <div className="space-y-2">
             {rules.map((r, i) => (
               <div key={i} className="flex items-center gap-1.5">
-                <input type="number" value={r.unit_price || ''} onChange={(e) => setRule(i, 'unit_price', parseInt(e.target.value) || 0)}
+                <MoneyInput value={r.unit_price} onChange={(val) => setRule(i, 'unit_price', val)}
                   placeholder="단가" className="w-24 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
                 <span className="text-[11px] text-neutral-400">원</span>
                 <input type="number" value={r.min_qty || ''} onChange={(e) => setRule(i, 'min_qty', parseInt(e.target.value) || 0)}
                   placeholder="수량" className="w-14 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
                 <span className="text-[11px] text-neutral-400">자루↑</span>
-                <input type="number" value={r.bundle_price || ''} onChange={(e) => setRule(i, 'bundle_price', parseInt(e.target.value) || 0)}
+                <MoneyInput value={r.bundle_price} onChange={(val) => setRule(i, 'bundle_price', val)}
                   placeholder="묶음가" className="flex-1 min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-sm text-right" />
                 <button title="삭제" aria-label="삭제" onClick={() => setRules(rules.filter((_, j) => j !== i))} className="text-neutral-400 hover:text-red-500 shrink-0"><X size={14} /></button>
               </div>

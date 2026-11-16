@@ -184,19 +184,58 @@ async function pcChecks(browser) {
     if (sel.idx !== 1 || !sel.id) fail('제품 목록 — ↓ 두 번이면 둘째 줄', `고른 줄 ${sel.idx}, 주소 id=${sel.id}`); else ok('제품 목록(카드 모양) — ↓ 로 줄 이동');
   }
 
-  // 숫자 칸에 큰 수를 치면 쉼표 붙은 값이 칸 위에 뜬다
+  // 금액 칸 — 치는 동안 칸 안에 쉼표가 찍히고 글자 · 음수는 안 들어간다 (제품 등록의 소매가)
   await open(page, '/products/new');
-  const hasNum = await page.evaluate(() => { const el = document.querySelector('input[type=number]'); if (!el) return false; el.focus(); return true; });
-  if (!hasNum) fail('숫자 칸 쉼표 표시', '숫자 칸을 못 찾음');
+  const hasMoney = await page.evaluate(() => { const el = document.querySelector('input[inputmode=numeric]'); if (!el) return false; el.focus(); return true; });
+  if (!hasMoney) fail('금액 칸 쉼표', '금액 칸을 못 찾음');
   else {
-    await page.keyboard.type('1250000');
+    await page.keyboard.type('-12a50000');
+    await sleep(150);
+    const v1 = await page.evaluate(() => document.activeElement.value);
+    for (let i = 0; i < 3; i++) await page.keyboard.press('Backspace');
+    await sleep(150);
+    const v2 = await page.evaluate(() => document.activeElement.value);
+    if (v1 !== '1,250,000' || v2 !== '1,250') fail('금액 칸 쉼표', `「${v1}」 → 지운 뒤 「${v2}」`); else ok('금액 칸 — 칸 안에 쉼표(1,250,000), 글자 · 음수는 안 들어감');
+  }
+
+  // 금액이 아닌 숫자 칸(수량 · 일수 등)에 큰 수를 치면 쉼표 붙은 값이 칸 위에 뜬다
+  let numPage = null;
+  for (const url of ['/products/new', '/settings?tab=repair', '/settings']) {
+    await open(page, url);
+    await sleep(300);
+    if (await page.evaluate(() => { const el = Array.from(document.querySelectorAll('input[type=number]')).find((e) => e.getClientRects().length > 0 && !e.disabled); if (!el) return false; el.focus(); el.select(); return true; })) { numPage = url; break; }
+  }
+  if (!numPage) fail('숫자 칸 쉼표 표시', '숫자 칸을 못 찾음');
+  else {
+    await page.keyboard.type('12500');
     await sleep(200);
-    const shown = await page.evaluate(() => Array.from(document.querySelectorAll('body > div[aria-hidden=true]')).some((d) => d.textContent === '1,250,000' && getComputedStyle(d).display !== 'none'));
+    const bubbles = () => page.evaluate(() => Array.from(document.querySelectorAll('body > div[aria-hidden=true]')).filter((d) => getComputedStyle(d).display !== 'none' && /^[\d,]+$/.test(d.textContent || '') && (d.textContent || '').includes(',')).map((d) => d.textContent));
+    const shown = await bubbles();
     await page.evaluate(() => { const el = document.activeElement; if (el instanceof HTMLElement) el.blur(); });
     await sleep(100);
-    const gone = await page.evaluate(() => !Array.from(document.querySelectorAll('body > div[aria-hidden=true]')).some((d) => d.textContent === '1,250,000' && getComputedStyle(d).display !== 'none'));
-    if (!shown) fail('숫자 칸 쉼표 표시', '1,250,000 이 뜨지 않음'); else if (!gone) fail('숫자 칸 쉼표 표시', '칸을 떠나도 남아 있음'); else ok('숫자 칸 — 큰 수를 치면 쉼표 붙은 값이 뜨고, 떠나면 사라짐');
+    const after = await bubbles();
+    if (!shown.length) fail('숫자 칸 쉼표 표시', `${numPage}: 표시가 뜨지 않음`); else if (after.length) fail('숫자 칸 쉼표 표시', '칸을 떠나도 남아 있음'); else ok('숫자 칸(금액 아님) — 큰 수를 치면 칸 위에 쉼표 표시, 떠나면 사라짐');
   }
+
+  // 전체 출고 준비표 — 버튼은 머리줄에 하나, 어느 화면에서나 열린다
+  const dup = [];
+  for (const url of ['/orders', '/sales', '/repairs']) {
+    await open(page, url);
+    await sleep(300);
+    const c = await page.evaluate(() => ({
+      inMain: Array.from(document.querySelectorAll('main button')).filter((b) => !b.closest('header') && /전체 출고 준비표/.test(b.textContent || '')).length,
+      top: document.querySelectorAll('button[aria-label="전체 출고 준비표"]').length,
+    }));
+    if (c.inMain > 0) dup.push(`${url}: 화면 안에 버튼이 ${c.inMain}개 남음`);
+    if (c.top !== 1) dup.push(`${url}: 머리줄 버튼 ${c.top}개`);
+  }
+  await open(page, '/customers');
+  await page.click('button[aria-label="전체 출고 준비표"]');
+  await sleep(500);
+  const prepOpen = await page.evaluate(() => /출고 준비표/.test(Array.from(document.querySelectorAll('.fixed')).map((e) => e.textContent).join(' ')));
+  if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
+  if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
+  await page.keyboard.press('Escape');
 
   if (errors.length) fail('PC — 화면 오류 없음', [...new Set(errors)].slice(0, 5).join(' / ')); else ok('PC — 화면 오류 없음');
   await page.close();

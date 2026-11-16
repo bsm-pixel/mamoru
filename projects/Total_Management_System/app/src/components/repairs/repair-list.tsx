@@ -11,7 +11,7 @@ import { useUpdateRepairStatus, useUpdateRepairFields, useShipRepair, useEpostPi
 import { formatKRW, formatPhone, formatDate,  formatDateTimeShort } from '@/lib/utils/format';
 import {
   Search, Scissors, Package, MapPin, CheckCircle,
-  CreditCard, Truck, ClipboardCheck, ClipboardList, Printer, CalendarOff, CalendarPlus, Tag,
+  CreditCard, Truck, ClipboardCheck, Printer, CalendarOff, CalendarPlus, Tag,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
@@ -19,7 +19,6 @@ import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal'
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useNow } from '@/hooks/use-now';
-import { UnifiedPrepModal } from '@/components/shared/unified-prep-modal';
 import { RepairBlockedDatesModal } from './repair-blocked-dates-modal';
 import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
@@ -117,7 +116,6 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [showPrep, setShowPrep] = useState(false);
   const [showTags, setShowTags] = useState(false); // 선택한 여러 건 꼬리표를 빈칸 없이 이어서 출력
-  const [showUnified, setShowUnified] = useState(false);
   const [showBlocked, setShowBlocked] = useState(false);
   const toggleCheck = (id: string) => setCheckedIds((prev) => {
     const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next;
@@ -270,17 +268,10 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
         })}
       </div>}
 
-      {/* 건수 + 출력 도구 — 검은 버튼은 [방문 예약] 하나만(전체 출고 준비표는 테두리 버튼) */}
+      {/* 건수 + 출력 도구 — 검은 버튼은 [방문 예약] 하나만. 전체 출고 준비표는 머리줄로 옮김(2026-11-16) */}
       <div className="flex items-center gap-2 flex-wrap">
         <p className="text-xs text-neutral-500">{filteredRepairs.length}건</p>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setShowUnified(true)}
-            title="복원수리·주문·판매의 출고 준비를 한 장에"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition"
-          >
-            <ClipboardList size={14} /> 전체 출고 준비표
-          </button>
           {/* 모바일만 — PC는 체크박스 칸이 항상 있음 */}
           {!isLg && (
             <button
@@ -367,7 +358,6 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
           onClose={() => setShowTags(false)}
         />
       )}
-      {showUnified && <UnifiedPrepModal initialTab="repair" onClose={() => setShowUnified(false)} />}
       {showBlocked && <RepairBlockedDatesModal onClose={() => setShowBlocked(false)} />}
     </div>
   );

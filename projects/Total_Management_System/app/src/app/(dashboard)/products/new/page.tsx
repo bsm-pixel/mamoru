@@ -12,6 +12,7 @@ import { useProductCategoryOptions } from '@/hooks/use-product-categories';
 import { useCampaigns } from '@/hooks/use-events';
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { MissingNote } from '@/components/ui/missing-note';
+import { MoneyInput } from '@/components/ui/money-input';
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -216,10 +217,9 @@ export default function NewProductPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="text-xs text-neutral-500">소매가</label>
-              <input
-                type="number"
-                value={form.price || ''}
-                onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+              <MoneyInput
+                value={form.price}
+                onChange={(val) => setForm({ ...form, price: val })}
                 placeholder="0"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />
@@ -228,10 +228,9 @@ export default function NewProductPage() {
             {Object.entries(priceGroups).map(([key, def]) => (
               <div key={key}>
                 <label className="text-xs text-neutral-500">{def.label}</label>
-                <input
-                  type="number"
-                  value={form.price_group_values[key]?.price || ''}
-                  onChange={(e) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: parseInt(e.target.value) || 0, display_name: form.price_group_values[key]?.display_name || '' } } })}
+                <MoneyInput
+                  value={form.price_group_values[key]?.price}
+                  onChange={(val) => setForm({ ...form, price_group_values: { ...form.price_group_values, [key]: { ...form.price_group_values[key], price: val, display_name: form.price_group_values[key]?.display_name || '' } } })}
                   placeholder="0"
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
                 />
@@ -239,10 +238,9 @@ export default function NewProductPage() {
             ))}
             <div>
               <label className="text-xs text-neutral-500">매입가</label>
-              <input
-                type="number"
-                value={form.price_purchase || ''}
-                onChange={(e) => setForm({ ...form, price_purchase: parseInt(e.target.value) || 0 })}
+              <MoneyInput
+                value={form.price_purchase}
+                onChange={(val) => setForm({ ...form, price_purchase: val })}
                 placeholder="0"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-stone-400"
               />

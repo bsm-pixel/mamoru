@@ -45,6 +45,7 @@ import { toneClasses } from '@/lib/ui/status-tone';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { matchSearch } from '@/lib/utils/search-match';
 import { CopyButton } from '@/components/ui/copy-button';
+import { MoneyInput, MoneyText } from '@/components/ui/money-input';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드', cash: '현금', transfer: '계좌이체', mixed: '복합',
@@ -1452,10 +1453,9 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
                 placeholder="제품명"
                 className="flex-1 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400"
               />
-              <input
-                type="number"
+              <MoneyText
                 value={customPrice}
-                onChange={(e) => setCustomPrice(e.target.value)}
+                onChange={(val) => setCustomPrice(val)}
                 placeholder="단가"
                 className="w-24 h-9 px-3 rounded-lg border border-neutral-200 text-sm placeholder:text-neutral-400"
                 onKeyDown={(e) => { if (e.key === 'Enter') addCustomProduct(); }}
@@ -1478,8 +1478,8 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
             </div>
             <div>
               <label className="text-xs text-neutral-500 mb-1 block">할인</label>
-              <input type="number" value={discountAmount}
-                onChange={(e) => setDiscountAmount(Number(e.target.value))}
+              <MoneyInput value={discountAmount} showZero
+                onChange={(val) => setDiscountAmount(val)}
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             </div>
           </div>
@@ -1528,7 +1528,7 @@ function FullEditSaleModal({ sale, items: originalItems, serials: existingSerial
               ))}
             </div>
             {paymentStatus === 'partial' && (
-              <input type="number" value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))}
+              <MoneyInput value={paidAmount} showZero onChange={(val) => setPaidAmount(val)}
                 placeholder="입금액" className="w-full h-9 px-3 mt-2 rounded-lg border border-neutral-200 text-sm" />
             )}
           </div>

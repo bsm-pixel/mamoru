@@ -10,6 +10,7 @@ import { useSetting } from '@/hooks/use-settings';
 import { DEFAULT_CAT_LABELS } from '@/lib/utils/setting-defaults';
 import type { Product } from '@/lib/supabase/types';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MoneyInput } from '@/components/ui/money-input';
 
 /* ── 변경 추적 타입 ── */
 type EditedFields = {
@@ -377,31 +378,28 @@ export function ProductBulkEditTable({ products, onClose }: Props) {
                   </td>
                   {/* 소매가 */}
                   <td>
-                    <input
-                      type="number"
+                    <MoneyInput
                       className={numCls}
-                      value={getCellValue(p, 'price') as number ?? 0}
-                      onChange={e => updateField(p.id, 'price', Number(e.target.value) || 0)}
+                      value={getCellValue(p, 'price') as number} showZero
+                      onChange={(val) => updateField(p.id, 'price', val)}
                     />
                   </td>
                   {/* 그룹별 가격 */}
                   {groupKeys.map(gk => (
                     <td key={`price-${gk}`}>
-                      <input
-                        type="number"
+                      <MoneyInput
                         className={numCls}
-                        value={getGroupValue(p, gk, 'price') as number ?? 0}
-                        onChange={e => updateGroupField(p.id, gk, 'price', Number(e.target.value) || 0)}
+                        value={getGroupValue(p, gk, 'price') as number} showZero
+                        onChange={(val) => updateGroupField(p.id, gk, 'price', val)}
                       />
                     </td>
                   ))}
                   {/* 매입가 */}
                   <td>
-                    <input
-                      type="number"
+                    <MoneyInput
                       className={numCls}
-                      value={getCellValue(p, 'price_purchase') as number ?? 0}
-                      onChange={e => updateField(p.id, 'price_purchase', Number(e.target.value) || 0)}
+                      value={getCellValue(p, 'price_purchase') as number} showZero
+                      onChange={(val) => updateField(p.id, 'price_purchase', val)}
                     />
                   </td>
                   {/* 발주명 */}

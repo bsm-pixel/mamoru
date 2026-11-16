@@ -220,7 +220,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-          <h3 className="text-sm font-bold text-neutral-800">통합 준비표 <span className="font-normal text-neutral-400">지금 준비할 것</span></h3>
+          <h3 className="text-sm font-bold text-neutral-800">전체 출고 준비표 <span className="font-normal text-neutral-400">지금 준비할 것</span></h3>
           <div className="flex items-center gap-2">
             <div className="flex items-center text-[11px] rounded-md overflow-hidden border border-neutral-200">
               <button onClick={() => setMode('tray')} className={`px-2 py-1 font-semibold transition ${mode === 'tray' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:bg-neutral-50'}`}>트레이형</button>

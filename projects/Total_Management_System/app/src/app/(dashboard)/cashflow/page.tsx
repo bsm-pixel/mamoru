@@ -13,6 +13,7 @@ import { DEFAULT_CASHFLOW_INCOME_CATEGORIES, DEFAULT_CASHFLOW_EXPENSE_CATEGORIES
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { MoneyText } from '@/components/ui/money-input';
 
 export default function CashflowPage() {
   const queryClient = useQueryClient();
@@ -116,7 +117,7 @@ export default function CashflowPage() {
               </div>
               <div>
                 <label className="text-xs text-neutral-500 mb-1 block">금액</label>
-                <input type="number" value={txAmount} placeholder="0" onChange={(e) => setTxAmount(e.target.value)}
+                <MoneyText value={txAmount} placeholder="0" onChange={(val) => setTxAmount(val)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
               </div>
               <div>

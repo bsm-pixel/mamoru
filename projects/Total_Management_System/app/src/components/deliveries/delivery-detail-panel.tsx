@@ -28,6 +28,7 @@ import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR } from '@/lib/returns/transiti
 import type { ReturnStatus } from '@/lib/supabase/types';
 import Link from 'next/link';
 import { matchSearch } from '@/lib/utils/search-match';
+import { MoneyInput } from '@/components/ui/money-input';
 
 // 상태 뱃지 라벨/색은 lib/deliveries/status.ts getDeliveryStatusChip 이 단일 출처 (여기 있던 사본은 미사용이라 제거)
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
@@ -442,7 +443,7 @@ export function DeliveryDetailPanel({ deliveryId }: Props) {
                   <button title="수량 늘리기" aria-label="수량 늘리기" onClick={() => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, quantity: it.quantity + 1 } : it))}
                     className="w-6 h-6 rounded bg-neutral-100 flex items-center justify-center hover:bg-neutral-200"><Plus size={10} /></button>
                 </div>
-                <input type="number" value={item.unit_price || ''} onChange={(e) => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, unit_price: parseInt(e.target.value) || 0 } : it))}
+                <MoneyInput value={item.unit_price} onChange={(val) => setEditItems((prev) => prev.map((it, i) => i === idx ? { ...it, unit_price: val } : it))}
                   className="w-20 h-7 px-2 rounded border border-neutral-200 bg-stone-50 text-xs text-right" />
                 <button title="삭제" aria-label="삭제" onClick={() => setEditItems((prev) => prev.filter((_, i) => i !== idx))}
                   className="w-6 h-6 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={10} /></button>

@@ -18,6 +18,7 @@ import { SkeletonRows } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { MissingNote } from '@/components/ui/missing-note';
+import { MoneyText } from '@/components/ui/money-input';
 
 const CATEGORY_COLOR: Record<string, string> = {
   택배비: 'bg-blue-100 text-blue-700',
@@ -292,8 +293,8 @@ export default function ExpensesPage() {
               </div>
               <div>
                 <label className="text-xs text-neutral-500 mb-1 block">금액</label>
-                <input type="number" value={amount} placeholder="0"
-                  onChange={(e) => setAmount(e.target.value)}
+                <MoneyText value={amount} placeholder="0"
+                  onChange={(val) => setAmount(val)}
                   className="w-full h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
               </div>
               <div>
@@ -345,7 +346,7 @@ export default function ExpensesPage() {
                           </select>
                         </label>
                         <label className="text-[11px] text-neutral-500">금액
-                          <input type="number" min={1} value={editRow.amount} onChange={(ev) => setEditRow({ ...editRow, amount: ev.target.value })}
+                          <MoneyText value={editRow.amount} onChange={(val) => setEditRow({ ...editRow, amount: val })}
                             className="mt-0.5 w-full h-9 px-2 rounded-lg border border-neutral-200 bg-white text-sm text-right" />
                         </label>
                         <label className="text-[11px] text-neutral-500">메모
@@ -461,8 +462,8 @@ export default function ExpensesPage() {
               className="w-full sm:w-auto min-w-0 h-9 px-2 rounded-lg border border-neutral-200 text-xs">
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <input type="number" value={recAmount} placeholder="금액"
-              onChange={(e) => setRecAmount(e.target.value)}
+            <MoneyText value={recAmount} placeholder="금액"
+              onChange={(val) => setRecAmount(val)}
               className="w-full sm:w-24 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 text-sm" />
             <input type="text" value={recMemo} placeholder="메모"
               onChange={(e) => setRecMemo(e.target.value)}
