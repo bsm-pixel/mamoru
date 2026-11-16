@@ -3,7 +3,8 @@
 /**
  * UpcomingList — 일정 페이지 '다가오는 일정' 리스트 (2026-08-12)
  *   달력 아래 빈 공간을 채움. 다음 8건을 날짜순으로, 각 건에 전화·길찾기(출장) 액션.
- *   /schedule 전용. 공용 useScheduleEvents 재사용.
+ *   공용 useScheduleEvents 재사용.
+ *   2026-11-16 「일정」 메뉴를 없애며 대시보드 달력 오른쪽 칸 안으로 옮겼다 — bare(테두리 없이) · excludeDate(위에 이미 보이는 날짜 빼기) · limit.
  */
 
 import { useRouter } from 'next/navigation';
@@ -13,7 +14,7 @@ import { ymd, parseYmd } from '@/lib/schedule/calendar';
 import { formatPhone } from '@/lib/utils/format';
 import { Phone, Navigation } from 'lucide-react';
 
-export function UpcomingList() {
+export function UpcomingList({ bare = false, excludeDate, limit = 8 }: { bare?: boolean; excludeDate?: string; limit?: number } = {}) {
   const router = useRouter();
   const now = new Date();
   const todayStr = ymd(now.getFullYear(), now.getMonth(), now.getDate());
@@ -24,22 +25,23 @@ export function UpcomingList() {
   const endStr = ymd(end.getFullYear(), end.getMonth(), end.getDate());
   const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-  // 요약(ScheduleSummary)과 동일 범위·옵션 → React Query 캐시 공유. 출력은 아래 필터로 오늘 이후만.
+  // 출력은 아래 필터로 오늘 이후만.
   const { dateMap } = useScheduleEvents(weekStart, endStr, { includeCompleted: true });
   const flat = flattenEvents(dateMap);
   const upcoming = flat
     .filter((x) => x.date > todayStr || (x.date === todayStr && (eventTimeStr(x.ev) ?? '99:99') >= nowHHMM))
-    .slice(0, 8);
+    .filter((x) => x.date !== excludeDate)
+    .slice(0, limit);
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 p-4">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-stone-900">다가오는 일정</h3>
+    <div className={bare ? '' : 'bg-white rounded-2xl border border-stone-200 p-4'}>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className={bare ? 'text-xs font-bold text-stone-700' : 'text-sm font-bold text-stone-900'}>다가오는 일정</h3>
         <span className="text-[11px] text-stone-400">{upcoming.length}건</span>
       </div>
 
       {upcoming.length === 0 ? (
-        <div className="py-6 text-center text-xs text-stone-400">예정된 일정이 없습니다</div>
+        <div className={`${bare ? 'py-2' : 'py-6 text-center'} text-xs text-stone-400`}>예정된 일정이 없습니다</div>
       ) : (
         <div className="divide-y divide-stone-100">
           {upcoming.map(({ date, ev }, i) => {

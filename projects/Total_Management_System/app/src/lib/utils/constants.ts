@@ -17,7 +17,6 @@ export const NAV_GROUPS: NavGroup[] = [
     group: '',  // 홈
     items: [
       { label: '대시보드', href: '/dashboard', icon: 'LayoutDashboard', matchPrefix: '/dashboard' },
-      { label: '일정', href: '/schedule', icon: 'CalendarDays', matchPrefix: '/schedule' },
     ],
   },
   {

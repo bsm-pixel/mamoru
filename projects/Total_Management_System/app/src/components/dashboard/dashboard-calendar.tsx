@@ -11,21 +11,27 @@
  * 2026-08-12: 데이터/유틸/색상을 공용 모듈로 통합(DRY) + 방문수거(수거예정) 추가.
  *   - useScheduleEvents (상담 매장·출장 + 수리 직접방문·방문수거)
  *   - getCalendarDays/ymd (lib/schedule/calendar), SCHEDULE_COLORS (lib/schedule/colors)
+ *
+ * 2026-11-16 「일정」 메뉴를 없애고 이 구역으로 합쳤다(사장님 지시 — 대시보드 달력과 같은 화면이 메뉴에 둘이었다).
+ *   오른쪽 칸에: 일정 등록 버튼 2개 · 줄마다 길찾기/전화 · 그 아래 다가오는 일정. 지난 날짜의 끝난 일정도 회색으로 보인다.
  */
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { CustomerNotes } from '@/components/shared/customer-notes';
 import { activityDisplay } from '@/lib/customer/display';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import { getCalendarDays, ymd } from '@/lib/schedule/calendar';
-import { useScheduleEvents } from '@/lib/schedule/use-schedule-events';
+import { useScheduleEvents, eventPhone, eventAddress, type ScheduleEvent } from '@/lib/schedule/use-schedule-events';
+import { UpcomingList } from '@/components/schedule/upcoming-list';
+import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
+import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { SCHEDULE_COLORS } from '@/lib/schedule/colors';
 import { formatPhone, CONSULTATION_STATUS_LABEL, CONSULTATION_STATUS_COLOR, CONSULTATION_TYPE_LABEL, formatDate, formatDateFull, formatKRW } from '@/lib/utils/format';
-import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Calendar as CalendarIcon, Phone, MapPin, ArrowRight, StickyNote, Navigation, CalendarPlus, Wrench } from 'lucide-react';
 import type { Consultation } from '@/lib/supabase/types';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
@@ -78,8 +84,35 @@ async function fetchConsultContext(c: Consultation): Promise<ConsultContext> {
   return { company, pastConsults, sales };
 }
 
-export function DashboardCalendarPanel({ includePast = false }: { includePast?: boolean } = {}) {
+/** 줄 끝의 길찾기 · 전화 (줄을 눌러 상세로 가는 것과 따로 눌린다) */
+function RowActions({ ev }: { ev: ScheduleEvent }) {
+  const phone = eventPhone(ev);
+  const addr = eventAddress(ev);
+  if (!phone && !addr) return null;
+  const cls = 'w-7 h-7 rounded-lg hover:bg-stone-100 flex items-center justify-center transition';
+  return (
+    <div className="flex items-center shrink-0">
+      {addr && (
+        <a href={`https://map.kakao.com/?q=${encodeURIComponent(addr)}`} target="_blank" rel="noreferrer"
+          onClick={(e) => e.stopPropagation()} className={cls} title="길찾기" aria-label="길찾기">
+          <Navigation size={14} className="text-stone-500" />
+        </a>
+      )}
+      {phone && (
+        <a href={`tel:${phone}`} onClick={(e) => e.stopPropagation()} className={cls} title="전화" aria-label="전화">
+          <Phone size={14} className="text-stone-500" />
+        </a>
+      )}
+    </div>
+  );
+}
+
+export function DashboardCalendarPanel() {
+  const includePast = true; // 지난 날짜의 끝난 일정도 보인다(회색) — 전엔 일정 화면에서만
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [consultOpen, setConsultOpen] = useState(false);
+  const [repairOpen, setRepairOpen] = useState(false);
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -206,9 +239,9 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
         </div>
       </div>
 
-      {/* 우측: 선택일 타임라인 — 2026-11-15 일정이 없으면 달력 높이만큼 늘어난 빈칸 대신 한 줄로 접는다 */}
-      <div className={`bg-white rounded-2xl border border-stone-200 ${selectedEvents.length === 0 ? 'px-4 py-3 lg:self-start' : 'p-4'}`}>
-        <div className={`flex items-center justify-between ${selectedEvents.length === 0 ? '' : 'mb-3'}`}>
+      {/* 우측: 선택일 타임라인 + 일정 등록 + 다가오는 일정 */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-4">
+        <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-stone-900">
               {selectedLabel.month}월 {selectedLabel.day}일
@@ -218,10 +251,21 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold">오늘</span>
             )}
           </div>
-          <span className="text-[10px] text-stone-500">{selectedEvents.length === 0 ? '일정이 없습니다' : `${selectedEvents.length}건`}</span>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => setConsultOpen(true)}
+              className="h-7 px-2.5 rounded-lg bg-stone-900 text-white text-[11px] font-semibold hover:bg-stone-800 transition inline-flex items-center gap-1">
+              <CalendarPlus size={12} />상담 일정 등록
+            </button>
+            <button type="button" onClick={() => setRepairOpen(true)}
+              className="h-7 px-2.5 rounded-lg border border-stone-300 bg-white text-stone-700 text-[11px] font-semibold hover:bg-stone-50 transition inline-flex items-center gap-1">
+              <Wrench size={12} />복원수리 방문 예약
+            </button>
+          </div>
         </div>
 
-        {selectedEvents.length === 0 ? null : (
+        {selectedEvents.length === 0 ? (
+          <p className="text-xs text-stone-400 py-1">이 날은 일정이 없습니다</p>
+        ) : (
           <div className="relative pl-4">
             <div className="absolute left-1 top-1.5 bottom-1.5 w-px bg-stone-200" />
             <div className="space-y-2.5">
@@ -244,6 +288,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                           {qty > 0 ? `${qty}자루` : formatPhone(r.phone)}
                         </span>
                       </div>
+                      <RowActions ev={ev} />
                     </div>
                   );
                 }
@@ -265,6 +310,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                           {qty > 0 ? `${qty}자루` : formatPhone(p.phone)}
                         </span>
                       </div>
+                      <RowActions ev={ev} />
                     </div>
                   );
                 }
@@ -283,6 +329,7 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                         <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{p.name || '고객'}</span><ActivityChips types={calActTypes(p.phone)} className="shrink-0" /></span>
                         <span className="text-[10px] text-stone-400 truncate">{p.pickup_method || formatPhone(p.phone || '')}</span>
                       </div>
+                      <RowActions ev={ev} />
                     </div>
                   );
                 }
@@ -303,13 +350,23 @@ export function DashboardCalendarPanel({ includePast = false }: { includePast?: 
                       <span className="inline-flex items-center gap-1 min-w-0"><span className={`text-xs font-medium truncate ${selectedPast ? 'text-stone-400' : 'text-stone-800'}`}>{activityDisplay(c.activity_name, c.name)}</span><ActivityChips types={calActTypes(c.phone)} className="shrink-0" /></span>
                       <span className="text-[10px] text-stone-400 truncate">{formatPhone(c.phone || '')}</span>
                     </div>
+                    <RowActions ev={ev} />
                   </div>
                 );
               })}
             </div>
           </div>
         )}
+
+        {/* 다가오는 일정 — 위에 보이는 날짜의 건은 빼고 */}
+        <div className="mt-3 pt-3 border-t border-stone-100">
+          <UpcomingList bare excludeDate={selectedDate} limit={5} />
+        </div>
       </div>
+
+      {/* 등록 창 — 상담관리 · 복원수리 화면의 것을 그대로 쓴다(같은 규칙 · 같은 알림톡) */}
+      <CreateConsultationModal open={consultOpen} onClose={() => setConsultOpen(false)} onCreated={() => queryClient.invalidateQueries()} />
+      <VisitBookingModal open={repairOpen} onClose={() => setRepairOpen(false)} onCreated={() => queryClient.invalidateQueries()} />
 
       {/* ── 일정 상세 모달 ── */}
       {detail && (() => {

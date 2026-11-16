@@ -52,7 +52,7 @@ const FIXTURES = {
 const PAGES = [
   ['/dashboard', '대시보드'], ['/sales', '판매 관리'], ['/orders', '주문관리'], ['/repairs', '복원수리'],
   ['/consultations', '상담관리'], ['/customers', '고객 관리'], ['/products', '제품 관리'], ['/inventory', '재고'],
-  ['/purchasing', '매입관리'], ['/suppliers', 'B2B 거래처'], ['/reviews', '리뷰관리'], ['/schedule', '일정'],
+  ['/purchasing', '매입관리'], ['/suppliers', 'B2B 거래처'], ['/reviews', '리뷰관리'],
   ['/expenses', '경비 관리'], ['/cashflow', '입출금 관리'], ['/returns', '반품 · 교환'], ['/contracts', '전자 계약서'],
   ['/settings', '설정'],
 ];
@@ -277,6 +277,33 @@ async function pcChecks(browser) {
   if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
+
+  // 일정 — 메뉴에서 빠졌고(2026-11-16), 등록 버튼 · 다가오는 일정은 대시보드 달력 오른쪽 칸에 있다. 옛 주소는 대시보드로 간다
+  await open(page, '/schedule');
+  await sleep(500);
+  const sch = await page.evaluate(() => {
+    const btn = (t) => Array.from(document.querySelectorAll('main button')).filter((b) => (b.textContent || '').trim() === t).length;
+    return {
+      path: location.pathname,
+      menu: Array.from(document.querySelectorAll('a[href="/schedule"]')).length,
+      consult: btn('상담 일정 등록'), repair: btn('복원수리 방문 예약'),
+      upcoming: /다가오는 일정/.test(document.querySelector('main')?.textContent || ''),
+    };
+  });
+  const schBad = [];
+  if (sch.path !== '/dashboard') schBad.push(`옛 주소가 ${sch.path} 에 머묾`);
+  if (sch.menu) schBad.push('메뉴에 일정이 남음');
+  if (sch.consult !== 1 || sch.repair !== 1) schBad.push(`등록 버튼 ${sch.consult}/${sch.repair}개`);
+  if (!sch.upcoming) schBad.push('다가오는 일정이 없음');
+  if (!schBad.length) {
+    await page.evaluate(() => Array.from(document.querySelectorAll('main button')).find((b) => (b.textContent || '').trim() === '상담 일정 등록')?.click());
+    await sleep(500);
+    const opened = await page.evaluate(() => /일정 수동 등록/.test(document.body.textContent || ''));
+    if (!opened) schBad.push('상담 일정 등록 창이 안 열림');
+    await page.keyboard.press('Escape');
+    await sleep(300);
+  }
+  if (schBad.length) fail('일정 — 대시보드로 합침', schBad.join(' / ')); else ok('일정 — 메뉴에서 빠짐, 옛 주소는 대시보드로, 등록 버튼 · 다가오는 일정은 대시보드에');
 
   if (errors.length) fail('PC — 화면 오류 없음', [...new Set(errors)].slice(0, 5).join(' / ')); else ok('PC — 화면 오류 없음');
   await page.close();
