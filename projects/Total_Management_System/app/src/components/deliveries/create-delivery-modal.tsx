@@ -87,6 +87,40 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   );
 
   // 제품 필터
+  // 2026-11-16 거래처 검색도 ↑↓·Enter 로 고른다 — 전엔 이 칸만 키 처리가 없어 마우스로 눌러야 했다
+  const partnerResults = searchResults.filter((c) => {
+    const type = c.customer_type || '';
+    return type === 'dealer' || type === 'academy' || c.source === 'dealer' || c.source === 'academy';
+  });
+  const pickPartner = (c: (typeof searchResults)[number]) => {
+    const companyName = c.company_name || undefined;
+    setSelectedCustomer({
+      id: c.id,
+      name: c.name,
+      phone: c.phone,
+      customer_type: c.customer_type || '',
+      company_name: companyName || undefined,
+      default_repair_price: c.default_repair_price ?? null,
+    });
+    setCustomerName(companyName || c.name);
+    setCustomerPhone(c.phone || '');
+    setShowCustomerDropdown(false);
+    // 거래처 복원수리 기본 단가 자동 적용 (2-E)
+    if (c.default_repair_price && c.default_repair_price > 0) setRepairUnitPrice(c.default_repair_price);
+    // 장바구니 가격 재계산
+    const type = c.customer_type || '';
+    setCart((prev) => prev.map((item) => {
+      if (!item.product_id) return item;
+      const prod = products.find((p) => p.id === item.product_id);
+      if (!prod) return item;
+      let price = prod.price;
+      if (type === 'dealer' && (prod as Record<string, unknown>).price_dealer) price = (prod as Record<string, unknown>).price_dealer as number;
+      if (type === 'academy' && (prod as Record<string, unknown>).price_academy) price = (prod as Record<string, unknown>).price_academy as number;
+      return { ...item, unit_price: price };
+    }));
+  };
+  const partnerPick = useEnterSelect(partnerResults, pickPartner);
+
   // 검색 결과에서 ↑↓·Enter 로 바로 담기 (결과 1개면 Enter 만으로)
   const filteredProducts = products.filter((p) => {
     if (!productSearch) return true;
@@ -214,6 +248,11 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                   setShowCustomerDropdown(true);
                 }}
                 onFocus={() => customerQuery.length >= 2 && setShowCustomerDropdown(true)}
+                onKeyDown={(e) => {
+                  if (selectedCustomer || !showCustomerDropdown) return;
+                  if (e.key === 'Escape' && partnerResults.length > 0) { e.stopPropagation(); e.nativeEvent.stopPropagation(); setShowCustomerDropdown(false); return; }
+                  partnerPick.onKeyDown(e);
+                }}
                 placeholder="거래처 검색 (2자 이상)"
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
@@ -225,44 +264,12 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
               )}
               {showCustomerDropdown && searchResults.length > 0 && !selectedCustomer && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {searchResults
-                    .filter((c) => {
-                      // 딜러/아카데미만 필터 (source로 판별)
-                      const src = c.source;
-                      const type = c.customer_type || '';
-                      return type === 'dealer' || type === 'academy' || src === 'dealer' || src === 'academy';
-                    })
-                    .map((c) => (
+                  {partnerResults.map((c, i) => (
                       <button
                         key={c.id}
-                        onClick={() => {
-                          const companyName = c.company_name || undefined;
-                          setSelectedCustomer({
-                            id: c.id,
-                            name: c.name,
-                            phone: c.phone,
-                            customer_type: c.customer_type || '',
-                            company_name: companyName || undefined,
-                            default_repair_price: c.default_repair_price ?? null,
-                          });
-                          setCustomerName(companyName || c.name);
-                          setCustomerPhone(c.phone || '');
-                          setShowCustomerDropdown(false);
-                          // 거래처 복원수리 기본 단가 자동 적용 (2-E)
-                          if (c.default_repair_price && c.default_repair_price > 0) setRepairUnitPrice(c.default_repair_price);
-                          // 장바구니 가격 재계산
-                          const type = c.customer_type || '';
-                          setCart((prev) => prev.map((item) => {
-                            if (!item.product_id) return item;
-                            const prod = products.find((p) => p.id === item.product_id);
-                            if (!prod) return item;
-                            let price = prod.price;
-                            if (type === 'dealer' && (prod as Record<string, unknown>).price_dealer) price = (prod as Record<string, unknown>).price_dealer as number;
-                            if (type === 'academy' && (prod as Record<string, unknown>).price_academy) price = (prod as Record<string, unknown>).price_academy as number;
-                            return { ...item, unit_price: price };
-                          }));
-                        }}
-                        className="w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-neutral-50 transition text-left"
+                        onClick={() => pickPartner(c)}
+                        onMouseEnter={() => partnerPick.setActiveIdx(i)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-neutral-50 transition text-left ${partnerPick.isActive(i) ? 'bg-neutral-100' : ''}`}
                       >
                         <div>
                           <span className="font-medium">{c.company_name || c.name}</span>
@@ -276,10 +283,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                         </span>
                       </button>
                     ))}
-                  {searchResults.filter((c) => {
-                    const type = c.customer_type || '';
-                    return type === 'dealer' || type === 'academy';
-                  }).length === 0 && (
+                  {partnerResults.length === 0 && (
                     <div className="px-3 py-2 text-xs text-neutral-400">딜러/아카데미 고객이 없습니다</div>
                   )}
                 </div>

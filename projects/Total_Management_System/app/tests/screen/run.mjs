@@ -37,6 +37,7 @@ const FIXTURES = {
     customers: [
       { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-2', name: '점검고객나', phone: '010-0000-0002', phone_normalized: '01000000002', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z', total_spent: 0, purchase_count: 0 },
+      { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 8000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
     ],
     products: [
       { id: 'p-check-1', name: '점검가위 가', sku: 'CHK-001', category: 'SCI', product_group: null, price: 1250000, price_purchase: 400000, stock_quantity: 3, is_active: true, zone_raw: 3, zone_ready: 0, zone_display: 0, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z' },
@@ -215,6 +216,26 @@ async function pcChecks(browser) {
     await sleep(100);
     const after = await bubbles();
     if (!shown.length) fail('숫자 칸 쉼표 표시', `${numPage}: 표시가 뜨지 않음`); else if (after.length) fail('숫자 칸 쉼표 표시', '칸을 떠나도 남아 있음'); else ok('숫자 칸(금액 아님) — 큰 수를 치면 칸 위에 쉼표 표시, 떠나면 사라짐');
+  }
+
+  // 거래처 매출 입력 — 거래처 검색에서 ↓ · Enter 로 고른다 (결과가 1건이어도)
+  await open(page, '/sales/new?mode=b2b');
+  await sleep(500);
+  const PARTNER = 'input[placeholder="거래처 검색 (2자 이상)"]';
+  if (!(await page.$(PARTNER))) fail('거래처 매출 — 거래처 검색 칸', '칸을 못 찾음');
+  else {
+    await page.click(PARTNER);
+    await page.keyboard.type('점검');
+    try { await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some((b) => /점검거래처/.test(b.textContent || '')), { timeout: 8000 }); } catch { /* 아래에서 실패로 잡힌다 */ }
+    await page.keyboard.press('ArrowDown');
+    await sleep(150);
+    const lit = await page.evaluate(() => Array.from(document.querySelectorAll('button')).some((b) => /점검거래처/.test(b.textContent || '') && b.className.includes('bg-neutral-100')));
+    await page.keyboard.press('Enter');
+    await sleep(300);
+    const picked = await page.evaluate((sel) => document.querySelector(sel)?.value, PARTNER);
+    if (!lit) fail('거래처 매출 — ↓ 를 누르면 줄이 강조됨', '강조가 안 됨');
+    else if (picked !== '점검거래처') fail('거래처 매출 — Enter 로 거래처 고르기', `칸 값 「${picked}」`);
+    else ok('거래처 매출 — 거래처 검색에서 ↓ · Enter 로 고름(결과 1건)');
   }
 
   // 전체 출고 준비표 — 버튼은 머리줄에 하나, 어느 화면에서나 열린다
