@@ -30,7 +30,13 @@ export function fakeSessionCookie() {
 function filterRows(rows, params) {
   let out = rows;
   for (const [col, raw] of params) {
-    if (['select', 'order', 'limit', 'offset', 'or', 'and', 'on_conflict', 'columns'].includes(col)) continue;
+    if (col === 'or') {
+      // 이름 검색: or=(name.ilike.%가%,company_name.ilike.%가%) — 전부 ilike 일 때만 거른다(다른 조건이 섞인 or 는 무시)
+      const parts = raw.replace(/^\(|\)$/g, '').split(',').map((c) => /^(\w+)\.ilike\.%(.*)%$/.exec(c));
+      if (parts.length && parts.every(Boolean)) out = out.filter((r) => parts.some(([, c, v]) => String(r[c] ?? '').toLowerCase().includes(v.toLowerCase())));
+      continue;
+    }
+    if (['select', 'order', 'limit', 'offset', 'and', 'on_conflict', 'columns'].includes(col)) continue;
     const m = /^(eq|in|is)\.(.*)$/s.exec(raw);
     if (!m) continue;
     const [, op, val] = m;

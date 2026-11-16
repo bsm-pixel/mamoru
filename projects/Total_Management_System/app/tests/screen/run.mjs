@@ -37,7 +37,8 @@ const FIXTURES = {
     customers: [
       { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-2', name: '점검고객나', phone: '010-0000-0002', phone_normalized: '01000000002', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z', total_spent: 0, purchase_count: 0 },
-      { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 8000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
+      { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 10000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
+      { id: 'c-check-4', name: '단가없는상사', phone: '010-0000-0004', phone_normalized: '01000000004', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: null, created_at: '2026-11-04T00:00:00Z', updated_at: '2026-11-04T00:00:00Z', total_spent: 0, purchase_count: 0 },
     ],
     products: [
       { id: 'p-check-1', name: '점검가위 가', sku: 'CHK-001', category: 'SCI', product_group: null, price: 1250000, price_purchase: 400000, stock_quantity: 3, is_active: true, zone_raw: 3, zone_ready: 0, zone_display: 0, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z' },
@@ -236,6 +237,25 @@ async function pcChecks(browser) {
     if (!lit) fail('거래처 매출 — ↓ 를 누르면 줄이 강조됨', '강조가 안 됨');
     else if (picked !== '점검거래처') fail('거래처 매출 — Enter 로 거래처 고르기', `칸 값 「${picked}」`);
     else ok('거래처 매출 — 거래처 검색에서 ↓ · Enter 로 고름(결과 1건)');
+
+    // 복원수리 단가 — 단가 10,000 거래처를 골랐다가 단가 없는 거래처로 바꾸면 8,000 으로 돌아온다 (2026-11-16 앞 거래처 단가가 남던 문제)
+    const repairPrice = () => page.evaluate(() => {
+      const label = Array.from(document.querySelectorAll('label')).find((l) => (l.textContent || '').trim() === '단가 (원)');
+      return label?.parentElement?.querySelector('input')?.value ?? null;
+    });
+    const first = await repairPrice();
+    await page.click(PARTNER);
+    await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+    await page.keyboard.type('단가없는');
+    try { await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some((b) => /단가없는상사/.test(b.textContent || '')), { timeout: 8000 }); } catch { /* 아래에서 실패로 잡힌다 */ }
+    await page.keyboard.press('Enter');
+    await sleep(300);
+    const picked2 = await page.evaluate((sel) => document.querySelector(sel)?.value, PARTNER);
+    const second = await repairPrice();
+    if (first !== '10,000') fail('거래처 매출 — 거래처 기본 단가 자동 적용', `단가 칸 「${first}」`);
+    else if (picked2 !== '단가없는상사') fail('거래처 매출 — 거래처 바꾸기', `칸 값 「${picked2}」`);
+    else if (second !== '8,000') fail('거래처 매출 — 단가 없는 거래처로 바꾸면 8,000', `단가 칸 「${second}」`);
+    else ok('거래처 매출 — 복원수리 단가: 10,000 거래처 → 단가 없는 거래처로 바꾸면 8,000');
   }
 
   // 전체 출고 준비표 — 버튼은 머리줄에 하나, 어느 화면에서나 열린다

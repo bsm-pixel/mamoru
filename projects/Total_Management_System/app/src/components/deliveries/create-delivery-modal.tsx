@@ -39,12 +39,15 @@ interface Props {
   onCreated: (id: string) => void;
 }
 
+/** 거래처에 복원수리 기본 단가가 없을 때 쓰는 값 (자루당) */
+const BASE_REPAIR_PRICE = 8000;
+
 export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   const createDelivery = useCreateDelivery();
   const { data: products = [] } = useProducts();
   // 복원수리 (선택 입력 — 자루 0 이면 미포함)
   const [repairQty, setRepairQty] = useState(0);
-  const [repairUnitPrice, setRepairUnitPrice] = useState(8000);
+  const [repairUnitPrice, setRepairUnitPrice] = useState(BASE_REPAIR_PRICE);
   const [repairExtras, setRepairExtras] = useState<Array<{ product_name: string; quantity: number; unit_price: number; category?: string }>>([]);
   const [repairExtraName, setRepairExtraName] = useState('');
   const [repairExtraPrice, setRepairExtraPrice] = useState('');
@@ -106,7 +109,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
     setCustomerPhone(c.phone || '');
     setShowCustomerDropdown(false);
     // 거래처 복원수리 기본 단가 자동 적용 (2-E)
-    if (c.default_repair_price && c.default_repair_price > 0) setRepairUnitPrice(c.default_repair_price);
+    // 2026-11-16 단가가 없는 거래처면 기본값으로 되돌린다 — 전엔 그대로 둬서, 앞에 고른 거래처의 단가(예: 10,000)가 다음 거래처에 남았다
+    setRepairUnitPrice(c.default_repair_price && c.default_repair_price > 0 ? c.default_repair_price : BASE_REPAIR_PRICE);
     // 장바구니 가격 재계산
     const type = c.customer_type || '';
     setCart((prev) => prev.map((item) => {
@@ -243,7 +247,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 type="text"
                 value={selectedCustomer ? (selectedCustomer.company_name || selectedCustomer.name) : customerQuery}
                 onChange={(e) => {
-                  if (selectedCustomer) { setSelectedCustomer(null); setCustomerName(''); }
+                  if (selectedCustomer) { setSelectedCustomer(null); setCustomerName(''); setRepairUnitPrice(BASE_REPAIR_PRICE); }
                   setCustomerQuery(e.target.value);
                   setShowCustomerDropdown(true);
                 }}
@@ -257,7 +261,7 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
                 className="w-full h-9 px-3 rounded-lg border border-neutral-200 bg-stone-50 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300"
               />
               {selectedCustomer && (
-                <button title="선택 지우기" aria-label="선택 지우기" onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); setCustomerName(''); }}
+                <button title="선택 지우기" aria-label="선택 지우기" onClick={() => { setSelectedCustomer(null); setCustomerQuery(''); setCustomerName(''); setRepairUnitPrice(BASE_REPAIR_PRICE); }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
                   <X size={14} />
                 </button>
