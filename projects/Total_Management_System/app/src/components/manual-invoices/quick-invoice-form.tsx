@@ -1,13 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Info, AlertTriangle, Copy, Truck, RotateCcw } from 'lucide-react';
+import { Info, AlertTriangle, Copy, Truck, RotateCcw, Pencil, Search } from 'lucide-react';
 import { CustomerAutocomplete, type SelectedCustomer } from '@/components/shared/customer-autocomplete';
 import { useCreateManualInvoice } from '@/hooks/use-manual-invoices';
 import type { ManualInvoice } from '@/lib/supabase/types';
 import { formatPhone } from '@/lib/utils/format';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
+
+/** 받는 곳 (이번 송장에 실제로 찍히는 값) */
+interface Receiver { name: string; phone: string; postcode: string; road: string; detail: string }
+const fromCustomer = (c: SelectedCustomer): Receiver => ({ name: c.name || '', phone: c.phone || '', postcode: c.postcode || '', road: c.address_road || '', detail: c.address_detail || '' });
+const FIELD = 'h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-terracotta/40';
+const INPUT = `w-full ${FIELD}`;
 
 export function QuickInvoiceForm() {
   const [selectedCustomer, setSelectedCustomer] = useState<SelectedCustomer | null>(null);
@@ -17,18 +23,39 @@ export function QuickInvoiceForm() {
 
   const createInvoice = useCreateManualInvoice();
 
-  const addressMissing = !!selectedCustomer && (!selectedCustomer.postcode || !selectedCustomer.address_road);
-  const phoneMissing = !!selectedCustomer && !selectedCustomer.phone;
-  const customerIncomplete = addressMissing || phoneMissing;
+  // 2026-11-18 받는 곳을 이번 송장에서만 다르게 적을 수 있다 — 전엔 고객에 저장된 주소로만 나가서, 다른 곳으로 보낼 때 고객 정보를 먼저 고쳐야 했다
+  const [recv, setRecv] = useState<Receiver>({ name: '', phone: '', postcode: '', road: '', detail: '' });
+  const [editing, setEditing] = useState(false);
+  const [saveAddr, setSaveAddr] = useState(false);
+
+  const saved = selectedCustomer ? fromCustomer(selectedCustomer) : null;
+  const changed = !!saved && (Object.keys(saved) as (keyof Receiver)[]).some((k) => saved[k].trim() !== recv[k].trim());
+  const addrChanged = !!saved && (saved.postcode.trim() !== recv.postcode.trim() || saved.road.trim() !== recv.road.trim() || saved.detail.trim() !== recv.detail.trim());
+  const missing = [
+    !recv.name.trim() && '받는 사람',
+    recv.phone.replace(/\D/g, '').length < 9 && '연락처',
+    (!recv.postcode.trim() || !recv.road.trim()) && '주소',
+  ].filter(Boolean) as string[];
+
+  function pickCustomer(c: SelectedCustomer) {
+    const r = fromCustomer(c);
+    setSelectedCustomer(c);
+    setRecv(r);
+    setSaveAddr(false);
+    // 저장된 주소 · 연락처가 비어 있으면 바로 적을 수 있게 펼친다 (전엔 고객 화면으로 가서 채워야 했다)
+    setEditing(!r.phone || !r.postcode || !r.road);
+  }
 
   const canIssue =
     !!selectedCustomer &&
-    !customerIncomplete &&
+    missing.length === 0 &&
     goodsName.trim().length > 0 &&
     goodsName.trim().length <= 50;
 
   function reset() {
     setSelectedCustomer(null);
+    setEditing(false);
+    setSaveAddr(false);
     setGoodsName('');
     setDeliveryMessage('');
     setLastIssued(null);
@@ -41,6 +68,11 @@ export function QuickInvoiceForm() {
         customer_id: selectedCustomer.id,
         goods_name: goodsName.trim(),
         delivery_message: deliveryMessage.trim() || undefined,
+        // 바꾼 것이 없으면 보내지 않는다 — 서버가 고객에 저장된 값을 그대로 쓴다
+        ...(changed ? {
+          receiver: { name: recv.name.trim(), phone: recv.phone.trim(), postcode: recv.postcode.trim(), address_road: recv.road.trim(), address_detail: recv.detail.trim() || undefined },
+          save_address_to_customer: saveAddr && addrChanged,
+        } : {}),
       });
       if (res.invoice) setLastIssued(res.invoice);
     } catch {
@@ -117,49 +149,79 @@ export function QuickInvoiceForm() {
         <label className="block text-xs font-semibold text-neutral-600 mb-1.5">고객 *</label>
         <CustomerAutocomplete
           selectedCustomer={selectedCustomer}
-          onSelect={(c) => setSelectedCustomer(c)}
-          onClear={() => setSelectedCustomer(null)}
+          onSelect={pickCustomer}
+          onClear={() => { setSelectedCustomer(null); setEditing(false); setSaveAddr(false); }}
         />
 
-        {/* 고객 정보 미리보기 */}
-        {selectedCustomer && !customerIncomplete && (
-          <div className="mt-2 rounded-lg bg-terracotta/5 border border-terracotta/20 px-3 py-2.5 text-xs space-y-0.5">
-            <p className="text-neutral-600">
-              <span className="text-neutral-400">받는 사람</span>{' '}
-              <span className="font-semibold text-indigo-black">{selectedCustomer.name}</span>
-              {selectedCustomer.phone && <span className="ml-2 text-neutral-500">{formatPhone(selectedCustomer.phone)}</span>}
-            </p>
-            <p className="text-neutral-600">
-              <span className="text-neutral-400">주소</span>{' '}
-              {[selectedCustomer.postcode, selectedCustomer.address_road, selectedCustomer.address_detail].filter(Boolean).join(' ')}
-            </p>
+        {/* 받는 곳 — 보기 */}
+        {selectedCustomer && !editing && (
+          <div className="mt-2 rounded-lg bg-terracotta/5 border border-terracotta/20 px-3 py-2.5 text-xs flex items-start gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <p className="text-neutral-600">
+                <span className="text-neutral-400">받는 사람</span>{' '}
+                <span className="font-semibold text-indigo-black">{recv.name}</span>
+                {recv.phone && <span className="ml-2 text-neutral-500">{formatPhone(recv.phone)}</span>}
+              </p>
+              <p className="text-neutral-600 break-keep">
+                <span className="text-neutral-400">주소</span>{' '}
+                {[recv.postcode, recv.road, recv.detail].filter(Boolean).join(' ')}
+              </p>
+              {changed && <p className="text-[11px] font-semibold text-amber-700">이번 송장만 이 정보로 나갑니다{saveAddr && addrChanged ? ' · 주소는 고객 정보에도 저장' : ''}</p>}
+            </div>
+            <button type="button" onClick={() => setEditing(true)}
+              className="shrink-0 h-8 px-2.5 rounded-lg border border-neutral-300 bg-white text-[11px] font-semibold text-neutral-700 hover:bg-neutral-50 inline-flex items-center gap-1">
+              <Pencil size={12} />받는 곳 바꾸기
+            </button>
           </div>
         )}
 
-        {/* 차단 메시지 */}
-        {selectedCustomer && customerIncomplete && (
-          <div className="mt-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5">
-            <div className="flex items-start gap-2">
-              <AlertTriangle size={14} className="text-red-500 mt-0.5 shrink-0" />
-              <div className="flex-1 text-xs space-y-1">
-                <p className="font-semibold text-red-700">
-                  {addressMissing && phoneMissing
-                    ? '고객 주소·연락처가 모두 비어 있습니다.'
-                    : addressMissing
-                    ? '고객 주소(우편번호+도로명)가 비어 있습니다.'
-                    : '고객 연락처가 비어 있습니다.'}
-                </p>
-                <p className="text-red-600">
-                  송장 발급을 위해 먼저 고객 정보를 보강해주세요.
-                </p>
-                <Link
-                  href={`/customers/${selectedCustomer.id}`}
-                  className="inline-block text-red-700 underline font-semibold hover:text-red-800"
-                >
-                  고객 정보 페이지로 이동 →
-                </Link>
+        {/* 받는 곳 — 고치기 */}
+        {selectedCustomer && editing && (
+          <div className="mt-2 rounded-lg border border-neutral-200 bg-white px-3 py-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold text-neutral-700">받는 곳 <span className="font-normal text-neutral-400">(이번 송장에 찍히는 정보)</span></p>
+              {changed && (
+                <button type="button" onClick={() => { if (saved) setRecv(saved); setSaveAddr(false); }}
+                  className="text-[11px] text-neutral-500 underline hover:text-neutral-700">저장된 정보로 되돌리기</button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] text-neutral-500 mb-0.5">받는 사람</label>
+                <input type="text" value={recv.name} maxLength={40} onChange={(e) => setRecv({ ...recv, name: e.target.value })} placeholder="이름" className={INPUT} aria-label="받는 사람" />
+              </div>
+              <div>
+                <label className="block text-[11px] text-neutral-500 mb-0.5">연락처</label>
+                <input type="tel" value={recv.phone} maxLength={20} onChange={(e) => setRecv({ ...recv, phone: e.target.value })} placeholder="010-0000-0000" className={INPUT} aria-label="받는 사람 연락처" />
               </div>
             </div>
+            <div>
+              <label className="block text-[11px] text-neutral-500 mb-0.5">주소</label>
+              {/* 우편번호 + 검색 버튼 한 줄, 도로명은 아래 줄 전체 — 휴대폰 폭에서도 넘치지 않게 */}
+              <div className="flex gap-2">
+                <input type="text" value={recv.postcode} readOnly placeholder="우편번호" className={`${FIELD} w-24 shrink-0 bg-neutral-50`} aria-label="우편번호" />
+                <DaumPostcodeButton
+                  onSelected={({ zonecode, roadAddress }) => setRecv((r) => ({ ...r, postcode: zonecode, road: roadAddress, detail: '' }))}
+                  className="shrink-0 h-9 px-3 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 inline-flex items-center gap-1"
+                >
+                  <Search size={12} />주소 검색
+                </DaumPostcodeButton>
+              </div>
+              <input type="text" value={recv.road} readOnly placeholder="주소 검색을 눌러 주세요" className={`${INPUT} mt-2 bg-neutral-50`} aria-label="도로명 주소" />
+              <input type="text" value={recv.detail} maxLength={200} onChange={(e) => setRecv({ ...recv, detail: e.target.value })} placeholder="상세 주소 (동 · 호수 · 상호)" className={`${INPUT} mt-2`} aria-label="상세 주소" />
+            </div>
+            {addrChanged && (
+              <label className="flex items-start gap-2 text-xs text-neutral-700 cursor-pointer py-1">
+                <input type="checkbox" checked={saveAddr} onChange={(e) => setSaveAddr(e.target.checked)} className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>이 주소를 고객 정보에도 저장<span className="block text-[11px] text-neutral-400">끄면 이번 송장에만 씁니다</span></span>
+              </label>
+            )}
+            {missing.length > 0 ? (
+              <p className="text-[11px] text-red-600 flex items-center gap-1"><AlertTriangle size={12} />빠진 항목: {missing.join(' · ')}</p>
+            ) : (
+              <button type="button" onClick={() => setEditing(false)}
+                className="h-8 px-3 rounded-lg border border-neutral-300 bg-white text-xs font-semibold text-neutral-700 hover:bg-neutral-50">확인</button>
+            )}
           </div>
         )}
       </div>

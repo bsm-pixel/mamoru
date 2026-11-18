@@ -8,6 +8,10 @@ export interface CreateManualInvoiceInput {
   customer_id: string;
   goods_name: string;
   delivery_message?: string;
+  /** 받는 곳을 이번 송장에서만 다르게 (2026-11-18) — 없으면 고객에 저장된 이름 · 연락처 · 주소 */
+  receiver?: { name: string; phone: string; postcode: string; address_road: string; address_detail?: string };
+  /** 위 주소를 고객 정보의 기본 주소로도 저장 */
+  save_address_to_customer?: boolean;
 }
 
 export interface CreateManualInvoiceResult {
@@ -71,6 +75,7 @@ export function useCreateManualInvoice() {
       if (data.warning) toast(data.warning, { icon: '⚠️', duration: 6000 });
       else toast.success('송장 발급 완료');
       queryClient.invalidateQueries({ queryKey: ['manual-invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] }); // 주소를 고객 정보에도 저장했을 수 있다
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });

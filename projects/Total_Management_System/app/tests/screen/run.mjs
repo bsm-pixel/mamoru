@@ -35,7 +35,7 @@ const CHROME = process.env.CHROME_PATH || [
 const FIXTURES = {
   tables: {
     customers: [
-      { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
+      { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', postcode: '00001', address_road: '점검시 점검로 1', address_detail: '101호', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-2', name: '점검고객나', phone: '010-0000-0002', phone_normalized: '01000000002', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 10000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-4', name: '단가없는상사', phone: '010-0000-0004', phone_normalized: '01000000004', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: null, created_at: '2026-11-04T00:00:00Z', updated_at: '2026-11-04T00:00:00Z', total_spent: 0, purchase_count: 0 },
@@ -277,6 +277,61 @@ async function pcChecks(browser) {
   if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
+
+  // 빠른 송장 — 받는 곳을 이번 송장에서만 바꿔 보낸다 (2026-11-18). 발급 요청은 가로채서 내용만 본다(택배사에 닿지 않는다)
+  await open(page, '/manual-invoices');
+  await sleep(500);
+  {
+    const bad = [];
+    let sent = null;
+    await page.setRequestInterception(true);
+    const onReq = (req) => {
+      if (req.method() === 'POST' && req.url().endsWith('/api/manual-invoices')) {
+        sent = JSON.parse(req.postData() || '{}');
+        req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, invoice: { id: 'mi-1', invoice_number: '000000000000', customer_name: sent.receiver?.name || '', customer_phone: sent.receiver?.phone || '', receiver_postcode: sent.receiver?.postcode || '', receiver_address_road: sent.receiver?.address_road || '', receiver_address_detail: sent.receiver?.address_detail || '', goods_name: sent.goods_name } }) });
+      } else req.continue();
+    };
+    page.on('request', onReq);
+    const clickText = (t) => page.evaluate((text) => { const b = Array.from(document.querySelectorAll('main button')).find((e) => (e.textContent || '').trim() === text); b?.click(); return !!b; }, t);
+    const setVal = async (label, v) => { const sel = `main input[aria-label="${label}"]`; await page.click(sel); await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control'); await page.keyboard.type(v); };
+    try {
+      const search = await page.$('main input[type="text"]');
+      await search.click();
+      await page.keyboard.type('점검고객가');
+      await page.waitForFunction(() => Array.from(document.querySelectorAll('main button, main li, main [role="option"]')).some((b) => /점검고객가/.test(b.textContent || '')), { timeout: 8000 });
+      await page.evaluate(() => { const el = Array.from(document.querySelectorAll('main button, main li, main [role="option"]')).find((b) => /점검고객가/.test(b.textContent || '')); el?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); el?.click(); });
+      await sleep(400);
+      const shown = await page.evaluate(() => document.querySelector('main')?.textContent || '');
+      if (!/점검시 점검로 1/.test(shown)) bad.push('고른 뒤 저장된 주소가 안 보임');
+      if (!(await clickText('받는 곳 바꾸기'))) bad.push('[받는 곳 바꾸기] 버튼이 없음');
+      else {
+        await sleep(200);
+        await setVal('받는 사람', '대신받는분');
+        await setVal('받는 사람 연락처', '010-9999-0000');
+        await setVal('상세 주소', '909호');
+        await sleep(150);
+        const note = await page.evaluate(() => document.querySelector('main')?.textContent || '');
+        if (!/이 주소를 고객 정보에도 저장/.test(note)) bad.push('고객 정보에도 저장 선택이 안 보임');
+        await clickText('확인');
+        await sleep(200);
+        const sum = await page.evaluate(() => document.querySelector('main')?.textContent || '');
+        if (!/대신받는분/.test(sum) || !/이번 송장만 이 정보로 나갑니다/.test(sum)) bad.push('바꾼 내용이 요약에 안 보임');
+        await page.click('main input[placeholder^="예: 샘플"]');
+        await page.keyboard.type('점검 품목');
+        await clickText('ALPS 송장 발급');
+        await sleep(600);
+        if (!sent) bad.push('발급 요청이 나가지 않음');
+        else {
+          const r = sent.receiver || {};
+          if (sent.customer_id !== 'c-check-1' || r.name !== '대신받는분' || r.phone !== '010-9999-0000' || r.postcode !== '00001' || r.address_road !== '점검시 점검로 1' || r.address_detail !== '909호') bad.push(`보낸 내용이 다름 ${JSON.stringify(sent)}`);
+          if (sent.save_address_to_customer !== false) bad.push('고르지 않았는데 고객 정보 저장이 켜짐');
+        }
+      }
+    } catch (e) { bad.push(String(e.message || e).slice(0, 150)); }
+    page.off('request', onReq);
+    await page.setRequestInterception(false);
+    if (bad.length) fail('빠른 송장 — 받는 곳 바꾸기', bad.join(' / ')); else ok('빠른 송장 — 받는 곳(이름 · 연락처 · 상세 주소)을 바꿔 발급, 고객 정보는 그대로');
+  }
 
   // 일정 — 메뉴에서 빠졌고(2026-11-16), 등록 버튼 · 다가오는 일정은 대시보드 달력 오른쪽 칸에 있다. 옛 주소는 대시보드로 간다
   await open(page, '/schedule');

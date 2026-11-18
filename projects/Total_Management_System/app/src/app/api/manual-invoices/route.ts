@@ -4,7 +4,12 @@ import { getNextInvoice, bookShipment } from '@/lib/lotte/alps-client';
 import { errMsg } from '@/lib/utils/err';
 
 /** POST /api/manual-invoices — 빠른 송장(별도 송장) 발급
- *  body: { customer_id: string; goods_name: string; delivery_message?: string }
+ *  body: { customer_id: string; goods_name: string; delivery_message?: string;
+ *          receiver?: { name, phone, postcode, address_road, address_detail? }; save_address_to_customer?: boolean }
+ *
+ *  2026-11-18 receiver — 받는 곳을 이번 송장에서만 다르게 적을 수 있다(전엔 고객에 저장된 주소로만 나갔다).
+ *    없으면 전과 같이 고객에 저장된 값. 송장 기록(manual_invoices)에는 실제로 보낸 값이 남는다.
+ *    save_address_to_customer 가 참이면 그 주소를 고객 기본 주소로도 저장한다(이름 · 연락처는 건드리지 않는다).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -42,15 +47,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '고객을 찾을 수 없습니다' }, { status: 404 });
     }
 
-    // 안전장치: 주소·연락처 미보유 차단
-    if (!customer.postcode || !customer.address_road) {
+    // 받는 곳 — 화면에서 적어 보낸 값이 있으면 그 값, 없으면 고객에 저장된 값
+    const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+    const rcvIn = body.receiver && typeof body.receiver === 'object' ? body.receiver as Record<string, unknown> : null;
+    const receiver = rcvIn
+      ? { name: str(rcvIn.name, 40), phone: str(rcvIn.phone, 20), postcode: str(rcvIn.postcode, 10), address_road: str(rcvIn.address_road, 200), address_detail: str(rcvIn.address_detail, 200) || null }
+      : { name: customer.name as string, phone: (customer.phone || '') as string, postcode: (customer.postcode || '') as string, address_road: (customer.address_road || '') as string, address_detail: (customer.address_detail || null) as string | null };
+
+    if (rcvIn) {
+      if (!receiver.name) return NextResponse.json({ error: '받는 사람 이름을 입력해주세요' }, { status: 400 });
+      if (receiver.phone.replace(/\D/g, '').length < 9) return NextResponse.json({ error: '받는 사람 연락처를 확인해주세요' }, { status: 400 });
+      if (!receiver.postcode || !receiver.address_road) return NextResponse.json({ error: '받는 주소(우편번호 + 도로명)를 입력해주세요' }, { status: 400 });
+    }
+
+    // 안전장치: 주소·연락처 미보유 차단 (받는 곳을 따로 적지 않았을 때)
+    if (rcvIn) { /* 위에서 확인함 */ } else if (!customer.postcode || !customer.address_road) {
       return NextResponse.json({
         error: '고객 주소(우편번호+도로명)가 없습니다. 고객 정보 페이지에서 보강 후 다시 시도해주세요.',
         customer_id: customer.id,
         missing: 'address',
       }, { status: 400 });
     }
-    if (!customer.phone) {
+    if (!rcvIn && !customer.phone) {
       return NextResponse.json({
         error: '고객 연락처가 없습니다. 고객 정보 페이지에서 보강 후 다시 시도해주세요.',
         customer_id: customer.id,
@@ -60,13 +78,13 @@ export async function POST(req: NextRequest) {
 
     // ALPS 송장 발급
     const { invoiceNumber } = await getNextInvoice();
-    const fullAddr = [customer.address_road, customer.address_detail].filter(Boolean).join(' ');
+    const fullAddr = [receiver.address_road, receiver.address_detail].filter(Boolean).join(' ');
 
     const result = await bookShipment({
       invoiceNumber,
-      receiverName: customer.name,
-      receiverTel: customer.phone,
-      receiverZip: customer.postcode,
+      receiverName: receiver.name,
+      receiverTel: receiver.phone,
+      receiverZip: receiver.postcode,
       receiverAddr: fullAddr,
       goodsName,
       deliveryMessage: deliveryMessage ?? undefined,
@@ -82,17 +100,26 @@ export async function POST(req: NextRequest) {
       .insert({
         invoice_number: invoiceNumber,
         customer_id: customer.id,
-        customer_name: customer.name,
-        customer_phone: customer.phone,
-        receiver_postcode: customer.postcode,
-        receiver_address_road: customer.address_road,
-        receiver_address_detail: customer.address_detail ?? null,
+        customer_name: receiver.name,
+        customer_phone: receiver.phone,
+        receiver_postcode: receiver.postcode,
+        receiver_address_road: receiver.address_road,
+        receiver_address_detail: receiver.address_detail ?? null,
         goods_name: goodsName,
         delivery_message: deliveryMessage,
         created_by: user.id,
       })
       .select()
       .single();
+
+    // 고객 기본 주소로도 저장 (요청했을 때만 · 송장은 이미 나갔으므로 실패해도 발급은 성공으로 둔다)
+    let addressSaveFailed = false;
+    if (rcvIn && body.save_address_to_customer === true) {
+      const { error: custErr } = await db.from('customers')
+        .update({ postcode: receiver.postcode, address_road: receiver.address_road, address_detail: receiver.address_detail })
+        .eq('id', customer.id);
+      if (custErr) { addressSaveFailed = true; console.error('[manual-invoices] 고객 주소 저장 실패:', custErr.message); }
+    }
 
     if (insertErr) {
       // ALPS는 성공했지만 DB insert 실패 — 송장번호는 이미 외부에 발급됨. 로그로 추적.
@@ -104,7 +131,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ success: true, invoice: inserted });
+    return NextResponse.json({ success: true, invoice: inserted, ...(addressSaveFailed ? { warning: '송장은 발급됐지만 고객 정보에 주소를 저장하지 못했습니다. 고객 화면에서 직접 고쳐 주세요.' } : {}) });
   } catch (err) {
     return NextResponse.json({ error: errMsg(err) }, { status: 500 });
   }
