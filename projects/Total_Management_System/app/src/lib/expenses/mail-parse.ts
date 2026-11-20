@@ -49,6 +49,11 @@ export interface MailInput {
 
 /** 영수증이 아닌 메일 — 보낸 곳·제목만으로 거른다 (공지·광고·검수 알림·고객 주문 알림 등) */
 const SKIP_SUBJECT = /작업\s*공지|공지|업데이트|개인정보|입금계좌|검수|약관|소식|뉴스레터|이벤트|프로모션|\[MAMORU\]|새 주문|주문이 접수|주문 알림/;
+/** 우리 쇼핑몰이 보낸 주문 · 결제 알림 — 고객이 낸 돈(매출)이지 경비가 아니다 (2026-11-20)
+ *  실제 메일: 제목 "[즐거운 미용가위, MAMORU] [주문번호] 주문에 대한 결제가 완료되었습니다." · 본문 "새로운 주문이 접수되었습니다"
+ *  보낸 곳이 쇼핑몰 지메일이라 SKIP_SENDER(imweb.me)에 안 걸렸고, 제목 머리가 "[MAMORU]"가 아니라 SKIP_SUBJECT 도 지나쳤다 */
+const OWN_SHOP_SUBJECT = /^\s*\[[^\]]*MAMORU[^\]]*\]|주문에 대한 결제가 완료/;
+const OWN_SHOP_BODY = /새로운 주문이 접수되었습니다|주문\s*정보[\s|]*고객명/;
 const SKIP_SENDER = /imweb\.me|danal\.co\.kr|payaction\.app|wallet-email\.samsung\.com|bsm@mamoru\.kr/i;
 
 /** 거래처별 기본 분류 — 처음 한 번만 쓰이고, 이후엔 사장님이 고른 값(expense_vendor_rules)이 우선 */
@@ -110,6 +115,7 @@ export function parseExpenseMail(mail: MailInput): ParsedExpense | null {
   const { subject, text } = mail;
   const addr = senderAddr(mail.from);
   if (SKIP_SENDER.test(addr) || SKIP_SUBJECT.test(subject)) return null;
+  if (OWN_SHOP_SUBJECT.test(subject) || OWN_SHOP_BODY.test(text.slice(0, 600))) return null;
 
   const received = kstDate(mail.receivedAt);
   const t = text.replace(/ /g, ' ');
