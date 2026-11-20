@@ -278,6 +278,26 @@ async function pcChecks(browser) {
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
 
+  // 고객 검색 — 상세 주소에 적힌 말로도 찾고, 두 글자부터 찾는다 (2026-11-20)
+  await open(page, '/customers');
+  {
+    const bad = [];
+    const rowsText = () => page.evaluate(() => document.querySelector('main')?.textContent || '');
+    const box = await page.$('main input[data-list-search]');
+    await box.click();
+    await page.keyboard.type('점');
+    await sleep(900);
+    let t = await rowsText();
+    if (!/두 글자 이상 입력하면 찾습니다/.test(t)) bad.push('한 글자일 때 안내가 안 보임');
+    if (!/점검고객나/.test(t)) bad.push('한 글자인데 목록이 걸러짐');
+    await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+    await page.keyboard.type('101호');
+    try { await page.waitForFunction(() => { const x = document.querySelector('main')?.textContent || ''; return /점검고객가/.test(x) && !/점검고객나/.test(x); }, { timeout: 8000 }); } catch { bad.push('상세 주소(101호)로 찾았는데 그 고객만 남지 않음'); }
+    t = await rowsText();
+    if (!/주소\s*101호/.test(t)) bad.push('주소에서 걸린 까닭(주소 101호)이 목록에 안 보임');
+    if (bad.length) fail('고객 검색 — 상세 주소 · 두 글자부터', bad.join(' / ')); else ok('고객 검색 — 상세 주소에 적힌 말로 찾음, 한 글자는 안내만');
+  }
+
   // 빠른 송장 — 받는 곳을 이번 송장에서만 바꿔 보낸다 (2026-11-18). 발급 요청은 가로채서 내용만 본다(택배사에 닿지 않는다)
   await open(page, '/manual-invoices');
   await sleep(500);

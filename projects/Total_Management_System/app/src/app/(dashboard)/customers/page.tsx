@@ -26,6 +26,7 @@ import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-no
 import { useSetting } from '@/hooks/use-settings';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { cleanCustomerSearch, CUSTOMER_SEARCH_MIN } from '@/lib/customer/search-filter';
 
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 const SOURCE_LABEL: Record<string, string> = {
@@ -81,8 +82,11 @@ export default function CustomersPage() {
 
   // 2026-11-15 숨긴 고객(거래가 있어 지울 수 없는 고객을 목록에서 뺀 것) 보기
   const [showHidden, setShowHidden] = useState(false);
+  // 2026-11-20 두 글자부터 찾는다 — 한 글자일 때는 전체 목록을 그대로 둔다
+  const keyword = cleanCustomerSearch(search);
+  const activeSearch = keyword.length >= CUSTOMER_SEARCH_MIN ? keyword : '';
   const { data, isLoading } = useCustomers({
-    search,
+    search: activeSearch,
     type: typeFilter || undefined,
     page,
     limit,
@@ -112,8 +116,17 @@ export default function CustomersPage() {
         </div>
       ),
     },
-    ...CUSTOMER_COLUMNS.slice(1),
-  ], [customerActTypes]);
+    ...CUSTOMER_COLUMNS.slice(1).map((col) => (col.key !== 'company' ? col : {
+      ...col,
+      // 2026-11-20 상세 주소에서 걸린 고객은 왜 나왔는지 보이게 그 주소를 적어 준다
+      render: (c: Customer) => {
+        const hit = addressHit(c, activeSearch);
+        return hit
+          ? <span className="text-neutral-500 truncate" title={hit}><span className="text-[10.5px] text-neutral-400 mr-1">주소</span>{hit}</span>
+          : <span className="text-neutral-500 truncate">{c.company_name || '—'}</span>;
+      },
+    })),
+  ], [customerActTypes, activeSearch]);
 
   const listContent = isLoading ? (
     <div className="p-4 space-y-3">
@@ -133,6 +146,7 @@ export default function CustomersPage() {
           isSelected={selectedId === c.id}
           onClick={() => setSelectedId(c.id)}
           actTypes={customerActTypes(c.phone)}
+          addressHit={addressHit(c, activeSearch)}
         />
       ))}
     </div>
@@ -150,7 +164,7 @@ export default function CustomersPage() {
             <SearchInput
               value={search}
               onChange={(v) => { setSearch(v); setPage(1); }}
-              placeholder="고객명, 전화번호, 업체명 검색"
+              placeholder="고객명 · 연락처 · 매장명 · 활동명 · 상세 주소 (두 글자 이상)"
             />
           </div>
           <button data-new-action type="button" onClick={() => setShowAdd(true)}
@@ -158,6 +172,9 @@ export default function CustomersPage() {
             <Plus size={14} />고객 추가
           </button>
         </div>
+        {search.trim().length > 0 && !activeSearch && (
+          <p className="text-xs text-neutral-500 px-1">두 글자 이상 입력하면 찾습니다 (고객명 · 연락처 · 업체/매장명 · 활동명 · 상세 주소)</p>
+        )}
         {showHidden && (
           <p className="text-xs text-neutral-600 bg-neutral-100 rounded-lg px-3 py-2">
             숨긴 고객만 보는 중입니다. 고객을 열어 「숨김 해제」를 누르면 다시 목록에 나옵니다.
@@ -277,7 +294,16 @@ export default function CustomersPage() {
 
 /* 기존 AddCustomerModal → CustomerCreateModal 공통 컴포넌트로 교체 (customer-create-modal.tsx) */
 
-function CustomerRow({ customer, note, isSelected, onClick, actTypes }: { customer: Customer; note?: LatestNote; isSelected: boolean; onClick: () => void; actTypes?: ActivityTypes }) {
+/** 검색어가 이름 · 업체명이 아니라 상세 주소에서 걸렸으면 그 주소를 돌려준다(목록에 까닭을 보여 주려고) */
+function addressHit(c: Customer, keyword: string): string | null {
+  if (!keyword) return null;
+  const k = keyword.toLowerCase();
+  const has = (v: string | null | undefined) => !!v && v.toLowerCase().includes(k);
+  if (has(c.name) || has(c.company_name) || has(c.activity_name)) return null;
+  return has(c.address_detail) ? c.address_detail : null;
+}
+
+function CustomerRow({ customer, note, isSelected, onClick, actTypes, addressHit: hit }: { customer: Customer; note?: LatestNote; isSelected: boolean; onClick: () => void; actTypes?: ActivityTypes; addressHit?: string | null }) {
   const c = customer;
   return (
     <div
@@ -298,6 +324,7 @@ function CustomerRow({ customer, note, isSelected, onClick, actTypes }: { custom
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
           {c.phone && <span>{formatPhone(c.phone)}</span>}
           {c.company_name && <span>{c.company_name}</span>}
+          {hit && <span className="truncate">주소 {hit}</span>}
           <span>{SOURCE_LABEL[c.source] || c.source}</span>
           <span>{formatDate(c.created_at)}</span>
         </div>

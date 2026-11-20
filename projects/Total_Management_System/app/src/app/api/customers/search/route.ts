@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { NOT_HIDDEN_FILTER } from '@/lib/customer/hidden';
+import { customerSearchOr } from '@/lib/customer/search-filter';
 
 /** GET /api/customers/search?q=홍 — 고객 자동완성 검색 */
 export async function GET(req: NextRequest) {
@@ -10,22 +11,14 @@ export async function GET(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const q = req.nextUrl.searchParams.get('q')?.trim();
-    if (!q || q.length < 2) {
+    // 2026-11-20 검색 조건은 한 곳(search-filter)에서 — 고객 목록과 같은 칸을 찾는다(활동명 · 상세 주소 포함)
+    const orFilter = customerSearchOr(req.nextUrl.searchParams.get('q'));
+    if (!orFilter) {
       return NextResponse.json({ customers: [] });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-
-    // 숫자만 추출 (전화번호 검색용)
-    const digits = q.replace(/\D/g, '');
-    const hasDigits = digits.length >= 2;
-
-    // 이름 OR 전화번호(정규화)로 부분매칭 검색
-    const orFilter = hasDigits
-      ? `name.ilike.%${q}%,phone_normalized.ilike.%${digits}%,company_name.ilike.%${q}%`
-      : `name.ilike.%${q}%,company_name.ilike.%${q}%`;
 
     const { data, error } = await db
       .from('customers')

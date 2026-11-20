@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { phoneError, emailError } from '@/lib/utils/validate';
 import { HIDDEN_TAG, NOT_HIDDEN_FILTER } from '@/lib/customer/hidden';
+import { customerSearchOr } from '@/lib/customer/search-filter';
 
 /** GET /api/customers — 고객 목록 (검색/필터/페이징) */
 export async function GET(req: NextRequest) {
@@ -29,14 +30,9 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false })
       .range(from, to);
 
-    if (search) {
-      const digits = search.replace(/\D/g, '');
-      const hasDigits = digits.length >= 2;
-      const orFilter = hasDigits
-        ? `name.ilike.%${search}%,phone_normalized.ilike.%${digits}%,company_name.ilike.%${search}%`
-        : `name.ilike.%${search}%,company_name.ilike.%${search}%`;
-      query = query.or(orFilter);
-    }
+    // 2026-11-20 검색 조건은 한 곳(search-filter)에서 — 활동명 · 상세 주소도 찾고, 두 글자부터 찾는다
+    const orFilter = customerSearchOr(search);
+    if (orFilter) query = query.or(orFilter);
 
     // 2026-11-15 숨긴 고객(꼬리표 「숨김」)은 목록에서 뺀다. ?hidden=1 이면 숨긴 고객만
     if (url.searchParams.get('hidden') === '1') query = query.contains('tags', [HIDDEN_TAG]);

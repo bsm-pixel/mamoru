@@ -170,6 +170,10 @@ export default function B2BPartnersPage() {
           <Plus size={14} />거래처 추가
         </button>
       </div>
+      {/* 2026-11-20 고객 검색과 같은 규칙 — 두 글자부터 찾는다 */}
+      {search.trim().length === 1 && (
+        <p className="text-xs text-neutral-500 px-1">두 글자 이상 입력하면 찾습니다</p>
+      )}
 
       <Card padding={false}>
         {isLoading ? (
