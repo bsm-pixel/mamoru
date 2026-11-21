@@ -24,6 +24,7 @@ import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
 import { StageGrid } from '@/components/ui/stage-grid';
 import { matchSearch as matchText } from '@/lib/utils/search-match';
@@ -153,7 +154,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
     { key: 'customer', label: '고객', render: (r) => (
       <div className="min-w-0">
         <div className="flex items-center gap-1 min-w-0">
-          <span className={`font-bold text-sm truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</span>
+          <CustomerPeek customerId={r.customer_id} className="min-w-0 flex"><span className={`font-bold text-sm truncate ${r.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{r.name}</span></CustomerPeek>
           <ActivityChips types={repairActTypes(r.phone)} className="shrink-0" />
         </div>
         <div className="text-[11px] text-neutral-400">{formatPhone(r.phone)}</div>
@@ -421,9 +422,9 @@ function RepairCard({ repair: r, tab, isSelected, onSelect, prepMode = false, ch
 
             {/* 고객 정보 */}
             <div className="flex items-center gap-1 min-w-0">
-              <span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
+              <CustomerPeek customerId={r.customer_id} className="min-w-0 flex"><span className={`text-sm font-semibold truncate ${isCancelled ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>
                 {r.name}
-              </span>
+              </span></CustomerPeek>
               <ActivityChips types={actTypes} className="shrink-0" />
             </div>
             <p className="text-xs text-neutral-500">{formatPhone(r.phone)}</p>

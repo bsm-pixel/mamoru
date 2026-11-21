@@ -19,6 +19,7 @@ import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL, formatD
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
@@ -890,7 +891,7 @@ const SalesGridTable = memo(function SalesGridTable({
               <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDateFull(item.date)}{isSale && d.payment_status === 'paid' && !d.shipped_at && !d.delivered_at && !cancelled && <DaysSince date={item.date} warnDays={unshippedDays} className="ml-1.5" />}</td>
               <td className="px-3 py-2.5">
                 <div className="flex items-center gap-1 min-w-0">
-                  <span className={`font-semibold text-indigo-black truncate ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</span>
+                  <CustomerPeek customerId={d.customer_id as string | null | undefined} className="min-w-0 flex"><span className={`font-semibold text-indigo-black truncate ${cancelled ? 'line-through' : ''}`}>{d.customer_name || '—'}</span></CustomerPeek>
                   {isSale && <ActivityChips types={actLookup?.(d.customer_phone)} className="shrink-0" />}
                 </div>
                 {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
@@ -947,9 +948,9 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
       <div className="flex-1 min-w-0 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 min-w-0">
-            <span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
+            <CustomerPeek customerId={sale.customer_id} className="min-w-0 flex"><span className={`text-sm font-semibold text-indigo-black truncate ${isCancelled ? 'line-through' : ''}`}>
               {sale.customer_name}
-            </span>
+            </span></CustomerPeek>
             <ActivityChips types={actTypes} className="shrink-0" />
           </div>
           <div className="text-xs text-neutral-500 mt-0.5 flex items-center gap-1.5 flex-wrap">

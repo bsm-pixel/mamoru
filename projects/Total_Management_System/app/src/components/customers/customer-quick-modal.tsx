@@ -66,7 +66,7 @@ export function CustomerQuickModal({ customerId, open, onClose }: Props) {
               ...sales.map((s) => ({ type: 'sale', date: s.sale_date, title: s.sale_number, amount: s.paid_amount, href: `/sales/${s.id}` })),
               ...contracts.map((ct) => ({ type: 'contract', date: ct.created_at, title: ct.contract_number, amount: ct.final_amount, href: `/contracts/${ct.id}` })),
               ...consultations.map((con) => ({ type: 'consultation', date: con.visit_date || con.created_at, title: CONSULTATION_TYPE_LABEL[con.consultation_type] || con.consultation_type, href: `/consultations/${con.id}` })),
-              ...((repairs as unknown as Array<{ id: string; repair_number: string; total_cost: number | null; created_at: string }>) || []).map((r) => ({ type: 'repair', date: r.created_at, title: r.repair_number || '복원수리', amount: r.total_cost || 0, href: `/repairs/${r.id}` })),
+              ...repairs.map((r) => ({ type: 'repair', date: r.created_at, title: r.as_id || '복원수리', amount: r.total_amount || 0, href: `/repairs/${r.id}` })),
               ...orders.map((o) => ({ type: 'order', date: o.ordered_at, title: `아임웹 ${o.imweb_order_no}`, amount: o.paid_amount || 0, href: `/orders/${o.id}` })),
             ].filter((t) => !!t.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
             // 이번 상담 1건뿐이면 사실상 첫 방문 — 응대 톤을 바로 잡게 알려준다

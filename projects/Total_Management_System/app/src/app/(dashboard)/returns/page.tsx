@@ -15,6 +15,7 @@ import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { ReturnRow } from '@/lib/supabase/types';
@@ -62,7 +63,7 @@ export default function ReturnsPage() {
           className={`w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition ${selectedId === r.id ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-stone-800 truncate">{r.name || '이름없음'}</span>
+              <CustomerPeek customerId={r.customer_id} className="min-w-0 flex"><span className="text-sm font-semibold text-stone-800 truncate">{r.name || '이름없음'}</span></CustomerPeek>
               <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${RETURN_STATUS_COLOR[r.status]}`}>{RETURN_STATUS_LABEL[r.status]}</span>
               <span className="text-[10px] font-semibold text-neutral-400">{returnTypeChip(r.return_type)}</span>
               {/* 164: 납품(B2B)에서 생긴 반품 */}

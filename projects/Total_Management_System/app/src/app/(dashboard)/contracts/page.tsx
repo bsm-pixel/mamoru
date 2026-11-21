@@ -19,6 +19,7 @@ import { StageGrid } from '@/components/ui/stage-grid';
 import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 import { ContractDetailPanel } from '@/components/contracts/contract-detail-panel';
 import { Plus, FileText } from 'lucide-react';
 import type { Contract } from '@/lib/supabase/types';
@@ -53,7 +54,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 const CONTRACT_COLUMNS: GridColumn<Contract>[] = [
   { key: 'no', label: '계약번호', render: (c) => <span className={`font-mono text-[11px] text-neutral-500 ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.contract_number}</span> },
   { key: 'created', label: '작성일', render: (c) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{formatDate(c.created_at)}</span> },
-  { key: 'customer', label: '고객', render: (c) => <span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span> },
+  { key: 'customer', label: '고객', render: (c) => <CustomerPeek customerId={c.customer_id} className="min-w-0 flex"><span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span></CustomerPeek> },
   { key: 'status', label: '상태', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${STATUS_COLOR[c.status] || 'bg-neutral-100 text-neutral-500'}`}>{STATUS_LABEL[c.status] || c.status}</span> },
   { key: 'pay', label: '결제', render: (c) => <span className="text-neutral-500 text-xs">{PAYMENT_LABEL[c.payment_method] || c.payment_method || '—'}</span> },
   { key: 'amount', label: '금액', align: 'right', render: (c) => <span className={`font-bold tabular-nums ${c.status === 'cancelled' ? 'line-through text-neutral-400' : 'text-indigo-black'}`}>{formatKRW(c.final_amount)}</span> },
@@ -77,7 +78,7 @@ export default function ContractsPage() {
     CONTRACT_COLUMNS.map((col) => col.key === 'customer'
       ? { ...col, render: (c: Contract) => (
           <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
-            <span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span>
+            <CustomerPeek customerId={c.customer_id} className="min-w-0 flex"><span className={`font-semibold text-indigo-black truncate ${c.status === 'cancelled' ? 'line-through' : ''}`}>{c.customer_name}</span></CustomerPeek>
             <ActivityChips types={contractActTypes(c.customer_phone)} className="shrink-0" />
           </span>
         ) }
@@ -266,9 +267,9 @@ const ContractRow = memo(function ContractRow({ contract, isSelected, onClick, a
     <div onClick={onClick} className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-stone-50/60 transition ${isCancelled ? 'opacity-50' : ''} ${isSelected ? 'bg-stone-100 border-l-2 border-l-stone-900' : ''}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-semibold text-stone-900 truncate ${isCancelled ? 'line-through' : ''}`}>
+          <CustomerPeek customerId={contract.customer_id} className="min-w-0 flex"><span className={`text-sm font-semibold text-stone-900 truncate ${isCancelled ? 'line-through' : ''}`}>
             {contract.customer_name}
-          </span>
+          </span></CustomerPeek>
           <ActivityChips types={actTypes} className="shrink-0" />
           <Badge className={STATUS_COLOR[contract.status] || ''}>
             {STATUS_LABEL[contract.status] || contract.status}

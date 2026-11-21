@@ -100,10 +100,9 @@ export function useCustomer(id: string) {
         }>;
         repairs: Array<{
           id: string;
-          repair_number: string;
+          as_id: string;
           status: string;
-          item_description: string | null;
-          total_cost: number | null;
+          total_amount: number | null;
           created_at: string;
         }>;
         orders?: Array<{

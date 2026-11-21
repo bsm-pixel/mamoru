@@ -19,6 +19,7 @@ import { DataGrid, type GridColumn } from '@/components/ui/data-grid';
 import { DeliveryDetailPanel } from '@/components/deliveries/delivery-detail-panel';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 import { useDeliveries, useDeliveryStats } from '@/hooks/use-deliveries';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW, formatDate, CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_COLOR } from '@/lib/utils/format';
@@ -44,6 +45,7 @@ const SHIP_TONE = { amber: 'text-amber-600', green: 'text-emerald-600', mute: 't
 /** 그리드 행 타입 — deliveries 는 훅에서 Record<string,unknown> 로 오므로 표시용 필드만 명시 */
 interface DeliveryLike extends DeliveryStatusInput {
   id: string;
+  customer_id?: string | null;
   customer_name?: string | null;
   company_name?: string | null;
   customer_type?: string | null;
@@ -56,7 +58,7 @@ interface DeliveryLike extends DeliveryStatusInput {
 /** PC 그리드 컬럼: 납품일·거래처·유형·상태·배송·결제·금액 */
 const DELIVERY_COLUMNS: GridColumn<DeliveryLike>[] = [
   { key: 'date', label: '납품일', render: (d) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{d.delivery_date ? formatDate(d.delivery_date) : '—'}</span> },
-  { key: 'customer', label: '거래처', render: (d) => <span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span> },
+  { key: 'customer', label: '거래처', render: (d) => <CustomerPeek customerId={d.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span></CustomerPeek> },
   { key: 'type', label: '유형', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{CUSTOMER_TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
   { key: 'status', label: '상태', render: (d) => { const c = getDeliveryStatusChip(d); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${c.className}`}>{c.label}</span>; } },
   { key: 'ship', label: '배송', render: (d) => { const s = getDeliveryShipStatus(d); return <span className={`text-xs font-medium ${SHIP_TONE[s.tone]}`}>{s.label}</span>; } },
@@ -104,7 +106,7 @@ export default function DeliveriesPage() {
     DELIVERY_COLUMNS.map((col) => col.key === 'customer'
       ? { ...col, render: (d: DeliveryLike) => (
           <span className="inline-flex items-center gap-1 min-w-0 max-w-full">
-            <span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span>
+            <CustomerPeek customerId={d.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span></CustomerPeek>
             <ActivityChips types={deliveryActTypes((d as { customer_phone?: string | null }).customer_phone)} className="shrink-0" />
           </span>
         ) }
@@ -339,9 +341,9 @@ const DeliveryRow = memo(function DeliveryRow({ dl, isSelected, onClick, actType
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-stone-900 truncate">
+          <CustomerPeek customerId={(dl.customer_id as string | null | undefined)} className="min-w-0 flex"><span className="text-sm font-semibold text-stone-900 truncate">
             {dl.customer_name as string}
-          </span>
+          </span></CustomerPeek>
           <ActivityChips types={actTypes} className="shrink-0" />
           {/* 110: 상세와 같은 규칙 (납품확정 → 출고대기 → 출고완료 → 배송완료) */}
           {(() => {

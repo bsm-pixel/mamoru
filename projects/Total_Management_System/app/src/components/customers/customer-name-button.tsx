@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CustomerQuickModal } from '@/components/customers/customer-quick-modal';
+import { CustomerPeek } from '@/components/customers/customer-peek';
 
 /**
  * 고객 이름 → 「고객 정보」 모달(메모·상담 메모·최근 거래) (2026-10-22)
@@ -20,14 +21,15 @@ export function CustomerNameButton({ customerId, className = '', children }: {
   if (!customerId) return <span className={className}>{children}</span>;
   return (
     <>
+      <CustomerPeek customerId={customerId} className="min-w-0 inline-flex">
       <button
         type="button"
-        title="고객 정보·메모 보기"
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
         className={`${className} text-left underline decoration-dotted decoration-neutral-300 underline-offset-4 hover:decoration-neutral-700 transition`}
       >
         {children}
       </button>
+      </CustomerPeek>
       {open && (
         <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
           <CustomerQuickModal customerId={customerId} open onClose={() => setOpen(false)} />

@@ -35,7 +35,8 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(10),
       db.from('repairs')
-        .select('id, repair_number, status, item_description, total_cost, created_at')
+        // 2026-11-21 없는 칸 이름으로 조회해 400 이 나고(오류 검사 없음) 복원수리 이력이 늘 비어 있었다
+        .select('id, as_id, status, total_amount, created_at')
         .eq('customer_id', id)
         .order('created_at', { ascending: false })
         .limit(10),

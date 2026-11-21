@@ -40,6 +40,16 @@ const FIXTURES = {
       { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 10000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-4', name: '단가없는상사', phone: '010-0000-0004', phone_normalized: '01000000004', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: null, created_at: '2026-11-04T00:00:00Z', updated_at: '2026-11-04T00:00:00Z', total_spent: 0, purchase_count: 0 },
     ],
+    // 고객 미리 보기 점검용 (2026-11-21) — 계약서 1건 · 복원수리 1건 · 메모 1건이 점검고객가에 붙어 있다
+    contracts: [
+      { id: 'ct-check-1', contract_number: 'CT-CHECK-001', customer_id: 'c-check-1', customer_name: '점검고객가', customer_phone: '010-0000-0001', status: 'signed', payment_method: 'card', final_amount: 500000, total_amount: 500000, created_at: '2026-11-05T00:00:00Z', updated_at: '2026-11-05T00:00:00Z' },
+    ],
+    repairs: [
+      { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
+    ],
+    customer_notes: [
+      { id: 'n-check-1', customer_id: 'c-check-1', body: '점검 메모 한 줄', category: null, created_at: '2026-11-07T00:00:00Z', deleted_at: null },
+    ],
     products: [
       { id: 'p-check-1', name: '점검가위 가', sku: 'CHK-001', category: 'SCI', product_group: null, price: 1250000, price_purchase: 400000, stock_quantity: 3, is_active: true, zone_raw: 3, zone_ready: 0, zone_display: 0, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z' },
       { id: 'p-check-2', name: '점검가위 나', sku: 'CHK-002', category: 'SCI', product_group: null, price: 980000, price_purchase: 300000, stock_quantity: 5, is_active: true, zone_raw: 5, zone_ready: 0, zone_display: 0, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z' },
@@ -277,6 +287,30 @@ async function pcChecks(browser) {
   if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
+
+  // 고객 미리 보기 — 목록의 고객 이름에 마우스를 올리면 작은 카드, 벗어나면 사라진다 (2026-11-21)
+  await open(page, '/contracts');
+  {
+    const bad = [];
+    const name = await page.evaluateHandle(() => Array.from(document.querySelectorAll('main [data-customer-peek]')).find((e) => /점검고객가/.test(e.textContent || '') && e.getClientRects().length > 0));
+    if (!name.asElement()) bad.push('계약서 목록에서 고객 이름을 못 찾음');
+    else {
+      await name.asElement().hover();
+      try {
+        await page.waitForFunction(() => /고객 열기/.test(document.getElementById('customer-peek-card')?.textContent || ''), { timeout: 8000 });
+        const t = await page.evaluate(() => document.getElementById('customer-peek-card')?.textContent || '');
+        if (!/미수금/.test(t)) bad.push('카드에 미수금이 없음');
+        if (!/복원수리/.test(t)) bad.push('최근 거래에 복원수리가 안 보임');
+        if (!/점검 메모 한 줄/.test(t)) bad.push('마지막 메모가 안 보임');
+        const href = await page.evaluate(() => document.querySelector('#customer-peek-card a')?.getAttribute('href') || '');
+        if (href !== '/customers/c-check-1') bad.push(`[고객 열기] 주소가 ${href}`);
+      } catch { bad.push('마우스를 올려도 카드가 안 뜸'); }
+      await page.mouse.move(5, 5);
+      await sleep(600);
+      if (await page.evaluate(() => !!document.getElementById('customer-peek-card'))) bad.push('마우스를 치워도 카드가 남음');
+    }
+    if (bad.length) fail('고객 미리 보기 — 이름에 마우스 올리기', bad.join(' / ')); else ok('고객 미리 보기 — 유형 · 미수금 · 최근 거래 · 마지막 메모 · [고객 열기]');
+  }
 
   // 고객 검색 — 상세 주소에 적힌 말로도 찾고, 두 글자부터 찾는다 (2026-11-20)
   await open(page, '/customers');
