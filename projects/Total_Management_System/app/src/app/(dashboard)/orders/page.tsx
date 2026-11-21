@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useOrders, useOrderSync, useOrderCounts } from '@/hooks/use-orders';
+import { useOrders, useOrderSync, useOrderCounts, useUpdateOrderMemo } from '@/hooks/use-orders';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { formatKRW,  ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, formatDateTimeShort } from '@/lib/utils/format';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -23,6 +23,7 @@ import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { InlineMemo } from '@/components/ui/inline-memo';
 import { usePageSize } from '@/hooks/use-page-size';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import type { Order } from '@/lib/supabase/types';
@@ -80,7 +81,7 @@ export default function OrdersPage() {
   const orderColumns: GridColumn<Order>[] = [
     { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTimeShort(o.ordered_at)}{['pay_done', 'preparing', 'ready_to_ship'].includes(o.status) && <DaysSince date={o.ordered_at} warnDays={unshippedDays} className="ml-1.5" />}</span> },
     { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
-    { key: 'name', label: '주문자', render: (o) => <span className="inline-flex items-center gap-1 min-w-0 max-w-full"><CustomerPeek customerId={o.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span></CustomerPeek><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span> },
+    { key: 'name', label: '주문자', render: (o) => <div className="min-w-0"><span className="inline-flex items-center gap-1 min-w-0 max-w-full"><CustomerPeek customerId={o.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span></CustomerPeek><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span><OrderMemoCell order={o} /></div> },
     { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },
     { key: 'pay', label: '결제', render: (o) => o.paid_at
       ? <span className="text-emerald-600 text-xs font-medium">결제완료</span>
@@ -390,3 +391,9 @@ const OrderRow = memo(function OrderRow({ order, isSelected, onClick, onInvoice,
     </div>
   );
 });
+
+/** 목록에서 사장님 메모 바로 고치기 (2026-11-21) — 상세와 같은 값(admin_note), 고객에게는 안 보인다 */
+function OrderMemoCell({ order }: { order: Order }) {
+  const update = useUpdateOrderMemo();
+  return <InlineMemo value={order.admin_note} onSave={(next) => update.mutate({ id: order.id, admin_note: next })} />;
+}

@@ -40,8 +40,7 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
   // 사장님 메모(관리자 전용, admin_note) — 선택 건이 바뀔 때만 서버값으로 초기화(타이핑 중 값 보존)
   const [adminNote, setAdminNote] = useState(r.admin_note || '');
   const [savingNote, setSavingNote] = useState(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setAdminNote(r.admin_note || ''); }, [r.id]);
+  useEffect(() => { setAdminNote(r.admin_note || ''); }, [r.id, r.admin_note]);
   const adminNoteDirty = adminNote !== (r.admin_note ?? '');
   const handleSaveNote = async () => {
     if (!onUpdate) return;

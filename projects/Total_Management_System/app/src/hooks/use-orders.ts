@@ -171,6 +171,7 @@ export function useUpdateOrderMemo() {
     onSuccess: (_d, { id }) => {
       toast.success('메모 저장됨');
       queryClient.invalidateQueries({ queryKey: ['order', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders'] }); // 2026-11-21 목록에서 바로 고친 메모가 목록에도 보이게
     },
     onError: (err) => toast.error('메모 저장 실패: ' + String(err)),
   });

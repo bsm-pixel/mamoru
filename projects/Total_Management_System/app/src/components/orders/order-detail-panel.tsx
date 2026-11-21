@@ -30,8 +30,7 @@ export function OrderDetailPanel({ orderId }: Props) {
   // 사장님 메모(관리자 전용) — 선택 주문이 바뀔 때만 서버값으로 초기화(타이핑 중 값 보존)
   const updateMemo = useUpdateOrderMemo();
   const [adminNote, setAdminNote] = useState('');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { setAdminNote(data?.order?.admin_note || ''); }, [data?.order?.id]);
+  useEffect(() => { setAdminNote(data?.order?.admin_note || ''); }, [data?.order?.id, data?.order?.admin_note]);
   // 주문 액션(상단 주/하단 부차/모달) — rules-of-hooks 위해 조기 return 전에 호출(nullable 가드 내장)
   const orderActions = useOrderActions(data?.order, data?.items ?? []);
 

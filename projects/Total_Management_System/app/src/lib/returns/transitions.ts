@@ -132,3 +132,18 @@ export const PICKUP_IN_PERSON = '대면수령';
 export function isCourierPickup(pickupMethod?: string | null): boolean {
   return String(pickupMethod || '').trim() === PICKUP_COURIER;
 }
+
+/**
+ * 지금 이 건의 「다음 할 일」 (2026-11-21) — 상세의 검은 버튼과 목록 줄 끝 버튼이 같은 규칙을 쓴다.
+ * 점검 · 조정은 재발송 송장이 나가기 전엔 '완료'를 권하지 않는다(돌려보내기 전에 끝내는 실수 방지).
+ */
+export function returnPrimaryNext(r: { status: ReturnStatus; return_type?: string | null; exchange_out_invoice_number?: string | null }): ReturnStatus | undefined {
+  const isAdjust = isAdjustReturn(r.return_type);
+  if (isAdjust && !r.exchange_out_invoice_number && ['inbound', 'inspected'].includes(r.status)) return undefined;
+  const next = RETURN_PRIMARY_NEXT[r.status];
+  return next && getAllowedReturnTransitions(r.status).includes(next) ? next : undefined;
+}
+
+export function returnActionLabel(r: { return_type?: string | null }, next: ReturnStatus): string {
+  return isAdjustReturn(r.return_type) && next === 'inbound' ? '입고완료' : RETURN_ACTION_LABEL[next];
+}

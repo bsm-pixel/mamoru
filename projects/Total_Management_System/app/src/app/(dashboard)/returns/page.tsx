@@ -10,12 +10,14 @@ import { SlidePanel } from '@/components/ui/slide-panel';
 import { StageGrid } from '@/components/ui/stage-grid';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useReturns, useUpdateReturn, useShipReturn, useBookReturnPickup } from '@/hooks/use-returns';
-import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, RETURN_PRIMARY_NEXT, getAllowedReturnTransitions, returnTypeChip, isAdjustReturn, ADJUST_STATUS_HINT } from '@/lib/returns/transitions';
+import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, RETURN_ACTION_LABEL, RETURN_STATUS_HINT, returnPrimaryNext, returnActionLabel, getAllowedReturnTransitions, returnTypeChip, isAdjustReturn, ADJUST_STATUS_HINT } from '@/lib/returns/transitions';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
 import { runLater } from '@/lib/ui/undo-toast';
+import { rememberNextRow } from '@/lib/ui/next-row';
+import { confirmAsk } from '@/components/ui/confirm-ask';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -60,8 +62,8 @@ export default function ReturnsPage() {
   ) : (
     <div className="divide-y divide-neutral-100">
       {returns.map((r) => (
-        <button key={r.id} data-list-row data-selected={selectedId === r.id ? 'true' : undefined} onClick={() => setSelectedId(r.id)}
-          className={`w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition ${selectedId === r.id ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}>
+        <button key={r.id} data-list-row data-row-key={r.id} data-selected={selectedId === r.id ? 'true' : undefined} onClick={() => setSelectedId(r.id)}
+          className={`group w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition ${selectedId === r.id ? 'bg-stone-50 border-l-2 border-l-stone-900' : ''}`}>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <CustomerPeek customerId={r.customer_id} className="min-w-0 flex"><span className="text-sm font-semibold text-stone-800 truncate">{r.name || '이름없음'}</span></CustomerPeek>
@@ -76,6 +78,7 @@ export default function ReturnsPage() {
             </div>
           </div>
           {r.pickup_method && <span className="shrink-0 text-[11px] text-neutral-400 flex items-center gap-0.5"><Truck size={11} />{r.pickup_method}</span>}
+          <ReturnRowAction r={r} />
         </button>
       ))}
     </div>
@@ -321,9 +324,7 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
            섞여 있었고, [취소]가 보조 버튼과 같은 줄에 나란히 있어 오클릭 위험이 있었다 */}
       {allowed.length > 0 && (() => {
         // 점검·조정: 재발송 송장이 나가기 전엔 '완료'를 큰 버튼으로 두지 않는다(돌려보내기 전에 끝내는 실수 방지)
-        const primary = isAdjust && !hasInvoice && ['inbound', 'inspected'].includes(r.status)
-          ? undefined
-          : RETURN_PRIMARY_NEXT[r.status];
+        const primary = returnPrimaryNext(r); // 2026-11-21 목록 줄 끝 버튼과 같은 규칙(lib/returns/transitions)
         const secondary = allowed.filter((s) => s !== primary && s !== 'cancelled');
         return (
           <Card>
@@ -367,5 +368,33 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
         );
       })()}
     </div>
+  );
+}
+
+/**
+ * 줄 끝 「다음 할 일」 버튼 (2026-11-21, PC) — 상세를 열지 않고 처리하고, 끝나면 다음 건을 고른다.
+ * 줄에 마우스를 올렸을 때만 보인다. 누르면 한 번 확인(입고완료는 고객 알림이 나갈 수 있다).
+ * 줄 자체가 버튼이라 안쪽은 span(role=button)으로 둔다.
+ */
+function ReturnRowAction({ r }: { r: ReturnRow }) {
+  const update = useUpdateReturn();
+  const next = returnPrimaryNext(r);
+  if (!next) return null;
+  const label = returnActionLabel(r, next);
+  const run = async (el: Element) => {
+    const goNext = rememberNextRow(el);
+    if (!(await confirmAsk(`${r.name || '이 건'} — ${label}\n상세를 열지 않고 바로 처리합니다.`, { title: label, confirmLabel: label }))) return;
+    update.mutate({ id: r.id, status: next }, { onSuccess: goNext });
+  };
+  return (
+    <span
+      role="button"
+      tabIndex={-1}
+      data-row-action
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (!update.isPending) void run(e.currentTarget); }}
+      className="hidden lg:inline-flex shrink-0 items-center px-2 py-1 rounded-md bg-stone-900 text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 hover:bg-stone-800 transition"
+    >
+      {update.isPending ? '처리 중…' : label}
+    </span>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -24,6 +24,9 @@ import type { Repair } from '@/lib/supabase/types';
 import type { RepairTabKey } from './repair-tab-bar';
 import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { InlineMemo } from '@/components/ui/inline-memo';
+import { rememberNextRow } from '@/lib/ui/next-row';
+import { useQueryClient } from '@tanstack/react-query';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import { isAlpsTrackable } from '@/lib/shipping/couriers';
 import { StageGrid } from '@/components/ui/stage-grid';
@@ -158,6 +161,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
           <ActivityChips types={repairActTypes(r.phone)} className="shrink-0" />
         </div>
         <div className="text-[11px] text-neutral-400">{formatPhone(r.phone)}</div>
+        <RepairMemoCell repair={r} />
       </div>
     ) },
     { key: 'proceed', label: '진행방법', render: (r) => <ProceedBadge type={r.proceed_type} /> },
@@ -600,13 +604,20 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
   const isVisitHandover = r.proceed_type === '직접방문' && !r.invoice_number && (tab === 'in_progress' || tab === 'ready_to_ship')
     && (r.status === 'repairing' || r.status === 'ready_to_ship');
 
+  // 2026-11-21 처리한 뒤 다음 건으로 — 누르는 순간의 다음 줄을 기억해 둔다(처리하면 이 줄이 탭에서 빠진다)
+  const goNextRef = useRef<() => void>(() => {});
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    goNextRef.current = rememberNextRow(e.currentTarget);
     setShowConfirm(true);
   };
 
   // 확인 후 실행할 액션
   const handleConfirm = async () => {
+    await runAction();
+    goNextRef.current();
+  };
+  const runAction = async () => {
     if (isVisitHandover) {
       await updateStatus.mutateAsync({ id: r.id, status: 'completed', note: '고객 전달 완료 (매장 방문)' });
       return;
@@ -684,5 +695,19 @@ function InlineAction({ repair: r, tab }: { repair: Repair; tab: RepairTabKey })
         </div>
       )}
     </>
+  );
+}
+
+/** 목록에서 사장님 메모 바로 고치기 (2026-11-21) — 상세와 같은 값(admin_note), 고객에게는 안 보인다 */
+function RepairMemoCell({ repair }: { repair: Repair }) {
+  const update = useUpdateRepairFields();
+  const qc = useQueryClient();
+  return (
+    <InlineMemo
+      value={repair.admin_note}
+      onSave={(next) => update.mutate({ id: repair.id, admin_note: next }, {
+        onSuccess: () => { qc.invalidateQueries({ queryKey: ['repair-tabs'] }); qc.invalidateQueries({ queryKey: ['repairs'] }); },
+      })}
+    />
   );
 }

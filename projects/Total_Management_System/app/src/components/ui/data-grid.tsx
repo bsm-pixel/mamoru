@@ -66,10 +66,11 @@ function DataGridInner<T>({
             <tr
               key={key}
               data-list-row
+              data-row-key={key}
               data-selected={sel ? 'true' : undefined}
               onClick={() => onSelect?.(row)}
               className={cn(
-                'border-b border-neutral-100 transition',
+                'group border-b border-neutral-100 transition', // group: 줄에 마우스를 올렸을 때만 보이는 것(+ 메모 등)
                 onSelect && 'cursor-pointer',
                 sel ? 'bg-[#F4F0EA] shadow-[inset_3px_0_0_#1A1A1A]' : 'hover:bg-warm-ivory/50',
                 rowClassName?.(row),
