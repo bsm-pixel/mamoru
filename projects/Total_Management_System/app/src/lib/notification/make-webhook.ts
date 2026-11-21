@@ -76,6 +76,7 @@ const REPAIR_STATUS_TEMPLATES = new Set<NotifyTemplate>([
   'as_visit_remind_2h',
   'as_visit_rescheduled',
   'as_visit_cancelled',
+  'as_handed_over',     // 2026-11-21 직접 전달 완료 (수리내역 조회 버튼) — Make 분기가 생기기 전엔 받아도 아무것도 안 보낸다
 ]);
 
 /** 아임웹 주문 취소·반품 안내 (전용 Make 시나리오 → webhook_imweb, 폴백 없음) — 2026-09-14 */
@@ -169,6 +170,7 @@ export type NotifyTemplate =
   | 'as_visit_rescheduled' // 직접방문 예약 변경 안내 → webhook_repair
   | 'as_visit_cancelled'  // 직접방문 예약 취소 완료 → webhook_repair
   // 165: 출장 현장 맡김(판매 입력에서 접수) — webhook_field_repair 전용
+  | 'as_handed_over'      // 2026-11-21 택배 없이 직접 전달 완료 (수리내역 조회) → webhook_repair
   | 'as_field_received'   // 출장 맡김 확인 (접수번호·자루 수·결제 완료)
   | 'combined_shipped'    // 제품·복원수리 함께 출고 (같은 송장) — as_shipped + sales_shipped 대체
   | 'review_request'      // 상담 리뷰 요청 → webhook_consultation
@@ -227,6 +229,7 @@ const TEMPLATE_EVENT_MAP: Record<NotifyTemplate, string> = {
   as_visit_remind_2h: 'AS_VISIT_REMIND_2H',
   as_visit_rescheduled: 'AS_VISIT_RESCHEDULED',
   as_visit_cancelled: 'AS_VISIT_CANCELLED',
+  as_handed_over: 'AS_HANDED_OVER',
   as_field_received: 'AS_FIELD_RECEIVED',
   combined_shipped: 'COMBINED_SHIPPED',
   review_request: 'REVIEW_REQUEST',          // 상담 리뷰 요청 → MAKE_WEBHOOK_URL

@@ -802,7 +802,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
           setConfirmAction(null);
         }}
         title="직접 수령 (매장 전달)"
-        message={<>{r.name}님께 매장에서 <strong>직접 전달</strong>(택배 없이)한 것으로 처리합니다.<br />배송완료 상태가 됩니다.</>}
+        message={<>{r.name}님께 매장에서 <strong>직접 전달</strong>(택배 없이)한 것으로 처리합니다.<br />배송완료 상태가 됩니다. 후기 요청 알림톡은 3시간 뒤에 나갑니다.</>}
         confirmLabel="직접 수령 완료"
       />
       <ConfirmModal

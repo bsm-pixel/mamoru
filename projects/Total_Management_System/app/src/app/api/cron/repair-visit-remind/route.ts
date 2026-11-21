@@ -26,6 +26,7 @@ function formatKoreanDate(dateStr: string): string {
  *     - 대상: 직접방문 + completed + 직접전달(delivery_method='pickup') + 후기 자동발송 켜짐 + 미발송 + 전달 3시간~3일 사이
  *     - 전달 직후엔 고객이 아직 매장에 있을 수 있어 바로 보내지 않는다. 밤 9시~아침 9시(KST)엔 보내지 않고 다음 회차로 미룬다
  *     - 택배 건의 후기 요청은 기존대로 배송완료 시점(api/repair/[id] PATCH)에 나간다
+ *     - 2026-11-21 택배 건을 송장 없이 손으로 건넨 경우(「직접 수령」 → delivered + pickup)도 여기서 3시간 뒤에 보낸다
  */
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
@@ -138,8 +139,8 @@ export async function GET(req: NextRequest) {
       const { data: handed } = await dbAny
         .from('repairs')
         .select('id, as_id, name, phone, proceed_type, review_promised_type, review_promised_subtype, delivered_at')
-        .eq('proceed_type', '직접방문')
-        .eq('status', 'completed')
+        // 2026-11-21 방문 건(completed)뿐 아니라 택배 건을 손으로 건넨 경우(delivered · 「직접 수령」)도 같은 규칙
+        .in('status', ['delivered', 'completed'])
         .eq('delivery_method', 'pickup')
         .not('review_promised_at', 'is', null)
         .is('review_request_sent_at', null)

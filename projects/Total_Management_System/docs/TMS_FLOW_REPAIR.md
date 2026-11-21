@@ -3,6 +3,16 @@
 >
 > **마스터 문서**: [TMS_SYSTEM_ARCHITECTURE.md](TMS_SYSTEM_ARCHITECTURE.md) §3 참조
 
+## 2026-11-21 — 직접 전달(송장 없이 손으로 건넴): 전달 안내 알림톡 + 후기 요청 3시간 뒤
+
+택배 건(직접발송 · 방문수거 · 출장수거)을 송장 없이 건네면 `다른 처리 방법` → `직접 수령 (매장 전달)` → `delivered` + `delivery_method='pickup'`.
+
+- **전에는**: 출고 알림톡(`as_shipped`)이 안 나가 수리내역서 링크가 고객에게 갈 길이 없었고, 후기 요청은 버튼을 누른 즉시 나갔다.
+- **지금**: 버튼을 누르면 `as_handed_over`(직접 전달 완료 · [수리내역 조회] 버튼) 발송 → 후기 요청은 3시간 뒤 크론(`api/cron/repair-visit-remind` [3])이 보낸다. 방문 건 「고객 전달 완료」와 같은 규칙.
+- 판정은 서버(`api/repair/[id]` PATCH `isDirectHandover`): `delivered` + `pickup` + 송장 없음 + 수리중/작업완료에서 온 경우만. 송장이 있는 건의 배송완료는 전과 같다.
+- 크론 [3] 대상이 `직접방문 + completed` → `pickup + (delivered|completed)` 로 넓어졌다.
+- 템플릿 문안 · Make 분기 · 가동 순서: [AS_HANDOVER_ALIMTALK.md](AS_HANDOVER_ALIMTALK.md). 분기를 만들기 전엔 Make 가 신호를 받아도 아무것도 보내지 않는다.
+
 ## 2026-11-10 — 출고완료 탭: 최근 30일·최신순·전체기간 검색
 - 전: shipped_at 내림차순 + 50건 상한 → 탭 숫자 늘 50(실제 70), 출고일 없는 방문 건이 맨 위, 검색이 50건 안에서만
 - 후: 끝난 날(delivered_at ?? shipped_at ?? updated_at) 기준 최근 30일만 최신순, 탭 숫자=실제 건수 (`hooks/use-repair-tabs.ts`)

@@ -103,6 +103,15 @@ export async function PATCH(
       !current.invoice_number &&
       ['repairing', 'ready_to_ship'].includes(current.status);
 
+    // 2026-11-21 택배 건을 송장 없이 손으로 건넨 경우(「직접 수령」 버튼) — 배송완료로 가지만 출고 알림톡이 없어
+    //   수리내역서 링크가 고객에게 갈 길이 없었다. 여기서 전달 안내(as_handed_over · 수리내역 조회 버튼)를 보내고,
+    //   후기 요청은 방문 건처럼 3시간 뒤 크론(api/cron/repair-visit-remind [3])에 맡긴다 — 건네기 직전에 눌러도 후기 요청이 먼저 가지 않게.
+    const isDirectHandover =
+      newStatus === 'delivered' &&
+      rest.delivery_method === 'pickup' &&
+      !current.invoice_number &&
+      ['repairing', 'ready_to_ship'].includes(current.status);
+
     // 상태 전이 검증
     if (newStatus && newStatus !== current.status && !isVisitHandover) {
       const valid = isValidRepairTransition(
@@ -160,6 +169,23 @@ export async function PATCH(
           template = 'as_visit_cancelled';
         }
         if (!template || !data.phone) return;
+
+        if (isDirectHandover) {
+          const result = await sendNotification({
+            template: 'as_handed_over',
+            phone: data.phone,
+            name: data.name,
+            skipAdminPush: true, // 사장님이 방금 직접 누른 일
+            data: {
+              id: data.as_id,
+              as_id: data.as_id,
+              as_uid: data.as_id, // 수리내역 조회 버튼 #{as_uid}
+              qty: String((Number(data.qty_mamoru) || 0) + (Number(data.qty_other) || 0)),
+            },
+          });
+          if (!result.success) console.error('[repair handover] 전달 안내 실패:', result.error);
+          return; // 후기 요청은 3시간 뒤 크론이 보낸다
+        }
 
         // 067: 후기 요청 자동 발송 가드
         // 2026-05-26: 약속 ✓ 고객만 → 153(2026-09-16) 기본 ON 으로 뒤집음 (해제한 건만 걸린다)
