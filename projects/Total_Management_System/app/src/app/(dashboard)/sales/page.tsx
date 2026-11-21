@@ -25,7 +25,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { Plus, FileSignature, Receipt, LayoutGrid, Package } from 'lucide-react';
-import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { PrepSheetModal } from '@/components/lazy-modals';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import { StageGrid } from '@/components/ui/stage-grid';

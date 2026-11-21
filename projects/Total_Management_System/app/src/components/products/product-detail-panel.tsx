@@ -14,7 +14,7 @@ import { useProduct, useUpdateProduct, useCreateProduct, useSourcingByProduct } 
 import { formatKRW } from '@/lib/utils/format';
 import { Save, Package, Hash, X, Plus, Archive, Copy, Eye, EyeOff, Trash2, ArrowRightLeft, ArrowRight, ExternalLink, Printer, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { LabelPrintModal } from '@/components/lazy-modals';
 import { StockImageManager } from '@/components/products/stock-image-manager';
 import { ReturnStockCard } from '@/components/inventory/return-stock-card';
 import { useLabelTemplate } from '@/hooks/use-label-templates';

@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useSerials, useCreateSerial, useCreateSerialBatch, useUpdateSerialStatus, useUpdateSerialZone } from '@/hooks/use-serials';
 import { formatDateTime } from '@/lib/utils/format';
 import { Plus, Search, Barcode, Printer, QrCode } from 'lucide-react';
-import { LabelPrintModal } from '@/components/labels/label-print-modal';
+import { LabelPrintModal } from '@/components/lazy-modals';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { sendZplToPrinter, downloadZpl } from '@/lib/label/browser-print';
 import { buildVerifyQrZpl } from '@/lib/label/verify-qr-label';

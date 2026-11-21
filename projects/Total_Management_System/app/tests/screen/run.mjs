@@ -47,6 +47,11 @@ const FIXTURES = {
     repairs: [
       { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
     ],
+    // 목록 기능 점검용 (2026-11-21) — 주문 3건(메모 바로 고치기 · Shift 범위 선택) · 반품 1건(5초 되돌리기)
+    orders: [1, 2, 3].map((n) => ({ id: `o-check-${n}`, imweb_order_no: `2026000000000${n}`, orderer_name: `점검주문${n}`, orderer_phone: `0100000010${n}`, recipient_name: `점검주문${n}`, status: 'pay_done', paid_amount: 100000 * n, paid_at: '2026-11-20T00:00:00Z', ordered_at: `2026-11-2${n}T00:00:00Z`, invoice_number: null, admin_note: null, customer_id: null, created_at: `2026-11-2${n}T00:00:00Z` })),
+    returns: [
+      { id: 'rt-check-1', return_number: 'RT-CHECK-001', name: '점검반품', phone: '01000000201', status: 'requested', return_type: 'refund', product_name: '점검가위 가', serial_number: null, customer_id: null, source: 'sale', pickup_method: null, created_at: '2026-11-20T00:00:00Z', updated_at: '2026-11-20T00:00:00Z' },
+    ],
     customer_notes: [
       { id: 'n-check-1', customer_id: 'c-check-1', body: '점검 메모 한 줄', category: null, created_at: '2026-11-07T00:00:00Z', deleted_at: null },
     ],
@@ -287,6 +292,103 @@ async function pcChecks(browser) {
   if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
+
+  // 주문 목록 — 메모를 줄에서 바로 고친다 · Shift 로 범위 선택 (2026-11-21)
+  await open(page, '/orders');
+  {
+    const bad = [];
+    const rowOf = (name) => page.evaluateHandle((n) => Array.from(document.querySelectorAll('main tr[data-list-row]')).find((r) => (r.textContent || '').includes(n)), name);
+    const row1 = (await rowOf('점검주문1')).asElement();
+    if (!row1) bad.push('주문 줄을 못 찾음');
+    else {
+      await row1.hover();
+      const memoBtn = await row1.$('button[data-inline-memo]');
+      if (!memoBtn) bad.push('줄에 「+ 메모」가 없음');
+      else {
+        const wait = page.waitForRequest((r) => r.url().includes('/api/orders/o-check-1/memo') && r.method() === 'POST', { timeout: 8000 }).catch(() => null);
+        await memoBtn.click();
+        await page.keyboard.type('점검 메모');
+        await page.keyboard.press('Enter');
+        const req = await wait;
+        if (!req) bad.push('Enter 를 눌러도 저장 요청이 안 나감');
+        else if (JSON.parse(req.postData() || '{}').admin_note !== '점검 메모') bad.push(`저장한 글이 다름: ${req.postData()}`);
+        if (new URL(page.url()).searchParams.get('id')) bad.push('메모를 눌렀는데 상세가 열림');
+      }
+      // Shift 범위: 첫 줄 체크 → Shift 누른 채 셋째 줄 체크 → 3건
+      const checks = await page.$$('main input[data-row-check]');
+      if (checks.length < 3) bad.push(`체크박스 ${checks.length}개`);
+      else {
+        await checks[0].click();
+        await page.keyboard.down('Shift'); await checks[2].click(); await page.keyboard.up('Shift');
+        await sleep(300);
+        const n = await page.evaluate(() => document.querySelectorAll('main input[data-row-check]:checked').length);
+        if (n !== 3) bad.push(`Shift 범위 선택 뒤 체크 ${n}개(3개여야 함)`);
+        if (!/3건 선택됨/.test(await page.evaluate(() => document.querySelector('main')?.textContent || ''))) bad.push('「3건 선택됨」이 안 보임');
+      }
+    }
+    if (bad.length) fail('주문 목록 — 메모 바로 고치기 · Shift 범위 선택', bad.join(' / ')); else ok('주문 목록 — 메모를 줄에서 고침(Enter 저장) · Shift 로 3건 선택');
+  }
+
+  // 5초 되돌리기 — 반품 취소를 누르고 [되돌리기] 를 누르면 취소되지 않는다 (2026-11-21)
+  await open(page, '/returns');
+  {
+    const bad = [];
+    let patched = 0;
+    const onReq = (r) => { if (r.url().includes('/api/returns/rt-check-1') && r.method() === 'PATCH') patched++; };
+    page.on('request', onReq);
+    const row = await page.evaluateHandle(() => Array.from(document.querySelectorAll('main [data-list-row]')).find((r) => (r.textContent || '').includes('점검반품')));
+    if (!row.asElement()) bad.push('반품 줄을 못 찾음');
+    else {
+      await row.asElement().click();
+      await sleep(600);
+      // 위험 구역은 「⋯ 더 보기」로 접혀 있다 — 먼저 펼친다
+      await page.evaluate(() => Array.from(document.querySelectorAll('main button[aria-expanded="false"]')).filter((e) => /더 보기/.test(e.textContent || '')).forEach((e) => e.click()));
+      await sleep(300);
+      const clicked = await page.evaluate(() => { const b = Array.from(document.querySelectorAll('main button')).find((e) => (e.textContent || '').trim() === '반품 취소'); if (!b) return false; b.click(); return true; });
+      if (!clicked) bad.push('[반품 취소] 버튼을 못 찾음');
+      else {
+        try { await page.waitForSelector('button[data-undo]', { timeout: 4000 }); } catch { bad.push('[되돌리기] 가 안 보임'); }
+        await page.evaluate(() => document.querySelector('button[data-undo]')?.click());
+        await sleep(6000);
+        if (patched > 0) bad.push('되돌렸는데 취소 요청이 나감');
+        // 되돌리지 않으면 5초 뒤 실제로 실행돼야 한다(미뤄 둔 일이 사라지면 안 된다)
+        await page.evaluate(() => Array.from(document.querySelectorAll('main button')).find((e) => (e.textContent || '').trim() === '반품 취소')?.click());
+        await sleep(6500);
+        if (patched !== 1) bad.push(`되돌리지 않았는데 취소 요청이 ${patched}번`);
+      }
+    }
+    page.off('request', onReq);
+    if (bad.length) fail('5초 되돌리기 — 반품 취소', bad.join(' / ')); else ok('5초 되돌리기 — 반품 취소를 되돌리면 실행되지 않음');
+  }
+
+  // 임시 저장 — 발주 작성에서 쓰다가 새로고침하면 「작성하던 내용이 있습니다」 → 이어서 쓰기 (2026-11-21)
+  await open(page, '/purchasing/new');
+  {
+    const bad = [];
+    const acceptLeave = (d) => { d.accept().catch(() => {}); };
+    page.on('dialog', acceptLeave);
+    const memo = await page.$('main input[placeholder="메모 (선택)"]');
+    if (!memo) bad.push('메모 칸을 못 찾음');
+    else {
+      await memo.click();
+      await page.keyboard.type('점검 임시 저장');
+      await sleep(1200);
+      await page.reload({ waitUntil: 'networkidle2' });
+      try {
+        await page.waitForSelector('[data-draft-banner]', { timeout: 8000 });
+        await page.evaluate(() => Array.from(document.querySelectorAll('[data-draft-banner] button')).find((b) => (b.textContent || '').trim() === '이어서 쓰기')?.click());
+        await sleep(400);
+        const v = await page.$eval('main input[placeholder="메모 (선택)"]', (e) => e.value);
+        if (v !== '점검 임시 저장') bad.push(`이어서 쓰기 뒤 메모가 「${v}」`);
+        if (await page.$('[data-draft-banner]')) bad.push('이어서 쓴 뒤에도 안내가 남음');
+      } catch { bad.push('새로고침 뒤 안내가 안 보임'); }
+      // 뒷정리: 다음 점검에 남지 않게 초안을 지운다
+      await page.evaluate(() => { try { localStorage.removeItem('tms.draft.purchase-new'); } catch { /* 무시 */ } });
+    }
+    await open(page, '/dashboard');
+    page.off('dialog', acceptLeave);
+    if (bad.length) fail('임시 저장 — 발주 작성', bad.join(' / ')); else ok('임시 저장 — 새로고침 뒤 「이어서 쓰기」로 되살아남');
+  }
 
   // 고객 미리 보기 — 목록의 고객 이름에 마우스를 올리면 작은 카드, 벗어나면 사라진다 (2026-11-21)
   await open(page, '/contracts');

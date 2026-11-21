@@ -19,7 +19,7 @@ import { RefreshCw, Truck, ShoppingBag, Printer, X, MoreHorizontal } from 'lucid
 import { StageGrid } from '@/components/ui/stage-grid';
 import { useEscapeKey } from '@/hooks/use-media-query';
 import { InvoiceModal } from '@/components/orders/invoice-modal';
-import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { PrepSheetModal } from '@/components/lazy-modals';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';

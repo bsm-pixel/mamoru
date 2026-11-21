@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { UnifiedPrepModal } from './unified-prep-modal';
+import { UnifiedPrepModal } from '@/components/lazy-modals';
 
 /**
  * 전체 출고 준비표를 여는 한 곳 (2026-11-16)

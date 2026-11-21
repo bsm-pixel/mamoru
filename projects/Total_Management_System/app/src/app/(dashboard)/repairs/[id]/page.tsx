@@ -9,7 +9,7 @@ import { RepairDetailCard } from '@/components/repairs/repair-detail-card';
 import { InspectionSummary } from '@/components/repairs/inspection-summary';
 import { SidebarActionCard } from '@/components/repairs/sidebar-action-card';
 import { RepairTimeline } from '@/components/repairs/repair-timeline';
-import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
+import { RepairTagPrintModal } from '@/components/lazy-modals';
 import {
   useRepair,
   useUpdateRepairFields,

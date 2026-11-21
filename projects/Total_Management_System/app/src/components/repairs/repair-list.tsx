@@ -14,8 +14,7 @@ import {
   CreditCard, Truck, ClipboardCheck, Printer, CalendarOff, CalendarPlus, Tag,
 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
-import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
-import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
+import { RepairPrepSheetModal, RepairTagPrintModal } from '@/components/lazy-modals';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useNow } from '@/hooks/use-now';

@@ -11,9 +11,8 @@ import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, formatPhone } from '@/lib/utils/format';
 import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
+import { PrepSheetModal, LabelPrintModal } from '@/components/lazy-modals';
 import { StatusStepper } from '@/components/ui/status-stepper';
-import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { CopyButton } from '@/components/ui/copy-button';
 

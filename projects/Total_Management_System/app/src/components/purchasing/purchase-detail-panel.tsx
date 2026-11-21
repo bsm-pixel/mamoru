@@ -13,7 +13,7 @@ import { useProducts } from '@/hooks/use-sales';
 import { useQueryClient } from '@tanstack/react-query';
 import { Truck, Pencil, Minus, Plus, Trash2, X, Save, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { POPrintModal } from './po-print-modal';
+import { POPrintModal } from '@/components/lazy-modals';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { useEnterSelect } from '@/hooks/use-enter-select';

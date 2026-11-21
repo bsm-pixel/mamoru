@@ -2,6 +2,7 @@
 
 import { MamoruWordmark } from '@/components/ui/mamoru-logo';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
+import { useFormDraft, DraftBanner } from '@/hooks/use-form-draft';
 import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
@@ -191,6 +192,7 @@ export default function NewContractPage() {
       }
     }
 
+    draft.clear(); // 저장 성공 — 임시 저장분을 지운다
     router.push('/contracts');
   }
 
@@ -202,12 +204,22 @@ export default function NewContractPage() {
   // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
   const unsavedGuard = useUnsavedGuard(!!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim() || !!buyerSignature);
 
+  // 2026-11-21 임시 저장 — 서명과 손글씨 이미지는 넣지 않는다(크고, 함께 쓰는 태블릿에 남으면 안 된다). 이어서 쓸 때 서명은 다시 받는다
+  const draft = useFormDraft('contract-new', 1, { customerName, customerPhone, customerAddress, customerId, consultationId, shopName, rows, paymentMethod, installment, discount, depositAmount, memo }, !!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim());
+  const resumeDraft = () => {
+    const d = draft.take();
+    if (!d) return;
+    setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setCustomerAddress(d.customerAddress); setCustomerId(d.customerId); setConsultationId(d.consultationId);
+    setShopName(d.shopName); setRows(d.rows); setPaymentMethod(d.paymentMethod); setInstallment(d.installment); setDiscount(d.discount); setDepositAmount(d.depositAmount); setMemo(d.memo);
+  };
+
   return (
     <>
       {unsavedGuard}
       <Topbar title="계약서 작성" />
 
       <div className="px-3 py-4">
+        <div className="max-w-[600px] mx-auto mb-2"><DraftBanner at={draft.pendingAt} onResume={resumeDraft} onDiscard={draft.discard} /></div>
         <div ref={contractRef} className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
 
           {/* -- 헤더 -- */}

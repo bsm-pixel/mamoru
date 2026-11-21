@@ -8,8 +8,7 @@ import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
 import { RepairTimeline } from './repair-timeline';
 import { StatusStepper } from '@/components/ui/status-stepper';
-import { RepairPrepSheetModal } from './repair-prep-sheet-modal';
-import { RepairTagPrintModal } from '@/components/labels/repair-tag-print-modal';
+import { RepairPrepSheetModal, RepairTagPrintModal } from '@/components/lazy-modals';
 import { ReviewManagementCard } from '@/components/reviews/review-management-card';
 import { Printer, Tag } from 'lucide-react';
 import {

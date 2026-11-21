@@ -16,7 +16,7 @@ import { CustomerNotes } from '@/components/shared/customer-notes';
 import { formatKRW, formatDate, formatPhone, formatDateTimeShort, formatDateFull } from '@/lib/utils/format';
 import { isB2BCustomerType } from '@/lib/sales/customer-type';
 import { RefreshCw, Undo2, Wrench, Hash, Ban, CheckCircle, AlertTriangle, Pencil, Save, FileText, Printer, Download, Truck, Package, ClipboardList, Copy, Link2, MapPin } from 'lucide-react';
-import { PrepSheetModal } from './prep-sheet-modal';
+import { PrepSheetModal, LabelPrintModal } from '@/components/lazy-modals';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { DeliveryTracker } from '@/components/orders/delivery-tracker';
 import { COURIER_OPTIONS, COURIER_LOTTE, COURIER_DIRECT, isAlpsTrackable, courierLabel } from '@/lib/shipping/couriers';
@@ -36,7 +36,6 @@ import type { SaleChannel, OfflineSale, OfflineSaleItem, Product } from '@/lib/s
 import { getUnitPrice, getProductDisplayName, hasGroupPrice } from '@/lib/utils/pricing';
 import { usePriceGroups } from '@/hooks/use-price-groups';
 import { SerialPicker } from './serial-picker';
-import { LabelPrintModal } from '@/components/labels/label-print-modal';
 import { useLabelTemplate } from '@/hooks/use-label-templates';
 import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';

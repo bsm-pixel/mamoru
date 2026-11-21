@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
+import { useFormDraft, DraftBanner } from '@/hooks/use-form-draft';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Card } from '@/components/ui/card';
@@ -135,6 +136,7 @@ export default function NewPurchaseOrderPage() {
       })),
     });
 
+    draft.clear(); // 저장 성공 — 임시 저장분을 지운다
     router.push('/purchasing');
   }
 
@@ -144,12 +146,22 @@ export default function NewPurchaseOrderPage() {
   // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
   const unsavedGuard = useUnsavedGuard(items.length > 0 || !!memo.trim());
 
+  // 2026-11-21 임시 저장 — 창을 닫거나 새로고침해도 이어서 쓰기
+  const draft = useFormDraft('purchase-new', 1, { supplierName, supplierId, expectedDate, memo, vatType, currency, exchangeRate, items }, items.length > 0 || !!memo.trim());
+  const resumeDraft = () => {
+    const d = draft.take();
+    if (!d) return;
+    setSupplierName(d.supplierName); setSupplierId(d.supplierId); setExpectedDate(d.expectedDate); setMemo(d.memo);
+    setVatType(d.vatType); setCurrency(d.currency); setExchangeRate(d.exchangeRate); setItems(d.items);
+  };
+
   return (
     <>
       {unsavedGuard}
       <Topbar title="발주 작성" />
 
       <div className="px-4 md:px-6 py-4 space-y-4">
+        <DraftBanner at={draft.pendingAt} onResume={resumeDraft} onDiscard={draft.discard} />
         <Button variant="ghost" size="sm" onClick={() => router.push('/purchasing')}>
           <ArrowLeft size={14} />
           목록으로

@@ -4,6 +4,7 @@ import { useState, Suspense, useEffect, useRef } from 'react';
 import { KeyHint } from '@/components/ui/key-hint';
 import { MoneyInput, MoneyText } from '@/components/ui/money-input';
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard';
+import { useFormDraft, DraftBanner } from '@/hooks/use-form-draft';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useHotkeys, isDialogOpen } from '@/hooks/use-hotkeys';
 import { groupArrowKeys } from '@/lib/ui/group-keys';
@@ -378,6 +379,7 @@ function NewSaleContent() {
     try {
       localStorage.setItem('tms.sale.last', JSON.stringify({ channel: saleChannel, method: paymentMethod === 'mixed' ? 'card' : paymentMethod }));
     } catch { /* 저장 못 해도 무시 */ }
+    draft.clear(); // 저장 성공 — 임시 저장분을 지운다
     router.push('/sales');
   }
 
@@ -473,6 +475,18 @@ function NewSaleContent() {
   // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
   const unsavedGuard = useUnsavedGuard(!createSale.isPending && !createSale.isSuccess && (cart.length > 0 || hasRepair || !!customerName.trim() || !!memo.trim()));
 
+  // 2026-11-21 임시 저장 — 창을 닫거나 새로고침해도 이어서 쓰기. 상담 · 계약서에서 넘어온 입력(주소에 값이 붙은 경우)은 건드리지 않는다
+  const draftSnapshot = { cart, selectedCustomer, rep, repShipping, repTakeAway, customerName, customerPhone, paymentMethod, paymentStatus, depositAmount, saleChannel, discount, memo, mixedCard, mixedCash, mixedTransfer };
+  const draft = useFormDraft('sale-new', 1, draftSnapshot, cart.length > 0 || hasRepair || !!customerName.trim() || !!memo.trim(), !contractId && !fromConsultationId);
+  const resumeDraft = () => {
+    const d = draft.take();
+    if (!d) return;
+    setCart(d.cart); setSelectedCustomer(d.selectedCustomer); setRep(d.rep); setRepShipping(d.repShipping); setRepTakeAway(d.repTakeAway);
+    setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setPaymentMethod(d.paymentMethod); setPaymentStatus(d.paymentStatus);
+    setDepositAmount(d.depositAmount); setSaleChannel(d.saleChannel); setDiscount(d.discount); setMemo(d.memo);
+    setMixedCard(d.mixedCard); setMixedCash(d.mixedCash); setMixedTransfer(d.mixedTransfer);
+  };
+
   return (
     <>
       {unsavedGuard}
@@ -480,6 +494,7 @@ function NewSaleContent() {
 
       {/* 2026-10-19 모바일: 하단 고정 바(장바구니·합계·판매 등록) 높이만큼 아래 여백 */}
       <div className="bg-stone-50 min-h-screen px-4 md:px-6 py-4 pb-32 xl:pb-4 space-y-3">
+        <DraftBanner at={draft.pendingAt} onResume={resumeDraft} onDiscard={draft.discard} />
         {/* 070: 상담 link 안내 배너 */}
         {sourceConsultation && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-xs">
