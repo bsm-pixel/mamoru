@@ -19,13 +19,14 @@ import { formatKRW, formatDate, SALE_CHANNEL_LABEL, CUSTOMER_TYPE_LABEL, formatD
 import { getSaleShipStatus, getDeliveryShipStatus, type ShipStatus } from '@/lib/sales/ship-status';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { usePageSize } from '@/hooks/use-page-size';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SearchInput } from '@/components/ui/search-input';
 import { Pagination } from '@/components/ui/pagination';
 import { Plus, FileSignature, Receipt, LayoutGrid, Package } from 'lucide-react';
 import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
-import { SelectionBar } from '@/components/ui/selection-bar';
+import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { RevenueDarkCard } from '@/components/ui/revenue-dark-card';
 import { StageGrid } from '@/components/ui/stage-grid';
 import type { OfflineSale } from '@/lib/supabase/types';
@@ -210,7 +211,8 @@ export default function SalesPage() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  const { data, isLoading } = useSales({ search, page, limit: 20, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
+  const limit = usePageSize(() => setPage(1)); // 2026-11-21 세로로 긴 화면은 높이에 맞게(보통 화면 · 휴대폰은 20건 그대로)
+  const { data, isLoading } = useSales({ search, page, limit, tab, channel, dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined });
   /* 배지 숫자는 목록과 **같은 기간**을 봐야 한다 — 2026-09-28
      (전엔 전체 기간을 세어 '처리 필요 5'인데 목록엔 이번달 4건만 뜨는 어긋남이 있었다) */
   const countFilters = { dateRange, dateFrom: dateFrom || undefined, dateTo: dateTo || undefined };
@@ -224,7 +226,7 @@ export default function SalesPage() {
   const newContractCount = contractData?.contracts?.filter((c) => !c.offline_sale_id).length || 0;
   const sales = data?.sales || [];
   const total = data?.total || 0;
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / limit);
 
   /** 2026-05-26 Phase B: 통합 목록 — 영역 칩 따라 sale/delivery 합집합. 날짜 desc 정렬 */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -884,8 +886,7 @@ const SalesGridTable = memo(function SalesGridTable({
             >
               {prepMode && (
                 <td className="px-2 py-2.5">
-                  <input type="checkbox" checked={checked} onChange={onCheck} onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 rounded border-neutral-300" />
+                  <RowCheck checked={!!checked} onToggle={() => onCheck?.()} />
                 </td>
               )}
               <td className="px-3 py-2.5 text-neutral-600 whitespace-nowrap tabular-nums">{formatDateFull(item.date)}{isSale && d.payment_status === 'paid' && !d.shipped_at && !d.delivered_at && !cancelled && <DaysSince date={item.date} warnDays={unshippedDays} className="ml-1.5" />}</td>
@@ -939,9 +940,7 @@ const SaleRow = memo(function SaleRow({ sale, note, selected, onClick, prepMode,
 
       {/* 체크박스 (준비표 모드) */}
       {prepMode && (
-        <input type="checkbox" checked={checked} onChange={onCheck}
-          onClick={(e) => e.stopPropagation()}
-          className="w-4 h-4 rounded border-neutral-300 shrink-0 self-center" />
+        <RowCheck checked={!!checked} onToggle={() => onCheck?.()} className="self-center" />
       )}
 
       {/* 본문 */}
@@ -1002,9 +1001,7 @@ const DeliveryRow = memo(function DeliveryRow({ delivery, selected, onClick, pre
 
       {/* 체크박스 (준비표 모드) */}
       {prepMode && (
-        <input type="checkbox" checked={checked} onChange={onCheck}
-          onClick={(e) => e.stopPropagation()}
-          className="w-4 h-4 rounded border-neutral-300 shrink-0 self-center" />
+        <RowCheck checked={!!checked} onToggle={() => onCheck?.()} className="self-center" />
       )}
 
       {/* 본문 */}

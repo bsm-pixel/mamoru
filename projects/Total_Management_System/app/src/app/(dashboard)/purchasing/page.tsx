@@ -23,6 +23,7 @@ import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useStatusCounts } from '@/hooks/use-status-counts';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { usePageSize } from '@/hooks/use-page-size';
 import { useStickyState } from '@/hooks/use-sticky-state';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -71,7 +72,7 @@ export default function PurchasingPage() {
   // 탭 건수 — 「전체」는 취소를 뺀 수가 아니라 표 전체
   const tabCounts = useStatusCounts('purchase_orders');
   const tabCountOf = (v: string): number | null => !tabCounts.loaded ? null : v === '' ? tabCounts.total : (tabCounts.counts[v] || 0);
-  const limit = 20;
+  const limit = usePageSize(() => setPage(1)); // 2026-11-21 세로로 긴 화면은 높이에 맞게(보통 화면 · 휴대폰은 20건 그대로)
 
   const isLg = useIsLg();
 

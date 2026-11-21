@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 import { errMsg } from '@/lib/utils/err';
+import { undoToast } from '@/lib/ui/undo-toast';
 
 export interface LatestNote { customer_id: string; body: string; category: string | null; created_at: string; }
 
@@ -85,7 +86,15 @@ export function useDeleteCustomerNote() {
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || '삭제 실패'); }
       return true;
     },
-    onSuccess: (_d, v) => { qc.invalidateQueries({ queryKey: ['customer-notes', v.customerId] }); },
+    onSuccess: (_d, v) => {
+      const refresh = () => { qc.invalidateQueries({ queryKey: ['customer-notes', v.customerId] }); qc.invalidateQueries({ queryKey: ['latest-customer-notes'] }); qc.invalidateQueries({ queryKey: ['customer-peek', v.customerId] }); };
+      refresh();
+      // 2026-11-21 확인창 없이 바로 지워지던 메모 — 5초 동안 되살릴 수 있게
+      undoToast('메모를 지웠습니다', async () => {
+        const res = await fetch(`/api/customer-notes?id=${v.id}`, { method: 'PATCH' });
+        if (res.ok) refresh(); else toast.error('되돌리지 못했습니다');
+      });
+    },
     onError: (e) => toast.error('삭제 실패: ' + errMsg(e)),
   });
 }

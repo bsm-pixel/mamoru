@@ -23,6 +23,7 @@ import { PrepSheetModal } from '@/components/sales/prep-sheet-modal';
 import { SelectionBar, RowCheck } from '@/components/ui/selection-bar';
 import { useActivityTypes, type ActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
+import { usePageSize } from '@/hooks/use-page-size';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import type { Order } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
@@ -67,11 +68,12 @@ export default function OrdersPage() {
   const rowToggles = !isLg && prepMode;
 
   useEscapeKey(() => setSelectedId(null), !!selectedId);
-  const { data, isLoading } = useOrders({ status, search, dateRange, page, limit: 20 });
+  const limit = usePageSize(() => setPage(1)); // 2026-11-21 세로로 긴 화면은 높이에 맞게(보통 화면 · 휴대폰은 20건 그대로)
+  const { data, isLoading } = useOrders({ status, search, dateRange, page, limit });
   const orders = data?.orders || [];
   const orderActTypes = useActivityTypes(orders.map((o) => o.orderer_phone));
   const total = data?.total || 0;
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / limit);
 
   // PC 그리드 컬럼 — 주문일·주문번호·주문자·상태·결제·금액·송장(액션)
   const unshippedDays = useSetting<number>('shipping.unshipped_warning_days', 2); // 며칠째 표시가 굵어지는 기준(설정 > 주문·배송)

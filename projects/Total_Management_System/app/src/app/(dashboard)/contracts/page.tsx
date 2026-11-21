@@ -26,6 +26,7 @@ import type { Contract } from '@/lib/supabase/types';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { usePageSize } from '@/hooks/use-page-size';
 
 const TABS: { key: ContractTab; label: string }[] = [
   { key: 'all', label: '전체' },
@@ -70,7 +71,8 @@ export default function ContractsPage() {
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const isLg = useIsLg();
 
-  const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit: 20 });
+  const limit = usePageSize(() => setPage(1)); // 2026-11-21 세로로 긴 화면은 높이에 맞게(보통 화면 · 휴대폰은 20건 그대로)
+  const { data, isLoading } = useContracts({ tab, search, dateRange, page, limit });
   const { data: tabCounts } = useContractTabCounts();
   const contracts = data?.contracts || [];
   const contractActTypes = useActivityTypes(contracts.map((c) => c.customer_phone));
@@ -85,7 +87,7 @@ export default function ContractsPage() {
       : col
     ), [contractActTypes]);
   const total = data?.total || 0;
-  const totalPages = Math.ceil(total / 20);
+  const totalPages = Math.ceil(total / limit);
 
   const handleTabChange = (t: ContractTab) => { setTab(t); setPage(1); };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { runLater } from '@/lib/ui/undo-toast';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,8 @@ export function PurchaseDetailPanel({ purchaseId, onDeleted }: Props) {
   const CURRENCY_SYMBOL: Record<string, string> = { KRW: '₩', USD: '$', CNY: '¥' };
 
   async function handleAction(status: string, extra?: Record<string, unknown>) {
+    // 2026-11-21 발주 취소는 끝 상태(되돌아갈 길 없음) — 확인 뒤에도 5초 동안 되돌릴 수 있게 미뤘다가 실행
+    if (status === 'cancelled') { runLater('5초 뒤 발주를 취소합니다', () => updatePO.mutate({ id: purchaseId, status, ...extra })); return; }
     await updatePO.mutateAsync({ id: purchaseId, status, ...extra });
   }
 

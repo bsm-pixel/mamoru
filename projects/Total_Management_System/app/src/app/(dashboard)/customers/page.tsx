@@ -26,6 +26,7 @@ import { useLatestCustomerNotes, type LatestNote } from '@/hooks/use-customer-no
 import { useSetting } from '@/hooks/use-settings';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { usePageSize } from '@/hooks/use-page-size';
 import { cleanCustomerSearch, CUSTOMER_SEARCH_MIN } from '@/lib/customer/search-filter';
 
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
@@ -75,7 +76,7 @@ export default function CustomersPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
-  const limit = 20;
+  const limit = usePageSize(() => setPage(1)); // 2026-11-21 세로로 긴 화면은 높이에 맞게(보통 화면 · 휴대폰은 20건 그대로)
   const availableTags = useSetting<string[]>('customer.tags', []);
 
   const isLg = useIsLg();

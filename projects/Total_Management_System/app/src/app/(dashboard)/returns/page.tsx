@@ -15,6 +15,7 @@ import { StatusStepper } from '@/components/ui/status-stepper';
 import { Button } from '@/components/ui/button';
 import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@/components/ui/action-section';
 import { formatDate, formatPhone } from '@/lib/utils/format';
+import { runLater } from '@/lib/ui/undo-toast';
 import { CustomerPeek } from '@/components/customers/customer-peek';
 import { Undo2, Package, Truck, Store, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -355,7 +356,8 @@ function ReturnDetail({ r }: { r: ReturnRow }) {
               {/* 164: 반영된 납품 반품은 취소 불가(서버도 막음) */}
               {allowed.includes('cancelled') && !(r.delivery_id && r.applied_at) && (
                 <DangerZone>
-                  <DangerLink disabled={update.isPending} onClick={() => update.mutate({ id: r.id, status: 'cancelled' })}>
+                  {/* 2026-11-21 확인 없이 바로 취소되던 것 — 5초 뒤에 실행하고 그 사이 되돌릴 수 있게(취소는 끝 상태라 돌아갈 길이 없다) */}
+                  <DangerLink disabled={update.isPending} onClick={() => runLater('5초 뒤 반품을 취소합니다', () => update.mutate({ id: r.id, status: 'cancelled' }))}>
                     반품 취소
                   </DangerLink>
                 </DangerZone>
