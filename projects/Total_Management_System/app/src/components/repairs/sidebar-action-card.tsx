@@ -89,6 +89,7 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 2026-11-22 함께 판매한 제품이 아직 건네기 전이면 [직접 수령] 창에서 같이 끝낸다(기본 켜짐)
   const { data: linkedSale = null } = useLinkedSalePending(r.sale_id, ['repairing', 'ready_to_ship'].includes(r.status) && !r.invoice_number);
   const [saleToo, setSaleToo] = useState(true);
+  const reviewOn = !!(r as { review_promised_at?: string | null }).review_promised_at; // 후기 자동발송 켜짐 여부
   const markSaleDelivered = useMarkSaleDelivered();
 
   const currentStatus = r.status as RepairStatus;
@@ -827,11 +828,12 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
                     <br />판매 건도 지금 끝납니다. 후기 요청은 두 건 합쳐 1통만, 바로 나갑니다.
                   </span>
                 </label>
-                {!saleToo && <p className="text-xs text-neutral-500">가위만 끝냅니다. 후기 요청 알림톡은 3시간 뒤에 나갑니다.</p>}
+                {!saleToo && <p className="text-xs text-neutral-500">가위만 끝냅니다. {reviewOn ? '후기 요청 알림톡은 3시간 뒤에 나갑니다.' : '후기 자동발송이 꺼져 있어 후기 요청은 나가지 않습니다.'}</p>}
               </>
             ) : (
               <p className="text-xs text-neutral-500">
-                {r.sale_id ? '함께 판매한 제품 쪽에서 후기 요청이 이미 나갔으면 다시 보내지 않습니다. 아니면 3시간 뒤에 나갑니다.' : '후기 요청 알림톡은 3시간 뒤에 나갑니다.'}
+                {/* 2026-11-22 꺼 둔 건에도 「3시간 뒤에 나갑니다」라고 떠서 헷갈렸다 — 실제 동작대로 적는다 */}
+                {!reviewOn ? '후기 자동발송이 꺼져 있어 후기 요청은 나가지 않습니다.' : r.sale_id ? '함께 판매한 제품 쪽에서 후기 요청이 이미 나갔으면 다시 보내지 않습니다. 아니면 3시간 뒤에 나갑니다.' : '후기 요청 알림톡은 3시간 뒤에 나갑니다.'}
               </p>
             )}
           </div>
