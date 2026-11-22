@@ -5,6 +5,7 @@ import { sendAdminEmail } from '@/lib/notification/email';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import { matchOrCreateCustomer } from '@/lib/customer/match-or-create';
+import { prefDaysOf, prefTimesOf, prefText } from '@/lib/consultation/prefs';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -276,8 +277,9 @@ export async function POST(req: NextRequest) {
             address: fullAddress,
             days: daysArr.join(','),
             timePrefs: timePrefsArr.join(','),
-            hope_days_text: daysArr.join(', '),
-            hope_times_text: timePrefsArr.join(', '),
+            // 2026-11-22 고르지 않았으면 빈칸 대신 「상관없음」 (lib/consultation/prefs.ts)
+            hope_days_text: prefText(prefDaysOf(daysArr)),
+            hope_times_text: prefText(prefTimesOf(timePrefsArr)),
             memo: memoText || '',
           },
         });

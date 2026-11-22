@@ -23,6 +23,7 @@ import { getAllowedTransitions } from '@/lib/consultation/transitions';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { prefDaysOf, prefTimesOf } from '@/lib/consultation/prefs';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
@@ -202,9 +203,9 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
       {/* 출장: 가능요일/선호시간대 */}
       {c.consultation_type === 'field_request' && (() => {
         const raw = c.gas_raw as any;
-        const prefDays = (raw?.days as string)?.split(',').filter(Boolean) || [];
-        const prefTimes = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
-        if (prefDays.length === 0 && prefTimes.length === 0) return null;
+        // 2026-11-22 고르지 않았으면 「상관없음」으로 보인다 (lib/consultation/prefs.ts)
+        const prefDays = prefDaysOf(raw?.days);
+        const prefTimes = prefTimesOf(raw?.timePrefs);
         return (
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {prefDays.length > 0 && (
@@ -518,8 +519,8 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
           open={suggestModalOpen}
           onClose={() => setSuggestModalOpen(false)}
           consultationId={c.id}
-          prefDays={((c.gas_raw as any)?.days as string)?.split(',').filter(Boolean)}
-          prefTimes={((c.gas_raw as any)?.timePrefs as string)?.split(',').filter(Boolean)}
+          prefDays={prefDaysOf((c.gas_raw as any)?.days)}
+          prefTimes={prefTimesOf((c.gas_raw as any)?.timePrefs)}
         />
       )}
 

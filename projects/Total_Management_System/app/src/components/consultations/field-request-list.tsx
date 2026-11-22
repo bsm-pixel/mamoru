@@ -23,6 +23,7 @@ import { useActivityTypes } from '@/hooks/use-activity-types';
 import { ActivityChips } from '@/components/shared/activity-chips';
 import type { Consultation } from '@/lib/supabase/types';
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
+import { prefDaysOf, prefTimesOf } from '@/lib/consultation/prefs';
 
 // 7탭: 오늘출장 | 신규접수 | 제안중 | 일정재요청 | 확정 | 보류 | 지난내역
 //   2026-10-19 '보류' 추가 — 전엔 on_hold 건이 어느 탭에도 안 보여 사라졌다
@@ -242,9 +243,8 @@ export function FieldRequestList({ selectedFieldId, onFieldSelect, onSelect, onS
           {/* 신규접수/대응필요: 가능요일/선호시간대 칩 */}
           {(tab === 'new_intake' || tab === 'action_needed') && (() => {
             const raw = (c as any).gas_raw;
-            const days = (raw?.days as string)?.split(',').filter(Boolean) || [];
-            const times = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
-            if (days.length === 0 && times.length === 0) return null;
+            const days = prefDaysOf(raw?.days);   // 2026-11-22 비었으면 「상관없음」
+            const times = prefTimesOf(raw?.timePrefs);
             return (
               <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                 {days.map(d => (

@@ -46,6 +46,19 @@ describe('상담 알림톡 — Make 가 읽는 칸이 빈칸으로 나가지 않
     expect(p.data.hope_times_text).toBe('오전');
   });
 
+  it('출장 접수에서 요일 · 시간대를 고르지 않았거나 「무관」이면: 빈칸 대신 「상관없음」', async () => {
+    const { POST } = await import('@/app/api/consultation/public/submit/route');
+    const res = await POST(jsonReq('/api/consultation/public/submit', 'POST', {
+      name: '점검고객', phone: '010-0000-0003', type: '출장 요청',
+      addressRoad: '인천 남동구 점검로 1', days: [], timePrefs: ['무관'],
+    }));
+    expect(res.status, JSON.stringify(await res.clone().json())).toBe(200);
+    await settle();
+    const p = ctx.sent.find((s) => s.template === 'request');
+    expect(missing(p)).toEqual([]);
+    expect([p.data.hope_days_text, p.data.hope_times_text]).toEqual(['상관없음', '상관없음']);
+  });
+
   it('매장방문 즉시 확정: 방문 날짜 · 시간이 실린다', async () => {
     const { POST } = await import('@/app/api/consultation/public/submit/route');
     const res = await POST(jsonReq('/api/consultation/public/submit', 'POST', {

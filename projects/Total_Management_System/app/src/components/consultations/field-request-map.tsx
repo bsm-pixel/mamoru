@@ -10,6 +10,7 @@ import { activityDisplay } from '@/lib/customer/display';
 import { loadKakaoMapSDK, type KakaoMap, type KakaoMarker, type KakaoOverlay } from '@/lib/kakao/map-loader';
 import { formatPhone, CONSULTATION_STATUS_LABEL } from '@/lib/utils/format';
 import type { Consultation } from '@/lib/supabase/types';
+import { prefDaysOf, prefTimesOf } from '@/lib/consultation/prefs';
 
 /** R2: 상태별 핀 색상 (노랑/주황/파랑/초록) */
 const PIN_CONFIG: Record<string, { color: string; icon: string }> = {
@@ -211,8 +212,8 @@ export function FieldRequestMap({ selectedFieldId, onFieldSelect, onSelect, acti
 
 function buildOverlayHTML(c: Consultation): string {
   const raw = (c as any).gas_raw;
-  const days = (raw?.days as string)?.split(',').filter(Boolean) || [];
-  const times = (raw?.timePrefs as string)?.split(',').filter(Boolean) || [];
+  const days = prefDaysOf(raw?.days);   // 2026-11-22 비었으면 「상관없음」
+  const times = prefTimesOf(raw?.timePrefs);
   const prefHtml = (days.length || times.length) ? `
     <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">
       ${days.map(d => `<span style="padding:1px 5px;border-radius:4px;background:#EFF6FF;color:#2563EB;font-size:10px;font-weight:600;">${escapeHtml(d)}</span>`).join('')}
