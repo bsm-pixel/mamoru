@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { todayKST } from '@/lib/utils/kst';
+import { linkContractCustomer } from '@/lib/contracts/link-customer';
 
 /** GET /api/contracts — 계약서 목록 */
 export async function GET(req: NextRequest) {
@@ -107,6 +108,7 @@ export async function POST(req: NextRequest) {
     // 172 칸 — SQL(마이그 172) 실행 전이면 이 칸 없이 다시 저장한다(각인이 있으면 저장하지 않고 알린다)
     const ext = {
       signed_via: contract.signature_data ? 'store' : null,
+      terms_agreed_at: contract.signature_data && contract.terms_agreed ? new Date().toISOString() : null, // 2026-11-23 「위 내용을 확인했습니다」
       ...(engraving ? {
         engraving: true,
         engraving_text: engravingText || null,
@@ -115,7 +117,7 @@ export async function POST(req: NextRequest) {
       } : {}),
     };
     let { data: created, error: createError } = await db.from('contracts').insert({ ...base, ...ext }).select().single();
-    if (createError && /signed_via|engraving|column/i.test(String(createError.message || ''))) {
+    if (createError && /signed_via|terms_agreed|engraving|column/i.test(String(createError.message || ''))) {
       if (engraving) throw new Error('이니셜 각인 칸이 아직 준비되지 않았습니다 — 데이터베이스 SQL 172 실행이 필요합니다');
       ({ data: created, error: createError } = await db.from('contracts').insert(base).select().single());
     }
@@ -140,6 +142,13 @@ export async function POST(req: NextRequest) {
         .insert(contractItems);
 
       if (itemsError) throw itemsError;
+    }
+
+    // 2026-11-23 이 자리에서 서명한 계약서는 고객을 붙인다(같은 번호 고객 → 그 고객, 없으면 새로).
+    //   링크로 보낸 계약서는 고객이 서명할 때 붙는다(/api/contracts/public).
+    if (created.signature_data && !created.customer_id) {
+      const cid = await linkContractCustomer(db, created, { road: contract.customer_address_road, detail: contract.customer_address_detail, postcode: contract.customer_postcode });
+      if (cid) created.customer_id = cid;
     }
 
     return NextResponse.json({ contract: created, contractNumber });

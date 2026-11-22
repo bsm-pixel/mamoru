@@ -50,10 +50,20 @@
   input[type=text]:focus{outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void);}
   .hint{font-size:13px; color:var(--mute); line-height:1.7; margin-top:8px;}
 
-  .pad{position:relative; border:1px solid var(--void); border-radius:2px; background:#fff; height:190px; touch-action:none;}
-  .pad canvas{display:block; width:100%; height:100%; cursor:crosshair;}
-  .pad .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--mist); font-size:15px; pointer-events:none;}
-  .pad-bar{display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:13px; color:var(--mute);}
+  /* 2026-11-23 서명 = [서명하기] → 화면 전체 서명판 (TMS 계약서 작성 sign-pad.tsx 와 같은 방식) */
+  .sig-prev{display:flex; align-items:center; justify-content:center; width:100%; min-height:110px; border:1px solid var(--void); border-radius:2px; background:#fff; cursor:pointer; position:relative; padding:8px;}
+  .sig-prev img{max-height:96px; max-width:80%; object-fit:contain;}
+  .sig-prev span{position:absolute; right:10px; bottom:6px; font-size:12px; color:var(--stone); text-decoration:underline; text-underline-offset:3px;}
+  .sov{position:fixed; inset:0; z-index:100; background:#fff; display:flex; flex-direction:column;}
+  .sov-top{display:flex; align-items:center; justify-content:space-between; height:52px; padding:0 12px; border-bottom:1px solid var(--sand); flex:none; font-size:15px; font-weight:700;}
+  .sov-top button{background:none; border:0; font:inherit; font-size:15px; font-weight:500; color:var(--stone); min-height:44px; padding:0 8px; cursor:pointer;}
+  .sov-area{position:relative; flex:1; touch-action:none; user-select:none; -webkit-user-select:none; overscroll-behavior:none;}
+  .sov-area canvas{position:absolute; inset:0; touch-action:none; cursor:crosshair;}
+  .sov-ph{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; color:var(--mist); font-size:16px; pointer-events:none;}
+  .sov-ph small{font-size:13px;}
+  .sov-line{position:absolute; left:32px; right:32px; bottom:22%; border-bottom:1px solid var(--sand); pointer-events:none;}
+  .sov-bot{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px; padding-bottom:max(12px, env(safe-area-inset-bottom)); border-top:1px solid var(--sand); flex:none;}
+  .sov-bot .btn{margin:0;}
   .link{background:none; border:0; font:inherit; font-size:13px; color:var(--stone); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:8px 0; min-height:44px;}
 
   .btns{display:flex; flex-direction:column; gap:10px; margin-top:22px;}
@@ -128,11 +138,21 @@
       <label class="chk"><input type="checkbox" id="c-terms"><span>위 필독·유의사항을 읽고 동의합니다</span></label>
       <label class="chk hidden" id="l-eng"><input type="checkbox" id="c-eng"><span>각인 후에는 교환·반품이 어려운 것을 확인했습니다</span></label>
       <label class="fld" style="margin-top:18px">서명</label>
-      <div class="pad" id="pad"><canvas id="cv"></canvas><div class="ph" id="ph">여기에 손가락으로 서명해 주세요</div></div>
-      <div class="pad-bar"><span>정자로 쓰지 않으셔도 괜찮아요</span><button type="button" class="link" id="b-clear">다시 쓰기</button></div>
+      <button type="button" class="btn" id="b-open">서명하기</button>
+      <button type="button" class="sig-prev hidden" id="sig-prev" aria-label="서명 다시 쓰기"><img id="sig-img" alt="서명"><span>다시 쓰기</span></button>
+      <p class="hint" id="sig-hint">위 항목에 체크하면 서명할 수 있어요. 정자로 쓰지 않으셔도 괜찮아요.</p>
       <div id="sign-warn" class="warn hidden"></div>
       <div class="btns"><button class="btn primary" id="b-sign" disabled>서명하고 제출하기</button></div>
     </div>
+  </div>
+
+  <!-- 화면 전체 서명판 -->
+  <div id="sov" class="sov hidden" role="dialog" aria-modal="true" aria-label="서명">
+    <div class="sov-top"><button type="button" id="sov-close">닫기</button><span>서명</span><span style="width:44px"></span></div>
+    <div class="sov-area" id="sov-area"><canvas id="cv"></canvas>
+      <div class="sov-ph" id="ph"><span>여기에 손가락으로 서명해 주세요</span><small>폰을 눕히면 더 넓게 쓸 수 있어요</small></div>
+      <div class="sov-line"></div></div>
+    <div class="sov-bot"><button type="button" class="btn" id="b-clear" disabled>다시 쓰기</button><button type="button" class="btn primary" id="b-done" disabled>완료</button></div>
   </div>
 
   <!-- 서명 끝 -->
@@ -163,7 +183,7 @@
 (function(){
   var API = 'https://app-eta-sandy-75.vercel.app/api/contracts/public';
   var t = new URLSearchParams(location.search).get('t') || '';
-  var D = null, drawn = false;
+  var D = null, drawn = false, sigData = '';
   function $(id){ return document.getElementById(id); }
   function show(id){ $(id).classList.remove('hidden'); }
   function hide(id){ $(id).classList.add('hidden'); }
@@ -226,35 +246,70 @@
     show('main');
     setupPad();
     ['c-terms','c-eng'].forEach(function(id){ $(id).addEventListener('change', check); });
+    check();
     $('b-sign').addEventListener('click', submit);
   }
 
   function check(){
-    var ok = $('c-terms').checked && (!D.engraving || $('c-eng').checked) && drawn;
-    $('b-sign').disabled = !ok;
+    var agreed = $('c-terms').checked && (!D.engraving || $('c-eng').checked);
+    $('b-open').disabled = !agreed;
+    $('sig-hint').classList.toggle('hidden', !!sigData || agreed);
+    $('b-sign').disabled = !(agreed && sigData);
   }
 
-  // ── 서명 패드 (손가락 · 펜 · 마우스) ──
-  var cv, ctx, last = null;
+  // ── 서명판 (손가락 · 펜 · 마우스) — 2026-11-23 화면 전체로. TMS sign-pad.tsx 와 같은 방식 ──
+  //  손가락을 떼거나 끊기거나 칸 밖으로 나가면 획을 끝낸다 · 서명 중 화면이 움직이지 않게 · 중간점 곡선으로 부드럽게
+  var cv, ctx, pts = [], down = false, box, bodyOverflow = '';
+  function resetBox(){ box = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity }; }
+  function size(){
+    var r = $('sov-area').getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1A1A1A'; ctx.fillStyle = '#1A1A1A';
+    drawn = false; resetBox(); show('ph'); padButtons();   // 크기가 바뀌면(폰을 눕힘) 다시 쓴다
+  }
+  function padButtons(){ $('b-clear').disabled = !drawn; $('b-done').disabled = !drawn; }
+  function openPad(){
+    show('sov'); bodyOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    size(); window.addEventListener('resize', size);
+  }
+  function closePad(){
+    hide('sov'); document.body.style.overflow = bodyOverflow; window.removeEventListener('resize', size);
+  }
+  function exportSig(){
+    var dpr = cv.width / parseFloat(cv.style.width), pad = 12;
+    var sx = Math.max(0, (box.x0 - pad) * dpr), sy = Math.max(0, (box.y0 - pad) * dpr);
+    var sw = Math.min(cv.width - sx, (box.x1 - box.x0 + pad * 2) * dpr), sh = Math.min(cv.height - sy, (box.y1 - box.y0 + pad * 2) * dpr);
+    var k = Math.min(1, 600 / sw, 240 / sh), out = document.createElement('canvas');
+    out.width = Math.max(1, Math.round(sw * k)); out.height = Math.max(1, Math.round(sh * k));
+    out.getContext('2d').drawImage(cv, sx, sy, sw, sh, 0, 0, out.width, out.height);
+    return out.toDataURL('image/png');
+  }
   function setupPad(){
-    cv = $('cv'); ctx = cv.getContext('2d');
-    function size(){
-      var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var keep = drawn ? cv.toDataURL() : null;
-      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1A1A1A';
-      if (keep){ var im = new Image(); im.onload = function(){ ctx.drawImage(im, 0, 0, r.width, r.height); }; im.src = keep; }
-    }
-    size();
-    window.addEventListener('resize', size);
+    cv = $('cv'); ctx = cv.getContext('2d'); resetBox();
     function pos(e){ var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
-    cv.addEventListener('pointerdown', function(e){ e.preventDefault(); cv.setPointerCapture(e.pointerId); last = pos(e); ctx.beginPath(); ctx.arc(last.x, last.y, 1.2, 0, Math.PI*2); ctx.fillStyle = '#1A1A1A'; ctx.fill(); });
-    cv.addEventListener('pointermove', function(e){ if (!last) return; e.preventDefault(); var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
-      if (!drawn){ drawn = true; hide('ph'); check(); } });
-    function end(){ last = null; }
+    function grow(p){ box.x0 = Math.min(box.x0, p.x); box.y0 = Math.min(box.y0, p.y); box.x1 = Math.max(box.x1, p.x); box.y1 = Math.max(box.y1, p.y); }
+    function end(e){ if (!down) return; down = false; pts = []; try { cv.releasePointerCapture(e.pointerId); } catch (x) {} }
+    cv.addEventListener('pointerdown', function(e){ e.preventDefault(); cv.setPointerCapture(e.pointerId); down = true;
+      var p = pos(e); pts = [p]; grow(p); ctx.beginPath(); ctx.arc(p.x, p.y, 1.3, 0, Math.PI*2); ctx.fill();
+      if (!drawn){ drawn = true; hide('ph'); padButtons(); } });
+    cv.addEventListener('pointermove', function(e){ if (!down) return; e.preventDefault();
+      var p = pos(e), r = cv.getBoundingClientRect();
+      if (p.x < 0 || p.y < 0 || p.x > r.width || p.y > r.height){ end(e); return; }   // 칸 밖으로 나가면 획 끝
+      pts.push(p); grow(p);
+      if (pts.length < 3){ ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(p.x, p.y); ctx.stroke(); return; }
+      var p0 = pts[pts.length-3], p1 = pts[pts.length-2];
+      ctx.beginPath(); ctx.moveTo((p0.x+p1.x)/2, (p0.y+p1.y)/2); ctx.quadraticCurveTo(p1.x, p1.y, (p1.x+p.x)/2, (p1.y+p.y)/2); ctx.stroke(); });
     cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', end);
-    $('b-clear').addEventListener('click', function(){ ctx.clearRect(0, 0, cv.width, cv.height); drawn = false; show('ph'); check(); });
+    $('b-open').addEventListener('click', openPad);
+    $('sig-prev').addEventListener('click', openPad);
+    $('sov-close').addEventListener('click', closePad);
+    $('b-clear').addEventListener('click', function(){ ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0, 0, cv.width, cv.height); ctx.restore(); drawn = false; resetBox(); show('ph'); padButtons(); });
+    $('b-done').addEventListener('click', function(){
+      if (!drawn) return;
+      sigData = exportSig(); $('sig-img').src = sigData; show('sig-prev'); hide('b-open'); closePad(); check();
+    });
   }
 
   function warn(id, msg){ $(id).textContent = msg; show(id); }
@@ -263,7 +318,7 @@
     var b = $('b-sign'); b.disabled = true; b.textContent = '제출하는 중…'; hide('sign-warn');
     var engText = D.engraving && D.engravingStatus === 'pending' ? ($('eng-input').value || '').trim() : '';
     fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ t: t, action: 'sign', signature: cv.toDataURL('image/png'), agreed: $('c-terms').checked, engraving_agreed: D.engraving ? $('c-eng').checked : undefined, engraving_text: engText })
+      body: JSON.stringify({ t: t, action: 'sign', signature: sigData, agreed: $('c-terms').checked, engraving_agreed: D.engraving ? $('c-eng').checked : undefined, engraving_text: engText })
     }).then(function(r){ return r.json(); }).then(function(res){
       if (!res.ok){ warn('sign-warn', res.error || '제출하지 못했어요. 다시 눌러 주세요.'); b.disabled = false; b.textContent = '서명하고 제출하기'; return; }
       hide('main'); window.scrollTo(0, 0);

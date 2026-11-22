@@ -7,8 +7,9 @@ import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Topbar } from '@/components/layout/topbar';
 import { Button } from '@/components/ui/button';
-import { SignatureCanvas } from '@/components/contracts/signature-canvas';
-import { HandwritingField } from '@/components/contracts/handwriting-field';
+import { SignPadField } from '@/components/contracts/sign-pad';
+import { DaumPostcodeButton } from '@/components/shared/daum-postcode-button';
+import { typingPhone } from '@/lib/utils/validate';
 import { ProductPickerModal } from '@/components/contracts/product-picker-modal';
 import { TodayConsultationPicker } from '@/components/contracts/today-consultation-picker';
 import { useCreateContract } from '@/hooks/use-contracts';
@@ -34,14 +35,13 @@ export default function NewContractPage() {
   /* -- 고객 정보 (DB 저장용 텍스트) -- */
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
+  // 2026-11-23 주소 = 주소 검색(도로명) + 상세 주소. 계약서에는 합쳐서 저장, 고객 등록에는 나눠서 넘긴다
+  const [addrRoad, setAddrRoad] = useState('');
+  const [addrDetail, setAddrDetail] = useState('');
+  const [postcode, setPostcode] = useState('');
+  const customerAddress = [addrRoad, addrDetail].map((x) => x.trim()).filter(Boolean).join(' ');
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [consultationId, setConsultationId] = useState<string | null>(null);
-
-  /* -- 필기 데이터 (base64) -- */
-  const [hwName, setHwName] = useState('');
-  const [hwPhone, setHwPhone] = useState('');
-  const [hwAddress, setHwAddress] = useState('');
 
   /* -- 매장 정보 -- */
   const [shopName, setShopName] = useState('');
@@ -64,6 +64,8 @@ export default function NewContractPage() {
   /* -- 서명 -- */
   const [buyerSignature, setBuyerSignature] = useState('');
   const [sellerSignature, setSellerSignature] = useState('');
+  // 2026-11-23 서명 전에 「위 내용을 확인했습니다」 체크
+  const [confirmed, setConfirmed] = useState(false);
   // 2026-11-22 서명 받는 방법: 이 자리(매장·출장 화면) / 고객 폰으로 링크 (온라인·톡상담 고객)
   const [signMode, setSignMode] = useState<'here' | 'link'>('here');
 
@@ -94,9 +96,10 @@ export default function NewContractPage() {
     address_detail: string | null;
   }) {
     setCustomerName(consultation.name);
-    setCustomerPhone(consultation.phone);
-    const addr = [consultation.address_road, consultation.address_detail].filter(Boolean).join(' ');
-    setCustomerAddress(addr);
+    setCustomerPhone(typingPhone(consultation.phone || ''));
+    setAddrRoad(consultation.address_road || '');
+    setAddrDetail(consultation.address_detail || '');
+    setPostcode('');
     setCustomerId(consultation.customer_id);
     setConsultationId(consultation.id);
     setConsultPickerOpen(false);
@@ -148,6 +151,7 @@ export default function NewContractPage() {
         payment_method: paymentMethod,
         installment_months: installment,
         signature_data: (!byLink && buyerSignature) || undefined, // 링크로 보낼 때는 고객이 폰에서 서명
+        terms_agreed: !byLink && !!buyerSignature && confirmed,
         memo: memo.trim() || undefined,
         engraving,
         engraving_text: engText || undefined,
@@ -158,9 +162,10 @@ export default function NewContractPage() {
         shop_name: shopName.trim() || undefined,
         shop_address: customerAddress.trim() || undefined,
         consultation_id: consultationId || undefined,
-        handwriting_name: (!byLink && hwName) || undefined,
-        handwriting_phone: (!byLink && hwPhone) || undefined,
-        handwriting_address: (!byLink && hwAddress) || undefined,
+        // 2026-11-23 성함·연락처·주소는 손글씨 대신 입력 칸 — handwriting_* 는 더 보내지 않는다(옛 계약서는 그대로 보임)
+        customer_address_road: addrRoad.trim() || undefined,
+        customer_address_detail: addrDetail.trim() || undefined,
+        customer_postcode: postcode || undefined,
       },
       items: filledRows.map((r) => ({
         product_id: r.product!.id,
@@ -206,24 +211,27 @@ export default function NewContractPage() {
     }
 
     draft.clear(); // 저장 성공 — 임시 저장분을 지운다
-    router.push('/contracts');
+    // 2026-11-23 상세로 — 서명된 계약서는 거기서 [판매 입력] 한 번(고객·제품이 채워진 채로)
+    router.push(result?.contract?.id ? `/contracts/${result.contract.id}` : '/contracts');
   }
 
   const canSubmit = rows.some((r) => r.product) && !createContract.isPending && (signMode === 'here' || !!customerName.trim());
 
   /* -- 입력 스타일 -- */
-  const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-1 text-sm focus:outline-none focus:border-neutral-800 w-full';
+  // 2026-11-23 휴대폰 글자 16px(아이폰 자동 확대 방지) · 누름 높이 44px
+  const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-2 min-h-11 text-base sm:text-sm focus:outline-none focus:border-neutral-800 w-full';
 
   // 2026-11-15 넣다가 다른 메뉴를 누르면 한 번 묻는다 (저장 성공 뒤 스스로 이동할 때는 묻지 않음)
   const unsavedGuard = useUnsavedGuard(!!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim() || !!buyerSignature);
 
   // 2026-11-21 임시 저장 — 서명과 손글씨 이미지는 넣지 않는다(크고, 함께 쓰는 태블릿에 남으면 안 된다). 이어서 쓸 때 서명은 다시 받는다
   // 2026-11-22 판 2: 서명 받는 방법 · 각인 칸 추가 (판 1 임시 저장분은 버린다)
-  const draft = useFormDraft('contract-new', 2, { customerName, customerPhone, customerAddress, customerId, consultationId, shopName, rows, paymentMethod, installment, discount, depositAmount, memo, signMode, engraving, engravingLater, engravingText }, !!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim());
+  // 2026-11-23 판 3: 주소를 도로명·상세로 나눔 (판 2 임시 저장분은 버린다)
+  const draft = useFormDraft('contract-new', 3, { customerName, customerPhone, addrRoad, addrDetail, postcode, customerId, consultationId, shopName, rows, paymentMethod, installment, discount, depositAmount, memo, signMode, engraving, engravingLater, engravingText }, !!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim());
   const resumeDraft = () => {
     const d = draft.take();
     if (!d) return;
-    setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setCustomerAddress(d.customerAddress); setCustomerId(d.customerId); setConsultationId(d.consultationId);
+    setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setAddrRoad(d.addrRoad); setAddrDetail(d.addrDetail); setPostcode(d.postcode); setCustomerId(d.customerId); setConsultationId(d.consultationId);
     setShopName(d.shopName); setRows(d.rows); setPaymentMethod(d.paymentMethod); setInstallment(d.installment); setDiscount(d.discount); setDepositAmount(d.depositAmount); setMemo(d.memo);
     setSignMode(d.signMode); setEngraving(d.engraving); setEngravingLater(d.engravingLater); setEngravingText(d.engravingText);
   };
@@ -285,45 +293,27 @@ export default function NewContractPage() {
             </div>
           </div>
 
-          {/* -- 링크로 보낼 때: 고객 정보를 직원이 글자로 적는다 (손글씨 칸은 매장용) -- */}
-          {signMode === 'link' && (
-            <div className="px-5 py-4 border-b border-neutral-300 space-y-3" data-link-customer>
-              <div>
-                <label className="text-[10px] text-neutral-500">고객 이름</label>
-                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="고객 이름" className={inputClass} />
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-500">연락처</label>
-                <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="010-0000-0000" className={inputClass} />
-              </div>
-              <div>
-                <label className="text-[10px] text-neutral-500">주소 (수령지)</label>
-                <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="주소 (선택)" className={inputClass} />
-              </div>
+          {/* -- 고객 정보 (2026-11-23 손글씨 칸 → 키보드 입력 칸. 상담자 불러오기로 채워지면 고객은 확인만) -- */}
+          <div className="px-5 py-4 border-b border-neutral-300 space-y-3" data-link-customer data-customer-fields>
+            <div>
+              <label htmlFor="ct-name" className="text-[11px] text-neutral-500">성함</label>
+              <input id="ct-name" type="text" autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="성함" className={inputClass} />
             </div>
-          )}
-
-          {/* -- 고객 필기 영역 (성함 / 연락처 / 주소) -- */}
-          <div className={`px-5 py-4 border-b border-neutral-300 space-y-3 ${signMode === 'link' ? 'hidden' : ''}`}>
-            <p className="text-[10px] text-neutral-400 mb-1">고객님이 직접 작성해주세요</p>
-            <HandwritingField
-              label="성함"
-              placeholder={customerName || undefined}
-              height={50}
-              onDraw={setHwName}
-            />
-            <HandwritingField
-              label="연락처"
-              placeholder={customerPhone || undefined}
-              height={50}
-              onDraw={setHwPhone}
-            />
-            <HandwritingField
-              label="주소 (수령지)"
-              placeholder={customerAddress || undefined}
-              height={60}
-              onDraw={setHwAddress}
-            />
+            <div>
+              <label htmlFor="ct-phone" className="text-[11px] text-neutral-500">연락처</label>
+              <input id="ct-phone" type="tel" inputMode="numeric" autoComplete="tel" value={customerPhone} onChange={(e) => setCustomerPhone(typingPhone(e.target.value))} placeholder="010-0000-0000" className={inputClass} />
+            </div>
+            <div>
+              <label htmlFor="ct-addr" className="text-[11px] text-neutral-500">주소 (수령지)</label>
+              <div className="flex items-end gap-2">
+                <input id="ct-addr" type="text" value={addrRoad} onChange={(e) => setAddrRoad(e.target.value)} placeholder="주소 검색을 눌러 주세요" className={inputClass} />
+                <DaumPostcodeButton onSelected={(d) => { setAddrRoad(d.roadAddress); setPostcode(d.zonecode); document.getElementById('ct-addr-detail')?.focus(); }}
+                  className="shrink-0 min-h-11 px-3 rounded-md border border-neutral-800 text-xs font-semibold text-neutral-800 hover:bg-neutral-100 transition">
+                  주소 검색
+                </DaumPostcodeButton>
+              </div>
+              <input id="ct-addr-detail" type="text" aria-label="상세 주소" value={addrDetail} onChange={(e) => setAddrDetail(e.target.value)} placeholder="상세 주소 (동·호수)" className={inputClass + ' mt-1'} />
+            </div>
           </div>
 
           {/* -- 필독 (유의사항) -- */}
@@ -528,17 +518,23 @@ export default function NewContractPage() {
               {yyyy} 년 {mm} 월 {dd} 일
             </p>
 
-            <div className="space-y-3">
-              {signMode === 'link' && (
+            <div className="space-y-4">
+              {signMode === 'link' ? (
                 <p className="text-xs text-neutral-500 border border-dashed border-neutral-300 rounded-md px-3 py-2">구매자 서명은 고객이 링크에서 합니다</p>
+              ) : (
+                <div className="space-y-2" data-buyer-sign>
+                  {/* 2026-11-23 손으로 쓰는 것은 이 최종 서명 하나 — 확인 체크 → [서명하기] → 화면 전체 서명판 */}
+                  <label className="flex items-center gap-2 text-sm font-semibold text-neutral-800 cursor-pointer min-h-11">
+                    <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="w-5 h-5 accent-neutral-800" data-confirm-check />
+                    위 내용을 확인했습니다
+                  </label>
+                  <SignPadField value={buyerSignature} onChange={setBuyerSignature} label="구매자 서명" testId="buyer"
+                    lockedReason={confirmed ? null : '위 내용을 확인하고 체크하면 서명할 수 있어요'} />
+                </div>
               )}
-              <div className={signMode === 'link' ? 'hidden' : ''}>
-                <p className="text-xs font-bold text-neutral-700 mb-1">구매자 서명</p>
-                <SignatureCanvas onSign={setBuyerSignature} width={320} height={120} />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-neutral-700 mb-1">판매자 서명</p>
-                <SignatureCanvas onSign={setSellerSignature} width={320} height={120} />
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-neutral-700">판매자 서명</p>
+                <SignPadField value={sellerSignature} onChange={setSellerSignature} label="판매자 서명" testId="seller" />
               </div>
             </div>
           </div>

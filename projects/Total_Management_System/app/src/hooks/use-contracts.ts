@@ -156,6 +156,11 @@ export function useCreateContract() {
         // 172: 이니셜 각인 — 문구가 없으면 「나중에 받기」
         engraving?: boolean;
         engraving_text?: string;
+        // 2026-11-23 서명하면 고객을 붙일 때 쓰는 주소 조각(계약서 칸에는 합친 customer_address만 저장)
+        customer_address_road?: string;
+        customer_address_detail?: string;
+        customer_postcode?: string;
+        terms_agreed?: boolean;
       };
       items: Array<{
         product_id?: string;

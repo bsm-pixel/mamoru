@@ -34,28 +34,26 @@ export function SignatureCanvas({ onSign, width = 400, height = 200 }: Signature
     ctx.strokeStyle = '#181725';
   }, [width, height]);
 
-  const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  // 2026-11-23 터치·마우스 이벤트를 섞어 쓰다 손가락을 뗀 뒤 선이 칸 끝까지 이어지던 문제 → 포인터 이벤트 하나로.
+  //   손가락을 떼거나 끊기거나 칸 밖으로 나가면 그 획을 끝낸다. (계약서 작성 화면은 sign-pad.tsx 의 전체 화면 서명판을 쓴다)
+  const getPos = useCallback((e: React.PointerEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    if ('touches' in e) {
-      const touch = e.touches[0];
-      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
-    }
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }, []);
 
-  const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const startDraw = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
-    setIsDrawing(true);
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
+    setIsDrawing(true);
     const pos = getPos(e);
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
   }, [getPos]);
 
-  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const draw = useCallback((e: React.PointerEvent) => {
     if (!isDrawing) return;
     e.preventDefault();
     const ctx = canvasRef.current?.getContext('2d');
@@ -67,11 +65,13 @@ export function SignatureCanvas({ onSign, width = 400, height = 200 }: Signature
   }, [isDrawing, getPos]);
 
   const endDraw = useCallback(() => {
+    if (!isDrawing) return;
     setIsDrawing(false);
+    canvasRef.current?.getContext('2d')?.beginPath(); // 다음 획이 이전 획 끝에서 이어지지 않게
     if (hasDrawn && canvasRef.current) {
       onSign(canvasRef.current.toDataURL('image/png'));
     }
-  }, [hasDrawn, onSign]);
+  }, [isDrawing, hasDrawn, onSign]);
 
   const clear = useCallback(() => {
     const canvas = canvasRef.current;
@@ -90,13 +90,11 @@ export function SignatureCanvas({ onSign, width = 400, height = 200 }: Signature
         <canvas
           ref={canvasRef}
           className="cursor-crosshair touch-none"
-          onMouseDown={startDraw}
-          onMouseMove={draw}
-          onMouseUp={endDraw}
-          onMouseLeave={endDraw}
-          onTouchStart={startDraw}
-          onTouchMove={draw}
-          onTouchEnd={endDraw}
+          onPointerDown={startDraw}
+          onPointerMove={draw}
+          onPointerUp={endDraw}
+          onPointerCancel={endDraw}
+          onPointerLeave={endDraw}
         />
         {!hasDrawn && (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-neutral-400 pointer-events-none">

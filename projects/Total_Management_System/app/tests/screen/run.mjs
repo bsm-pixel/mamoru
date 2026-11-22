@@ -221,6 +221,39 @@ async function pcChecks(browser) {
     await page.keyboard.press('Escape');
     if (bad.length) fail('계약서 — 링크로 보내기 · 각인 · 재고', bad.join(' / ')); else ok('계약서 — 링크 모드(서명 칸 숨김) · 각인 체크 때만 안내 · 제품 창에 재고');
   }
+  // 계약서 — 글자는 입력 칸 · 최종 서명 한 번(화면 전체 서명판) · 뗀 뒤 선이 이어지지 않음 (2026-11-23 t-261123-sign-ux)
+  await open(page, '/contracts/new');
+  {
+    const bad = [];
+    await page.waitForSelector('[data-customer-fields] #ct-phone', { timeout: 8000 }).catch(() => {});
+    if (!(await page.$('[data-customer-fields] #ct-phone'))) bad.push('성함·연락처·주소 입력 칸이 없음');
+    if (await page.evaluate(() => document.querySelectorAll('main canvas').length)) bad.push('손글씨 칸(canvas)이 아직 화면에 있음');
+    await page.click('#ct-phone');
+    await page.keyboard.type('01012345678');
+    const phone = await page.$eval('#ct-phone', (e) => e.value);
+    if (phone !== '010-1234-5678') bad.push(`연락처 자동 하이픈이 「${phone}」`);
+    if (!(await page.$eval('[data-sign-pad="buyer"] [data-sign-open]', (b) => b.disabled))) bad.push('확인 체크 전인데 [서명하기]가 눌림');
+    await page.click('[data-confirm-check]');
+    await sleep(150);
+    await page.click('[data-sign-pad="buyer"] [data-sign-open]');
+    try {
+      await page.waitForSelector('[data-sign-overlay] canvas', { timeout: 3000 });
+      const box = await (await page.$('[data-sign-overlay] canvas')).boundingBox();
+      if (box.width < 300 || box.height < 300) bad.push(`서명판이 화면 전체가 아님 (${Math.round(box.width)}×${Math.round(box.height)})`);
+      await page.mouse.move(box.x + 30, box.y + 150); await page.mouse.down();
+      for (let i = 0; i < 15; i++) await page.mouse.move(box.x + 30 + i * 10, box.y + 150 + Math.sin(i) * 25);
+      await page.mouse.up();
+      await page.mouse.move(box.x + box.width - 4, box.y + 150);
+      const edge = await page.evaluate(() => { const c = document.querySelector('[data-sign-overlay] canvas'); const d = c.getContext('2d').getImageData(c.width - 16, 0, 16, c.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i]) n++; return n; });
+      if (edge) bad.push('손을 뗀 뒤 선이 칸 끝까지 이어짐');
+      await page.click('[data-sign-done]');
+      await sleep(200);
+      if (await page.$('[data-sign-overlay]')) bad.push('[완료] 뒤에도 서명판이 남음');
+      if (!(await page.$('[data-sign-pad="buyer"] [data-sign-preview] img'))) bad.push('완료한 서명이 작은 그림으로 안 보임');
+    } catch { bad.push('[서명하기]를 눌러도 서명판이 안 열림'); }
+    if (bad.length) fail('계약서 — 입력 칸 · 최종 서명 한 번', bad.join(' / ')); else ok('계약서 — 성함·연락처·주소는 입력 칸, 확인 체크 뒤 화면 전체 서명판, 뗀 뒤 선 안 이어짐');
+  }
+  page.once('dialog', (d) => { d.accept().catch(() => {}); }); // 서명한 채로 떠나면 「저장하지 않은 내용」을 묻는다 — 떠나기
   await open(page, '/contracts/ct-check-2');
   {
     const bad = [];
@@ -742,6 +775,27 @@ async function mobileChecks(browser) {
     if (await broken(page)) over.push(`${url}: 화면이 깨짐`);
   }
   if (over.length) fail('휴대폰 — 옆으로 넘치지 않음', over.join(' / ')); else ok(`휴대폰 — 옆으로 넘치지 않음 (${PAGES.length}개 화면)`);
+
+  // 휴대폰 계약서 작성 — 넘침 없음 · 입력 칸 글자 16px(아이폰 확대 방지) · 서명판이 화면 전체 (2026-11-23 t-261123-sign-ux)
+  await open(page, '/contracts/new');
+  {
+    const bad = [];
+    await page.waitForSelector('#ct-phone', { timeout: 8000 }).catch(() => bad.push('입력 칸이 없음'));
+    const m = await page.evaluate(() => ({ w: document.documentElement.scrollWidth, vw: window.innerWidth, fs: parseFloat(getComputedStyle(document.getElementById('ct-phone')).fontSize) }));
+    if (m.w > m.vw + 1) bad.push(`${m.w - m.vw}px 옆으로 넘침`);
+    if (m.fs < 16) bad.push(`입력 칸 글자 ${m.fs}px (16 미만이면 아이폰이 확대)`);
+    if (process.env.SCREEN_SHOT_DIR) await page.screenshot({ path: path.join(process.env.SCREEN_SHOT_DIR, 'm_contract_new.png'), fullPage: true });
+    await page.click('[data-confirm-check]');
+    await page.click('[data-sign-pad="buyer"] [data-sign-open]');
+    try {
+      await page.waitForSelector('[data-sign-overlay] canvas', { timeout: 3000 });
+      const b = await (await page.$('[data-sign-overlay] canvas')).boundingBox();
+      if (b.width < 380 || b.height < 500) bad.push(`서명판 ${Math.round(b.width)}×${Math.round(b.height)} — 화면 전체가 아님`);
+      if (process.env.SCREEN_SHOT_DIR) await page.screenshot({ path: path.join(process.env.SCREEN_SHOT_DIR, 'm_contract_pad.png') });
+      await page.keyboard.press('Escape');
+    } catch { bad.push('서명판이 안 열림'); }
+    if (bad.length) fail('휴대폰 — 계약서 작성', bad.join(' / ')); else ok('휴대폰 — 계약서 작성: 넘침 없음 · 입력 글자 16px · 서명판 화면 전체');
+  }
 
   if (errors.length) fail('휴대폰 — 화면 오류 없음', [...new Set(errors)].slice(0, 5).join(' / ')); else ok('휴대폰 — 화면 오류 없음');
   await page.close();

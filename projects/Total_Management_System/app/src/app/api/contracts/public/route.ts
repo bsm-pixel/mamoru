@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { CAUTION_NOTICE, LEGAL_NOTICE, ENGRAVING_NOTICE } from '@/lib/contracts/notice';
 import { cleanEngraving, isToken, isValidSignature, maskName } from '@/lib/contracts/sign-link';
+import { linkContractCustomer } from '@/lib/contracts/link-customer';
 
 /**
  * 고객 서명 링크 — 로그인 없이 열쇠(?t=sign_token)로만 (2026-11-22, 마이그 172)
@@ -33,7 +34,7 @@ const ACCOUNT = '우리은행 1002-439-462514 (백성민)';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function findByToken(db: any, t: string) {
   const { data } = await db.from('contracts')
-    .select('id, contract_number, customer_name, status, total_amount, discount_amount, final_amount, payment_method, installment_months, deposit_amount, balance_amount, signature_data, signed_at, created_at, engraving, engraving_text, engraving_status')
+    .select('id, contract_number, customer_id, customer_name, customer_phone, status, total_amount, discount_amount, final_amount, payment_method, installment_months, deposit_amount, balance_amount, signature_data, signed_at, created_at, engraving, engraving_text, engraving_status')
     .eq('sign_token', t).maybeSingle();
   return data;
 }
@@ -106,6 +107,8 @@ export async function POST(req: NextRequest) {
 
       const engLine = c.engraving ? (patch.engraving_text ? ` · 각인 「${patch.engraving_text}」` : ' · 각인 문구 대기') : '';
       after(async () => {
+        // 2026-11-23 서명하면 고객 연결(없으면 새로) — [판매 입력]이 고객이 채워진 채로 열리게
+        await linkContractCustomer(db, c);
         try {
           const { sendPushToAll } = await import('@/lib/firebase/send-push');
           await sendPushToAll({ title: '✍️ 계약서 서명 완료', body: `${c.contract_number} ${c.customer_name}님이 링크로 서명했어요${engLine}`, url: `/contracts/${c.id}`, tag: `contract-sign-${c.id}` });
