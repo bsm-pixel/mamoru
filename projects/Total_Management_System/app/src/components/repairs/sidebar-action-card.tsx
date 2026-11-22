@@ -9,6 +9,7 @@ import { ActionNote, MoreActions, DangerZone, DangerLink, SubtleButton } from '@
 import { isAlpsTrackable, courierLabel } from '@/lib/shipping/couriers';
 import {
   useUpdateRepairStatus,
+  useLinkedSalePending,
   useUpdateRepairFields,
   useShipRepair,
   useCancelShipment,
@@ -18,6 +19,7 @@ import {
   useDeleteRepair,
   useEpostPickup,
 } from '@/hooks/use-repairs';
+import { useMarkSaleDelivered } from '@/hooks/use-sales';
 import { invalidateFinancialQueries } from '@/lib/query/invalidate-keys';
 import { getFilteredRepairTransitions, REPAIR_ACTION_LABEL, getRepairDisplayLabel } from '@/lib/repair/transitions';
 import { formatKRW, formatDateTime, formatDateFull, formatPhone } from '@/lib/utils/format';
@@ -84,6 +86,10 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
   // 165 출장 현장 맡김 — 판매와 연결된 건. 결제는 판매에서 끝났으므로 비용안내·입금확인 단계가 없다.
   //   입고 단계 주 버튼 = [입고 확인 · 작업 시작](알림톡 없음). 그 뒤는 택배 건과 같은 흐름(작업완료·송장/합포장)
   const isFieldTake = !!r.sale_id;
+  // 2026-11-22 함께 판매한 제품이 아직 건네기 전이면 [직접 수령] 창에서 같이 끝낸다(기본 켜짐)
+  const { data: linkedSale = null } = useLinkedSalePending(r.sale_id, ['repairing', 'ready_to_ship'].includes(r.status) && !r.invoice_number);
+  const [saleToo, setSaleToo] = useState(true);
+  const markSaleDelivered = useMarkSaleDelivered();
 
   const currentStatus = r.status as RepairStatus;
   const proceedType = r.proceed_type;
@@ -792,17 +798,44 @@ export function SidebarActionCard({ repair: r, inspections = [] }: SidebarAction
         open={confirmAction === 'direct_pickup'}
         onClose={() => setConfirmAction(null)}
         onConfirm={() => {
-          updateStatus.mutate({
-            id: r.id,
-            status: 'delivered',
-            delivered_at: new Date().toISOString(),
-            delivery_method: 'pickup',
-            note: '직접 수령 (매장 전달)',
-          });
+          if (linkedSale && saleToo) {
+            // 2026-11-22 함께 판매한 제품도 같이 건넸다 — 판매 [고객 수령 완료] 한 번으로 두 건을 끝낸다(같은 서버 경로)
+            markSaleDelivered.mutate({ id: linkedSale.id, mode: 'pickup', repairIds: [r.id] }, {
+              onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['sale', 'linked-pending', linkedSale.id] }); },
+            });
+          } else {
+            updateStatus.mutate({
+              id: r.id,
+              status: 'delivered',
+              delivered_at: new Date().toISOString(),
+              delivery_method: 'pickup',
+              note: '직접 수령 (매장 전달)',
+            });
+          }
           setConfirmAction(null);
         }}
         title="직접 수령 (매장 전달)"
-        message={<>{r.name}님께 매장에서 <strong>직접 전달</strong>(택배 없이)한 것으로 처리합니다.<br />배송완료 상태가 됩니다. 후기 요청 알림톡은 3시간 뒤에 나갑니다.</>}
+        message={
+          <div className="space-y-2">
+            <p>{r.name}님께 <strong>직접 전달</strong>(택배 없이)한 것으로 처리합니다. 배송완료 상태가 됩니다.</p>
+            {linkedSale ? (
+              <>
+                <label data-handover-sale className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-stone-50 px-3 py-2.5 cursor-pointer">
+                  <input type="checkbox" className="mt-0.5" checked={saleToo} onChange={(e) => setSaleToo(e.target.checked)} />
+                  <span className="text-xs leading-relaxed text-neutral-700">
+                    <b className="text-stone-900">함께 판매한 제품 {linkedSale.sale_number} 도 같이 수령 완료</b>
+                    <br />판매 건도 지금 끝납니다. 후기 요청은 두 건 합쳐 1통만, 바로 나갑니다.
+                  </span>
+                </label>
+                {!saleToo && <p className="text-xs text-neutral-500">가위만 끝냅니다. 후기 요청 알림톡은 3시간 뒤에 나갑니다.</p>}
+              </>
+            ) : (
+              <p className="text-xs text-neutral-500">
+                {r.sale_id ? '함께 판매한 제품 쪽에서 후기 요청이 이미 나갔으면 다시 보내지 않습니다. 아니면 3시간 뒤에 나갑니다.' : '후기 요청 알림톡은 3시간 뒤에 나갑니다.'}
+              </p>
+            )}
+          </div>
+        }
         confirmLabel="직접 수령 완료"
       />
       <ConfirmModal

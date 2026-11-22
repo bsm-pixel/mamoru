@@ -6,6 +6,8 @@ import { sendReviewRequestNotification } from '@/lib/notification/review-request
 import { recalcOutstanding } from '@/lib/outstanding';
 import { completeConsultationFromSale } from '@/lib/consultation/complete-from-sale';
 import { todayKST } from '@/lib/utils/kst';
+import { sendNotification } from '@/lib/notification/make-webhook';
+import { canHandoverWithSale } from '@/lib/repair/transitions';
 
 /** PATCH /api/sales/[id] — 취소 / 결제상태 변경 / 메모 수정 */
 export async function PATCH(
@@ -465,10 +467,65 @@ export async function PATCH(
 
       if (updateErr) throw updateErr;
 
+      // 2026-11-22 함께 맡은 가위(repairs.sale_id)도 같이 건넨 경우 — 수리 건을 같은 시각에 배송완료(직접 수령)로 닫는다.
+      //   전엔 판매만 끝나고 수리 건은 「작업완료」에 남았고, 따로 누르면 후기 요청이 판매·수리 2통 나갔다.
+      //   후기 요청은 판매 쪽 1통만 — 판매가 보내는(또는 이미 보낸) 경우 수리 건은 '보낸 것'으로 표시해 3시간 뒤 크론이 다시 보내지 않게 한다.
+      //   대상은 화면이 보낸 id 중 이 판매에 연결되고 건넬 수 있는 건만(서버가 다시 거른다).
+      const repairIds = Array.isArray((body as { repair_ids?: unknown }).repair_ids)
+        ? ((body as { repair_ids: unknown[] }).repair_ids.filter((x) => typeof x === 'string') as string[])
+        : [];
+      const reviewBySale = !!sale.review_requested_at || (!!sale.review_promised_at && !!sale.customer_phone);
+      const handedRepairs: Array<{ id: string; as_id: string; name: string | null; phone: string | null; qty_mamoru: number | null; qty_other: number | null }> = [];
+      if (mode === 'pickup' && repairIds.length > 0) {
+        const { data: linked } = await db.from('repairs')
+          .select('id, as_id, name, phone, status, invoice_number, proceed_type, qty_mamoru, qty_other, review_request_sent_at')
+          .eq('sale_id', id)
+          .in('id', repairIds);
+        for (const rp of (linked || []) as Array<Record<string, unknown>>) {
+          if (!canHandoverWithSale(rp as { status: string; invoice_number: string | null; proceed_type: string | null })) continue;
+          const patch: Record<string, unknown> = { status: 'delivered', delivery_method: 'pickup', delivered_at: now };
+          if (reviewBySale && !rp.review_request_sent_at) patch.review_request_sent_at = now;
+          // 그 사이 다른 창에서 상태가 바뀌었으면 건드리지 않는다
+          const { data: done } = await db.from('repairs').update(patch)
+            .eq('id', rp.id).eq('status', rp.status).is('invoice_number', null).select('id');
+          if (!done || done.length === 0) continue;
+          await db.from('repair_history').insert({
+            repair_id: rp.id,
+            from_status: rp.status,
+            to_status: 'delivered',
+            changed_by: user.id,
+            note: `직접 전달 (판매 ${sale.sale_number} 와 함께)`,
+          });
+          handedRepairs.push(rp as unknown as (typeof handedRepairs)[number]);
+        }
+      }
+
       // 자동 후기요청 — 택배(ALPS cron)와 동일 기준을 픽업/수동배송완료에도 적용 (2026-06-12)
       //   미해제 + 미발송 + 연락처 있음 → 즉시 발송 (버튼 클릭=수령완료라 cron 불필요)
       //   항상 발송 원칙(2026-09-14) — 설정 토글 없음 / 153(2026-09-16) — 자동발송 기본 ON, 해제한 건만 제외
       after(async () => {
+        // 함께 건넨 가위 — 전달 안내(수리내역 조회 버튼). 복원수리 [직접 수령] 과 같은 신호(as_handed_over)
+        for (const rp of handedRepairs) {
+          if (!rp.phone) continue;
+          try {
+            const res = await sendNotification({
+              template: 'as_handed_over',
+              phone: rp.phone,
+              name: rp.name || '고객',
+              skipAdminPush: true, // 사장님이 방금 직접 누른 일
+              data: { id: rp.as_id, as_id: rp.as_id, as_uid: rp.as_id, qty: String((Number(rp.qty_mamoru) || 0) + (Number(rp.qty_other) || 0)) },
+            });
+            if (!res.success) console.error('[mark_delivered handover] 전달 안내 실패:', res.error);
+          } catch (e) {
+            console.error('[mark_delivered handover] 예외:', e);
+          }
+        }
+        // 판매 쪽 후기 요청이 실패하면, 수리 건에 미리 찍은 '보낸 것' 표시를 풀어 3시간 뒤 크론이 대신 보내게 한다
+        const releaseRepairReview = async () => {
+          if (sale.review_requested_at || handedRepairs.length === 0) return;
+          await db.from('repairs').update({ review_request_sent_at: null })
+            .in('id', handedRepairs.map((r) => r.id)).eq('review_request_sent_at', now);
+        };
         try {
           if (sale.review_requested_at || !sale.review_promised_at || !sale.customer_phone) return;
           const reviewType = (sale.review_promised_type as 'purchase' | 'repair' | 'consult' | null) || 'purchase';
@@ -484,9 +541,12 @@ export async function PATCH(
           if (r.success) {
             await db.from('offline_sales').update({ review_requested_at: new Date().toISOString() }).eq('id', id);
             console.log(`[mark_delivered/${mode} auto-review] ${sale.sale_number} 발송 성공`);
+          } else {
+            await releaseRepairReview();
           }
         } catch (e) {
           console.error('[mark_delivered auto-review] 예외:', e);
+          await releaseRepairReview().catch(() => {});
         }
       });
 
@@ -495,6 +555,7 @@ export async function PATCH(
         action: 'marked_delivered',
         mode,
         delivered_at: now,
+        repairs_handed: handedRepairs.map((r) => r.as_id),
       });
     }
 

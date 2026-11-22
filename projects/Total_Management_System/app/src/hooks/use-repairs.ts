@@ -539,6 +539,28 @@ export interface SaleRepairRef {
   status: string;
   invoice_number: string | null;
   shipped_at: string | null;
+  proceed_type: string | null;
+}
+
+/**
+ * 2026-11-22 수리 건에 연결된 판매(repairs.sale_id)가 아직 '건네기 전'인지 — 복원수리 [직접 수령] 창에서 같이 끝낼지 묻는 용도.
+ * 건네기 전 = 수령 · 배송완료 아님, 송장 없음, 취소 · 반품 아님. 그 밖이면 null.
+ */
+export function useLinkedSalePending(saleId: string | null | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ['sale', 'linked-pending', saleId],
+    enabled: !!saleId && enabled,
+    queryFn: async (): Promise<{ id: string; sale_number: string } | null> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = createClient() as any;
+      const { data } = await db.from('offline_sales')
+        .select('id, sale_number, delivered_at, invoice_number, cancelled_at, returned_at')
+        .eq('id', saleId)
+        .maybeSingle();
+      if (!data || data.delivered_at || data.invoice_number || data.cancelled_at || data.returned_at) return null;
+      return { id: data.id, sale_number: data.sale_number };
+    },
+  });
 }
 export function useSaleRepairs(saleId: string | null | undefined) {
   return useQuery({
@@ -548,7 +570,7 @@ export function useSaleRepairs(saleId: string | null | undefined) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = createClient() as any;
       const { data } = await db.from('repairs')
-        .select('id, as_id, status, invoice_number, shipped_at')
+        .select('id, as_id, status, invoice_number, shipped_at, proceed_type')
         .eq('sale_id', saleId)
         .order('created_at', { ascending: false });
       return data || [];

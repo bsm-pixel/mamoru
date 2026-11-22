@@ -37,6 +37,16 @@ export function isValidRepairTransition(from: RepairStatus, to: RepairStatus): b
   return getAllowedRepairTransitions(from).includes(to);
 }
 
+/**
+ * 판매와 함께 손으로 건넬 수 있는 수리 건인가 (2026-11-22)
+ *   출장에서 제품 판매와 가위 수리를 함께 받은 건(repairs.sale_id)을 한 번에 건넬 때 —
+ *   판매 [고객 수령 완료] 와 복원수리 [직접 수령] 이 같은 조건을 쓴다(서버 · 화면 공용).
+ *   작업이 끝났거나 진행 중이고, 송장이 없고, 매장 방문 건이 아니어야 한다(방문 건은 「고객 전달 완료」로 따로 끝난다).
+ */
+export function canHandoverWithSale(r: { status: string; invoice_number?: string | null; proceed_type?: string | null }): boolean {
+  return ['repairing', 'ready_to_ship'].includes(r.status) && !r.invoice_number && r.proceed_type !== '직접방문';
+}
+
 /** 상태 순서 (진행도 계산용) — payment_confirmed 제거 */
 export const REPAIR_STATUS_ORDER: RepairStatus[] = [
   'intake',

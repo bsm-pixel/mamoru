@@ -949,11 +949,12 @@ export function useResendShipNotify() {
 export function useMarkSaleDelivered() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, mode }: { id: string; mode: 'delivery' | 'pickup' }) => {
+    // repairIds: 함께 맡은 가위(repairs.sale_id)도 같이 건넨 경우 — 서버가 그 수리 건을 같은 시각에 닫는다 (2026-11-22)
+    mutationFn: async ({ id, mode, repairIds }: { id: string; mode: 'delivery' | 'pickup'; repairIds?: string[] }) => {
       const res = await fetch(`/api/sales/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'mark_delivered', mode }),
+        body: JSON.stringify({ action: 'mark_delivered', mode, ...(repairIds && repairIds.length > 0 ? { repair_ids: repairIds } : {}) }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -961,10 +962,17 @@ export function useMarkSaleDelivered() {
       }
       return res.json();
     },
-    onSuccess: (_d, { id, mode }) => {
-      toast.success(mode === 'pickup' ? '고객 수령 완료 처리되었습니다' : '배송완료 처리되었습니다');
+    onSuccess: (d: { repairs_handed?: string[] } | undefined, { id, mode }) => {
+      const handed = d?.repairs_handed?.length || 0;
+      toast.success(mode === 'pickup' ? (handed > 0 ? `고객 수령 완료 — 함께 맡은 가위 ${handed}건도 전달 완료` : '고객 수령 완료 처리되었습니다') : '배송완료 처리되었습니다');
       queryClient.invalidateQueries({ queryKey: ['sale', id] });
       queryClient.invalidateQueries({ queryKey: ['sales'] });
+      if (handed > 0) {
+        // 수리 건 상태가 같이 바뀌었다 — 복원수리 목록 · 탭 숫자 · 상세 · 판매 상세의 「함께 맡은 가위」
+        queryClient.invalidateQueries({ queryKey: ['repairs'] });
+        queryClient.invalidateQueries({ queryKey: ['repair-tabs'] });
+        queryClient.invalidateQueries({ queryKey: ['repair'] });
+      }
       invalidateFinancialQueries(queryClient);
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),

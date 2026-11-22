@@ -134,6 +134,14 @@ export async function PATCH(
       updateData.delivered_at = new Date().toISOString();
     }
 
+    // 2026-11-22 판매와 함께 맡은 건(sale_id)을 손으로 건넬 때 — 판매 쪽에서 후기 요청이 이미 나갔으면
+    //   이 건은 '보낸 것'으로 표시한다. 안 그러면 3시간 뒤 크론이 같은 고객에게 한 통 더 보낸다(판매 1통 + 수리 1통).
+    if (isDirectHandover && current.sale_id && !current.review_request_sent_at) {
+      const { data: linkedSale } = await db.from('offline_sales')
+        .select('review_requested_at').eq('id', current.sale_id).maybeSingle();
+      if (linkedSale?.review_requested_at) updateData.review_request_sent_at = new Date().toISOString();
+    }
+
     // 119: 입고일 — '입고 & 비용안내'(cost_notified) 첫 전이 시점을 기록 (재발송해도 최초값 유지)
     if (newStatus === 'cost_notified' && !current.inbound_at) {
       updateData.inbound_at = new Date().toISOString();

@@ -46,6 +46,11 @@ const FIXTURES = {
     ],
     repairs: [
       { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
+      { id: 'r-check-2', as_id: 'AS-CHECK-0002', sale_id: 's-check-1', customer_id: null, name: '점검판매', phone: '01000000301', status: 'ready_to_ship', proceed_type: '출장수거', invoice_number: null, shipped_at: null, total_amount: 20000, qty_mamoru: 2, qty_other: 0, created_at: '2026-11-21T00:00:00Z', updated_at: '2026-11-21T00:00:00Z' },
+    ],
+    // 함께 맡은 가위 점검용 (2026-11-22) — 판매 1건에 작업완료 수리 1건이 연결돼 있다(repairs.sale_id)
+    offline_sales: [
+      { id: 's-check-1', sale_number: 'OS-CHECK-001', customer_id: null, customer_name: '점검판매', customer_phone: '01000000301', customer_type: 'B2C', sale_date: new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10), total_amount: 150000, discount_amount: 0, paid_amount: 150000, payment_method: 'card', payment_status: 'paid', delivery_method: 'pickup', invoice_number: null, shipped_at: null, delivered_at: null, cancelled_at: null, returned_at: null, memo: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
     ],
     // 목록 기능 점검용 (2026-11-21) — 주문 3건(메모 바로 고치기 · Shift 범위 선택) · 반품 1건(5초 되돌리기)
     orders: [1, 2, 3].map((n) => ({ id: `o-check-${n}`, imweb_order_no: `2026000000000${n}`, orderer_name: `점검주문${n}`, orderer_phone: `0100000010${n}`, recipient_name: `점검주문${n}`, status: 'pay_done', paid_amount: 100000 * n, paid_at: '2026-11-20T00:00:00Z', ordered_at: `2026-11-2${n}T00:00:00Z`, invoice_number: null, admin_note: null, customer_id: null, created_at: `2026-11-2${n}T00:00:00Z` })),
@@ -327,6 +332,39 @@ async function pcChecks(browser) {
       }
     }
     if (bad.length) fail('주문 목록 — 메모 바로 고치기 · Shift 범위 선택', bad.join(' / ')); else ok('주문 목록 — 메모를 줄에서 고침(Enter 저장) · Shift 로 3건 선택');
+  }
+
+  // 함께 맡은 가위 — 판매 [고객 수령 완료] 창에 「가위도 같이 전달 완료」가 켜진 채 뜨고, 누르면 그 가위 id 가 같이 나간다 (2026-11-22)
+  await open(page, '/sales');
+  {
+    const bad = [];
+    // 판매 목록은 카드 보기 · 표 보기 두 가지 — 이름이 적힌 가장 안쪽 칸을 누른다(누름이 줄로 올라간다)
+    const row = await page.evaluateHandle(() => { const all = Array.from(document.querySelectorAll('main *')).filter((e) => (e.textContent || '').includes('점검판매')); return all.find((e) => !Array.from(e.children).some((c) => (c.textContent || '').includes('점검판매'))); });
+    if (!row.asElement()) bad.push('판매 줄을 못 찾음');
+    else {
+      await row.asElement().click();
+      await sleep(900);
+      const clicked = await page.evaluate(() => { const b = Array.from(document.querySelectorAll('main button')).find((e) => (e.textContent || '').trim() === '고객 수령 완료'); if (!b) return false; b.click(); return true; });
+      if (!clicked) bad.push('[고객 수령 완료] 버튼을 못 찾음');
+      else {
+        try {
+          await page.waitForSelector('[data-handover-repairs]', { timeout: 5000 });
+          const info = await page.$eval('[data-handover-repairs]', (e) => ({ text: e.textContent || '', checked: e.querySelector('input')?.checked }));
+          if (!info.text.includes('AS-CHECK-0002')) bad.push(`창에 가위 번호가 없음: ${info.text}`);
+          if (!info.checked) bad.push('「가위도 같이」가 꺼진 채로 뜸');
+          const wait = page.waitForRequest((r) => r.url().includes('/api/sales/s-check-1') && r.method() === 'PATCH', { timeout: 8000 }).catch(() => null);
+          await page.evaluate(() => Array.from(document.querySelectorAll('button')).find((e) => (e.textContent || '').trim() === '수령 완료')?.click());
+          const req = await wait;
+          if (!req) bad.push('수령 완료 요청이 안 나감');
+          else {
+            const sent = JSON.parse(req.postData() || '{}');
+            if (sent.action !== 'mark_delivered' || sent.mode !== 'pickup') bad.push(`요청이 다름: ${req.postData()}`);
+            if (JSON.stringify(sent.repair_ids) !== JSON.stringify(['r-check-2'])) bad.push(`가위 id 가 같이 안 나감: ${req.postData()}`);
+          }
+        } catch { bad.push('창에 「함께 맡은 가위도 같이 전달 완료」가 안 보임'); }
+      }
+    }
+    if (bad.length) fail('함께 맡은 가위 — 판매 수령 완료 때 같이 닫기', bad.join(' / ')); else ok('함께 맡은 가위 — 판매 [고객 수령 완료] 한 번으로 가위도 같이 전달 완료');
   }
 
   // 5초 되돌리기 — 반품 취소를 누르고 [되돌리기] 를 누르면 취소되지 않는다 (2026-11-21)

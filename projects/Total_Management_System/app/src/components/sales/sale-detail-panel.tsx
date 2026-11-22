@@ -26,7 +26,7 @@ import { ExchangeModal } from './exchange-modal';
 import { AdjustReturnModal } from './adjust-return-modal';
 import { useSaleReturns } from '@/hooks/use-returns';
 import { useSaleRepairs } from '@/hooks/use-repairs';
-import { REPAIR_STATUS_LABEL } from '@/lib/repair/transitions';
+import { REPAIR_STATUS_LABEL, canHandoverWithSale } from '@/lib/repair/transitions';
 import { RETURN_STATUS_LABEL, RETURN_STATUS_COLOR, returnTypeChip } from '@/lib/returns/transitions';
 import type { ReturnStatus } from '@/lib/supabase/types';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
@@ -108,6 +108,8 @@ export function SaleDetailPanel({ saleId }: Props) {
   const [showMerge, setShowMerge] = useState(false);
   const [mergeTarget, setMergeTarget] = useState<string | null>(null);
   const [showPickupConfirm, setShowPickupConfirm] = useState(false);
+  // 2026-11-22 함께 맡은 가위도 같이 건넨 것으로 끝낼지 — 기본 켜짐(제품만 먼저 건넬 때만 끈다)
+  const [handoverRepairsToo, setHandoverRepairsToo] = useState(true);
   // 159: 송장 생성 전 받는 곳 확인 — 등록 주소 / 이번만 다른 주소
   const [shipAddrOpen, setShipAddrOpen] = useState(false);
   // 150: 롯데 외 택배사로 직접 보낸 경우 — 택배사+송장번호 기록
@@ -139,6 +141,9 @@ export function SaleDetailPanel({ saleId }: Props) {
   // 2026-11-12 출장 맡김으로 함께 맡은 가위(repairs.sale_id) — 아직 송장이 없으면 「같이 보내기」 안내
   const { data: saleRepairs = [] } = useSaleRepairs(saleId);
   const pendingRepairs = saleRepairs.filter((r) => !r.invoice_number && !r.shipped_at && !['shipped', 'delivered', 'completed', 'cancelled'].includes(r.status));
+  // 2026-11-22 [고객 수령 완료] 때 같이 건넬 수 있는 가위(작업중 · 작업완료, 송장 없음) / 아직 작업 전이라 남는 가위
+  const handoverRepairs = pendingRepairs.filter((r) => canHandoverWithSale(r));
+  const notReadyRepairs = pendingRepairs.filter((r) => !canHandoverWithSale(r));
 
   if (isLoading) {
     return (
@@ -1062,14 +1067,27 @@ export function SaleDetailPanel({ saleId }: Props) {
         open={showPickupConfirm}
         onClose={() => setShowPickupConfirm(false)}
         onConfirm={() => {
-          markDelivered.mutate({ id: saleId, mode: 'pickup' });
+          markDelivered.mutate({ id: saleId, mode: 'pickup', repairIds: handoverRepairsToo ? handoverRepairs.map((r) => r.id) : [] });
           setShowPickupConfirm(false);
         }}
         title="고객 수령 완료"
         message={
           <div className="space-y-2">
-            <p>{s.customer_name} 고객이 매장에서 제품을 직접 받아가신 것으로 처리합니다.</p>
+            {/* 2026-11-22 매장 수령 · 출장 전달 어느 쪽에도 맞는 말로 (전엔 「매장에서 직접 받아가신 것」) */}
+            <p>{s.customer_name} 고객에게 제품을 직접 전달한 것으로 처리합니다.</p>
             <p className="text-xs text-neutral-500">송장 없이 판매완료 상태로 전환됩니다.</p>
+            {handoverRepairs.length > 0 && (
+              <label data-handover-repairs className="flex items-start gap-2 rounded-lg border border-neutral-200 bg-stone-50 px-3 py-2.5 cursor-pointer">
+                <input type="checkbox" className="mt-0.5" checked={handoverRepairsToo} onChange={(e) => setHandoverRepairsToo(e.target.checked)} />
+                <span className="text-xs leading-relaxed text-neutral-700">
+                  <b className="text-stone-900">함께 맡은 가위 {handoverRepairs.map((r) => r.as_id).join(', ')} 도 같이 전달 완료</b>
+                  <br />복원수리 건도 지금 끝납니다. 후기 요청은 두 건 합쳐 1통만 나갑니다.
+                </span>
+              </label>
+            )}
+            {notReadyRepairs.length > 0 && (
+              <p className="text-xs text-amber-700">함께 맡은 가위 {notReadyRepairs.map((r) => r.as_id).join(', ')} 는 아직 작업 전이라 복원수리에 그대로 남습니다.</p>
+            )}
           </div>
         }
         confirmLabel="수령 완료"
