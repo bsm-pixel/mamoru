@@ -1,0 +1,913 @@
+{
+  "generatedAt": "2026-11-22T06:40:11.700Z",
+  "scenarios": {
+    "9837018": {
+      "name": "05 아임웹 클레임 (취소·반품·교환)",
+      "active": true,
+      "routes": [
+        {
+          "branch": "IW-주문취소접수",
+          "signals": [
+            "imweb_cancel_requested"
+          ],
+          "templateId": "KA01TP2609171807133932w0vQkSOQ9b",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        },
+        {
+          "branch": "IW-취소처리완료",
+          "signals": [
+            "imweb_cancel_completed"
+          ],
+          "templateId": "KA01TP260917181209855YvA0do24fKk",
+          "vars": {
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        },
+        {
+          "branch": "IW-반품요청접수",
+          "signals": [
+            "imweb_return_requested"
+          ],
+          "templateId": "KA01TP260917181503653n5ucPQlyH3d",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        },
+        {
+          "branch": "IW-반품승인",
+          "signals": [
+            "imweb_return_approved"
+          ],
+          "templateId": "KA01TP260917182334052P8gKYNarioq",
+          "vars": {
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        },
+        {
+          "branch": "IW-반품완료",
+          "signals": [
+            "imweb_return_completed"
+          ],
+          "templateId": "KA01TP2609201127141695TVFoKogqbc",
+          "vars": {
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        },
+        {
+          "branch": "IW-교환접수",
+          "signals": [
+            "imweb_exchange_requested"
+          ],
+          "templateId": "KA01TP260920115857746iBN2aiEtCdO",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{order_no}": [
+              "order_no"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        }
+      ]
+    },
+    "9837024": {
+      "name": "01 상담 (매장방문·출장·톡상담)",
+      "active": true,
+      "routes": [
+        {
+          "branch": "매장방문_확정",
+          "signals": [
+            "confirmed"
+          ],
+          "templateId": "KA01TP260303091544601Y2JjsVAphkQ",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "매장방문_일정변경",
+          "signals": [
+            "rescheduled"
+          ],
+          "templateId": "KA01TP2603030905247456V7ASKupmz1",
+          "vars": {
+            "#{new_date}": [
+              "new_date"
+            ],
+            "#{new_time}": [
+              "new_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "매장방문_RE24",
+          "signals": [
+            "remind24"
+          ],
+          "templateId": "KA01TP260303091444151tYFleW1mpme",
+          "vars": {
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "매장방문_RE2",
+          "signals": [
+            "remind2"
+          ],
+          "templateId": "KA01TP260303091421901xYBPegb9MQU",
+          "vars": {
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "매장방문_취소",
+          "signals": [
+            "cancelled"
+          ],
+          "templateId": "KA01TP260303090252955pbMB5ygXFVv",
+          "vars": {}
+        },
+        {
+          "branch": "출장_접수완료",
+          "signals": [
+            "request"
+          ],
+          "templateId": "KA01TP260303091354087YbnhG0I9bJL",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_date}": [
+              "hope_days_text"
+            ],
+            "#{visit_time}": [
+              "hope_times_text"
+            ]
+          }
+        },
+        {
+          "branch": "출장_시간제안",
+          "signals": [
+            "suggest"
+          ],
+          "templateId": "KA01TP2603030913295409i7uY5NOOiJ",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{confirm_link}": [
+              "confirm_link"
+            ]
+          }
+        },
+        {
+          "branch": "출장_확정",
+          "signals": [
+            "field_confirmed"
+          ],
+          "templateId": "KA01TP260303091307033rophDFGJudi",
+          "vars": {
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "출장_일정변경",
+          "signals": [
+            "field_rescheduled"
+          ],
+          "templateId": "KA01TP260303090556969S6muQRMHwXQ",
+          "vars": {
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "출장_RE24",
+          "signals": [
+            "field_remind_24h"
+          ],
+          "templateId": "KA01TP260303091242122Um2BSLjnFU4",
+          "vars": {
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "출장_RE2",
+          "signals": [
+            "field_remind_2h"
+          ],
+          "templateId": "KA01TP260303091217381p3hZHuYqrhq",
+          "vars": {
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "출장_취소",
+          "signals": [
+            "field_cancelled"
+          ],
+          "templateId": "KA01TP2603030910264722SRogfSo5nV",
+          "vars": {
+            "#{address}": [
+              "address"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "출장_도착지연",
+          "signals": [
+            "field_delayed"
+          ],
+          "templateId": "KA01TP260917184724839ViA2Jzxe93O",
+          "vars": {
+            "#{delay_min}": [
+              "delay_min"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{visit_time_revised}": [
+              "visit_time_revised"
+            ]
+          }
+        },
+        {
+          "branch": "톡상담_접수",
+          "signals": [
+            "talk_received"
+          ],
+          "templateId": "KA01TP260303091117182BH01usvofeQ",
+          "vars": {
+            "#{name}": [
+              "name"
+            ]
+          }
+        },
+        {
+          "branch": "톡상담_진행",
+          "signals": [
+            "talk_ready"
+          ],
+          "templateId": "KA01TP2603030910508834KLRVAIYo6w",
+          "vars": {}
+        },
+        {
+          "branch": "상담_후기요청",
+          "signals": [
+            "review_request"
+          ],
+          "templateId": "KA01TP260515110011801qj7E3pNtX87",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{phone}": [
+              "phone"
+            ],
+            "#{subtype}": [
+              "subtype"
+            ],
+            "#{consult_uid}": [
+              "consult_uid"
+            ]
+          }
+        }
+      ]
+    },
+    "9837025": {
+      "name": "03 판매·배송 (아임웹·오프라인 공통)",
+      "active": true,
+      "routes": [
+        {
+          "branch": "제품_출고완료",
+          "signals": [
+            "sales_shipped"
+          ],
+          "templateId": "KA01TP2604160450238676n2qVIPJsne",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking}": [
+              "tracking"
+            ],
+            "#{goods_name}": [
+              "goods_name"
+            ]
+          }
+        },
+        {
+          "branch": "제품구매_후기요청",
+          "signals": [
+            "purchase_review_request"
+          ],
+          "templateId": "KA01TP26051511054195502AwscgllnS",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{order_uid}": [
+              "order_uid"
+            ]
+          }
+        }
+      ]
+    },
+    "9837026": {
+      "name": "04 반품·교환 (오프라인 판매분)",
+      "active": true,
+      "routes": [
+        {
+          "branch": "반품교환_회수예약",
+          "signals": [
+            "return_received"
+          ],
+          "templateId": "KA01TP260920114432402fjnfZEZj1ew",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{return_type}": [
+              "return_type"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ],
+            "#{return_number}": [
+              "return_number"
+            ]
+          }
+        },
+        {
+          "branch": "반품교환_입고완료",
+          "signals": [
+            "return_inbound"
+          ],
+          "templateId": "KA01TP260920114629970BdSEQV0b9sI",
+          "vars": {
+            "#{product_name}": [
+              "product_name"
+            ],
+            "#{return_number}": [
+              "return_number"
+            ]
+          }
+        },
+        {
+          "branch": "교환_발송완료",
+          "signals": [
+            "exchange_shipped"
+          ],
+          "templateId": "KA01TP260920123922103t3yF3pTXu9u",
+          "vars": {
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking}": [
+              "tracking"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        }
+      ]
+    },
+    "9837027": {
+      "name": "06 EVENT",
+      "active": true,
+      "routes": [
+        {
+          "branch": "EVENT_접수완료",
+          "signals": [
+            "event_received"
+          ],
+          "templateId": "KA01TP260920124706722BwilVM9cCvO",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{items}": [
+              "items"
+            ],
+            "#{event_name}": [
+              "event_name"
+            ],
+            "#{event_detail}": [
+              "event_detail"
+            ]
+          }
+        },
+        {
+          "branch": "EVENT_입금확인",
+          "signals": [
+            "event_payment_confirmed"
+          ],
+          "templateId": "KA01TP260920130010010LLvuv7Qw9Un",
+          "vars": {
+            "#{event_name}": [
+              "event_name"
+            ],
+            "#{event_number}": [
+              "event_number"
+            ],
+            "#{total_amount}": [
+              "total_amount"
+            ]
+          }
+        },
+        {
+          "branch": "EVENT_출고완료",
+          "signals": [
+            "event_shipped"
+          ],
+          "templateId": "KA01TP260920130320749tGxhC32X8AK",
+          "vars": {
+            "#{id}": [
+              "id"
+            ],
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking}": [
+              "tracking"
+            ],
+            "#{event_name}": [
+              "event_name"
+            ],
+            "#{goods_name}": [
+              "goods_name"
+            ]
+          }
+        },
+        {
+          "branch": "리뷰이벤트_당첨안내",
+          "signals": [
+            "review_event_won"
+          ],
+          "templateId": "KA01TP261002083848427oK8tv09coaC",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{rank}": [
+              "rank"
+            ],
+            "#{prize}": [
+              "prize"
+            ],
+            "#{token}": [
+              "token"
+            ]
+          }
+        },
+        {
+          "branch": "리뷰이벤트_출고안내",
+          "signals": [
+            "review_event_shipped"
+          ],
+          "templateId": "KA01TP261002084553517S6nnhiMLk3A",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{prize}": [
+              "prize"
+            ],
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking}": [
+              "tracking"
+            ]
+          }
+        }
+      ]
+    },
+    "9837029": {
+      "name": "02 복원수리 (접수·상태변경·후기)",
+      "active": true,
+      "routes": [
+        {
+          "branch": "직접발송",
+          "signals": [
+            "as_received"
+          ],
+          "templateId": "KA01TP260303090814981LUgz9PkK0yd",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{address}": [
+              "address"
+            ],
+            "#{delivery_method}": [
+              "delivery_method"
+            ]
+          }
+        },
+        {
+          "branch": "방문수거_문앞",
+          "signals": [
+            "as_received"
+          ],
+          "templateId": "KA01TP260303090653540qJUGcMeoieZ",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{address}": [
+              "address"
+            ],
+            "#{pickup_date}": [
+              "pickup_date"
+            ],
+            "#{delivery_method}": [
+              "delivery_method"
+            ]
+          }
+        },
+        {
+          "branch": "방문수거_카운터",
+          "signals": [
+            "as_received"
+          ],
+          "templateId": "KA01TP260303090718504HbGBeUdimR4",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{address}": [
+              "address"
+            ],
+            "#{pickup_date}": [
+              "pickup_date"
+            ],
+            "#{delivery_method}": [
+              "delivery_method"
+            ]
+          }
+        },
+        {
+          "branch": "방문수거_직접전달",
+          "signals": [
+            "as_received"
+          ],
+          "templateId": "KA01TP260303090751903u5OZzmn06N9",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{address}": [
+              "address"
+            ],
+            "#{pickup_date}": [
+              "pickup_date"
+            ],
+            "#{delivery_method}": [
+              "delivery_method"
+            ]
+          }
+        },
+        {
+          "branch": "직접방문_접수완료",
+          "signals": [
+            "as_visit_booked"
+          ],
+          "templateId": "KA01TP2607281154546230n9U9PRoqql",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{name}": [
+              "name"
+            ],
+            "#{as_id}": [
+              "as_id"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{visit_duration_min}": [
+              "visit_duration_min"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "입고&비용안내",
+          "signals": [
+            "as_cost_notice"
+          ],
+          "templateId": "KA01TP260303090931960mf7AGTiskN9",
+          "vars": {
+            "#{as_amount}": [
+              "as_amount"
+            ],
+            "#{qty_other}": [
+              "qty_other"
+            ],
+            "#{qty_mamoru}": [
+              "qty_mamoru"
+            ],
+            "#{total_amount}": [
+              "total_amount"
+            ],
+            "#{shipping_amount}": [
+              "shipping_amount"
+            ]
+          }
+        },
+        {
+          "branch": "입금확인완료",
+          "signals": [
+            "as_payment_confirmed"
+          ],
+          "templateId": "KA01TP260303090838933qkIiYuMLGD6",
+          "vars": {}
+        },
+        {
+          "branch": "출고완료&송장",
+          "signals": [
+            "as_shipped"
+          ],
+          "templateId": "KA01TP260303090624339ESqfapahpmZ",
+          "vars": {
+            "#{as_uid}": [
+              "as_uid"
+            ],
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking_number}": [
+              "tracking_number"
+            ]
+          }
+        },
+        {
+          "branch": "수리_취소",
+          "signals": [
+            "as_cancelled"
+          ],
+          "templateId": "KA01TP260303091611173tZ5FUnie4wW",
+          "vars": {}
+        },
+        {
+          "branch": "수리_후기요청",
+          "signals": [
+            "as_review_request"
+          ],
+          "templateId": "KA01TP260515110648959LlZkgDkmLsw",
+          "vars": {
+            "#{name}": [
+              "name"
+            ],
+            "#{as_uid}": [
+              "as_uid"
+            ]
+          }
+        },
+        {
+          "branch": "직접방문_RE24",
+          "signals": [
+            "as_visit_remind_24h"
+          ],
+          "templateId": "KA01TP260728121626109LU5H0aJL2Qw",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "직접방문_RE2",
+          "signals": [
+            "as_visit_remind_2h"
+          ],
+          "templateId": "KA01TP260728122203703U85Jl76Ov8K",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        },
+        {
+          "branch": "직접방문_일정변경",
+          "signals": [
+            "as_visit_rescheduled"
+          ],
+          "templateId": "KA01TP260728122456715NjQPyI8Kolb",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ],
+            "#{change_request_link}": [
+              "change_request_link"
+            ]
+          }
+        },
+        {
+          "branch": "직접방문_취소",
+          "signals": [
+            "as_visit_cancelled"
+          ],
+          "templateId": "KA01TP260728122939303ej0JJNjKekv",
+          "vars": {
+            "#{visit_date}": [
+              "visit_date"
+            ],
+            "#{visit_time}": [
+              "visit_time"
+            ]
+          }
+        }
+      ]
+    },
+    "10056000": {
+      "name": "07 출장 맡김·함께 출고",
+      "active": true,
+      "routes": [
+        {
+          "branch": "TMS-출장맡김확인",
+          "signals": [
+            "as_field_received"
+          ],
+          "templateId": "KA01TP261028100611763mjLbGQzO8sK",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{name}": [
+              "name"
+            ],
+            "#{as_id}": [
+              "as_id"
+            ],
+            "#{as_uid}": [
+              "as_uid"
+            ],
+            "#{pay_status}": [
+              "pay_status"
+            ]
+          }
+        },
+        {
+          "branch": "TMS-함께출고",
+          "signals": [
+            "combined_shipped"
+          ],
+          "templateId": "KA01TP2610281017121832JQrUZussDX",
+          "vars": {
+            "#{qty}": [
+              "qty"
+            ],
+            "#{name}": [
+              "name"
+            ],
+            "#{as_id}": [
+              "as_id"
+            ],
+            "#{as_uid}": [
+              "as_uid"
+            ],
+            "#{courier}": [
+              "courier"
+            ],
+            "#{tracking}": [
+              "tracking"
+            ],
+            "#{product_name}": [
+              "product_name"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
