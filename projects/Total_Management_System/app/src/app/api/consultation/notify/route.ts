@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
         visit_date: c.visit_date || '',
         visit_time: c.visit_time || '',
         address,
+        // 2026-11-22 확정 알림톡의 [일정확인/변경] 버튼 주소 — 재발송 때 빠져 버튼이 빈 주소였다 (다른 상담 알림과 같은 주소)
+        change_request_link: `page.mamoru.kr/projects/consulting/page_change_request.html?uid=${c.unique_id}`,
         ...extraData,
       },
     });

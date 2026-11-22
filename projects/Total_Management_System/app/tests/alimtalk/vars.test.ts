@@ -45,13 +45,7 @@ const CALLER_EXTRA: Record<string, string[]> = {
  * 형식: '신호 · 파일 · 칸'
  */
 const KNOWN_GAPS = new Set<string>([
-  // 1) 복원수리 출고 알림톡 — Make 는 #{tracking_number} 를 tracking_number 에서 읽는데 TMS 는 tracking 으로 보낸다
-  'as_shipped · app/api/cron/track-delivery/route.ts · tracking_number',
-  'as_shipped · app/api/repair/[id]/merged-ship/route.ts · tracking_number',
-  'as_shipped · app/api/repair/[id]/route.ts · tracking_number',
-  'as_shipped · lib/notification/combined-shipped.ts · tracking_number',
-  // 2) 매장방문 확정 알림톡 [재발송] — 일정 변경 버튼 주소(change_request_link)를 안 보낸다
-  'confirmed · app/api/consultation/notify/route.ts · change_request_link',
+  // (2026-11-22 첫 점검의 ① 복원수리 출고 송장번호 · ② 매장방문 확정 재발송 버튼 주소는 고침)
 ]);
 
 const sites = scanCallSites(SRC).map((s) => {

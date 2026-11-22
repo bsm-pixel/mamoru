@@ -9,9 +9,9 @@
 - **못 잡는 것**: 값 이름은 맞는데 실제 값이 비는 경우(예: 고객이 고르지 않은 칸)는 흐름 점검(`tests/flows/consult-alimtalk-vars.test.ts` 등)이 맡는다. 솔라피 템플릿 본문 자체의 오타는 Make 표에 안 보이므로 못 잡는다.
 
 ## 2026-11-22 첫 점검에서 나온 것
-1. **복원수리 출고(`as_shipped`)** — 템플릿 칸 `#{tracking_number}` 를 Make 가 `tracking_number` 에서 읽는데 TMS 는 `tracking` 으로 보낸다 → 송장번호 빈칸 가능 (4곳: 송장 자동 감지 크론 · 합포장 · 상태 변경 · 함께 출고).
-2. **매장방문 확정 재발송(`confirmed`, 상담 상세 [알림톡 재발송])** — 일정 변경 버튼 주소(`change_request_link`)를 안 보낸다.
-3. **EVENT 입금 안내(`event_payment_notice`)** — TMS 는 보내는데 Make 에 분기가 없어 아무것도 안 나간다.
+1. ✅ 11-22 고침 — **복원수리 출고(`as_shipped`)** — 템플릿 칸 `#{tracking_number}` 를 Make 가 `tracking_number` 에서 읽는데 TMS 는 `tracking` 으로 보낸다 → 송장번호 빈칸 가능 (4곳: 송장 자동 감지 크론 · 합포장 · 상태 변경 · 함께 출고).
+2. ✅ 11-22 고침 — **매장방문 확정 재발송(`confirmed`, 상담 상세 [알림톡 재발송])** — 일정 변경 버튼 주소(`change_request_link`)를 안 보낸다.
+3. **EVENT 입금 안내(`event_payment_notice`)** — TMS 는 보내는데 Make 에 분기가 없어 아무것도 안 나간다. (11-22 기준 진행 중인 EVENT 없음 · 입금 안내 버튼 7월 이후 사용 없음 — 다음 EVENT 전에 정리)
 4. **복원수리 직접 전달(`as_handed_over`)** — 템플릿 등록 전이라 Make 분기 없음(작업실 `t-261121-handover-template`, 알고 있는 것).
 
 ## 신호별 표

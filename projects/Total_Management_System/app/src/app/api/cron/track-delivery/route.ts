@@ -294,6 +294,8 @@ export async function GET(request: NextRequest) {
                 as_uid: repair.as_id,
                 courier: repair.courier_name || '롯데택배',
                 tracking: repair.invoice_number || '',
+              // 2026-11-22 Make 「복원수리 출고」는 #{tracking_number} 를 tracking_number 에서 읽는다 — tracking 만 보내 송장번호가 빈칸이었다
+                tracking_number: repair.invoice_number || '',
               },
             });
             if (!sent.success) console.error(`[track-delivery/repairs pickup] ${repair.as_id} 알림톡 실패:`, sent.error);

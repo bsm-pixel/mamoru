@@ -100,7 +100,8 @@ export async function sendCombinedShipped(
     template: 'as_shipped',
     phone: repair.phone,
     name: repair.name,
-    data: { id: repair.as_id, as_id: repair.as_id, as_uid: repair.as_id, courier, tracking: repair.invoice_number },
+    // 2026-11-22 Make 「복원수리 출고」는 #{tracking_number} 를 tracking_number 에서 읽는다 — tracking 만 보내 송장번호가 빈칸이었다
+    data: { id: repair.as_id, as_id: repair.as_id, as_uid: repair.as_id, courier, tracking: repair.invoice_number, tracking_number: repair.invoice_number },
   });
   const s = await sendSalesShippedNotification(db, {
     id: sale.id,

@@ -139,6 +139,8 @@ export async function POST(
             shipping_amount: String(updated.shipping_fee || 0),
             total_amount: String(updated.total_amount || 0),
             tracking: cleanInvoice,
+          // 2026-11-22 Make 「복원수리 출고」는 #{tracking_number} 를 tracking_number 에서 읽는다 — tracking 만 보내 송장번호가 빈칸이었다
+            tracking_number: cleanInvoice,
             courier: cleanCourier,
             uid: updated.as_id,
             as_id: updated.as_id, // 2026-09-13: #{as_id} 템플릿 호환

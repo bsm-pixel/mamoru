@@ -243,6 +243,8 @@ export async function PATCH(
             shipping_amount: String(data.shipping_fee || 0),
             total_amount: String(data.total_amount || 0),
             tracking: data.invoice_number || '',
+            // 2026-11-22 Make 「복원수리 출고」는 #{tracking_number} 를 tracking_number 에서 읽는다 — tracking 만 보내 송장번호가 빈칸이었다
+            tracking_number: data.invoice_number || '',
             courier: '롯데택배',
             // 직접방문 전용(as_visit_cancelled) 방문일정 변수 — 그 외 템플릿엔 무해
             visit_date: fmtVisitDate(data.visit_date as string | null),
