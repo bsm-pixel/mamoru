@@ -404,9 +404,36 @@ async function pcChecks(browser) {
     if (bad.length) fail('5초 되돌리기 — 반품 취소', bad.join(' / ')); else ok('5초 되돌리기 — 반품 취소를 되돌리면 실행되지 않음');
   }
 
-  // 임시 저장 — 발주 작성에서 쓰다가 새로고침하면 「작성하던 내용이 있습니다」 → 이어서 쓰기 (2026-11-21)
-  await open(page, '/purchasing/new');
+  // 5초 되돌리기 — 고객 메모를 지우면 [되돌리기] 가 뜨고, 누르면 되살리는 요청이 나간다 (2026-11-22)
+  await open(page, '/customers?id=c-check-1');
   {
+    const bad = [];
+    let del = 0, restore = 0;
+    const onReq = (r) => { if (r.url().includes('/api/customer-notes?id=n-check-1')) { if (r.method() === 'DELETE') del++; if (r.method() === 'PATCH') restore++; } };
+    page.on('request', onReq);
+    try {
+      await page.waitForFunction(() => (document.querySelector('main')?.textContent || '').includes('점검 메모 한 줄'), { timeout: 8000 });
+      const clicked = await page.evaluate(() => {
+        const row = Array.from(document.querySelectorAll('main *')).find((e) => e.children.length === 0 && (e.textContent || '').includes('점검 메모 한 줄'));
+        let n = row; for (let k = 0; k < 6 && n; k++) { n = n.parentElement; const b = n?.querySelector('button[aria-label="삭제"]'); if (b) { b.click(); return true; } }
+        return false;
+      });
+      if (!clicked) bad.push('메모 [삭제] 버튼을 못 찾음');
+      else {
+        await page.waitForSelector('button[data-undo]', { timeout: 4000 });
+        await page.evaluate(() => document.querySelector('button[data-undo]')?.click());
+        await sleep(800);
+        if (del !== 1) bad.push(`지우는 요청 ${del}번`);
+        if (restore !== 1) bad.push(`[되돌리기] 를 눌러도 되살리는 요청이 ${restore}번`);
+      }
+    } catch { bad.push('메모가 안 보이거나 [되돌리기] 가 안 뜸'); }
+    page.off('request', onReq);
+    if (bad.length) fail('5초 되돌리기 — 고객 메모 삭제', bad.join(' / ')); else ok('5초 되돌리기 — 고객 메모를 지운 뒤 [되돌리기] 로 되살림');
+  }
+
+  // 임시 저장 — 쓰다가 새로고침하면 「작성하던 내용이 있습니다」 → 이어서 쓰기 (2026-11-21 발주, 11-22 판매 입력 · 계약서 추가)
+  for (const [url, key, label] of [['/purchasing/new', 'purchase-new', '발주 작성'], ['/sales/new', 'sale-new', '판매 입력'], ['/contracts/new', 'contract-new', '계약서 작성']]) {
+    await open(page, url);
     const bad = [];
     const acceptLeave = (d) => { d.accept().catch(() => {}); };
     page.on('dialog', acceptLeave);
@@ -426,11 +453,11 @@ async function pcChecks(browser) {
         if (await page.$('[data-draft-banner]')) bad.push('이어서 쓴 뒤에도 안내가 남음');
       } catch { bad.push('새로고침 뒤 안내가 안 보임'); }
       // 뒷정리: 다음 점검에 남지 않게 초안을 지운다
-      await page.evaluate(() => { try { localStorage.removeItem('tms.draft.purchase-new'); } catch { /* 무시 */ } });
+      await page.evaluate((k) => { try { localStorage.removeItem('tms.draft.' + k); } catch { /* 무시 */ } }, key);
     }
     await open(page, '/dashboard');
     page.off('dialog', acceptLeave);
-    if (bad.length) fail('임시 저장 — 발주 작성', bad.join(' / ')); else ok('임시 저장 — 새로고침 뒤 「이어서 쓰기」로 되살아남');
+    if (bad.length) fail(`임시 저장 — ${label}`, bad.join(' / ')); else ok(`임시 저장 — ${label}: 새로고침 뒤 「이어서 쓰기」로 되살아남`);
   }
 
   // 출장 주소 — 접수 주소가 고객 정보 주소와 다르면 확인 창, [그대로 두기] 를 고르면 기록 / [수정] 으로 주소 고치기 칸 (2026-11-22)
