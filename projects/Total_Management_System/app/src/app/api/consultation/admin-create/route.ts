@@ -184,6 +184,9 @@ export async function POST(req: NextRequest) {
               type: typeLabel,
               date: visitDate,
               time: visitTime,
+              // 2026-11-22 Make 「매장방문_확정」·「출장_확정」은 visit_date·visit_time 을 읽는다 — 없으면 방문 날짜·시간이 빈칸
+              visit_date: visitDate || '',
+              visit_time: visitTime || '',
               address: fullAddress,
               days: '',
               memo: memo || '',

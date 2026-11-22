@@ -76,6 +76,9 @@ export async function GET(req: NextRequest) {
           type: '출장 요청',
           date,
           time,
+          // 2026-11-22 Make 「출장_확정」은 visit_date·visit_time 을 읽는다 — date·time 만 보내 방문 날짜·시간이 빈칸이었다
+          visit_date: date,
+          visit_time: time,
           address,
           change_request_link: `${GITHUB_PAGES}/page_change_request.html?uid=${data.unique_id}`,
         },

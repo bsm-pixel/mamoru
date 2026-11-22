@@ -191,6 +191,9 @@ export async function PATCH(
                 // field_rescheduled 등 #{visit_date}/#{visit_time} 변수를 쓰는 템플릿 호환 (date/time 도 함께 보냄)
                 visit_date: data.visit_date || '',
                 visit_time: data.visit_time || '',
+                // 2026-11-22 Make 「매장방문_일정변경」은 #{new_date}·#{new_time} 을 new_date·new_time 에서 읽는다 — 보내지 않아 바뀐 날짜·시간이 빈칸이었다
+                new_date: data.visit_date || '',
+                new_time: data.visit_time || '',
                 address,
                 days: '',
                 memo: data.memo || '',

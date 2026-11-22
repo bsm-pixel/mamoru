@@ -249,6 +249,10 @@ export async function POST(req: NextRequest) {
             type,
             date: visitDate || '',
             time: visitTime || '',
+            // 2026-11-22 Make 「매장방문_확정」은 #{visit_date}·#{visit_time} 을 visit_date·visit_time 에서 읽는다 —
+            //   date·time 만 보내 고객 알림톡의 방문 날짜·시간이 빈칸이었다 (notify 라우트와 같은 방식으로 둘 다 보낸다)
+            visit_date: visitDate || '',
+            visit_time: visitTime || '',
             address: fullAddress,
             days: daysArr.join(','),
             memo: memoText || '',
