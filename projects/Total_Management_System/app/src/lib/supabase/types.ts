@@ -922,6 +922,15 @@ export interface Database {
           handwriting_name: string | null;
           handwriting_phone: string | null;
           handwriting_address: string | null;
+          // 172: 고객 링크 서명 + 이니셜 각인
+          sign_token: string | null;
+          sign_link_at: string | null;
+          signed_via: string | null;
+          terms_agreed_at: string | null;
+          engraving: boolean;
+          engraving_text: string | null;
+          engraving_status: 'pending' | 'received' | null;
+          engraving_at: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;

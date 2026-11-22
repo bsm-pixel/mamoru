@@ -650,6 +650,25 @@ TMS /manual-invoices 진입
 | 상세 액션 | 판매전환 / 판매전환+알림톡 버튼 + 이미지 열람 링크 (03-25) |
 | DB 031 | consultation_id, handwriting 3컬럼, image_url (03-25) |
 
+### 고객 서명 링크 · 이니셜 각인 · 판매 연결 (2026-11-22, DB 172)
+
+```
+계약서 작성 → [서명 받는 방법: 이 자리에서 / 고객에게 링크로]
+  링크 → 저장하면 POST /api/contracts/[id]/sign-link (sign_token, 한 번 만들면 같은 주소)
+       → 상세 「고객 서명 링크」 [보낼 문구 복사] → 톡으로 보냄
+       → 고객: page.mamoru.kr/projects/contract/page_sign.html?t=
+            GET /api/contracts/public (이름 가림 · 전화/주소 안 보냄 · 문구는 lib/contracts/notice.ts)
+            유의사항 동의 (+각인 동의) + 손가락 서명 → POST action=sign (한 번만)
+       → status=signed, signed_via=link, terms_agreed_at → 사장님 푸시 (고객 알림톡 없음)
+이니셜 각인 체크 → 안내 문구(ENGRAVING_NOTICE) → 문구 지금 적기 / 나중에 받기(engraving_status=pending)
+  나중에 → 고객이 같은 링크로 POST action=engraving (pending 일 때 한 번) 또는 직원이 상세에서 적기(PATCH)
+[판매 전환] → /sales/new?contract_id= → 고객·제품·할인·결제수단·메모(계약번호·각인) 자동 채움
+  판매 저장 → contracts.offline_sale_id 연결 / 판매 취소 → 연결 해제(다시 판매 입력 가능)
+제품 고르는 창 → 새 제품 재고(products.stock_quantity), 0개는 「재고 없음」
+```
+- 같이 고친 옛 문제: 계약서 저장이 customer_id 를 버리던 것, [판매 전환]이 고객·품목을 안 넘기던 것, 계약서→판매 연결이 안 남던 것.
+- 점검: `tests/flows/contract-sign-link.test.ts`(14개), 화면 점검 「계약서 — 링크 모드 · 각인 · 재고」「계약서 상세 — 서명 링크 · 각인」.
+
 ## 4. 미완료 ❌
 
 | 항목 | 우선순위 |

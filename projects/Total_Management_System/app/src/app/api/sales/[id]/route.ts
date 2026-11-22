@@ -135,6 +135,9 @@ export async function PATCH(
         .eq('merged_into_sale_id', id).is('shipped_at', null).is('cancelled_at', null);
       await db.from('offline_sales').update({ merged_into_sale_id: null }).eq('id', id);
 
+      // 2026-11-22 계약서에서 만든 판매를 취소하면 계약서는 다시 「판매 전」으로 — 다시 [판매 입력] 할 수 있게
+      await db.from('contracts').update({ offline_sale_id: null }).eq('offline_sale_id', id);
+
       // 077: 회계 자동 연동 — 입금된 금액이 있으면 환불(expense) 기록
       if (sale.paid_amount > 0) {
         try {

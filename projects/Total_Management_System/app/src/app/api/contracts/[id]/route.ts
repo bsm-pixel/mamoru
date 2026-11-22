@@ -1,6 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
+import { cleanEngraving } from '@/lib/contracts/sign-link';
+
+/**
+ * PATCH /api/contracts/[id] — 이니셜 각인 문구 적기 (2026-11-22, 마이그 172)
+ *  body: { engraving_text } — 톡 등으로 나중에 받은 문구를 직원이 적어 넣는다. 비우면 다시 「나중에 받기」.
+ *  각인을 하지 않는 계약에 각인을 켜는 것도 여기서: { engraving: true }
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { id } = await params;
+    const body = await req.json().catch(() => ({}));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    const patch: Record<string, unknown> = {};
+    if (body.engraving === false) {
+      Object.assign(patch, { engraving: false, engraving_text: null, engraving_status: null, engraving_at: null });
+    } else if ('engraving_text' in body || body.engraving === true) {
+      const text = cleanEngraving(body.engraving_text);
+      Object.assign(patch, { engraving: true, engraving_text: text || null, engraving_status: text ? 'received' : 'pending', engraving_at: text ? new Date().toISOString() : null });
+    }
+    if (!Object.keys(patch).length) return NextResponse.json({ error: '바꿀 내용이 없습니다' }, { status: 400 });
+
+    const { data, error } = await db.from('contracts').update(patch).eq('id', id).select('id, engraving, engraving_text, engraving_status').single();
+    if (error) throw error;
+    return NextResponse.json({ contract: data });
+  } catch (err) {
+    return NextResponse.json({ error: errMsg(err) }, { status: 500 });
+  }
+}
 
 /**
  * DELETE /api/contracts/[id] — 계약서 영구 삭제

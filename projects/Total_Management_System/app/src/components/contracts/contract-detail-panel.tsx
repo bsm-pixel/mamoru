@@ -12,6 +12,7 @@ import { Send, Receipt, Image, ExternalLink, FileText, Trash2 } from 'lucide-rea
 import toast from 'react-hot-toast';
 import { useState } from 'react';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { ContractSignCards } from '@/components/contracts/contract-sign-cards';
 
 const STATUS_COLOR: Record<string, string> = toneClasses({
   draft: 'cancel', signed: 'progress', sent: 'progress', completed: 'done', cancelled: 'cancel',
@@ -151,6 +152,9 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
         </div>
       </Card>
 
+      {/* 2026-11-22 고객 서명 링크 · 이니셜 각인 */}
+      <ContractSignCards contract={contract} />
+
       {/* 서명 */}
       {(contract.signature_data || contract.seller_signature) && (
         <Card>
@@ -176,7 +180,7 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
             )}
           </div>
           {contract.signed_at && (
-            <p className="text-xs text-neutral-400 mt-2">서명: {formatDateTime(contract.signed_at)}</p>
+            <p className="text-xs text-neutral-400 mt-2">서명: {formatDateTime(contract.signed_at)}{contract.signed_via === 'link' ? ' · 고객이 링크에서 서명' : ''}</p>
           )}
         </Card>
       )}
@@ -242,10 +246,11 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
         open={showConvertConfirm}
         onClose={() => setShowConvertConfirm(false)}
         onConfirm={() => {
-          router.push(`/sales/new?customer_name=${encodeURIComponent(contract.customer_name)}&customer_phone=${encodeURIComponent(contract.customer_phone || '')}&contract_id=${contract.id}`);
+          // 2026-11-22 판매 입력이 계약서 번호로 고객 · 제품 · 할인을 직접 채운다
+          router.push(`/sales/new?contract_id=${contract.id}`);
         }}
         title="판매 전환"
-        message={`${contract.customer_name}님의 계약을 판매로 전환합니다. 판매 입력 화면으로 이동합니다.`}
+        message={`${contract.customer_name}님의 계약을 판매로 전환합니다. 계약서의 고객·제품이 채워진 판매 입력 화면으로 이동합니다.`}
         confirmLabel="판매 전환"
       />
 

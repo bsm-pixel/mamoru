@@ -43,6 +43,8 @@ const FIXTURES = {
     // 고객 미리 보기 점검용 (2026-11-21) — 계약서 1건 · 복원수리 1건 · 메모 1건이 점검고객가에 붙어 있다
     contracts: [
       { id: 'ct-check-1', contract_number: 'CT-CHECK-001', customer_id: 'c-check-1', customer_name: '점검고객가', customer_phone: '010-0000-0001', status: 'signed', payment_method: 'card', final_amount: 500000, total_amount: 500000, created_at: '2026-11-05T00:00:00Z', updated_at: '2026-11-05T00:00:00Z' },
+      // 2026-11-22 고객 서명 링크 · 각인 문구 대기 점검용
+      { id: 'ct-check-2', contract_number: 'CT-CHECK-002', customer_id: null, customer_name: '링크고객', customer_phone: '010-0000-0002', status: 'draft', payment_method: 'transfer', final_amount: 300000, total_amount: 300000, discount_amount: 0, installment_months: 0, deposit_amount: 0, balance_amount: 0, signature_data: null, offline_sale_id: null, sign_token: '11111111-2222-4333-8444-555555555555', sign_link_at: '2026-11-22T01:00:00Z', engraving: true, engraving_status: 'pending', engraving_text: null, created_at: '2026-11-22T00:00:00Z', updated_at: '2026-11-22T00:00:00Z' },
     ],
     repairs: [
       { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
@@ -191,6 +193,42 @@ async function pcChecks(browser) {
     const miss = need.filter((n) => !text.includes(n));
     const old = /어떠한 명분이든/.test(text);
     if (miss.length || old) fail(`계약서 유의사항 ${url}`, old ? '옛 문구가 남아 있음' : `빠진 문장: ${miss.join(' / ')}`); else ok(`계약서 유의사항 ${url}`);
+  }
+
+  // 계약서 — 링크로 보내기 · 이니셜 각인 · 제품 재고 (2026-11-22)
+  await open(page, '/contracts/new');
+  {
+    const bad = [];
+    const vis = (sel) => page.evaluate((s) => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0; }, sel);
+    if (await vis('[data-engraving-notice]')) bad.push('각인을 체크하지 않았는데 안내가 보임');
+    await page.click('[data-engraving-check]');
+    await sleep(200);
+    if (!(await vis('[data-engraving-notice]'))) bad.push('각인을 체크해도 안내가 안 보임');
+    await page.click('[data-sign-mode] [data-mode="link"]');
+    await sleep(200);
+    if (!(await vis('[data-link-customer]'))) bad.push('링크 모드에서 고객 이름 칸이 없음');
+    const sigShown = await page.evaluate(() => Array.from(document.querySelectorAll('main p')).some((p) => p.textContent === '구매자 서명' && p.getClientRects().length > 0));
+    if (sigShown) bad.push('링크 모드인데 구매자 서명 칸이 보임');
+    const label = await page.$eval('[data-contract-save]', (b) => b.textContent || '');
+    if (!/서명 링크 만들기/.test(label)) bad.push(`저장 버튼 글자가 「${label}」`);
+    // 제품 고르는 창에 재고
+    await page.evaluate(() => Array.from(document.querySelectorAll('main button')).find((b) => (b.textContent || '').trim() === '탭하여 선택')?.click());
+    try {
+      await page.waitForSelector('[data-stock]', { timeout: 4000 });
+      const t = await page.evaluate(() => Array.from(document.querySelectorAll('[data-stock]')).map((b) => b.textContent || '').join(' | '));
+      if (!/새 제품 3개/.test(t)) bad.push(`재고가 안 보임: ${t.slice(0, 80)}`);
+    } catch { bad.push('제품 고르는 창이 안 열림'); }
+    await page.keyboard.press('Escape');
+    if (bad.length) fail('계약서 — 링크로 보내기 · 각인 · 재고', bad.join(' / ')); else ok('계약서 — 링크 모드(서명 칸 숨김) · 각인 체크 때만 안내 · 제품 창에 재고');
+  }
+  await open(page, '/contracts/ct-check-2');
+  {
+    const bad = [];
+    try { await page.waitForSelector('[data-sign-link-card]', { timeout: 8000 }); } catch { bad.push('「고객 서명 링크」 칸이 없음'); }
+    const t = await page.evaluate(() => document.querySelector('main')?.textContent || '');
+    if (!/page_sign\.html\?t=11111111/.test(t)) bad.push('링크 주소가 안 보임');
+    if (!/문구 기다리는 중/.test(t)) bad.push('각인 「문구 기다리는 중」이 안 보임');
+    if (bad.length) fail('계약서 상세 — 서명 링크 · 각인', bad.join(' / ')); else ok('계약서 상세 — 서명 링크 주소 · 각인 문구 대기');
   }
 
   // ④-PC 카드 모양 목록에서도 ↓ 로 줄을 고른다 (제품)

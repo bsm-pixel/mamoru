@@ -62,18 +62,26 @@ export function ProductPickerModal({ open, onClose, onSelect }: Props) {
           <p className="text-center text-sm text-neutral-400 py-8">제품이 없습니다</p>
         ) : (
           <div className="space-y-1">
-            {filtered.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => handleSelect(p)}
-                className="w-full text-left px-4 py-4 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 transition border border-transparent hover:border-neutral-200"
-              >
-                <p className="text-sm font-semibold text-neutral-800">{p.name}</p>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  {p.sku} · {formatKRW(p.price)}
-                </p>
-              </button>
-            ))}
+            {filtered.map((p) => {
+              // 2026-11-22 새 제품 재고(판매 가능 수량) — 없는 모델을 계약하지 않게. 고를 수는 있다(입고 예정 등)
+              const stock = p.stock_quantity ?? 0;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => handleSelect(p)}
+                  data-stock={stock}
+                  className={`w-full text-left px-4 py-4 rounded-lg hover:bg-neutral-50 active:bg-neutral-100 transition border border-transparent hover:border-neutral-200 flex items-center gap-3 ${stock <= 0 ? 'opacity-55' : ''}`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-neutral-800">{p.name}</span>
+                    <span className="block text-xs text-neutral-500 mt-0.5">{p.sku} · {formatKRW(p.price)}</span>
+                  </span>
+                  <span className={`shrink-0 text-xs font-semibold tabular-nums whitespace-nowrap ${stock <= 0 ? 'text-red-600' : 'text-neutral-700'}`}>
+                    {stock <= 0 ? '재고 없음' : `새 제품 ${stock}개`}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

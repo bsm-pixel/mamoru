@@ -13,6 +13,7 @@ import { formatKRW, formatDate, formatDateTime, formatPhone } from '@/lib/utils/
 import { ArrowLeft, Send, Receipt, Image, ExternalLink, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { toneClasses } from '@/lib/ui/status-tone';
+import { ContractSignCards } from '@/components/contracts/contract-sign-cards';
 
 const STATUS_COLOR: Record<string, string> = toneClasses({
   draft: 'cancel', signed: 'progress', sent: 'progress', completed: 'done', cancelled: 'cancel',
@@ -213,6 +214,9 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </Card>
 
+        {/* 2026-11-22 고객 서명 링크 · 이니셜 각인 (사이드 패널과 같은 부품) */}
+        <ContractSignCards contract={contract} />
+
         {/* 서명 */}
         {(contract.signature_data || contract.seller_signature) && (
           <Card>
@@ -239,7 +243,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
             </div>
             {contract.signed_at && (
               <p className="text-xs text-neutral-500 mt-2">
-                서명 시각: {formatDateTime(contract.signed_at)}
+                서명 시각: {formatDateTime(contract.signed_at)}{contract.signed_via === 'link' ? ' · 고객이 링크에서 서명' : ''}
               </p>
             )}
           </Card>
@@ -279,7 +283,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => router.push(`/sales/new?customer_name=${encodeURIComponent(contract.customer_name)}&customer_phone=${encodeURIComponent(contract.customer_phone || '')}&contract_id=${contract.id}`)}
+                onClick={() => router.push(`/sales/new?contract_id=${contract.id}`)} /* 2026-11-22 판매 입력이 계약서로 고객·제품을 채운다 */
               >
                 판매 전환
               </Button>
@@ -293,6 +297,19 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <Send size={14} />
                 판매 전환 + 알림톡
               </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* 2026-11-22 판매로 바뀐 계약 — 그 판매로 바로 */}
+        {contract.offline_sale_id && (
+          <Card>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Receipt size={16} className="text-neutral-700 shrink-0" />
+                <span className="text-sm font-semibold text-neutral-700">이 계약은 판매로 전환됨</span>
+              </div>
+              <Button variant="secondary" size="sm" className="shrink-0" onClick={() => router.push(`/sales/${contract.offline_sale_id}`)}>전환된 판매 보기</Button>
             </div>
           </Card>
         )}

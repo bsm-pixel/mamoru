@@ -16,8 +16,9 @@ import { formatKRW } from '@/lib/utils/format';
 import { Plus, X, Users } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
 import { MissingNote } from '@/components/ui/missing-note';
-import { CAUTION_NOTICE } from '@/lib/contracts/notice';
+import { CAUTION_NOTICE, LEGAL_NOTICE, ENGRAVING_NOTICE } from '@/lib/contracts/notice';
 import { MoneyInput } from '@/components/ui/money-input';
+import toast from 'react-hot-toast';
 
 /* -- 제품 행 -- */
 interface ProductRow {
@@ -25,19 +26,6 @@ interface ProductRow {
   product: Product | null;
   quantity: number;
 }
-
-/* -- 법적 문구 -- */
-const LEGAL_NOTICE = `마모루는 도움을 드리는 회사입니다.
-
-저희는 판매목적의 영리목적이 아니라고 생각하며
-여러분의 행복은 고객님의 부분이 될 수 있다 생각합니다.
-
-그러기에 직접 확인의 이유로 분해나 발열이 발생 시
-영역 받지않은 개인이나 지점으로 수리를 맡기는 행위는 안됩니다.
-
-기본적인 관리, 재연마 방법은
-마모루에서 교육(무상) 해드리겠습니다.`;
-
 export default function NewContractPage() {
   const router = useRouter();
   const createContract = useCreateContract();
@@ -76,6 +64,13 @@ export default function NewContractPage() {
   /* -- 서명 -- */
   const [buyerSignature, setBuyerSignature] = useState('');
   const [sellerSignature, setSellerSignature] = useState('');
+  // 2026-11-22 서명 받는 방법: 이 자리(매장·출장 화면) / 고객 폰으로 링크 (온라인·톡상담 고객)
+  const [signMode, setSignMode] = useState<'here' | 'link'>('here');
+
+  /* -- 이니셜 각인 (2026-11-22) — 문구는 지금 적거나, 나중에 받는다(고객이 서명 링크로 보내거나 직원이 상세에서 적는다) -- */
+  const [engraving, setEngraving] = useState(false);
+  const [engravingLater, setEngravingLater] = useState(false);
+  const [engravingText, setEngravingText] = useState('');
 
   /* -- 계산 -- */
   const totalAmount = useMemo(() =>
@@ -136,7 +131,10 @@ export default function NewContractPage() {
   async function handleSubmit() {
     const filledRows = rows.filter((r) => r.product);
     if (filledRows.length === 0) return;
+    if (signMode === 'link' && !customerName.trim()) { toast.error('링크로 보낼 고객 이름을 적어 주세요'); return; }
     const name = customerName.trim() || '미입력';
+    const byLink = signMode === 'link';
+    const engText = engraving && !engravingLater ? engravingText.trim() : '';
 
     const result = await createContract.mutateAsync({
       contract: {
@@ -149,8 +147,10 @@ export default function NewContractPage() {
         final_amount: finalAmount,
         payment_method: paymentMethod,
         installment_months: installment,
-        signature_data: buyerSignature || undefined,
+        signature_data: (!byLink && buyerSignature) || undefined, // 링크로 보낼 때는 고객이 폰에서 서명
         memo: memo.trim() || undefined,
+        engraving,
+        engraving_text: engText || undefined,
         delivery_method: 'shipping',
         deposit_amount: depositAmount,
         balance_amount: balanceAmount,
@@ -158,9 +158,9 @@ export default function NewContractPage() {
         shop_name: shopName.trim() || undefined,
         shop_address: customerAddress.trim() || undefined,
         consultation_id: consultationId || undefined,
-        handwriting_name: hwName || undefined,
-        handwriting_phone: hwPhone || undefined,
-        handwriting_address: hwAddress || undefined,
+        handwriting_name: (!byLink && hwName) || undefined,
+        handwriting_phone: (!byLink && hwPhone) || undefined,
+        handwriting_address: (!byLink && hwAddress) || undefined,
       },
       items: filledRows.map((r) => ({
         product_id: r.product!.id,
@@ -171,6 +171,19 @@ export default function NewContractPage() {
         total_price: r.product!.price * r.quantity,
       })),
     });
+
+    // 링크로 보내기: 서명 링크를 만들고 상세로 — 상세의 「고객 서명 링크」 칸에서 톡 문구를 복사한다
+    if (byLink && result?.contract?.id) {
+      try {
+        const r = await fetch(`/api/contracts/${result.contract.id}/sign-link`, { method: 'POST' });
+        if (!r.ok) throw new Error(await r.text());
+      } catch {
+        toast.error('서명 링크를 만들지 못했어요 — 계약서 상세에서 [링크 만들기]를 다시 눌러 주세요');
+      }
+      draft.clear();
+      router.push(`/contracts/${result.contract.id}`);
+      return;
+    }
 
     // 계약서 이미지 캡처 + Storage 업로드 (실패해도 저장은 완료)
     if (contractRef.current && result?.contract?.id) {
@@ -196,7 +209,7 @@ export default function NewContractPage() {
     router.push('/contracts');
   }
 
-  const canSubmit = rows.some((r) => r.product) && !createContract.isPending;
+  const canSubmit = rows.some((r) => r.product) && !createContract.isPending && (signMode === 'here' || !!customerName.trim());
 
   /* -- 입력 스타일 -- */
   const inputClass = 'border-0 border-b border-neutral-300 bg-transparent px-1 py-1 text-sm focus:outline-none focus:border-neutral-800 w-full';
@@ -205,12 +218,14 @@ export default function NewContractPage() {
   const unsavedGuard = useUnsavedGuard(!!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim() || !!buyerSignature);
 
   // 2026-11-21 임시 저장 — 서명과 손글씨 이미지는 넣지 않는다(크고, 함께 쓰는 태블릿에 남으면 안 된다). 이어서 쓸 때 서명은 다시 받는다
-  const draft = useFormDraft('contract-new', 1, { customerName, customerPhone, customerAddress, customerId, consultationId, shopName, rows, paymentMethod, installment, discount, depositAmount, memo }, !!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim());
+  // 2026-11-22 판 2: 서명 받는 방법 · 각인 칸 추가 (판 1 임시 저장분은 버린다)
+  const draft = useFormDraft('contract-new', 2, { customerName, customerPhone, customerAddress, customerId, consultationId, shopName, rows, paymentMethod, installment, discount, depositAmount, memo, signMode, engraving, engravingLater, engravingText }, !!customerName.trim() || rows.some((r) => !!r.product) || !!memo.trim());
   const resumeDraft = () => {
     const d = draft.take();
     if (!d) return;
     setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setCustomerAddress(d.customerAddress); setCustomerId(d.customerId); setConsultationId(d.consultationId);
     setShopName(d.shopName); setRows(d.rows); setPaymentMethod(d.paymentMethod); setInstallment(d.installment); setDiscount(d.discount); setDepositAmount(d.depositAmount); setMemo(d.memo);
+    setSignMode(d.signMode); setEngraving(d.engraving); setEngravingLater(d.engravingLater); setEngravingText(d.engravingText);
   };
 
   return (
@@ -220,6 +235,22 @@ export default function NewContractPage() {
 
       <div className="px-3 py-4">
         <div className="max-w-[600px] mx-auto mb-2"><DraftBanner at={draft.pendingAt} onResume={resumeDraft} onDiscard={draft.discard} /></div>
+        {/* 2026-11-22 서명 받는 방법 — 계약서 종이 밖(캡처에 안 들어감) */}
+        <div className="max-w-[600px] mx-auto mb-3" data-sign-mode>
+          <p className="text-xs font-semibold text-neutral-600 mb-1.5">서명 받는 방법</p>
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-neutral-100" role="radiogroup" aria-label="서명 받는 방법">
+            {([['here', '이 자리에서 서명'], ['link', '고객에게 링크로 보내기']] as const).map(([v, label]) => (
+              <button key={v} type="button" role="radio" aria-checked={signMode === v} data-mode={v}
+                onClick={() => setSignMode(v)}
+                className={`min-h-10 rounded-md text-sm font-semibold transition ${signMode === v ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {signMode === 'link' && (
+            <p className="text-xs text-neutral-500 mt-1.5">저장하면 서명 링크가 만들어져요. 톡으로 보내면 고객이 폰에서 내용을 읽고 서명합니다.</p>
+          )}
+        </div>
         <div ref={contractRef} className="bg-white max-w-[600px] mx-auto border border-neutral-400 rounded-sm shadow-sm">
 
           {/* -- 헤더 -- */}
@@ -254,8 +285,26 @@ export default function NewContractPage() {
             </div>
           </div>
 
+          {/* -- 링크로 보낼 때: 고객 정보를 직원이 글자로 적는다 (손글씨 칸은 매장용) -- */}
+          {signMode === 'link' && (
+            <div className="px-5 py-4 border-b border-neutral-300 space-y-3" data-link-customer>
+              <div>
+                <label className="text-[10px] text-neutral-500">고객 이름</label>
+                <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="고객 이름" className={inputClass} />
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-500">연락처</label>
+                <input type="tel" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="010-0000-0000" className={inputClass} />
+              </div>
+              <div>
+                <label className="text-[10px] text-neutral-500">주소 (수령지)</label>
+                <input type="text" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="주소 (선택)" className={inputClass} />
+              </div>
+            </div>
+          )}
+
           {/* -- 고객 필기 영역 (성함 / 연락처 / 주소) -- */}
-          <div className="px-5 py-4 border-b border-neutral-300 space-y-3">
+          <div className={`px-5 py-4 border-b border-neutral-300 space-y-3 ${signMode === 'link' ? 'hidden' : ''}`}>
             <p className="text-[10px] text-neutral-400 mb-1">고객님이 직접 작성해주세요</p>
             <HandwritingField
               label="성함"
@@ -438,6 +487,41 @@ export default function NewContractPage() {
             )}
           </div>
 
+          {/* -- 이니셜 각인 (2026-11-22) — 체크했을 때만 안내 문구가 보인다 -- */}
+          <div className="px-5 py-4 border-b border-neutral-300 space-y-3" data-engraving>
+            <label className="flex items-center gap-2 text-sm font-semibold text-neutral-800 cursor-pointer min-h-8">
+              <input type="checkbox" checked={engraving} onChange={(e) => setEngraving(e.target.checked)} className="w-4 h-4 accent-neutral-800" data-engraving-check />
+              이니셜 각인
+            </label>
+            {engraving && (
+              <>
+                <p className="text-[11px] text-neutral-700 leading-relaxed border-l-2 border-neutral-800 pl-3 py-1" data-engraving-notice>{ENGRAVING_NOTICE}</p>
+                <div className="flex flex-wrap gap-4 text-sm" role="radiogroup" aria-label="각인 문구">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="engraving-when" checked={!engravingLater} onChange={() => setEngravingLater(false)} className="accent-neutral-800" />
+                    지금 적기
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="radio" name="engraving-when" checked={engravingLater} onChange={() => setEngravingLater(true)} className="accent-neutral-800" data-engraving-later />
+                    문구는 나중에 받기
+                  </label>
+                </div>
+                {!engravingLater ? (
+                  <div>
+                    <label className="text-[10px] text-neutral-500">각인 문구</label>
+                    <input type="text" value={engravingText} onChange={(e) => setEngravingText(e.target.value)} maxLength={30} placeholder="예: S.M.B" className={inputClass} />
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    {signMode === 'link'
+                      ? '고객이 서명 링크에서 바로 적거나, 정해지면 같은 링크로 보낼 수 있어요.'
+                      : '문구가 정해지면 서명 링크로 받거나, 톡으로 받아 계약서 상세에서 적어 넣어요.'}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
           {/* -- 날짜 + 서명 -- */}
           <div className="px-5 py-4 border-b border-neutral-300 space-y-4">
             <p className="text-center text-sm text-neutral-800 tracking-widest">
@@ -445,7 +529,10 @@ export default function NewContractPage() {
             </p>
 
             <div className="space-y-3">
-              <div>
+              {signMode === 'link' && (
+                <p className="text-xs text-neutral-500 border border-dashed border-neutral-300 rounded-md px-3 py-2">구매자 서명은 고객이 링크에서 합니다</p>
+              )}
+              <div className={signMode === 'link' ? 'hidden' : ''}>
                 <p className="text-xs font-bold text-neutral-700 mb-1">구매자 서명</p>
                 <SignatureCanvas onSign={setBuyerSignature} width={320} height={120} />
               </div>
@@ -466,13 +553,14 @@ export default function NewContractPage() {
 
         {/* -- 저장 버튼 -- */}
         <div className="max-w-[600px] mx-auto mt-4 pb-8">
-          <MissingNote className="mb-1.5 text-center" items={[!rows.some((r) => r.product) && '제품 1개 이상']} />
+          <MissingNote className="mb-1.5 text-center" items={[!rows.some((r) => r.product) && '제품 1개 이상', signMode === 'link' && !customerName.trim() && '고객 이름']} />
           <Button
             className="w-full"
             disabled={!canSubmit}
             onClick={handleSubmit}
+            data-contract-save
           >
-            {createContract.isPending ? '저장 중...' : `계약서 저장 (${formatKRW(finalAmount)})`}
+            {createContract.isPending ? '저장 중...' : signMode === 'link' ? `저장하고 서명 링크 만들기 (${formatKRW(finalAmount)})` : `계약서 저장 (${formatKRW(finalAmount)})`}
           </Button>
         </div>
       </div>

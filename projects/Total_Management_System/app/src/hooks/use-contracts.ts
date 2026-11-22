@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { todayKST, addDays, addMonths } from '@/lib/utils/kst';
 import { createClient } from '@/lib/supabase/client';
 import type { Contract, ContractItem } from '@/lib/supabase/types';
@@ -153,6 +153,9 @@ export function useCreateContract() {
         handwriting_name?: string;
         handwriting_phone?: string;
         handwriting_address?: string;
+        // 172: 이니셜 각인 — 문구가 없으면 「나중에 받기」
+        engraving?: boolean;
+        engraving_text?: string;
       };
       items: Array<{
         product_id?: string;
@@ -203,6 +206,36 @@ export function useDeleteContract() {
     onError: (err) => {
       toast.error(String(err instanceof Error ? err.message : err));
     },
+  });
+}
+
+/** 고객 서명 링크 만들기 (이미 있으면 같은 링크) — 2026-11-22 */
+export function useCreateSignLink() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (contractId: string) => {
+      const res = await fetch(`/api/contracts/${contractId}/sign-link`, { method: 'POST' });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || `링크를 만들지 못했어요 (${res.status})`);
+      return d as { token: string; url: string };
+    },
+    onSuccess: (_d, id) => queryClient.invalidateQueries({ queryKey: ['contract', id] }),
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
+  });
+}
+
+/** 이니셜 각인 문구 적기 · 각인 켜고 끄기 — 2026-11-22 */
+export function useUpdateEngraving() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: { id: string; engraving?: boolean; engraving_text?: string }) => {
+      const res = await fetch(`/api/contracts/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || `저장하지 못했어요 (${res.status})`);
+      return d;
+    },
+    onSuccess: (_d, v) => { toast.success('각인 내용을 저장했어요'); queryClient.invalidateQueries({ queryKey: ['contract', v.id] }); },
+    onError: (err) => toast.error(err instanceof Error ? err.message : String(err)),
   });
 }
 

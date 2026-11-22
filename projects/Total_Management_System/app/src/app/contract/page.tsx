@@ -9,7 +9,7 @@ import { useCreateContract } from '@/hooks/use-contracts';
 import { formatKRW } from '@/lib/utils/format';
 import { Plus, X, CheckCircle2, RotateCcw } from 'lucide-react';
 import type { Product } from '@/lib/supabase/types';
-import { CAUTION_NOTICE } from '@/lib/contracts/notice';
+import { CAUTION_NOTICE, LEGAL_NOTICE } from '@/lib/contracts/notice';
 import { MoneyInput } from '@/components/ui/money-input';
 
 /* ── 제품 행 ────────────────────────── */
@@ -19,17 +19,7 @@ interface ProductRow {
   quantity: number;
 }
 
-/* ── 법적 문구 (종이 계약서 원문) ────── */
-const LEGAL_NOTICE = `마모루는 도움을 드리는 회사입니다.
-
-저희는 판매목적의 영리목적이 아니라고 생각하며
-여러분의 행복은 고객님의 부분이 될 수 있다 생각합니다.
-
-그러기에 직접 확인의 이유로 분해나 발열이 발생 시
-영역 받지않은 개인이나 지점으로 수리를 맡기는 행위는 안됩니다.
-
-기본적인 관리, 재연마 방법은
-마모루에서 교육(무상) 해드리겠습니다.`;
+/* ── 법적 문구 (종이 계약서 원문) — lib/contracts/notice.ts 한 곳에서 (2026-11-22) ────── */
 
 export default function ContractStandalonePage() {
   const createContract = useCreateContract();

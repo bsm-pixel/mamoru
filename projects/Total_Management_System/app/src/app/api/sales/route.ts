@@ -168,6 +168,12 @@ export async function POST(req: NextRequest) {
     };
     const created = await insertOfflineSale(db, saleDate, salePayload);
 
+    // 2026-11-22 계약서 → 판매: 계약서 쪽에도 판매를 이어 둔다(전엔 판매→계약 한쪽만 남아 「전환된 판매 보기」·삭제 막기가 안 됐다)
+    if (salePayload.contract_id) {
+      const { error: linkErr } = await db.from('contracts').update({ offline_sale_id: created.id }).eq('id', salePayload.contract_id).is('offline_sale_id', null);
+      if (linkErr) console.error('[sales] 계약서 연결 실패:', linkErr.message);
+    }
+
     // 항목별 id 매핑 (시리얼 → sale_item 연결용)
     const itemIdMap: Record<number, string> = {};
 

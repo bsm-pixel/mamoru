@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>구매 계약서 | MAMORU</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;700;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css" rel="stylesheet">
+<!-- 구매 계약서 — 고객 서명 링크 (2026-11-22, TMS 마이그 172)
+     열쇠 ?t= 로 /api/contracts/public 에서 계약 내용을 받아 보여 주고, 동의 · 서명을 받는다.
+     문구(필독·유의사항·각인 안내)는 TMS lib/contracts/notice.ts 한 곳에서 내려온다 — 여기서 고치지 않는다.
+     규칙: 모노크롬 · 그림자/그라데이션 없음 · 모서리 2px · 예약 확인 페이지(projects/as/page_change_request.html)와 같은 전표 틀 -->
+<style>
+  :root{
+    --void:#1A1A1A; --ink:#2D2D2D; --stone:#4A4A4A; --mute:#8A8580; --mist:#B8B4AF;
+    --sand:#D4D0CB; --line:#EDEBE8; --shell:#F5F3F0; --cream:#FAF9F7;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--cream); color:var(--void); font-family:'Pretendard',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.6; word-break:keep-all;}
+  .wrap{max-width:520px; margin:0 auto; padding:28px 20px 72px; min-height:100vh;}
+  .brand{text-align:center; margin-bottom:26px; color:var(--void);}
+  .brand .mm-wordmark{display:block; height:10px; width:auto; margin:0 auto;}
+  .hidden{display:none !important;}
+
+  .sec{border-top:1px solid var(--void); padding:22px 0 10px; margin-bottom:8px;}
+  .sec.soft{border-top-color:var(--sand);}
+  .eyebrow{font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:.2em; color:var(--mute); margin-bottom:8px;}
+  h1{font-size:clamp(26px,7.4vw,32px); font-weight:900; letter-spacing:-.04em; line-height:1.2; margin-bottom:6px;}
+  .lead{font-size:14px; color:var(--stone); margin-bottom:14px;}
+  h2{font-size:16px; font-weight:800; letter-spacing:-.02em; margin-bottom:10px;}
+
+  .row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:11px 0; border-bottom:1px solid var(--sand); font-size:14px;}
+  .row .k{color:var(--mute); flex:0 0 auto;}
+  .row .v{color:var(--void); font-weight:700; text-align:right; font-variant-numeric:tabular-nums;}
+  .row.big .v{font-size:clamp(19px,5.4vw,22px); font-weight:900; letter-spacing:-.02em;}
+  .num{font-family:'Outfit','Pretendard',sans-serif; font-weight:600; letter-spacing:.02em;}
+  .item .v small{display:block; font-size:12px; font-weight:500; color:var(--mute);}
+
+  .notice{font-size:13.5px; color:var(--ink); line-height:1.75; white-space:pre-line; padding:2px 0 6px;}
+  .mark{border-left:2px solid var(--void); padding:4px 0 4px 12px; font-size:14px; font-weight:600; line-height:1.7; color:var(--void); margin:4px 0 12px;}
+
+  label.chk{display:flex; gap:12px; align-items:flex-start; padding:14px 0; border-bottom:1px solid var(--sand); font-size:15px; font-weight:600; cursor:pointer; min-height:48px;}
+  label.chk input{width:22px; height:22px; margin-top:1px; accent-color:var(--void); flex:none;}
+
+  .fld{font-size:13px; font-weight:700; color:var(--stone); margin:14px 0 6px; display:block;}
+  input[type=text]{width:100%; font-family:inherit; font-size:16px; padding:13px 12px; border:1px solid var(--sand); border-radius:2px; background:#fff; color:var(--void);}
+  input[type=text]:focus{outline:1px solid var(--void); outline-offset:-2px; border-color:var(--void);}
+  .hint{font-size:13px; color:var(--mute); line-height:1.7; margin-top:8px;}
+
+  .pad{position:relative; border:1px solid var(--void); border-radius:2px; background:#fff; height:190px; touch-action:none;}
+  .pad canvas{display:block; width:100%; height:100%; cursor:crosshair;}
+  .pad .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--mist); font-size:15px; pointer-events:none;}
+  .pad-bar{display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:13px; color:var(--mute);}
+  .link{background:none; border:0; font:inherit; font-size:13px; color:var(--stone); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:8px 0; min-height:44px;}
+
+  .btns{display:flex; flex-direction:column; gap:10px; margin-top:22px;}
+  .btn{display:block; width:100%; min-height:52px; text-align:center; padding:15px; border-radius:2px; font-size:16px; font-weight:800; letter-spacing:-.01em;
+    border:1px solid var(--void); cursor:pointer; background:#fff; color:var(--void); font-family:inherit; transition:background .15s, opacity .15s;}
+  .btn.primary{background:var(--void); color:var(--cream);}
+  .btn.primary:hover{background:var(--ink);}
+  .btn:focus-visible{outline:2px solid var(--void); outline-offset:2px;}
+  .btn:disabled{opacity:.35; cursor:default;}
+  .warn{border-left:2px solid var(--void); padding:2px 0 2px 12px; font-size:13.5px; font-weight:600; margin-top:12px;}
+
+  .done{border-top:1px solid var(--void); border-bottom:1px solid var(--sand); padding:44px 4px; text-align:center;}
+  .done h2{font-size:clamp(21px,6vw,25px); font-weight:900; letter-spacing:-.03em; margin-bottom:10px;}
+  .done p{font-size:14.5px; color:var(--ink); line-height:1.75;}
+  .done p b{display:inline-block; margin-top:6px; font-size:19px; font-weight:900; letter-spacing:.02em;}
+  .center{text-align:center;}
+  @media (min-width:768px){ .wrap{padding-top:48px;} .row, .notice{font-size:15px;} .lead{font-size:15px;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><svg class="mm-wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="3.19 205.21 315.73 34.01" role="img" aria-label="MAMORU"><path fill="currentColor" d="M3.21875 205.211H10.958C12.1787 205.211 13.0739 205.805 13.6436 206.993C13.8063 207.237 14.8561 209.052 16.793 212.437C19.6087 217.304 22.4652 222.244 25.3623 227.257C25.4762 227.452 25.8506 228.095 26.4854 229.185H26.5098C26.6074 229.006 27.9258 226.719 30.4648 222.325C34.2083 215.88 36.1777 212.462 36.373 212.071C36.5358 211.827 37.6182 209.963 39.6201 206.48C39.9945 205.943 40.4746 205.569 41.0605 205.357C41.3372 205.26 41.6872 205.211 42.1104 205.211H49.7764C49.7926 205.211 49.8008 205.219 49.8008 205.235V236.314C49.8008 237.437 49.3206 238.284 48.3604 238.853C47.9372 239.097 47.4977 239.219 47.042 239.219H41.0605C41.0443 239.219 41.0361 239.211 41.0361 239.195V221.568C40.7106 222.105 39.0179 225.027 35.958 230.333L32.2471 236.754C31.6611 237.584 30.8962 237.999 29.9521 237.999H23.043C22.1315 237.999 21.3828 237.608 20.7969 236.827C20.6992 236.697 19.7389 235.037 17.916 231.846C17.8021 231.667 16.443 229.324 13.8389 224.815C12.9111 223.204 12.2845 222.122 11.959 221.568V239.195C11.959 239.211 11.9508 239.219 11.9346 239.219H5.95312C5.1556 239.219 4.45573 238.886 3.85352 238.219C3.41406 237.681 3.19434 237.095 3.19434 236.461V205.235C3.19434 205.219 3.20247 205.211 3.21875 205.211ZM77.6055 205.211H84.7588C86.2074 205.211 87.4199 205.813 88.3965 207.017C88.6569 207.375 88.9824 207.929 89.373 208.677C89.4382 208.775 89.4951 208.873 89.5439 208.97C89.6904 209.198 90.9437 211.396 93.3037 215.562C93.971 216.75 94.736 218.101 95.5986 219.615C100.953 229.071 103.704 233.905 103.851 234.117L106.707 239.219H99.1875C97.2018 239.219 95.737 238.284 94.793 236.412C94.1257 235.273 93.6374 234.426 93.3281 233.873C93.0677 233.401 92.9212 233.149 92.8887 233.116H69.5488C69.5163 233.116 69.4756 233.132 69.4268 233.165C69.3942 233.197 69.3698 233.262 69.3535 233.36L67.1562 237.218C66.1634 238.552 64.8451 239.219 63.2012 239.219H55.7549C55.7223 239.219 55.7061 239.219 55.7061 239.219C55.7061 239.203 55.7061 239.187 55.7061 239.171C59.3031 232.807 62.4362 227.289 65.1055 222.618C67.2214 218.891 68.9303 215.88 70.2324 213.585C72.2507 210.02 73.3086 208.165 73.4062 208.018C73.6667 207.53 73.9434 207.099 74.2363 206.724C75.1803 205.715 76.3034 205.211 77.6055 205.211ZM81.1943 212.462L73.5527 225.914H88.8359C83.8392 217.157 81.292 212.673 81.1943 212.462ZM112.734 205.211H120.474C121.694 205.211 122.59 205.805 123.159 206.993C123.322 207.237 124.372 209.052 126.309 212.437C129.124 217.304 131.981 222.244 134.878 227.257C134.992 227.452 135.366 228.095 136.001 229.185H136.025C136.123 229.006 137.441 226.719 139.98 222.325C143.724 215.88 145.693 212.462 145.889 212.071C146.051 211.827 147.134 209.963 149.136 206.48C149.51 205.943 149.99 205.569 150.576 205.357C150.853 205.26 151.203 205.211 151.626 205.211H159.292C159.308 205.211 159.316 205.219 159.316 205.235V236.314C159.316 237.437 158.836 238.284 157.876 238.853C157.453 239.097 157.013 239.219 156.558 239.219H150.576C150.56 239.219 150.552 239.211 150.552 239.195V221.568C150.226 222.105 148.534 225.027 145.474 230.333L141.763 236.754C141.177 237.584 140.412 237.999 139.468 237.999H132.559C131.647 237.999 130.898 237.608 130.312 236.827C130.215 236.697 129.255 235.037 127.432 231.846C127.318 231.667 125.959 229.324 123.354 224.815C122.427 223.204 121.8 222.122 121.475 221.568V239.195C121.475 239.211 121.466 239.219 121.45 239.219H115.469C114.671 239.219 113.971 238.886 113.369 238.219C112.93 237.681 112.71 237.095 112.71 236.461V205.235C112.71 205.219 112.718 205.211 112.734 205.211ZM181.945 205.211H199.45C202.396 205.211 205.147 206.098 207.702 207.872C208.125 208.132 208.654 208.555 209.289 209.141C209.387 209.223 209.493 209.312 209.606 209.41C210.404 210.321 210.982 211.021 211.34 211.51C213.049 214.032 213.903 216.816 213.903 219.859V224.571C213.903 228.168 212.74 231.366 210.412 234.166C209.68 234.963 209.077 235.533 208.605 235.875C207.792 236.558 206.953 237.12 206.091 237.559C203.975 238.666 201.745 239.219 199.401 239.219H181.994C178.853 239.219 175.956 238.251 173.303 236.314C172.863 235.972 172.245 235.411 171.447 234.63C170.65 233.767 170.104 233.067 169.812 232.53C168.265 230.137 167.492 227.517 167.492 224.669V219.761C167.492 216.425 168.558 213.398 170.69 210.679C171 210.321 171.504 209.768 172.204 209.019C172.904 208.417 173.506 207.969 174.011 207.677C176.501 206.033 179.146 205.211 181.945 205.211ZM176.306 219.981V224.425C176.306 225.629 176.558 226.63 177.062 227.427C177.16 227.72 177.453 228.135 177.941 228.673C179.097 229.844 180.497 230.43 182.141 230.43H199.255C201.159 230.43 202.705 229.657 203.894 228.111C204.235 227.672 204.504 227.224 204.699 226.768C204.96 226.134 205.09 225.32 205.09 224.327V220.177C205.09 219.119 204.976 218.329 204.748 217.808C204.243 216.523 203.397 215.53 202.209 214.83C201.314 214.293 200.345 214.024 199.304 214.024H182.092C180.204 214.024 178.641 214.822 177.404 216.417C177.062 216.905 176.826 217.336 176.696 217.711C176.436 218.313 176.306 219.07 176.306 219.981ZM225.155 205.211H249.911C253.248 205.211 256.129 205.732 258.554 206.773C259.042 206.969 259.424 207.131 259.701 207.261C260.108 207.489 260.539 207.758 260.995 208.067C263.16 209.385 264.698 211.249 265.609 213.658C266.098 214.944 266.342 216.311 266.342 217.76V218.077C266.342 219.818 265.976 221.462 265.243 223.009C265.015 223.448 264.73 223.936 264.389 224.473C264.096 224.864 263.746 225.279 263.339 225.719C263.144 225.946 262.948 226.15 262.753 226.329L262.509 226.573L262.313 226.719L261.947 227.012C261.654 227.224 261.288 227.468 260.849 227.745C260.784 227.777 260.718 227.818 260.653 227.867C260.214 228.095 259.815 228.298 259.457 228.477C259.278 228.559 259.107 228.64 258.944 228.721C258.31 228.982 257.642 229.218 256.942 229.429C258.961 231.513 260.344 233.026 261.093 233.97C261.597 234.54 262.094 235.102 262.582 235.655C263.51 236.729 264.397 237.73 265.243 238.658C265.504 238.902 265.658 239.073 265.707 239.171H255.16C254.558 239.171 254.086 239.106 253.744 238.975C253.646 238.927 253.557 238.878 253.476 238.829C253.394 238.78 253.305 238.723 253.207 238.658C252.865 238.43 252.483 238.048 252.06 237.51C250.513 235.671 248.878 233.661 247.152 231.48L246.298 230.382C246.249 230.382 246.151 230.398 246.005 230.43C244.996 230.43 241.96 230.447 236.898 230.479H230.697V236.021C230.697 237.063 230.25 237.942 229.354 238.658C228.817 239.032 228.199 239.219 227.499 239.219H221.908V208.629C221.908 208.075 221.973 207.636 222.104 207.31C222.169 207.115 222.283 206.887 222.445 206.627C222.559 206.464 222.698 206.309 222.86 206.163C223.544 205.528 224.309 205.211 225.155 205.211ZM230.697 214.024V221.715H250.692C252.255 221.715 253.443 221.446 254.257 220.909C254.843 220.535 255.274 220.038 255.551 219.42C255.779 218.948 255.893 218.411 255.893 217.808C255.893 216.62 255.347 215.627 254.257 214.83C254.094 214.716 253.923 214.618 253.744 214.537C253.695 214.521 253.646 214.496 253.598 214.464C253.305 214.317 252.857 214.187 252.255 214.073C252.06 214.073 251.791 214.057 251.449 214.024H230.697ZM286.725 239.219C285.471 239.171 284.552 239.122 283.966 239.073C283.51 239.073 282.59 238.918 281.207 238.609C280.165 238.349 279.368 238.088 278.814 237.828C278.049 237.486 277.285 236.965 276.52 236.265C274.518 234.475 273.517 231.326 273.517 226.817L273.712 209.581C273.712 208.425 274.029 207.473 274.664 206.724C275.543 205.715 276.609 205.211 277.862 205.211H282.721V227.965C282.721 228.225 282.786 228.51 282.916 228.819C283.355 229.714 284.023 230.162 284.918 230.162H307.525C308.176 230.162 308.738 229.877 309.21 229.307C309.552 228.966 309.723 228.42 309.723 227.672V205.26C309.723 205.243 309.723 205.235 309.723 205.235C309.723 205.219 309.739 205.211 309.771 205.211H314.605C315.159 205.211 315.696 205.333 316.217 205.577C317.226 206 317.958 206.733 318.414 207.774C318.561 208.165 318.658 208.564 318.707 208.97C318.854 219.648 318.927 225.662 318.927 227.012C318.927 229.47 318.577 231.602 317.877 233.409C317.698 233.881 317.429 234.402 317.071 234.971C316.534 235.753 315.867 236.436 315.069 237.022C314.402 237.445 313.718 237.795 313.019 238.072C312.319 238.365 311.269 238.634 309.869 238.878C308.258 239.106 306.923 239.219 305.865 239.219H286.725Z"/></svg></div>
+
+  <div id="loading" class="sec soft center"><p style="color:var(--mute);font-size:14px;padding:24px 0;">계약서를 불러오는 중…</p></div>
+  <div id="error" class="done hidden"><h2>열 수 없는 주소예요</h2><p id="error-msg">받으신 링크로 다시 들어와 주세요.</p></div>
+
+  <!-- 계약 내용 -->
+  <div id="main" class="hidden">
+    <div class="sec">
+      <div class="eyebrow">PURCHASE CONTRACT</div>
+      <h1>구매 계약서</h1>
+      <p class="lead">내용을 천천히 확인하시고 맨 아래에서 서명해 주세요.</p>
+      <div class="row"><span class="k">계약번호</span><span class="v num" id="f-no">-</span></div>
+      <div class="row"><span class="k">구매자</span><span class="v" id="f-name">-</span></div>
+      <div class="row"><span class="k">작성일</span><span class="v" id="f-date">-</span></div>
+    </div>
+
+    <div class="sec soft">
+      <h2>구매 제품</h2>
+      <div id="f-items"></div>
+      <div class="row hidden" id="r-discount"><span class="k">할인</span><span class="v" id="f-discount">-</span></div>
+      <div class="row big"><span class="k">합계</span><span class="v" id="f-final">-</span></div>
+      <div class="row hidden" id="r-deposit"><span class="k">선납금 · 잔금</span><span class="v" id="f-deposit">-</span></div>
+      <div class="row"><span class="k">결제 방법</span><span class="v" id="f-pay">-</span></div>
+      <div class="row"><span class="k">입금 계좌</span><span class="v" id="f-account">-</span></div>
+    </div>
+
+    <div class="sec soft">
+      <h2>필독</h2>
+      <p class="notice" id="n-legal"></p>
+    </div>
+    <div class="sec soft">
+      <h2>유의사항</h2>
+      <p class="notice" id="n-caution"></p>
+    </div>
+
+    <!-- 이니셜 각인 -->
+    <div class="sec soft hidden" id="s-eng">
+      <h2>이니셜 각인</h2>
+      <p class="mark" id="n-eng"></p>
+      <div id="eng-have" class="row hidden"><span class="k">각인 문구</span><span class="v num" id="f-eng"></span></div>
+      <div id="eng-ask" class="hidden">
+        <label class="fld" for="eng-input">각인할 문구 <span style="font-weight:500;color:var(--mute)">(정해지셨다면)</span></label>
+        <input type="text" id="eng-input" maxlength="30" placeholder="예: S.M.B" autocomplete="off">
+        <p class="hint">아직 정하지 못하셨으면 비워 두세요. 정해지면 이 링크로 다시 들어와 보내실 수 있어요.</p>
+      </div>
+    </div>
+
+    <!-- 동의 + 서명 -->
+    <div class="sec">
+      <h2>동의 및 서명</h2>
+      <label class="chk"><input type="checkbox" id="c-terms"><span>위 필독·유의사항을 읽고 동의합니다</span></label>
+      <label class="chk hidden" id="l-eng"><input type="checkbox" id="c-eng"><span>각인 후에는 교환·반품이 어려운 것을 확인했습니다</span></label>
+      <label class="fld" style="margin-top:18px">서명</label>
+      <div class="pad" id="pad"><canvas id="cv"></canvas><div class="ph" id="ph">여기에 손가락으로 서명해 주세요</div></div>
+      <div class="pad-bar"><span>정자로 쓰지 않으셔도 괜찮아요</span><button type="button" class="link" id="b-clear">다시 쓰기</button></div>
+      <div id="sign-warn" class="warn hidden"></div>
+      <div class="btns"><button class="btn primary" id="b-sign" disabled>서명하고 제출하기</button></div>
+    </div>
+  </div>
+
+  <!-- 서명 끝 -->
+  <div id="signed" class="done hidden">
+    <h2 id="signed-title">서명이 완료되었어요</h2>
+    <p id="signed-msg">계약 내용은 매장에서 안전하게 보관합니다.<br>준비되는 대로 다시 안내드릴게요.</p>
+    <div class="btns" id="signed-close"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div>
+  </div>
+
+  <!-- 서명 뒤 · 각인 문구 나중에 보내기 -->
+  <div id="eng-later" class="sec hidden">
+    <div class="eyebrow">ENGRAVING</div>
+    <h2>각인 문구 보내기</h2>
+    <p class="mark" id="n-eng2"></p>
+    <label class="fld" for="eng-later-input">각인할 문구</label>
+    <input type="text" id="eng-later-input" maxlength="30" placeholder="예: S.M.B" autocomplete="off">
+    <div id="eng-warn" class="warn hidden"></div>
+    <div class="btns">
+      <button class="btn primary" id="b-eng" disabled>이 문구로 보내기</button>
+      <button class="btn" onclick="closeInapp()">나중에 보낼게요</button>
+    </div>
+  </div>
+  <div id="eng-done" class="done hidden"><h2>각인 문구를 받았어요</h2><p>보내 주신 문구<br><b id="eng-done-text"></b></p>
+    <div class="btns"><button class="btn primary" onclick="closeInapp()">확인 완료</button></div></div>
+</div>
+
+<script>
+(function(){
+  var API = 'https://app-eta-sandy-75.vercel.app/api/contracts/public';
+  var t = new URLSearchParams(location.search).get('t') || '';
+  var D = null, drawn = false;
+  function $(id){ return document.getElementById(id); }
+  function show(id){ $(id).classList.remove('hidden'); }
+  function hide(id){ $(id).classList.add('hidden'); }
+  function won(n){ return (Number(n) || 0).toLocaleString('ko-KR') + '원'; }
+  function ymd(iso){ if (!iso) return '-'; var d = new Date(iso); return d.getFullYear() + '. ' + (d.getMonth()+1) + '. ' + d.getDate() + '.'; }
+
+  // 카카오 인앱 닫기 (검증된 패턴 — memory/reference_kakao_inapp_close.md)
+  window.closeInapp = function(){
+    var ua = navigator.userAgent || '';
+    if (/KAKAOTALK/i.test(ua)){
+      location.href = /iPhone|iPad|iPod/i.test(ua) ? 'kakaoweb://closeBrowser' : 'kakaotalk://inappbrowser/close';
+      setTimeout(function(){ if (history.length > 1) history.back(); }, 600);
+      setTimeout(function(){ window.close(); }, 1200);
+      return;
+    }
+    if (history.length > 1){ history.back(); return; }
+    window.close();
+  };
+
+  function fail(msg){ hide('loading'); $('error-msg').textContent = msg; show('error'); }
+
+  function load(){
+    if (!t){ fail('받으신 링크로 다시 들어와 주세요.'); return; }
+    fetch(API + '?t=' + encodeURIComponent(t)).then(function(r){ return r.json(); }).then(function(res){
+      hide('loading');
+      if (!res.ok){ fail(res.error || '계약서를 찾을 수 없어요.'); return; }
+      D = res.data;
+      if (D.status === 'cancelled'){ fail('취소된 계약서예요. 궁금하신 점은 매장으로 문의해 주세요.'); return; }
+      if (D.signed){ afterSigned(D.engraving && D.engravingStatus === 'pending', true); return; }
+      render();
+    }).catch(function(){ fail('잠시 연결이 원활하지 않아요. 잠시 후 다시 열어 주세요.'); });
+  }
+
+  function render(){
+    $('f-no').textContent = D.number || '-';
+    $('f-name').textContent = (D.name || '-') + ' 님';
+    $('f-date').textContent = ymd(D.createdAt);
+    var box = $('f-items'); box.innerHTML = '';
+    (D.items || []).forEach(function(it){
+      var r = document.createElement('div'); r.className = 'row item';
+      var k = document.createElement('span'); k.className = 'k'; k.style.color = 'var(--void)'; k.style.fontWeight = '600'; k.textContent = it.name;
+      var v = document.createElement('span'); v.className = 'v';
+      v.textContent = won(it.total);
+      var s = document.createElement('small'); s.textContent = won(it.price) + ' × ' + it.qty; v.appendChild(s);
+      r.appendChild(k); r.appendChild(v); box.appendChild(r);
+    });
+    if (D.discount > 0){ $('f-discount').textContent = '− ' + won(D.discount); show('r-discount'); }
+    $('f-final').textContent = won(D.final);
+    if (D.deposit > 0 || D.balance > 0){ $('f-deposit').textContent = won(D.deposit) + ' · ' + won(D.balance); show('r-deposit'); }
+    $('f-pay').textContent = D.payment + (D.installment > 0 ? ' (' + D.installment + '개월)' : '');
+    $('f-account').textContent = D.account;
+    $('n-legal').textContent = D.notices.legal;
+    $('n-caution').textContent = D.notices.caution;
+    if (D.engraving){
+      $('n-eng').textContent = D.notices.engraving;
+      show('s-eng'); show('l-eng');
+      if (D.engravingStatus === 'received' && D.engravingText){ $('f-eng').textContent = D.engravingText; show('eng-have'); }
+      else show('eng-ask');
+    }
+    show('main');
+    setupPad();
+    ['c-terms','c-eng'].forEach(function(id){ $(id).addEventListener('change', check); });
+    $('b-sign').addEventListener('click', submit);
+  }
+
+  function check(){
+    var ok = $('c-terms').checked && (!D.engraving || $('c-eng').checked) && drawn;
+    $('b-sign').disabled = !ok;
+  }
+
+  // ── 서명 패드 (손가락 · 펜 · 마우스) ──
+  var cv, ctx, last = null;
+  function setupPad(){
+    cv = $('cv'); ctx = cv.getContext('2d');
+    function size(){
+      var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var keep = drawn ? cv.toDataURL() : null;
+      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#1A1A1A';
+      if (keep){ var im = new Image(); im.onload = function(){ ctx.drawImage(im, 0, 0, r.width, r.height); }; im.src = keep; }
+    }
+    size();
+    window.addEventListener('resize', size);
+    function pos(e){ var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    cv.addEventListener('pointerdown', function(e){ e.preventDefault(); cv.setPointerCapture(e.pointerId); last = pos(e); ctx.beginPath(); ctx.arc(last.x, last.y, 1.2, 0, Math.PI*2); ctx.fillStyle = '#1A1A1A'; ctx.fill(); });
+    cv.addEventListener('pointermove', function(e){ if (!last) return; e.preventDefault(); var p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p;
+      if (!drawn){ drawn = true; hide('ph'); check(); } });
+    function end(){ last = null; }
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', end);
+    $('b-clear').addEventListener('click', function(){ ctx.clearRect(0, 0, cv.width, cv.height); drawn = false; show('ph'); check(); });
+  }
+
+  function warn(id, msg){ $(id).textContent = msg; show(id); }
+
+  function submit(){
+    var b = $('b-sign'); b.disabled = true; b.textContent = '제출하는 중…'; hide('sign-warn');
+    var engText = D.engraving && D.engravingStatus === 'pending' ? ($('eng-input').value || '').trim() : '';
+    fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ t: t, action: 'sign', signature: cv.toDataURL('image/png'), agreed: $('c-terms').checked, engraving_agreed: D.engraving ? $('c-eng').checked : undefined, engraving_text: engText })
+    }).then(function(r){ return r.json(); }).then(function(res){
+      if (!res.ok){ warn('sign-warn', res.error || '제출하지 못했어요. 다시 눌러 주세요.'); b.disabled = false; b.textContent = '서명하고 제출하기'; return; }
+      hide('main'); window.scrollTo(0, 0);
+      afterSigned(!!res.engravingPending, false);
+    }).catch(function(){ warn('sign-warn', '연결이 원활하지 않아요. 다시 눌러 주세요.'); b.disabled = false; b.textContent = '서명하고 제출하기'; });
+  }
+
+  // 서명 뒤: 각인 문구를 아직 안 받았으면 보내기 칸을 함께 보여 준다 (나중에 같은 링크로 다시 와도 여기로)
+  function afterSigned(engPending, already){
+    if (already){ $('signed-title').textContent = '이미 서명하신 계약서예요'; $('signed-msg').innerHTML = '계약 내용은 매장에서 안전하게 보관합니다.'; }
+    show('signed');
+    if (engPending){
+      hide('signed-close');
+      $('n-eng2').textContent = (D && D.notices && D.notices.engraving) || '';
+      show('eng-later');
+      var inp = $('eng-later-input');
+      inp.addEventListener('input', function(){ $('b-eng').disabled = !inp.value.trim(); });
+      $('b-eng').addEventListener('click', sendEngraving);
+    }
+  }
+
+  function sendEngraving(){
+    var b = $('b-eng'), text = ($('eng-later-input').value || '').trim();
+    if (!text) return;
+    b.disabled = true; b.textContent = '보내는 중…'; hide('eng-warn');
+    fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: t, action: 'engraving', text: text }) })
+      .then(function(r){ return r.json(); }).then(function(res){
+        if (!res.ok){ warn('eng-warn', res.error || '보내지 못했어요. 다시 눌러 주세요.'); b.disabled = false; b.textContent = '이 문구로 보내기'; return; }
+        hide('eng-later'); hide('signed'); $('eng-done-text').textContent = res.text; show('eng-done'); window.scrollTo(0, 0);
+      }).catch(function(){ warn('eng-warn', '연결이 원활하지 않아요. 다시 눌러 주세요.'); b.disabled = false; b.textContent = '이 문구로 보내기'; });
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -68,11 +68,13 @@ export async function POST(req: NextRequest) {
 
     // 서명 여부로 상태 결정
     const status = contract.signature_data ? 'signed' : 'draft';
+    // 172 이니셜 각인: 문구가 있으면 받음, 없으면 「나중에 받기」
+    const engraving = !!contract.engraving;
+    const engravingText = engraving ? String(contract.engraving_text || '').trim().slice(0, 30) : '';
 
-    const { data: created, error: createError } = await db
-      .from('contracts')
-      .insert({
+    const base = {
         contract_number: contractNumber,
+        customer_id: contract.customer_id || null, // 2026-11-22 화면이 보내던 고객 연결을 저장하지 않던 것 고침
         customer_name: contract.customer_name,
         customer_phone: contract.customer_phone || null,
         customer_email: contract.customer_email || null,
@@ -101,9 +103,22 @@ export async function POST(req: NextRequest) {
         handwriting_phone: contract.handwriting_phone || null,
         handwriting_address: contract.handwriting_address || null,
         created_by: user.id,
-      })
-      .select()
-      .single();
+    };
+    // 172 칸 — SQL(마이그 172) 실행 전이면 이 칸 없이 다시 저장한다(각인이 있으면 저장하지 않고 알린다)
+    const ext = {
+      signed_via: contract.signature_data ? 'store' : null,
+      ...(engraving ? {
+        engraving: true,
+        engraving_text: engravingText || null,
+        engraving_status: engravingText ? 'received' : 'pending',
+        engraving_at: engravingText ? new Date().toISOString() : null,
+      } : {}),
+    };
+    let { data: created, error: createError } = await db.from('contracts').insert({ ...base, ...ext }).select().single();
+    if (createError && /signed_via|engraving|column/i.test(String(createError.message || ''))) {
+      if (engraving) throw new Error('이니셜 각인 칸이 아직 준비되지 않았습니다 — 데이터베이스 SQL 172 실행이 필요합니다');
+      ({ data: created, error: createError } = await db.from('contracts').insert(base).select().single());
+    }
 
     if (createError) throw createError;
 

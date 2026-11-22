@@ -28,7 +28,8 @@ import { usePriceGroups } from '@/hooks/use-price-groups';
 import { useCustomerCatalog } from '@/hooks/use-customer-catalog';
 import { TagSelector } from '@/components/shared/tag-selector';
 import { useSetting } from '@/hooks/use-settings';
-import type { Product } from '@/lib/supabase/types';
+import type { Product, Contract, ContractItem } from '@/lib/supabase/types';
+import { createClient } from '@/lib/supabase/client';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { matchSearch } from '@/lib/utils/search-match';
 import { useTopProductIds } from '@/hooks/use-top-products';
@@ -191,6 +192,47 @@ function NewSaleContent() {
     })();
     return () => { cancelled = true; };
   }, [fromConsultationId]);
+
+  // 2026-11-22 계약서 → 판매 입력: 계약서의 고객 · 제품 · 할인 · 각인 문구를 채운다 (전엔 계약서 번호만 넘어와 처음부터 다시 입력)
+  const contractFilled = useRef(false);
+  useEffect(() => {
+    if (!contractId || contractFilled.current || productsLoading) return;
+    contractFilled.current = true;
+    (async () => {
+      try {
+        const sb = createClient();
+        const [{ data: c }, { data: its }] = await Promise.all([
+          sb.from('contracts').select('*').eq('id', contractId).single(),
+          sb.from('contract_items').select('*').eq('contract_id', contractId),
+        ]);
+        if (!c) return;
+        const ct = c as Contract;
+        setCustomerName(ct.customer_name || '');
+        setCustomerPhone(ct.customer_phone || '');
+        if (ct.customer_id) {
+          try {
+            const r = await fetch(`/api/customers/${ct.customer_id}`);
+            if (r.ok) {
+              const { customer } = await r.json();
+              if (customer) setSelectedCustomer({ id: customer.id, name: customer.name, phone: customer.phone, customer_type: customer.customer_type } as SelectedCustomer);
+            }
+          } catch { /* 고객을 못 불러와도 이름 · 전화로 진행 */ }
+        }
+        setCart(((its || []) as ContractItem[]).map((it) => {
+          const p = products.find((x) => x.id === it.product_id) || null;
+          return p
+            ? { product: p, quantity: it.quantity, unitPrice: it.unit_price, selectedSerialIds: [] }
+            : { product: null, customName: it.product_name, customPrice: it.unit_price, quantity: it.quantity, unitPrice: it.unit_price, selectedSerialIds: [] };
+        }));
+        if (ct.discount_amount) setDiscount(ct.discount_amount);
+        if (['card', 'cash', 'transfer'].includes(ct.payment_method)) setPaymentMethod(ct.payment_method);
+        const memoParts = [`계약서 ${ct.contract_number}`];
+        if (ct.engraving) memoParts.push(ct.engraving_text ? `각인 「${ct.engraving_text}」` : '각인 문구 대기');
+        setMemo(memoParts.join(' · '));
+        toast.success('계약서 내용을 채웠어요 — 시리얼만 골라 주세요');
+      } catch { /* 조용히 실패, 직접 입력 가능 */ }
+    })();
+  }, [contractId, productsLoading, products]);
   const productTotal = cart.reduce((s, item) => s + item.unitPrice * item.quantity, 0);
   // 카트 전체에 이미 배정된 수동/자동 시리얼 — 품목 간 자동생성 중복 방지용 (2026-06-11 fix)
   const cartReservedSerials = cart.flatMap((it) => it.manualSerials || []);
