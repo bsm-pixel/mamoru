@@ -189,7 +189,7 @@ export function ContractDetailPanel({ contractId, onDeleted }: Props) {
               <Image size={14} className="text-neutral-500" />
               <span className="text-xs font-semibold text-neutral-500">계약서 이미지</span>
             </div>
-            <a href={contract.image_url} target="_blank" rel="noopener noreferrer"
+            <a href={`/api/contracts/${contract.id}/image`} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
               열람 <ExternalLink size={12} />
             </a>

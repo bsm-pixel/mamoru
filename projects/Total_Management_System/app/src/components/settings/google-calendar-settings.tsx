@@ -16,6 +16,7 @@ import { Calendar, ExternalLink, RefreshCw, Unlink, AlertCircle, CheckCircle2 } 
 import toast from 'react-hot-toast';
 import { formatDateTime } from '@/lib/utils/format';
 import { confirmAsk } from '@/components/ui/confirm-ask';
+import { DangerZone, DangerLink } from '@/components/ui/action-section';
 
 interface StatusData {
   connected: boolean;
@@ -235,10 +236,6 @@ export default function GoogleCalendarSettings() {
               <RefreshCw size={13} />
               전체 재동기화
             </Button>
-            <Button size="sm" variant="ghost" onClick={handleDisconnect} disabled={busy}>
-              <Unlink size={13} />
-              연결 해제
-            </Button>
           </div>
 
           <p className="text-[11px] text-neutral-400 leading-relaxed">
@@ -247,6 +244,13 @@ export default function GoogleCalendarSettings() {
             <br />
             ⚠️ 캘린더에서 직접 일정을 수정하지 마세요 — TMS와 불일치가 발생할 수 있습니다.
           </p>
+
+          {/* 2026-11-22 연결 해제는 재동기화 옆이 아니라 맨 아래 위험 구역으로(누르면 한 번 더 묻는다) */}
+          <DangerZone>
+            <DangerLink onClick={handleDisconnect} disabled={busy}>
+              <span className="inline-flex items-center gap-1"><Unlink size={12} />Google Calendar 연결 해제 (이미 만든 일정은 남음)</span>
+            </DangerLink>
+          </DangerZone>
         </div>
       ) : (
         <div className="space-y-3">

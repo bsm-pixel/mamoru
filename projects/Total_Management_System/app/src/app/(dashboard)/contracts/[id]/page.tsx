@@ -254,7 +254,7 @@ export default function ContractDetailPage({ params }: { params: Promise<{ id: s
                 <p className="text-sm font-semibold text-neutral-700">계약서 이미지</p>
               </div>
               <a
-                href={contract.image_url}
+                href={`/api/contracts/${contract.id}/image`} /* 2026-11-22 로그인 확인 뒤 1분짜리 주소로 */
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-xs text-blue-600 hover:underline"

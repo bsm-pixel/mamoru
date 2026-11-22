@@ -208,7 +208,7 @@ export function RepairDetailCard({ repair: r, onUpdate }: RepairDetailCardProps)
             value={adminNote}
             onChange={(e) => setAdminNote(e.target.value)}
             rows={2}
-            placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다"
+            placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다" aria-label="사장님 메모"
             className="w-full px-2.5 py-2 rounded-lg border border-neutral-200 bg-stone-50 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder:text-neutral-400"
           />
         </div>

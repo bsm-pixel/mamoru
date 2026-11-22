@@ -69,7 +69,7 @@ export function MoreActions({ label, defaultOpen = false, children }: MoreProps)
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-neutral-500 hover:text-neutral-800 transition"
+        className="w-full flex items-center justify-center gap-1 py-1.5 max-lg:min-h-10 text-xs text-neutral-500 hover:text-neutral-800 transition"
       >
         {label}
         <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -92,7 +92,7 @@ export function DangerZone({ children }: { children: ReactNode }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-neutral-400 hover:text-neutral-700 transition"
+        className="w-full flex items-center justify-center gap-1 py-1.5 max-lg:min-h-10 text-xs text-neutral-400 hover:text-neutral-700 transition"
       >
         ⋯ 더 보기
         <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -117,7 +117,7 @@ export function DangerLink({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full text-center text-xs text-neutral-400 hover:text-red-600 py-1 transition disabled:opacity-50"
+      className="w-full text-center text-xs text-neutral-400 hover:text-red-600 py-1 max-lg:min-h-10 transition disabled:opacity-50"
     >
       {children}
     </button>
@@ -139,7 +139,7 @@ export function SubtleButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full h-9 rounded-lg border border-neutral-200 text-xs text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
+      className="w-full h-9 max-lg:h-10 rounded-lg border border-neutral-200 text-xs text-neutral-600 hover:bg-neutral-50 transition disabled:opacity-50"
     >
       {children}
     </button>

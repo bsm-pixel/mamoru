@@ -9,7 +9,7 @@ import { DeliveryTracker } from './delivery-tracker';
 import { useOrderActions } from './order-action-bar';
 import { PrimaryActionBar } from '@/components/ui/primary-action-bar';
 import { formatKRW, formatDateTime, ORDER_STATUS_LABEL, ORDER_STATUS_COLOR, formatPhone } from '@/lib/utils/format';
-import { Package, Hash, Printer, RefreshCw } from 'lucide-react';
+import { Package, Hash, Printer, RefreshCw, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { PrepSheetModal, LabelPrintModal } from '@/components/lazy-modals';
 import { StatusStepper } from '@/components/ui/status-stepper';
@@ -88,6 +88,9 @@ export function OrderDetailPanel({ orderId }: Props) {
       {orderActions.hasPrimary && <PrimaryActionBar>{orderActions.primary}</PrimaryActionBar>}
 
       {/* 받는분 (배송지) — 주문자와 같으면 통합, 다르면 주문자 보조표기 */}
+      {/* 2026-11-22 다른 구역(주문 품목 · 배정 시리얼 · 배송 추적)처럼 구역 제목을 단다 */}
+      <div>
+      <p className="text-[11px] font-semibold text-neutral-400 mb-1.5 flex items-center gap-1"><MapPin size={11} /> 받는 분</p>
       <div className="rounded-lg bg-neutral-50 p-3 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -116,6 +119,7 @@ export function OrderDetailPanel({ orderId }: Props) {
           </Link>
         )}
       </div>
+      </div>
 
       {/* 사장님 메모 (관리자 전용 · 편집) — 고객 비노출. 복원수리·상담 메모와 동일 패턴 */}
       <div className="rounded-lg border border-neutral-200 bg-stone-50 p-3 space-y-1.5">
@@ -133,7 +137,7 @@ export function OrderDetailPanel({ orderId }: Props) {
           value={adminNote}
           onChange={(e) => setAdminNote(e.target.value)}
           rows={2}
-          placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다"
+          placeholder="작업 참고사항, 유선·톡 요청 등 — 고객에게 안 보입니다" aria-label="사장님 메모"
           className="w-full px-2.5 py-2 rounded-lg border border-neutral-200 bg-white text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-stone-400 placeholder:text-neutral-400"
         />
       </div>
