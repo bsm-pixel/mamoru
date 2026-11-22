@@ -58,20 +58,24 @@ export function usePushNotifications() {
         (payload) => {
           const data = payload.new as { title: string; body: string; url?: string; tag?: string };
 
-          // 브라우저 Notification
-          // tag를 data.tag로 사용 → FCM Service Worker와 동일 tag → 브라우저 자동 dedup (중복 표시 방지)
+          // 브라우저 알림 — 2026-11-22: 탭이 직접 띄우던 것(new Notification)을 서비스 워커로 옮김.
+          //   윈도우 크롬은 탭이 띄운 알림과 서비스 워커(FCM)가 띄운 알림을 다른 출처로 봐서, 같은 tag 여도
+          //   하나로 합치지 못하고 두 번 떴다(「각인 문구 도착」 2번). 같은 곳(서비스 워커)에서 같은 tag 로 띄우면
+          //   먼저 뜬 것을 조용히 바꿔치기 한다. 누르면 서비스 워커의 notificationclick 이 data.url 로 연다.
           if ('Notification' in window && Notification.permission === 'granted') {
-            const notif = new Notification(data.title, {
-              body: data.body,
-              icon: '/icon-192.png',
-              tag: data.tag || 'mamoru-push',
-              requireInteraction: true,
-            });
-            notif.onclick = () => {
-              window.focus();
-              if (data.url) window.location.href = data.url;
-              notif.close();
+            const tag = data.tag || 'mamoru-push';
+            const showInPage = () => {
+              const notif = new Notification(data.title, { body: data.body, icon: '/icon-192.png', tag, requireInteraction: true });
+              notif.onclick = () => { window.focus(); if (data.url) window.location.href = data.url; notif.close(); };
             };
+            const sw = 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration() : Promise.resolve(undefined);
+            sw.then((reg) => {
+              if (!reg) { showInPage(); return; }
+              return reg.showNotification(data.title, {
+                body: data.body, icon: '/icon-192.png', badge: '/icon-192.png', tag,
+                data: { url: data.url || '/dashboard', tag }, requireInteraction: true,
+              });
+            }).catch(showInPage);
           }
 
           // 알림음 재생
