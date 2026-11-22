@@ -25,6 +25,7 @@ import { useStatusCounts } from '@/hooks/use-status-counts';
 import { useUrlSelection } from '@/hooks/use-url-selection';
 import { usePageSize } from '@/hooks/use-page-size';
 import { useStickyState } from '@/hooks/use-sticky-state';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 const STATUS_LABEL: Record<string, string> = {
   draft: '작성중', ordered: '발주완료', deposit_paid: '선납완료',
@@ -57,7 +58,7 @@ const PO_COLUMNS: GridColumn<PurchaseOrder>[] = [
   { key: 'date', label: '발주일', render: (po) => <span className="text-neutral-600 tabular-nums">{formatDate(po.order_date)}</span> },
   { key: 'supplier', label: '공급처', render: (po) => <span className="font-semibold text-indigo-black">{po.supplier_name}</span> },
   { key: 'status', label: '상태', render: (po) => { const v = poStatusView(po); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${v.color}`}>{v.label}</span>; } },
-  { key: 'expected', label: '입고예정', render: (po) => <span className="text-neutral-500 tabular-nums">{po.expected_date ? formatDate(po.expected_date) : '—'}</span> },
+  { key: 'expected', label: '입고예정', minor: true, render: (po) => <span className="text-neutral-500 tabular-nums">{po.expected_date ? formatDate(po.expected_date) : '—'}</span> },
   { key: 'amount', label: '금액', align: 'right', render: (po) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(po.total_amount)}</span> },
 ];
 
@@ -207,7 +208,7 @@ export default function PurchasingPage() {
                 <Pagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
               </div>
             </div>
-            <div className="w-[440px] shrink-0 overflow-y-auto">
+            <div className={`w-[440px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
               {selectedId ? (
                 <PurchaseDetailPanel purchaseId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (

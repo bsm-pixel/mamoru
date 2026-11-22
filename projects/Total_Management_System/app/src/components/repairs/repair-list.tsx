@@ -164,7 +164,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       </div>
     ) },
     { key: 'proceed', label: '진행방법', render: (r) => <ProceedBadge type={r.proceed_type} /> },
-    { key: 'received', label: '접수일', render: (r) => (
+    { key: 'received', label: '접수일', minor: true, render: (r) => (
       <span className="inline-flex items-center gap-1.5">
         <TwoLineDate iso={r.received_at} />
         {/* 2026-11-15 끝나지 않은 건은 며칠째인지 — 설정 > 복원수리 「체류 경고 일수」를 넘기면 굵게 */}
@@ -172,7 +172,7 @@ export function RepairList({ onSelect, selectedId, initialTab, unpaidOnly, stale
       </span>
     ) },
     { key: 'pickup', label: '수거·방문일', render: (r) => <IntakeCell repair={r} /> },
-    { key: 'inbound', label: '입고일', render: (r) => <TwoLineDate iso={r.inbound_at ?? null} /> },
+    { key: 'inbound', label: '입고일', minor: true, render: (r) => <TwoLineDate iso={r.inbound_at ?? null} /> },
     { key: 'qty', label: '수량', render: (r) => (
       <span className="text-xs text-neutral-600 whitespace-nowrap">
         {r.qty_mamoru > 0 && <span>마모루 {r.qty_mamoru}</span>}

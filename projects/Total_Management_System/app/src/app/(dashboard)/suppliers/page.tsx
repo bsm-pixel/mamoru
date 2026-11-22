@@ -30,6 +30,7 @@ import { matchSearch } from '@/lib/utils/search-match';
 import { useListEscape } from '@/components/layout/list-keys';
 import { typingPhone } from '@/lib/utils/validate';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 // 074: B2B 카테고리 동적 관리 — system_settings('b2b.categories')에서 로드
 // supplier(매입처)는 catalog 흐름이 다르므로 system 고정으로 별도 관리
@@ -135,8 +136,8 @@ export default function B2BPartnersPage() {
   // PC 그리드 컬럼 — 거래처·유형·담당자·연락처·총거래·미수금 (동적 badge 의존 → useMemo)
   const partnerColumns = useMemo<GridColumn<Customer>[]>(() => [
     { key: 'company', label: '거래처', render: (p) => <span className="font-semibold text-indigo-black truncate">{p.company_name || p.name}</span> },
-    { key: 'type', label: '유형', render: (p) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${BADGE_STYLE[p.customer_type] || 'bg-neutral-100 text-neutral-600'}`}>{BADGE_LABEL[p.customer_type] || p.customer_type}</span> },
-    { key: 'name', label: '담당자', render: (p) => <span className="text-neutral-600 truncate">{p.company_name && p.name !== p.company_name ? p.name : '—'}</span> },
+    { key: 'type', label: '유형', minor: true, render: (p) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${BADGE_STYLE[p.customer_type] || 'bg-neutral-100 text-neutral-600'}`}>{BADGE_LABEL[p.customer_type] || p.customer_type}</span> },
+    { key: 'name', label: '담당자', minor: true, render: (p) => <span className="text-neutral-600 truncate">{p.company_name && p.name !== p.company_name ? p.name : '—'}</span> },
     { key: 'phone', label: '연락처', render: (p) => <span className="text-neutral-500 tabular-nums">{p.phone ? formatPhone(p.phone) : '—'}</span> },
     { key: 'spent', label: '총거래', align: 'right', render: (p) => <span className="font-semibold tabular-nums text-indigo-black">{p.total_spent > 0 ? formatKRW(p.total_spent) : '—'}</span> },
     { key: 'outstanding', label: '미수금', align: 'right', render: (p) => (p.outstanding_balance > 0 ? <span className="font-bold tabular-nums text-red-500">{formatKRW(p.outstanding_balance)}</span> : <span className="text-neutral-300">—</span>) },
@@ -212,7 +213,7 @@ export default function B2BPartnersPage() {
         {isLg ? (
           <div className="flex gap-4">
             <div className="flex-1 min-w-0 overflow-auto">{listContent}</div>
-            <div className="w-[440px] shrink-0">
+            <div className={`w-[440px] shrink-0 ${emptyPaneCls(!!selectedPartner)}`}>
               {selectedPartner ? (
                 <PartnerDetailPanel partner={selectedPartner} tabConfig={tabConfig} badgeStyle={BADGE_STYLE} badgeLabel={BADGE_LABEL} allTabs={B2B_TABS} />
               ) : (

@@ -16,6 +16,7 @@ import { ConsultationDetailPanel } from '@/components/consultations/consultation
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { RefreshCw, Store, Truck, MessageCircle, MapPin, CalendarPlus, LayoutGrid } from 'lucide-react';
 import { CreateConsultationModal } from '@/components/consultations/create-consultation-modal';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 // 카카오맵은 SSR 불가 → dynamic import
 const FieldRequestMap = dynamic(
@@ -198,7 +199,7 @@ export default function ConsultationsPage() {
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <AllConsultationsList onSelect={setSelectedId} />
               </div>
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
                 {selectedId ? (
                   <ConsultationDetailPanel consultationId={selectedId} />
                 ) : (
@@ -284,7 +285,7 @@ export default function ConsultationsPage() {
               </div>
 
               {/* 3열: 상세 모니터 */}
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
                 {selectedId ? (
                   <ConsultationDetailPanel consultationId={selectedId} />
                 ) : (
@@ -324,7 +325,7 @@ export default function ConsultationsPage() {
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <ScheduleCalendar onSelect={setSelectedId} />
               </div>
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
                 {selectedId ? (
                   <ConsultationDetailPanel
                     consultationId={selectedId}
@@ -364,7 +365,7 @@ export default function ConsultationsPage() {
               <div className="flex-1 min-w-0 overflow-y-auto">
                 <TalkConsultList onSelect={setSelectedId} />
               </div>
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
                 {selectedId ? (
                   <ConsultationDetailPanel consultationId={selectedId} />
                 ) : (

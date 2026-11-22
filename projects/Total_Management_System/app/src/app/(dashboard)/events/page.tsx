@@ -15,6 +15,7 @@ import { backdropClose } from '@/lib/ui/backdrop';
 import { EscClose } from '@/components/ui/esc-close';
 import { confirmAsk } from '@/components/ui/confirm-ask';
 import { MoneyInput } from '@/components/ui/money-input';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 const TABS: { key: EventStatus; label: string }[] = [
   { key: 'received', label: '신규접수' },
@@ -213,7 +214,7 @@ export default function EventsPage() {
           return isLg ? (
             <div className="flex gap-4 h-[calc(100vh-260px)]">
               <div className="flex-1 min-w-0 overflow-y-auto">{listContent}</div>
-              <div className="w-[400px] shrink-0 overflow-y-auto">
+              <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!sel)}`}>
                 {sel ? (
                   <EventDetail ev={sel} patch={patch} del={del} onDone={() => setSelId(null)} goSales={(saleId?: string) => router.push(saleId ? `/sales/${saleId}` : '/sales')} isFree={selIsFree} />
                 ) : (

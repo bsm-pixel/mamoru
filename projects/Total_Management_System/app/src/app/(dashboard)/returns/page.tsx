@@ -25,6 +25,7 @@ import type { ReturnRow } from '@/lib/supabase/types';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useStatusCounts } from '@/hooks/use-status-counts';
 import { useUrlSelection } from '@/hooks/use-url-selection';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
@@ -118,7 +119,7 @@ export default function ReturnsPage() {
         {isLg ? (
           <div className="flex gap-4 h-[calc(100vh-220px)]">
             <div className="flex-1 min-w-0 overflow-y-auto"><Card padding={false}>{listContent}</Card></div>
-            <div className="w-[400px] shrink-0 overflow-y-auto">
+            <div className={`w-[400px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selected)}`}>
               {selected ? <ReturnDetail r={selected} /> : (
                 <div className="flex flex-col items-center justify-center h-60 text-stone-400"><Undo2 size={28} className="mb-2 opacity-40" /><p className="text-xs">목록에서 반품 건을 선택하세요</p></div>
               )}

@@ -32,6 +32,7 @@ import { useUrlSelection } from '@/hooks/use-url-selection';
 import { DaysSince } from '@/components/ui/days-since';
 import { useSetting } from '@/hooks/use-settings';
 import { useStickyState } from '@/hooks/use-sticky-state';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 const STATUS_TABS = [
   { value: 'all', label: '전체' },
@@ -80,10 +81,10 @@ export default function OrdersPage() {
   const unshippedDays = useSetting<number>('shipping.unshipped_warning_days', 2); // 며칠째 표시가 굵어지는 기준(설정 > 주문·배송)
   const orderColumns: GridColumn<Order>[] = [
     { key: 'ordered', label: '주문일', render: (o) => <span className="text-neutral-500 whitespace-nowrap tabular-nums text-xs">{formatDateTimeShort(o.ordered_at)}{['pay_done', 'preparing', 'ready_to_ship'].includes(o.status) && <DaysSince date={o.ordered_at} warnDays={unshippedDays} className="ml-1.5" />}</span> },
-    { key: 'no', label: '주문번호', render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
+    { key: 'no', label: '주문번호', minor: true, render: (o) => <span className="font-mono text-[11px] text-neutral-500">{o.imweb_order_no}</span> },
     { key: 'name', label: '주문자', render: (o) => <div className="min-w-0"><span className="inline-flex items-center gap-1 min-w-0 max-w-full"><CustomerPeek customerId={o.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{o.orderer_name}</span></CustomerPeek><ActivityChips types={orderActTypes(o.orderer_phone)} className="shrink-0" /></span><OrderMemoCell order={o} /></div> },
     { key: 'status', label: '상태', render: (o) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${ORDER_STATUS_COLOR[o.status] || 'bg-stone-100 text-stone-500'}`}>{ORDER_STATUS_LABEL[o.status] || o.status}</span> },
-    { key: 'pay', label: '결제', render: (o) => o.paid_at
+    { key: 'pay', label: '결제', minor: true, render: (o) => o.paid_at
       ? <span className="text-emerald-600 text-xs font-medium">결제완료</span>
       : o.paid_amount > 0 ? <span className="text-rose-600 text-xs font-medium">미납</span> : <span className="text-neutral-300">—</span> },
     { key: 'amount', label: '금액', align: 'right', render: (o) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(o.paid_amount)}</span> },
@@ -277,7 +278,7 @@ export default function OrdersPage() {
             </div>
 
             {/* 우측: 주문 상세 모니터 (고정폭) — px로 스크롤바와 내용 사이 여백 확보 */}
-            <div className="w-[440px] shrink-0 overflow-y-auto px-4 py-1">
+            <div className={`w-[440px] shrink-0 overflow-y-auto px-4 py-1 ${emptyPaneCls(!!selectedId)}`}>
               {selectedId ? (
                 <OrderDetailPanel orderId={selectedId} />
               ) : (

@@ -554,6 +554,38 @@ async function pcChecks(browser) {
   }
   if (schBad.length) fail('일정 — 대시보드로 합침', schBad.join(' / ')); else ok('일정 — 메뉴에서 빠짐, 옛 주소는 대시보드로, 등록 버튼 · 다가오는 일정은 대시보드에');
 
+  // 세로로 세운 모니터(폭 1,060) — 빈 상세 칸이 접혀 목록이 넓게 쓰이고, 칸 안 글자가 세로로 꺾이지 않는다 (2026-11-22)
+  //   실제 사고: 빈 칸이 440px 을 차지해 목록이 500px 로 눌렸고 상태 · 금액 · 전화번호가 글자 단위로 줄바꿈됐다.
+  {
+    const bad = [];
+    await page.setViewport({ width: 1060, height: 1300 });
+    for (const url of ['/orders', '/customers', '/repairs', '/contracts']) {
+      await open(page, url);
+      await sleep(400);
+      const r = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const table = main?.querySelector('table');
+        const rows = Array.from(main?.querySelectorAll('tr[data-list-row]') || []);
+        // 한 칸 안에서 글자 단위로 꺾인 칸: 글자가 3자 이상인데 폭이 24px 도 안 되는 잎 요소
+        const broken = rows.flatMap((tr) => Array.from(tr.querySelectorAll('td *'))).filter((e) => e.children.length === 0 && (e.textContent || '').trim().length >= 3 && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().width < 24).length;
+        return { rows: rows.length, tableW: table ? Math.round(table.getBoundingClientRect().width) : 0, broken, hint: /목록에서 .{2,12} 선택하세요/.test(main?.innerText || '') };
+      });
+      if (r.rows === 0) continue; // 가짜 자료가 없는 화면은 건너뛴다
+      if (r.hint) bad.push(`${url}: 빈 상세 칸이 그대로 보임`);
+      if (r.tableW < 800) bad.push(`${url}: 목록 폭 ${r.tableW}px (800 이상이어야 함)`);
+      if (r.broken > 0) bad.push(`${url}: 글자가 세로로 꺾인 칸 ${r.broken}개`);
+      // 줄을 고르면 상세가 열려야 한다
+      await page.evaluate(() => document.querySelector('main tr[data-list-row]')?.click());
+      await sleep(700);
+      if (!new URL(page.url()).searchParams.get('id')) bad.push(`${url}: 줄을 눌러도 상세가 안 열림`);
+      const after = await page.evaluate(() => Array.from(document.querySelectorAll('main tr[data-list-row] td *')).filter((e) => e.children.length === 0 && (e.textContent || '').trim().length >= 3 && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().width < 24).length);
+      if (after > 0) bad.push(`${url}: 상세가 열린 뒤 글자가 세로로 꺾인 칸 ${after}개`);
+      await page.keyboard.press('Escape');
+    }
+    await page.setViewport({ width: 1440, height: 900 });
+    if (bad.length) fail('세로 모니터(1,060) — 목록이 넓게 쓰이고 글자가 꺾이지 않음', bad.join(' / ')); else ok('세로 모니터(1,060) — 빈 상세 칸은 접히고, 칸 안 글자가 세로로 꺾이지 않음');
+  }
+
   if (errors.length) fail('PC — 화면 오류 없음', [...new Set(errors)].slice(0, 5).join(' / ')); else ok('PC — 화면 오류 없음');
   await page.close();
 }

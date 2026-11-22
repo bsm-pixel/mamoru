@@ -28,6 +28,7 @@ import { toneClasses } from '@/lib/ui/status-tone';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
 import { usePageSize } from '@/hooks/use-page-size';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 /* ── 상수 ── */
 const STATUS_LABEL: Record<string, string> = {
@@ -60,10 +61,10 @@ interface DeliveryLike extends DeliveryStatusInput {
 const DELIVERY_COLUMNS: GridColumn<DeliveryLike>[] = [
   { key: 'date', label: '납품일', render: (d) => <span className="text-neutral-600 whitespace-nowrap tabular-nums">{d.delivery_date ? formatDate(d.delivery_date) : '—'}</span> },
   { key: 'customer', label: '거래처', render: (d) => <CustomerPeek customerId={d.customer_id} className="min-w-0 flex"><span className="font-semibold text-indigo-black truncate">{d.company_name || d.customer_name || '미지정'}</span></CustomerPeek> },
-  { key: 'type', label: '유형', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{CUSTOMER_TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
+  { key: 'type', label: '유형', minor: true, render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[d.customer_type || ''] || 'bg-neutral-100 text-neutral-500'}`}>{CUSTOMER_TYPE_LABEL[d.customer_type || ''] || '거래처'}</span> },
   { key: 'status', label: '상태', render: (d) => { const c = getDeliveryStatusChip(d); return <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${c.className}`}>{c.label}</span>; } },
   { key: 'ship', label: '배송', render: (d) => { const s = getDeliveryShipStatus(d); return <span className={`text-xs font-medium ${SHIP_TONE[s.tone]}`}>{s.label}</span>; } },
-  { key: 'pay', label: '결제', render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${PAYMENT_COLOR[d.payment_status || ''] || PAYMENT_COLOR.unpaid}`}>{PAYMENT_LABEL[d.payment_status || ''] || '미결제'}</span> },
+  { key: 'pay', label: '결제', minor: true, render: (d) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${PAYMENT_COLOR[d.payment_status || ''] || PAYMENT_COLOR.unpaid}`}>{PAYMENT_LABEL[d.payment_status || ''] || '미결제'}</span> },
   { key: 'amount', label: '금액', align: 'right', render: (d) => <span className="font-bold tabular-nums text-indigo-black">{formatKRW(deliveryNet(d))}</span> },
 ];
 
@@ -296,7 +297,7 @@ export default function DeliveriesPage() {
           <div className="flex-1 min-w-0 overflow-auto space-y-3 pr-1">
             {listContent}
           </div>
-          <div className="w-[440px] shrink-0 overflow-y-auto bg-white rounded-2xl border border-stone-200">
+          <div className={`w-[440px] shrink-0 overflow-y-auto bg-white rounded-2xl border border-stone-200 ${emptyPaneCls(!!selectedId)}`}>
             {selectedId ? (
               <DeliveryDetailPanel deliveryId={selectedId} />
             ) : (

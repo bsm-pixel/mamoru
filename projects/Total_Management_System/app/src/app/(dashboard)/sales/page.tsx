@@ -36,6 +36,8 @@ import { KeyHint } from '@/components/ui/key-hint';
 import { DaysSince } from '@/components/ui/days-since';
 import { useSetting } from '@/hooks/use-settings';
 import { useStickyState } from '@/hooks/use-sticky-state';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
+import { MINOR_COL_CLS } from '@/components/ui/data-grid';
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   card: '카드',
@@ -744,7 +746,7 @@ export default function SalesPage() {
             {listContent}
           </div>
           {/* 우측: 상세 패널 — 2026-05-26 Phase B: sourceType 분기 */}
-          <div className={`${gridMode ? 'w-[420px] shrink-0' : 'flex-1 min-w-0'} overflow-y-auto bg-white rounded-xl border border-neutral-200`}>
+          <div className={`${gridMode ? `w-[420px] shrink-0 ${emptyPaneCls(!!selected)}` : 'flex-1 min-w-0'} overflow-y-auto bg-white rounded-xl border border-neutral-200`}>
             {selected ? (
               selected.sourceType === 'sale' ? (
                 <SaleDetailPanel saleId={selected.id} />
@@ -846,15 +848,16 @@ const SalesGridTable = memo(function SalesGridTable({
 }) {
   const unshippedDays = useSetting<number>('shipping.unshipped_warning_days', 2); // 며칠째 표시가 굵어지는 기준
   return (
+    <div className="@container">
     <table className="w-full text-sm border-collapse">
       <thead>
         <tr className="sticky top-0 bg-stone-50 z-[1] text-left text-[11px] font-semibold text-neutral-500">
           {prepMode && <th className="px-2 py-2.5 w-9"></th>}
           <th className="px-3 py-2.5 whitespace-nowrap">날짜</th>
           <th className="px-3 py-2.5">고객</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">상담유형</th>
+          <th className={`px-3 py-2.5 whitespace-nowrap ${MINOR_COL_CLS}`}>상담유형</th>
           <th className="px-3 py-2.5 whitespace-nowrap">상태</th>
-          <th className="px-3 py-2.5 whitespace-nowrap">배송상태</th>
+          <th className={`px-3 py-2.5 whitespace-nowrap ${MINOR_COL_CLS}`}>배송상태</th>
           <th className="px-3 py-2.5 text-right whitespace-nowrap">금액</th>
         </tr>
       </thead>
@@ -897,14 +900,14 @@ const SalesGridTable = memo(function SalesGridTable({
                 </div>
                 {isSale && d.company_name && <div className="text-[11px] text-neutral-400">{d.company_name}</div>}
               </td>
-              <td className="px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500">{channelLabel}</td>
+              <td className={`px-3 py-2.5 whitespace-nowrap text-xs text-neutral-500 ${MINOR_COL_CLS}`}>{channelLabel}</td>
               <td className="px-3 py-2.5 whitespace-nowrap">
                 <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${statusTextClass(state)}`}>
                   {dot && <span className={`w-1.5 h-1.5 rounded-full ${dot.color}`} />}
                   {isSale ? (state === 'paid_unhandled' ? saleStatusText(state, d) : gridStatusLabel(state)) : gridStatusLabel(state)}
                 </span>
               </td>
-              <td className="px-3 py-2.5 whitespace-nowrap">
+              <td className={`px-3 py-2.5 whitespace-nowrap ${MINOR_COL_CLS}`}>
                 {ship.tone === 'mute'
                   ? <span className="text-xs text-neutral-300">{ship.label}</span>
                   : <span className={`inline-block px-2 py-0.5 rounded text-[10.5px] font-semibold ${SHIP_BADGE[ship.tone]}`}>{ship.label}</span>}
@@ -916,6 +919,7 @@ const SalesGridTable = memo(function SalesGridTable({
         })}
       </tbody>
     </table>
+    </div>
   );
 });
 

@@ -497,7 +497,8 @@ export function ProductDetailPanel({ productId, mode = 'view', duplicateData, on
   return (
     <div className="flex-1 overflow-y-auto space-y-4 pr-1">
       {/* 헤더 */}
-      <div className="flex items-center justify-between">
+      {/* 2026-11-22 좁은 칸(세로 모니터)에서 이름 · 코드와 버튼이 겹쳤다 — 자리가 모자라면 버튼 줄이 아래로 내려간다 */}
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-2 min-w-0">
           <Package size={18} className="text-neutral-700 shrink-0" />
           <h3 className="text-sm font-bold text-stone-900 truncate">{p.name}</h3>

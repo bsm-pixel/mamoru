@@ -28,6 +28,7 @@ import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
 import { usePageSize } from '@/hooks/use-page-size';
 import { cleanCustomerSearch, CUSTOMER_SEARCH_MIN } from '@/lib/customer/search-filter';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 // 고객유형 라벨/색은 format.ts SSOT(CUSTOMER_TYPE_LABEL/COLOR) 사용
 const SOURCE_LABEL: Record<string, string> = {
@@ -60,10 +61,10 @@ const CUSTOMER_COLUMNS: GridColumn<Customer>[] = [
       </div>
     ),
   },
-  { key: 'type', label: '유형', render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[c.customer_type] || CUSTOMER_TYPE_COLOR.retail}`}>{CUSTOMER_TYPE_LABEL[c.customer_type] || '일반'}</span> },
+  { key: 'type', label: '유형', minor: true, render: (c) => <span className={`px-2 py-0.5 rounded text-[10.5px] font-bold ${CUSTOMER_TYPE_COLOR[c.customer_type] || CUSTOMER_TYPE_COLOR.retail}`}>{CUSTOMER_TYPE_LABEL[c.customer_type] || '일반'}</span> },
   { key: 'phone', label: '연락처', render: (c) => <span className="text-neutral-600 tabular-nums">{c.phone ? formatPhone(c.phone) : '—'}</span> },
   { key: 'company', label: '업체/매장', render: (c) => <span className="text-neutral-500 truncate">{c.company_name || '—'}</span> },
-  { key: 'source', label: '유입', render: (c) => <span className="text-neutral-400 text-xs">{SOURCE_LABEL[c.source] || c.source || '—'}</span> },
+  { key: 'source', label: '유입', minor: true, render: (c) => <span className="text-neutral-400 text-xs">{SOURCE_LABEL[c.source] || c.source || '—'}</span> },
   { key: 'spent', label: '총구매', align: 'right', render: (c) => <span className="font-semibold tabular-nums text-indigo-black">{c.total_spent > 0 ? formatKRW(c.total_spent) : '—'}</span> },
   { key: 'outstanding', label: '미수금', align: 'right', render: (c) => (c.outstanding_balance > 0 ? <span className="font-bold tabular-nums text-red-500">{formatKRW(c.outstanding_balance)}</span> : <span className="text-neutral-300">—</span>) },
 ];
@@ -250,7 +251,7 @@ export default function CustomersPage() {
             </div>
 
             {/* 우측: 고객 상세 모니터 (고정폭) */}
-            <div className="w-[440px] shrink-0 overflow-y-auto">
+            <div className={`w-[440px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
               {selectedId ? (
                 <CustomerDetailPanel customerId={selectedId} onDeleted={() => setSelectedId(null)} />
               ) : (

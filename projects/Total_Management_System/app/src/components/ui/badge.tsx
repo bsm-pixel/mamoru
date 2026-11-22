@@ -18,7 +18,7 @@ export function Badge({ children, className, variant = 'default' }: BadgeProps) 
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold',
+        'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold whitespace-nowrap', // 좁은 칸에서 글자 단위로 세로로 꺾이지 않게 (2026-11-22)
         variants[variant],
         className
       )}

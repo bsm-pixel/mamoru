@@ -17,6 +17,7 @@ import { formatKRW } from '@/lib/utils/format';
 import { useListEscape } from '@/components/layout/list-keys';
 import { useUrlSelection } from '@/hooks/use-url-selection';
 import { RepairCustomerAside } from '@/components/repairs/repair-customer-aside';
+import { emptyPaneCls } from '@/lib/ui/detail-pane';
 
 export default function RepairsPage() {
   const sync = useRepairSync();
@@ -32,12 +33,12 @@ export default function RepairsPage() {
   // 2026-11-15 모바일: 매출 카드를 목록 아래로 내린다(전엔 카드와 칸이 먼저 나와 첫 접수 건이 화면 맨 아래에 걸렸다)
   //   max-lg:contents = 모바일에서는 이 묶음을 풀어 안의 두 덩어리가 목록과 같은 줄에서 순서를 바꿀 수 있게 한다
   const topStats = stats && (
-    <div className="space-y-2.5 max-lg:contents">
+    <div className="space-y-2.5 max-lg:contents lg:@container">
       {/* 매출 KPI + 오늘/이번주 (컴팩트) */}
       {(() => {
         const totalBags = (stats.monthRepairMamoru?.count || 0) + (stats.monthRepairOther?.count || 0) + (stats.monthRepairB2B?.count || 0);
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-2.5 max-lg:order-last">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] lg:@max-[620px]:grid-cols-2 lg:@max-[620px]:[&>*:first-child]:col-span-2 gap-2.5 max-lg:order-last">
             <RevenueDarkCard
               icon={TrendingUp}
               label="이번달 복원수리"
@@ -50,14 +51,14 @@ export default function RepairsPage() {
               ]}
             />
             {/* 오늘/이번주 작업 — PC만, 컴팩트 */}
-            <div className="hidden lg:block bg-white rounded-2xl border border-stone-200 px-3 py-2.5 lg:w-36">
+            <div className="hidden lg:block bg-white rounded-2xl border border-stone-200 px-3 py-2.5 lg:w-36 lg:@max-[620px]:w-auto">
               <p className="text-[10px] uppercase tracking-wider text-stone-500 font-semibold">오늘 작업</p>
               <p className="text-xl font-bold text-stone-900 leading-tight">
                 {(stats.todayWork?.mamoru || 0) + (stats.todayWork?.other || 0)}<span className="text-xs text-stone-500 ml-0.5">정</span>
               </p>
               <p className="text-[10px] text-stone-400">마모루 {stats.todayWork?.mamoru || 0} · 타사 {stats.todayWork?.other || 0}</p>
             </div>
-            <div className="hidden lg:block bg-white rounded-2xl border border-stone-200 px-3 py-2.5 lg:w-36">
+            <div className="hidden lg:block bg-white rounded-2xl border border-stone-200 px-3 py-2.5 lg:w-36 lg:@max-[620px]:w-auto">
               <p className="text-[10px] uppercase tracking-wider text-stone-500 font-semibold">이번주 누적</p>
               <p className="text-xl font-bold text-stone-900 leading-tight">
                 {(stats.weekWork?.mamoru || 0) + (stats.weekWork?.other || 0) + (stats.weekWork?.b2b || 0)}<span className="text-xs text-stone-500 ml-0.5">정</span>
@@ -148,7 +149,7 @@ export default function RepairsPage() {
               gridMode
             />
           </div>
-          <div className="w-[440px] min-[1440px]:w-[560px] min-[1920px]:w-[640px] shrink-0 overflow-y-auto">
+          <div className={`w-[440px] min-[1440px]:w-[560px] min-[1920px]:w-[640px] shrink-0 overflow-y-auto ${emptyPaneCls(!!selectedId)}`}>
             {detailPanel}
           </div>
           <div className="hidden min-[2200px]:block w-[480px] shrink-0 overflow-y-auto">

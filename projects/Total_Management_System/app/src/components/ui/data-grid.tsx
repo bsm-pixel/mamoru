@@ -18,6 +18,8 @@ export interface GridColumn<T> {
   align?: 'left' | 'right' | 'center';
   headClassName?: string;
   cellClassName?: string;
+  /** 덜 중요한 칸 — 목록이 좁아지면(760px 미만: 세로 모니터에서 상세가 열렸을 때) 숨겨 이름 · 상태 · 금액이 먼저 보이게 한다 (2026-11-22) */
+  minor?: boolean;
   render: (row: T) => React.ReactNode;
 }
 
@@ -32,6 +34,9 @@ interface DataGridProps<T> {
   rowClassName?: (row: T) => string;
   emptyMessage?: string;
 }
+
+/** 좁은 목록에서 숨기는 칸 — DataGrid 밖의 표(판매)도 같은 값을 쓴다. 표를 감싼 칸에 `@container` 가 있어야 한다 */
+export const MINOR_COL_CLS = '@max-[760px]:hidden';
 
 const alignCls = (a?: string) => (a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left');
 
@@ -48,11 +53,12 @@ function DataGridInner<T>({
     return <div className="flex items-center justify-center h-40 text-sm text-neutral-400">{emptyMessage}</div>;
   }
   return (
+    <div className="@container">
     <table className="w-full text-sm border-collapse">
       <thead>
         <tr className="sticky top-0 bg-stone-50 z-[1] text-left text-[11px] font-semibold text-neutral-500">
           {columns.map((c) => (
-            <th key={c.key} className={cn('px-3 py-2.5 whitespace-nowrap', alignCls(c.align), c.headClassName)}>
+            <th key={c.key} className={cn('px-3 py-2.5 whitespace-nowrap', alignCls(c.align), c.minor && MINOR_COL_CLS, c.headClassName)}>
               {c.label}
             </th>
           ))}
@@ -77,7 +83,7 @@ function DataGridInner<T>({
               )}
             >
               {columns.map((c) => (
-                <td key={c.key} className={cn('px-3 py-2.5', alignCls(c.align), c.cellClassName)}>
+                <td key={c.key} className={cn('px-3 py-2.5 whitespace-nowrap', alignCls(c.align), c.minor && MINOR_COL_CLS, c.cellClassName)}>
                   {c.render(row)}
                 </td>
               ))}
@@ -86,6 +92,7 @@ function DataGridInner<T>({
         })}
       </tbody>
     </table>
+    </div>
   );
 }
 
