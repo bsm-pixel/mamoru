@@ -4,6 +4,7 @@ import { isValidTransition } from '@/lib/consultation/transitions';
 import { sendNotification, type NotifyTemplate } from '@/lib/notification/make-webhook';
 import { syncConsultationToCalendar } from '@/lib/google/calendar-sync';
 import { deleteCalendarEvent } from '@/lib/google/calendar-client';
+import { geocodeForConsultation } from '@/lib/kakao/geocode';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
 
 const GITHUB_PAGES = 'page.mamoru.kr/projects/consulting';
@@ -86,12 +87,14 @@ export async function PATCH(
     const body = await req.json();
     // 항상 발송 원칙(2026-09-14): 알림 끄기 옵션 없음. 캐시된 구버전 화면이 보내는 skip_notify 는 DB 컬럼이 아니므로 버림
     delete body.skip_notify;
-    const { status: newStatus, note, ...rest } = body;
+    // also_customer: 주소를 고칠 때 고객 정보 주소도 같이 바꿀지(DB 컬럼 아님, 2026-11-22)
+    // address_to_customer: 'apply' | 'keep' — 접수 주소가 고객 정보 주소와 다를 때 사장님이 확인 창에서 고른 것(2026-11-22)
+    const { status: newStatus, note, also_customer: alsoCustomer, address_to_customer: addressToCustomer, ...rest } = body;
 
-    // 현재 상담 조회 (캘린더 동기화 판단용 visit_date/visit_time 포함)
+    // 현재 상담 조회 (캘린더 동기화 판단용 visit_date/visit_time · 주소 고치기 판단용 주소 포함)
     const { data: current, error: fetchErr } = await db
       .from('consultations')
-      .select('status, consultation_type, visit_date, visit_time, admin_note')
+      .select('status, consultation_type, visit_date, visit_time, admin_note, address_road, address_detail, postcode, customer_id, gas_raw')
       .eq('id', id)
       .single();
 
@@ -123,6 +126,41 @@ export async function PATCH(
       updateData.hold_reason = null;
     }
 
+    // 2026-11-22 주소 고치기 — 고객이 출장 요청 주소를 잘못 넣은 경우(작업실 t-261121-field-address)
+    //   좌표를 새 주소로 다시 계산한다(지도 핀 · 휴대폰 길찾기). 못 찾으면 비워 둔다 — 옛 주소 핀이 남는 것보다 낫고,
+    //   backfill-coords 가 나중에 다시 시도한다. 알림톡은 보내지 않는다(아래 template 은 상태 · 일정 변경에만 정해짐).
+    const addressChanged = 'address_road' in updateData && (
+      (updateData.address_road || '') !== (current.address_road || '') ||
+      (updateData.address_detail || '') !== (current.address_detail || '')
+    );
+    if ('address_road' in updateData) {
+      const road = String(updateData.address_road || '').trim();
+      if (!road) return NextResponse.json({ error: '도로명 주소를 넣어 주세요' }, { status: 400 });
+      updateData.address_road = road;
+      updateData.address_detail = String(updateData.address_detail || '').trim() || null;
+      if ('postcode' in updateData) updateData.postcode = String(updateData.postcode || '').trim() || null;
+    }
+    // 고객 주소에 대한 결정을 이 건에 남긴다(gas_raw.address_decision) — 상세를 다시 열어도 같은 확인 창이 뜨지 않게
+    //   주소를 고쳤으면 그때 고른 것(고객 주소도 바꿈 = applied / 이 건만 = kept)으로 기록한다
+    const decision: 'applied' | 'kept' | null =
+      addressToCustomer === 'apply' ? 'applied'
+      : addressToCustomer === 'keep' ? 'kept'
+      : addressChanged ? (alsoCustomer ? 'applied' : 'kept')
+      : null;
+    if (decision) {
+      const raw = (current.gas_raw && typeof current.gas_raw === 'object') ? current.gas_raw : {};
+      updateData.gas_raw = { ...raw, address_decision: decision, address_decided_at: new Date().toISOString() };
+    }
+    if (addressChanged) {
+      const geo = await geocodeForConsultation(updateData.address_road as string, (updateData.address_detail as string | null) || undefined);
+      updateData.latitude = geo?.lat ?? null;
+      updateData.longitude = geo?.lng ?? null;
+      // 옛 접수(GAS)의 시도 · 시군구 · 지역 칸은 옛 주소 기준이라 비운다(상담 전체 화면에 그대로 보이던 칸)
+      updateData.address_sido = null;
+      updateData.address_sigungu = null;
+      updateData.address_region = null;
+    }
+
     const { data, error } = await db
       .from('consultations')
       .update(updateData)
@@ -151,9 +189,43 @@ export async function PATCH(
       });
     }
 
+    // 주소를 고쳤으면 이력(상태 그대로 = 화면에 「내용 수정」) + 고객 정보 주소(고른 경우만)
+    if (addressChanged) {
+      const before = [current.address_road, current.address_detail].filter(Boolean).join(' ') || '(없음)';
+      await db.from('consultation_history').insert({
+        consultation_id: id,
+        from_status: current.status,
+        to_status: current.status,
+        changed_by: user.id,
+        note: `주소 변경 — 이전: ${before}${alsoCustomer && current.customer_id ? ' (고객 정보 주소도 바꿈)' : ''}`,
+      });
+      if (alsoCustomer && current.customer_id) {
+        const patch: Record<string, unknown> = { address_road: updateData.address_road, address_detail: updateData.address_detail };
+        if ('postcode' in updateData) patch.postcode = updateData.postcode;
+        await db.from('customers').update(patch).eq('id', current.customer_id);
+      }
+    }
+
+    // 접수 주소를 고객 주소로 (주소는 그대로, 확인 창에서 [고객 주소로 바꾸기]) — 2026-11-22
+    if (addressToCustomer === 'apply' && !addressChanged && current.customer_id && current.address_road) {
+      await db.from('customers').update({
+        address_road: current.address_road,
+        address_detail: current.address_detail || null,
+        postcode: current.postcode || null,
+      }).eq('id', current.customer_id);
+      await db.from('consultation_history').insert({
+        consultation_id: id,
+        from_status: current.status,
+        to_status: current.status,
+        changed_by: user.id,
+        note: '고객 정보 주소를 이 접수 주소로 바꿈',
+      });
+    }
+
     // 후속 작업: after()로 응답 반환 후 백그라운드 실행 — UI 빠른 응답
     //   adminNoteChanged 만인 경우: 캘린더 설명만 갱신되고 알림톡 template은 null 유지(고객 발송 없음)
-    if (statusChanged || scheduleChanged || adminNoteChanged) {
+    //   addressChanged 만인 경우(2026-11-22): 구글 달력 장소만 새 주소로 — 알림톡 없음
+    if (statusChanged || scheduleChanged || adminNoteChanged || addressChanged) {
       after(async () => {
         const sideEffects: Promise<unknown>[] = [];
 

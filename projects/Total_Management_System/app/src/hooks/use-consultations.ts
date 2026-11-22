@@ -212,6 +212,60 @@ export function useUpdateConsultationAdminNote() {
   });
 }
 
+/**
+ * 상담(출장) 주소 고치기 (2026-11-22) — 좌표 · 구글 달력은 서버가 새 주소로 맞추고, 알림톡은 나가지 않는다.
+ * alsoCustomer: 고객 정보 주소도 같이 바꿀지(기본 꺼짐)
+ */
+export function useUpdateConsultationAddress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, postcode, road, detail, alsoCustomer }: { id: string; postcode: string; road: string; detail: string; alsoCustomer: boolean }) => {
+      const res = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postcode, address_road: road, address_detail: detail, also_customer: alsoCustomer }),
+      });
+      if (!res.ok) throw new Error(await parseApiError(res, '주소 저장 실패'));
+      return res.json() as Promise<Consultation>;
+    },
+    onSuccess: (c, { alsoCustomer }) => {
+      toast.success(alsoCustomer ? '주소를 고쳤습니다 — 고객 정보 주소도 바꿈' : '주소를 고쳤습니다');
+      if (!c?.latitude) toast('새 주소의 지도 위치를 못 찾았습니다 — 지도 핀은 나중에 다시 찾습니다', { icon: 'ℹ️' });
+    },
+    onError: (err) => { toast.error('주소 저장 실패: ' + errMsg(err)); },
+    onSettled: (_d, _e, { id, alsoCustomer }) => {
+      queryClient.invalidateQueries({ queryKey: ['consultations'] });
+      queryClient.invalidateQueries({ queryKey: ['consultation', id] });
+      if (alsoCustomer) { queryClient.invalidateQueries({ queryKey: ['customers'] }); queryClient.invalidateQueries({ queryKey: ['customer-address'] }); }
+    },
+  });
+}
+
+/**
+ * 접수 주소가 고객 정보 주소와 다를 때 사장님 결정 (2026-11-22)
+ *   apply = 고객 정보 주소를 이 접수 주소로 바꿈 / keep = 그대로 둠. 결정은 상담 건에 남아 확인 창이 다시 뜨지 않는다.
+ */
+export function useDecideCustomerAddress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, decision }: { id: string; decision: 'apply' | 'keep' }) => {
+      const res = await fetch(`/api/consultation/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address_to_customer: decision }),
+      });
+      if (!res.ok) throw new Error(await parseApiError(res, '저장 실패'));
+      return res.json();
+    },
+    onSuccess: (_d, { decision }) => { toast.success(decision === 'apply' ? '고객 정보 주소를 바꿨습니다' : '고객 주소는 그대로 둡니다'); },
+    onError: (err) => { toast.error('저장 실패: ' + errMsg(err)); },
+    onSettled: (_d, _e, { id, decision }) => {
+      queryClient.invalidateQueries({ queryKey: ['consultation', id] });
+      if (decision === 'apply') { queryClient.invalidateQueries({ queryKey: ['customers'] }); queryClient.invalidateQueries({ queryKey: ['customer-address'] }); }
+    },
+  });
+}
+
 /** 상담 동기화 — 캐시 새로고침 (GAS 자동 Push가 이미 Supabase에 저장함) */
 export function useConsultationSync() {
   const queryClient = useQueryClient();

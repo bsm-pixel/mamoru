@@ -48,6 +48,11 @@ const FIXTURES = {
       { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
       { id: 'r-check-2', as_id: 'AS-CHECK-0002', sale_id: 's-check-1', customer_id: null, name: '점검판매', phone: '01000000301', status: 'ready_to_ship', proceed_type: '출장수거', invoice_number: null, shipped_at: null, total_amount: 20000, qty_mamoru: 2, qty_other: 0, created_at: '2026-11-21T00:00:00Z', updated_at: '2026-11-21T00:00:00Z' },
     ],
+    // 출장 주소 점검용 (2026-11-22) — 점검고객가(저장 주소 '점검시 점검로 1')가 다른 주소로 출장 요청
+    consultations: [
+      { id: 'k-check-1', unique_id: 'u-check-1', name: '점검고객가', phone: '01000000001', phone_normalized: '01000000001', consultation_type: 'field_request', status: 'pending_admin', customer_id: 'c-check-1', address_road: '점검시 다른로 9', address_detail: '9층', postcode: '00009', latitude: null, longitude: null, gas_raw: { days: '월' }, visit_date: null, visit_time: null, memo: null, admin_note: null, created_at: '2026-11-21T00:00:00Z', updated_at: '2026-11-21T00:00:00Z' },
+    ],
+    consultation_history: [],
     // 함께 맡은 가위 점검용 (2026-11-22) — 판매 1건에 작업완료 수리 1건이 연결돼 있다(repairs.sale_id)
     offline_sales: [
       { id: 's-check-1', sale_number: 'OS-CHECK-001', customer_id: null, customer_name: '점검판매', customer_phone: '01000000301', customer_type: 'B2C', sale_date: new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10), total_amount: 150000, discount_amount: 0, paid_amount: 150000, payment_method: 'card', payment_status: 'paid', delivery_method: 'pickup', invoice_number: null, shipped_at: null, delivered_at: null, cancelled_at: null, returned_at: null, memo: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
@@ -426,6 +431,30 @@ async function pcChecks(browser) {
     await open(page, '/dashboard');
     page.off('dialog', acceptLeave);
     if (bad.length) fail('임시 저장 — 발주 작성', bad.join(' / ')); else ok('임시 저장 — 새로고침 뒤 「이어서 쓰기」로 되살아남');
+  }
+
+  // 출장 주소 — 접수 주소가 고객 정보 주소와 다르면 확인 창, [그대로 두기] 를 고르면 기록 / [수정] 으로 주소 고치기 칸 (2026-11-22)
+  await open(page, '/consultations/k-check-1');
+  {
+    const bad = [];
+    try {
+      await page.waitForSelector('[data-ask-mismatch]', { timeout: 8000 });
+      const txt = await page.$eval('[data-ask-mismatch]', (e) => e.textContent || '');
+      if (!txt.includes('점검시 점검로 1') || !txt.includes('점검시 다른로 9')) bad.push(`창에 두 주소가 다 안 보임: ${txt.slice(0, 120)}`);
+      const wait = page.waitForRequest((r) => r.url().includes('/api/consultation/k-check-1') && r.method() === 'PATCH', { timeout: 8000 }).catch(() => null);
+      await page.evaluate(() => Array.from(document.querySelectorAll('[data-ask-mismatch] button')).find((b) => (b.textContent || '').trim() === '그대로 두기')?.click());
+      const req = await wait;
+      if (!req) bad.push('[그대로 두기] 를 눌러도 요청이 안 나감');
+      else if (JSON.parse(req.postData() || '{}').address_to_customer !== 'keep') bad.push(`요청이 다름: ${req.postData()}`);
+    } catch { bad.push('접수 주소가 달라도 확인 창이 안 뜸'); }
+    await sleep(500);
+    const edit = await page.$('[data-address-edit]');
+    if (!edit) bad.push('주소 [수정] 버튼이 없음');
+    else {
+      await edit.click();
+      try { await page.waitForSelector('[data-address-form]', { timeout: 4000 }); } catch { bad.push('[수정] 을 눌러도 주소 고치기 칸이 안 열림'); }
+    }
+    if (bad.length) fail('출장 주소 — 다른 주소 확인 창 · 주소 고치기', bad.join(' / ')); else ok('출장 주소 — 접수 주소가 다르면 확인 창 · [수정] 으로 주소 고치기 칸');
   }
 
   // 고객 미리 보기 — 목록의 고객 이름에 마우스를 올리면 작은 카드, 벗어나면 사라진다 (2026-11-21)

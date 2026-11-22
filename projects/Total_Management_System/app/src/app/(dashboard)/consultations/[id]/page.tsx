@@ -29,6 +29,7 @@ import {
   CONSULTATION_TYPE_LABEL, formatDateFull } from '@/lib/utils/format';
 import { ArrowLeft, MapPin, Calendar, User, Clock, UserCheck, AlertCircle, CheckCircle, FileSignature, ShoppingCart } from 'lucide-react';
 import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types';
+import { ConsultationAddressLine } from '@/components/consultations/address-edit';
 
 /** 상태 전이 → 버튼 라벨 매핑 */
 const STATUS_BUTTON_LABEL: Record<string, string> = {
@@ -339,6 +340,19 @@ export default function ConsultationDetailPage() {
               </>
             )}
           </dl>
+          {/* 2026-11-22 출장 건은 여기서도 주소를 고친다 (상세 패널과 같은 부품) */}
+          {c.consultation_type === 'field_request' && (
+            <div className="mt-3 pt-3 border-t border-neutral-100">
+              <ConsultationAddressLine
+                consultationId={c.id}
+                customerId={c.customer_id}
+                postcode={c.postcode}
+                road={c.address_road}
+                detail={c.address_detail}
+                decided={!!(c.gas_raw as { address_decision?: string } | null)?.address_decision}
+              />
+            </div>
+          )}
         </Card>
 
         {/* 딜러 배정 */}

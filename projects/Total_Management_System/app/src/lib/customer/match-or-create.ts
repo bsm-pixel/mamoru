@@ -30,6 +30,12 @@ export interface MatchOrCreateInput {
     customerType?: string;
     activityName?: string | null;   // 102: 활동명(매장 사용 이름)
     position?: string | null;        // 102: 직급
+    /**
+     * 2026-11-22 기존 고객의 주소가 이미 있으면 바꾸지 않는다(비어 있을 때만 채움).
+     * 출장 상담 접수용 — 접수 주소가 저장된 주소와 다르면 TMS 상담 상세에서 사장님이 확인 창으로 고른다.
+     * 복원수리 택배 접수는 '최신 배송지 반영(정책 B)'이 맞아 이 값을 쓰지 않는다.
+     */
+    keepExistingAddress?: boolean;
   };
 }
 
@@ -90,7 +96,13 @@ export async function matchOrCreateCustomer(
       if (position && !cur?.position) patch.position = position;
     }
     // 주소: 접수(택배)에 도로명 주소가 있으면 전체를 접수값으로 최신화 (정책 B — 최신 배송지 반영)
-    if (input.extra?.addressRoad) {
+    //   keepExistingAddress(출장 상담 접수)면 저장된 주소가 있을 때 건드리지 않는다 — 비어 있을 때만 채운다
+    let keepAddr = false;
+    if (input.extra?.addressRoad && input.extra.keepExistingAddress) {
+      const { data: curAddr } = await db.from('customers').select('address_road').eq('id', id).single();
+      keepAddr = !!(curAddr?.address_road || '').trim();
+    }
+    if (input.extra?.addressRoad && !keepAddr) {
       patch.address_road = input.extra.addressRoad;
       patch.address_detail = input.extra.addressDetail || null;
       patch.postcode = input.extra.postcode || null;

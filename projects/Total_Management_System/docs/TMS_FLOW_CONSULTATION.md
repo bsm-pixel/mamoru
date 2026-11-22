@@ -3,6 +3,15 @@
 
 ---
 
+## 2026-11-22 — 출장 주소 고치기 · 접수 주소와 고객 주소가 다를 때 확인 창
+
+- **고치기**: 출장 건 상세(패널 · 전체 화면)의 주소 줄 [수정] → 도로명은 주소 검색, 상세 주소는 직접 입력 → `PATCH /api/consultation/[id]` `{postcode, address_road, address_detail, also_customer}`. 서버가 좌표를 다시 잡고(못 찾으면 비움 — `backfill-coords` 가 나중에 다시), 옛 시도 · 시군구 · 지역 칸을 비우고, 구글 달력 장소를 맞추고, 이력에 「내용 수정」(이전 주소)으로 남긴다. **알림톡 없음.**
+- 저장할 때 고객 정보 주소와 다르면 「고객 주소도 바꿀까요?」 창([이 건만 고치기] / [고객 주소도 바꾸기]). 고객 주소가 비어 있으면 묻지 않고 채운다.
+- **접수 때**: 출장 접수는 기존 고객의 저장된 주소를 덮어쓰지 않는다(`matchOrCreateCustomer` `keepExistingAddress`). 비어 있으면 채우고, 새 고객은 접수 주소가 그대로 들어간다. 복원수리 택배 접수는 전처럼 최신 배송지로 바꾼다.
+- 접수 주소 ≠ 고객 정보 주소면 상세를 열 때 「접수 주소가 저장된 주소와 다릅니다」 창([그대로 두기] / [고객 주소로 바꾸기] → `address_to_customer: 'keep' | 'apply'`). 고른 것은 `gas_raw.address_decision` 에 남아 다시 묻지 않는다(고객이 다시 접수하면 새로 묻는다).
+- 뒤 단계: 지도 핀 · 휴대폰 길찾기(좌표) · 카카오맵 검색 · 구글 달력 · 이후 알림톡(시간 제안 · 확정 · 리마인드 · 취소) · 판매 입력 · 계약서는 상담 건 주소를 그때그때 읽어 자동으로 새 주소. 딜러 배정은 주소를 따로 보내지 않는다.
+- 부품: `components/consultations/address-edit.tsx` · 점검: `tests/flows/consult-address.test.ts`, 화면 점검 「출장 주소」.
+
 ## 2026-11-10 — 판매 연결 = 상담 자동 완료
 ```
 [상담 완료] → "판매 등록하기" → /sales/new?from_consultation= → 판매 저장(POST /api/sales, source_consultation_id)

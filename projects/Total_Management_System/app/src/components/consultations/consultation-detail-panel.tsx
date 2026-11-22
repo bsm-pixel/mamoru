@@ -24,6 +24,7 @@ import type { ConsultationStatus, ConsultationType } from '@/lib/supabase/types'
 import { CustomerNameButton } from '@/components/customers/customer-name-button';
 import { toneClasses } from '@/lib/ui/status-tone';
 import { prefDaysOf, prefTimesOf } from '@/lib/consultation/prefs';
+import { ConsultationAddressLine } from './address-edit';
 const TYPE_LABEL: Record<string, string> = {
   store_visit: '매장방문',
   field_request: '출장요청',
@@ -192,7 +193,17 @@ export function ConsultationDetailPanel({ consultationId, onAfterComplete }: Pro
             <span>{formatDateFull(c.visit_date)} {c.visit_time || ''}</span>
           </div>
         )}
-        {c.address_road && (
+        {/* 2026-11-22 출장 건은 주소를 그 자리에서 고친다(작업실 t-261121-field-address). 매장 방문 · 톡은 전처럼 보기만 */}
+        {c.consultation_type === 'field_request' ? (
+          <ConsultationAddressLine
+            consultationId={c.id}
+            customerId={c.customer_id}
+            postcode={c.postcode}
+            road={c.address_road}
+            detail={c.address_detail}
+            decided={!!(c.gas_raw as { address_decision?: string } | null)?.address_decision}
+          />
+        ) : c.address_road && (
           <div className="flex items-center gap-2 text-sm">
             <MapPin size={14} className="text-neutral-400" />
             <span>{c.address_road} {c.address_detail || ''}</span>

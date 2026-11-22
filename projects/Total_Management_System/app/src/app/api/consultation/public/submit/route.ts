@@ -101,6 +101,8 @@ export async function POST(req: NextRequest) {
         postcode: addressZip || null,
         activityName: activityName || null,
         position: position || null,
+        // 2026-11-22 기존 고객 주소는 덮어쓰지 않는다 — 다르면 TMS 상담 상세에서 사장님이 확인 창으로 고른다. 새 고객은 접수 주소가 그대로 들어간다
+        keepExistingAddress: true,
       },
     });
 
