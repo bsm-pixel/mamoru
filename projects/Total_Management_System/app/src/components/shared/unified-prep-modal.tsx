@@ -15,8 +15,12 @@ import { SkeletonRows } from '@/components/ui/skeleton';
  * 체크는 인쇄 대상 선택일 뿐 데이터 무변경(읽기전용).
  */
 
-type Domain = 'repair' | 'order' | 'sale';
+/* 2026-11-23 거래처도 같이: 'delivery' = 거래처 납품(deliveries). 판매 탭의 거래처(딜러·아카데미) 판매는 후불이라
+   결제 전이어도 출고 준비 대상으로 보인다(판매 관리 「처리 필요」와 같은 기준). */
+type Domain = 'repair' | 'order' | 'sale' | 'delivery';
 interface Row { id: string; label: string; name: string; sub?: string; hasInvoice: boolean }
+const DOMAINS: Domain[] = ['repair', 'order', 'sale', 'delivery'];
+const emptySets = (): Record<Domain, Set<string>> => ({ repair: new Set(), order: new Set(), sale: new Set(), delivery: new Set() });
 interface Props {
   initialTab?: Domain;
   preselect?: Partial<Record<Domain, string[]>>;
@@ -27,12 +31,13 @@ const TABS: { key: Domain; label: string }[] = [
   { key: 'repair', label: '복원수리' },
   { key: 'order', label: '주문' },
   { key: 'sale', label: '판매' },
+  { key: 'delivery', label: '거래처 납품' },
 ];
 
 export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: Props) {
   const [tab, setTab] = useState<Domain>(initialTab);
-  const [rows, setRows] = useState<Record<Domain, Row[]>>({ repair: [], order: [], sale: [] });
-  const [checked, setChecked] = useState<Record<Domain, Set<string>>>({ repair: new Set(), order: new Set(), sale: new Set() });
+  const [rows, setRows] = useState<Record<Domain, Row[]>>({ repair: [], order: [], sale: [], delivery: [] });
+  const [checked, setChecked] = useState<Record<Domain, Set<string>>>(emptySets);
   const [loading, setLoading] = useState(true);
   const [printing, setPrinting] = useState(false);
   const [mode, setMode] = useState<'tray' | 'list'>('tray');
@@ -43,14 +48,19 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
       setLoading(true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const db = createClient() as any;
-      const [repRes, ordRes, saleRes] = await Promise.all([
+      const [repRes, ordRes, saleRes, dlRes] = await Promise.all([
         db.from('repairs').select('id, as_id, name, qty_mamoru, qty_other, invoice_number')
           .eq('status', 'ready_to_ship').order('received_at', { ascending: true }).limit(100),
         db.from('orders').select('id, imweb_order_no, recipient_name, orderer_name, invoice_number')
           .eq('status', 'ready_to_ship').order('ordered_at', { ascending: true }).limit(100),
-        db.from('offline_sales').select('id, sale_number, customer_name, invoice_number')
-          .eq('payment_status', 'paid').is('shipped_at', null).is('delivered_at', null)
+        db.from('offline_sales').select('id, sale_number, customer_name, customer_type, invoice_number')
+          .or('payment_status.eq.paid,customer_type.in.(dealer,academy)') // 거래처 판매는 후불 — 결제 전이어도 준비 대상
+          .is('shipped_at', null).is('delivered_at', null)
           .is('cancelled_at', null).is('returned_at', null).order('sale_date', { ascending: true }).limit(100),
+        // 거래처 납품: 아직 출고 전(작성중·납품확정) — 판매 관리 「처리 필요」와 같은 기준(결제 여부 무관)
+        db.from('deliveries').select('id, dl_number, customer_name, tracking_number')
+          .in('status', ['draft', 'confirmed']).is('cancelled_at', null)
+          .order('delivery_date', { ascending: true }).limit(100),
       ]);
       const repair: Row[] = (repRes.data || []).map((r: Record<string, unknown>) => ({
         id: r.id as string, label: (r.as_id as string) || '', name: (r.name as string) || '이름없음',
@@ -63,13 +73,19 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
       }));
       const sale: Row[] = (saleRes.data || []).map((s: Record<string, unknown>) => ({
         id: s.id as string, label: (s.sale_number as string) || '', name: (s.customer_name as string) || '',
+        sub: s.customer_type === 'dealer' || s.customer_type === 'academy' ? '거래처' : undefined,
         hasInvoice: !!s.invoice_number,
       }));
-      setRows({ repair, order, sale });
+      const delivery: Row[] = (dlRes.data || []).map((d: Record<string, unknown>) => ({
+        id: d.id as string, label: (d.dl_number as string) || '', name: (d.customer_name as string) || '미지정', // deliveries엔 company_name 열이 없다(거래처명 = customer_name)
+        hasInvoice: !!d.tracking_number,
+      }));
+      const all: Record<Domain, Row[]> = { repair, order, sale, delivery };
+      setRows(all);
       // preselect: 넘어온 id 중 목록에 있는 것만 체크
-      const init: Record<Domain, Set<string>> = { repair: new Set(), order: new Set(), sale: new Set() };
-      (['repair', 'order', 'sale'] as Domain[]).forEach((d) => {
-        const ids = new Set((d === 'repair' ? repair : d === 'order' ? order : sale).map((x) => x.id));
+      const init = emptySets();
+      DOMAINS.forEach((d) => {
+        const ids = new Set(all[d].map((x) => x.id));
         (preselect?.[d] || []).forEach((id) => { if (ids.has(id)) init[d].add(id); });
       });
       setChecked(init);
@@ -90,7 +106,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
     return { ...prev, [d]: next };
   });
 
-  const totalChecked = checked.repair.size + checked.order.size + checked.sale.size;
+  const totalChecked = checked.repair.size + checked.order.size + checked.sale.size + checked.delivery.size;
 
   const handlePrint = async () => {
     if (totalChecked === 0) return;
@@ -196,6 +212,40 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
         });
       }
 
+      // 4) 거래처 납품 슬립 — 시리얼 없음, 주소 = 이 납품의 별도 배송지 > 거래처 주소(납품 상세·송장과 같은 순서)
+      const dlIds = [...checked.delivery];
+      if (dlIds.length) {
+        const [{ data: dls }, { data: items }] = await Promise.all([
+          db.from('deliveries').select('*').in('id', dlIds),
+          db.from('delivery_items').select('*').in('delivery_id', dlIds),
+        ]);
+        const custIds = [...new Set((dls || []).map((d: Record<string, unknown>) => d.customer_id).filter(Boolean))] as string[];
+        const addrBy: Record<string, string> = {};
+        if (custIds.length) {
+          const { data: custs } = await db.from('customers').select('id, postcode, address_road, address_detail').in('id', custIds);
+          (custs || []).forEach((c: Record<string, unknown>) => { addrBy[c.id as string] = [c.postcode ? `(${c.postcode})` : '', c.address_road, c.address_detail].filter(Boolean).join(' '); });
+        }
+        dlIds.map((id) => (dls || []).find((d: Record<string, unknown>) => d.id === id)).filter(Boolean).forEach((d: Record<string, unknown>) => {
+          const its = (items || []).filter((it: Record<string, unknown>) => it.delivery_id === d.id);
+          const mapped: { product_name: string; quantity: number; serialStr: string }[] = its.map((it: Record<string, unknown>) => ({
+            product_name: (it.product_name as string) || '', quantity: (it.quantity as number) || 0, serialStr: '',
+          }));
+          const ship = d.ship_address_road ? [d.ship_postcode ? `(${d.ship_postcode})` : '', d.ship_address_road, d.ship_address_detail].filter(Boolean).join(' ') : '';
+          const addr = ship || (d.customer_id ? addrBy[d.customer_id as string] || '' : '');
+          const name = (d.customer_name as string) || '미지정';
+          slips.push(saleSlip({
+            headerLabel: 'MAMORU 출고 준비표', orderNo: (d.dl_number as string) || '', tag: '거래처',
+            dateStr: (d.delivery_date as string) || (d.created_at as string) || '', custName: name, showNim: false,
+            phone: (d.customer_phone as string) || '', addr, items: mapped, memo: (d.memo as string) || '',
+          }));
+          listRows.push({
+            group: '거래처 납품', no: (d.dl_number as string) || '', name, contact: (d.customer_phone as string) || '',
+            itemsHtml: mapped.map((m) => `${esc(m.product_name)} <b>×${m.quantity}</b>`).join('<br>'),
+            qty: `${mapped.reduce((a, m) => a + m.quantity, 0)}개`, memo: (d.memo as string) || '',
+          });
+        });
+      }
+
       if (slips.length === 0) return;
       const w = window.open('', '_blank');
       if (!w) return;
@@ -210,7 +260,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
   const active = rows[tab];
   const activeChecked = checked[tab];
   const counts = useMemo(() => ({
-    repair: checked.repair.size, order: checked.order.size, sale: checked.sale.size,
+    repair: checked.repair.size, order: checked.order.size, sale: checked.sale.size, delivery: checked.delivery.size,
   }), [checked]);
 
   return (
@@ -287,7 +337,7 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
 
         {/* 푸터 */}
         <div className="px-4 py-2.5 border-t border-neutral-200 flex items-center justify-between text-xs text-neutral-500">
-          <span>선택 <b className="text-stone-900">{totalChecked}</b>건 (복원 {counts.repair}·주문 {counts.order}·판매 {counts.sale})</span>
+          <span>선택 <b className="text-stone-900">{totalChecked}</b>건 (복원 {counts.repair}·주문 {counts.order}·판매 {counts.sale}·거래처 {counts.delivery})</span>
           <span className="text-neutral-400">체크는 인쇄 대상 선택일 뿐 데이터는 변하지 않습니다</span>
         </div>
       </div>

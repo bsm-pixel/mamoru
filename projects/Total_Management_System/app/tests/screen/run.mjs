@@ -371,6 +371,9 @@ async function pcChecks(browser) {
   await sleep(500);
   const prepOpen = await page.evaluate(() => /출고 준비표/.test(Array.from(document.querySelectorAll('.fixed')).map((e) => e.textContent).join(' ')));
   if (!prepOpen) dup.push('고객 화면에서 눌러도 창이 안 열림');
+  // 2026-11-23 거래처 납품 탭(거래처 건도 같이 인쇄)
+  const hasDlTab = await page.evaluate(() => Array.from(document.querySelectorAll('.fixed button')).some((b) => /거래처 납품/.test(b.textContent || '')));
+  if (!hasDlTab) dup.push('「거래처 납품」 탭이 없음');
   if (dup.length) fail('전체 출고 준비표 — 머리줄 한 곳', dup.join(' / ')); else ok('전체 출고 준비표 — 버튼은 머리줄 하나, 다른 화면(고객)에서도 열림');
   await page.keyboard.press('Escape');
 
