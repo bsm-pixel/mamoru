@@ -300,9 +300,10 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
           <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-neutral-400">최근 고객</p>
           {recent.map((c) => (
             <button key={c.id} type="button" tabIndex={-1} onMouseDown={(e) => { e.preventDefault(); handleSelect(c); }}
-              className="w-full px-3 py-2 text-left border-t border-neutral-50 hover:bg-neutral-50 flex items-center gap-2">
-              <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
-              {c.phone && <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>}
+              className="w-full px-3 py-2 text-left border-t border-neutral-50 hover:bg-neutral-50 flex items-center gap-2 min-w-0">
+              <span className="text-sm font-semibold text-indigo-black shrink-0">{c.name}</span>
+              {c.phone && <span className="text-xs text-neutral-500 shrink-0">{formatPhone(c.phone)}</span>}
+              {c.company_name && <span className="text-xs text-neutral-400 truncate min-w-0">· {c.company_name}</span>}
             </button>
           ))}
         </div>
@@ -329,12 +330,16 @@ export function CustomerAutocomplete({ selectedCustomer, onSelect, onClear, show
                     i === activeIdx ? 'bg-terracotta/10' : 'hover:bg-neutral-50'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-indigo-black">{c.name}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-semibold text-indigo-black shrink-0">{c.name}</span>
                     {c.phone && (
-                      <span className="text-xs text-neutral-500">{formatPhone(c.phone)}</span>
+                      <span className="text-xs text-neutral-500 shrink-0">{formatPhone(c.phone)}</span>
                     )}
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500 ml-auto">
+                    {/* 2026-11-23 매장명 — 같은 이름 고객을 구분 (빠른 찾기·병합 목록과 같은 「· 매장명」) */}
+                    {c.company_name && (
+                      <span className="text-xs text-neutral-400 truncate min-w-0">· {c.company_name}</span>
+                    )}
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500 ml-auto shrink-0">
                       {SOURCE_LABEL[c.source] || c.source}
                     </span>
                   </div>

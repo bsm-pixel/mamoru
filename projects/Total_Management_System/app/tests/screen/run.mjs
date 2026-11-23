@@ -35,7 +35,7 @@ const CHROME = process.env.CHROME_PATH || [
 const FIXTURES = {
   tables: {
     customers: [
-      { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', postcode: '00001', address_road: '점검시 점검로 1', address_detail: '101호', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
+      { id: 'c-check-1', name: '점검고객가', phone: '010-0000-0001', phone_normalized: '01000000001', customer_type: 'B2C', company_name: '점검매장', postcode: '00001', address_road: '점검시 점검로 1', address_detail: '101호', tags: [], memo: null, created_at: '2026-11-01T00:00:00Z', updated_at: '2026-11-01T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-2', name: '점검고객나', phone: '010-0000-0002', phone_normalized: '01000000002', customer_type: 'B2C', tags: [], memo: null, created_at: '2026-11-02T00:00:00Z', updated_at: '2026-11-02T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-3', name: '점검거래처', phone: '010-0000-0003', phone_normalized: '01000000003', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: 10000, created_at: '2026-11-03T00:00:00Z', updated_at: '2026-11-03T00:00:00Z', total_spent: 0, purchase_count: 0 },
       { id: 'c-check-4', name: '단가없는상사', phone: '010-0000-0004', phone_normalized: '01000000004', customer_type: 'dealer', company_name: null, tags: [], memo: null, default_repair_price: null, created_at: '2026-11-04T00:00:00Z', updated_at: '2026-11-04T00:00:00Z', total_spent: 0, purchase_count: 0 },
@@ -313,6 +313,20 @@ async function pcChecks(browser) {
     await sleep(100);
     const after = await bubbles();
     if (!shown.length) fail('숫자 칸 쉼표 표시', `${numPage}: 표시가 뜨지 않음`); else if (after.length) fail('숫자 칸 쉼표 표시', '칸을 떠나도 남아 있음'); else ok('숫자 칸(금액 아님) — 큰 수를 치면 칸 위에 쉼표 표시, 떠나면 사라짐');
+  }
+
+  // 고객 검색 목록에 매장명 (2026-11-23 같은 이름 고객 구분)
+  await open(page, '/sales/new');
+  await sleep(500);
+  const CUST = 'input[placeholder="고객명 또는 전화번호 검색..."]';
+  if (!(await page.$(CUST))) fail('고객 검색 — 매장명 표시', '검색 칸을 못 찾음');
+  else {
+    await page.click(CUST);
+    await page.keyboard.type('점검고객');
+    let shown = false;
+    try { await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some((b) => /점검고객가/.test(b.textContent || '') && /· 점검매장/.test(b.textContent || '')), { timeout: 8000 }); shown = true; } catch { /* 아래 실패 */ }
+    if (shown) ok('고객 검색 — 이름 · 번호 옆에 매장명이 보임'); else fail('고객 검색 — 매장명 표시', '「· 점검매장」이 안 보임');
+    await page.keyboard.press('Escape');
   }
 
   // 거래처 매출 입력 — 거래처 검색에서 ↓ · Enter 로 고른다 (결과가 1건이어도)
