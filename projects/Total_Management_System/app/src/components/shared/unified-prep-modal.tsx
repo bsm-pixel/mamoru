@@ -198,10 +198,12 @@ export function UnifiedPrepModal({ initialTab = 'repair', preselect, onClose }: 
             product_name: it.product_name as string, quantity: (it.quantity as number) || 0,
             serialStr: (sers || []).filter((se: Record<string, unknown>) => se.offline_sale_id === s.id && (se.sale_item_id === it.id || se.product_id === it.product_id)).map((se: Record<string, unknown>) => se.serial_number).join(', '),
           }));
+          // 2026-11-26 주소 = 이 판매의 다른 배송지 > 고객 주소 (롯데 송장 · 거래처 납품과 같은 순서 — 전엔 다른 배송지를 넣어도 고객 주소가 찍혔다)
+          const saleShip = s.ship_address_road ? [s.ship_postcode ? `(${s.ship_postcode})` : '', s.ship_address_road, s.ship_address_detail].filter(Boolean).join(' ') : '';
           slips.push(saleSlip({
             headerLabel: 'MAMORU 출고 준비표', orderNo: (s.sale_number as string) || '', tag: isD ? '거래처' : null,
             dateStr: (s.sale_date as string) || '', custName: (s.customer_name as string) || '', showNim: !isD,
-            phone: (s.customer_phone as string) || '', addr: s.customer_id ? (addrBy[s.customer_id as string] || '') : '',
+            phone: (s.customer_phone as string) || '', addr: saleShip || (s.customer_id ? (addrBy[s.customer_id as string] || '') : ''),
             items: mapped, memo: (s.memo as string) || '',
           }));
           listRows.push({

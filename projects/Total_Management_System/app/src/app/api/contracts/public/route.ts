@@ -4,6 +4,7 @@ import { errMsg } from '@/lib/utils/err';
 import { CAUTION_NOTICE, LEGAL_NOTICE, ENGRAVING_NOTICE } from '@/lib/contracts/notice';
 import { cleanEngraving, isToken, isValidSignature, maskName } from '@/lib/contracts/sign-link';
 import { linkContractCustomer } from '@/lib/contracts/link-customer';
+import { syncSaleEngravingMemo } from '@/lib/contracts/engraving-memo';
 
 /**
  * 고객 서명 링크 — 로그인 없이 열쇠(?t=sign_token)로만 (2026-11-22, 마이그 172)
@@ -109,6 +110,8 @@ export async function POST(req: NextRequest) {
       after(async () => {
         // 2026-11-23 서명하면 고객 연결(없으면 새로) — [판매 입력]이 고객이 채워진 채로 열리게
         await linkContractCustomer(db, c);
+        // 2026-11-26 서명 전에 판매로 바꿔 둔 계약이면 받은 각인 문구를 판매 메모에도
+        if (patch.engraving_text) await syncSaleEngravingMemo(db, c.id, { on: true, text: patch.engraving_text as string });
         try {
           const { sendPushToAll } = await import('@/lib/firebase/send-push');
           await sendPushToAll({ title: '✍️ 계약서 서명 완료', body: `${c.contract_number} ${c.customer_name}님이 링크로 서명했어요${engLine}`, url: `/contracts/${c.id}`, tag: `contract-sign-${c.id}` });
@@ -128,6 +131,8 @@ export async function POST(req: NextRequest) {
       if (error) throw error;
       if (!done) return json({ ok: false, error: '각인 문구를 이미 받았어요.' }, 409);
       after(async () => {
+        // 2026-11-26 이미 판매로 바꾼 계약이면 판매 메모의 「각인 문구 대기」를 받은 문구로
+        await syncSaleEngravingMemo(db, c.id, { on: true, text });
         try {
           const { sendPushToAll } = await import('@/lib/firebase/send-push');
           await sendPushToAll({ title: '🔤 각인 문구 도착', body: `${c.contract_number} ${c.customer_name}님 — 「${text}」`, url: `/contracts/${c.id}`, tag: `contract-eng-${c.id}` });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { errMsg } from '@/lib/utils/err';
 import { cleanEngraving } from '@/lib/contracts/sign-link';
+import { syncSaleEngravingMemo } from '@/lib/contracts/engraving-memo';
 
 /**
  * PATCH /api/contracts/[id] — 이니셜 각인 문구 적기 (2026-11-22, 마이그 172)
@@ -29,6 +30,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { data, error } = await db.from('contracts').update(patch).eq('id', id).select('id, engraving, engraving_text, engraving_status').single();
     if (error) throw error;
+    // 2026-11-26 이미 판매로 바꾼 계약이면 판매 메모의 각인 부분도 맞춘다(출고 준비표에 「각인 문구 대기」가 남던 문제)
+    await syncSaleEngravingMemo(db, id, { on: !!data.engraving, text: data.engraving_text || null });
     return NextResponse.json({ contract: data });
   } catch (err) {
     return NextResponse.json({ error: errMsg(err) }, { status: 500 });
