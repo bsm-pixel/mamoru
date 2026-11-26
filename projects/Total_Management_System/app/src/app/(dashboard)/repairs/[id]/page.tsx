@@ -8,6 +8,7 @@ import { RepairStatusBadge } from '@/components/repairs/repair-status-badge';
 import { RepairDetailCard } from '@/components/repairs/repair-detail-card';
 import { InspectionSummary } from '@/components/repairs/inspection-summary';
 import { SidebarActionCard } from '@/components/repairs/sidebar-action-card';
+import { ContentCandidateCard, ContentShotReminder } from '@/components/repairs/content-candidate';
 import { RepairTimeline } from '@/components/repairs/repair-timeline';
 import { RepairTagPrintModal } from '@/components/lazy-modals';
 import {
@@ -106,11 +107,15 @@ export default function RepairDetailPage() {
           <div className="flex-1 space-y-4 min-w-0">
             <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
+            {/* 2026-11-26 콘텐츠 후보 (작업실 19번) */}
+            {r.status !== 'cancelled' && <ContentCandidateCard repair={r} />}
+
             {inspections.length > 0 && <InspectionSummary inspections={inspections} />}
           </div>
 
           {/* 우측: 사이드바 — 비용+액션+출고 통합 */}
           <div className="w-full lg:w-80 shrink-0 space-y-4">
+            <ContentShotReminder repair={r} />
             <SidebarActionCard repair={r} inspections={inspections} />
             <RepairTimeline history={history} />
           </div>

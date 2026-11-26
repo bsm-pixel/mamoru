@@ -48,7 +48,7 @@ const FIXTURES = {
     ],
     repairs: [
       { id: 'r-check-1', as_id: 'AS-CHECK-0001', customer_id: 'c-check-1', name: '점검고객가', phone: '01000000001', status: 'delivered', proceed_type: '직접발송', total_amount: 70000, qty_mamoru: 1, qty_other: 0, created_at: '2026-11-06T00:00:00Z', updated_at: '2026-11-06T00:00:00Z' },
-      { id: 'r-check-2', as_id: 'AS-CHECK-0002', sale_id: 's-check-1', customer_id: null, name: '점검판매', phone: '01000000301', status: 'ready_to_ship', proceed_type: '출장수거', invoice_number: null, shipped_at: null, total_amount: 20000, qty_mamoru: 2, qty_other: 0, created_at: '2026-11-21T00:00:00Z', updated_at: '2026-11-21T00:00:00Z' },
+      { id: 'r-check-2', as_id: 'AS-CHECK-0002', sale_id: 's-check-1', customer_id: null, name: '점검판매', phone: '01000000301', status: 'ready_to_ship', proceed_type: '출장수거', invoice_number: null, shipped_at: null, total_amount: 20000, qty_mamoru: 2, qty_other: 0, content_candidate: true, content_symptom: '날 끝 이빨 빠짐', content_before_shot: true, content_after_shot: false, content_consent: null, received_at: '2026-11-21T00:00:00Z', created_at: '2026-11-21T00:00:00Z', updated_at: '2026-11-21T00:00:00Z' },
     ],
     // 출장 주소 점검용 (2026-11-22) — 점검고객가(저장 주소 '점검시 점검로 1')가 다른 주소로 출장 요청
     consultations: [
@@ -313,6 +313,26 @@ async function pcChecks(browser) {
     await sleep(100);
     const after = await bubbles();
     if (!shown.length) fail('숫자 칸 쉼표 표시', `${numPage}: 표시가 뜨지 않음`); else if (after.length) fail('숫자 칸 쉼표 표시', '칸을 떠나도 남아 있음'); else ok('숫자 칸(금액 아님) — 큰 수를 치면 칸 위에 쉼표 표시, 떠나면 사라짐');
+  }
+
+  // 복원수리 콘텐츠 후보 (2026-11-26 작업실 19번) — 상세 카드 · 작업 후 촬영 확인 줄 · 머리줄 목록
+  await open(page, '/repairs?id=r-check-2');
+  try { await page.waitForFunction(() => /후보로 표시/.test(document.body.textContent || ''), { timeout: 8000 }); } catch { /* 아래 실패 */ }
+  {
+    const t = await page.evaluate(() => document.body.textContent || '');
+    if (!/후보로 표시/.test(t)) fail('복원수리 — 콘텐츠 후보 카드', '상세에 카드가 없음');
+    else if (!/작업 후 사진 찍었나요/.test(t)) fail('복원수리 — 작업 후 촬영 확인', '작업완료 후보 건에 확인 줄이 안 뜸');
+    else if (/작업 전 사진 찍었나요/.test(t)) fail('복원수리 — 작업 전 촬영 확인', '이미 찍은 작업 전 확인이 또 뜸');
+    else ok('복원수리 — 콘텐츠 후보 카드 + 작업 후 촬영 확인 줄(작업 전은 찍어서 안 뜸)');
+    const btn = await page.$('button[title="콘텐츠 후보 목록"]');
+    if (!btn) fail('복원수리 — 콘텐츠 후보 목록', '머리줄 버튼 없음');
+    else {
+      await btn.click();
+      let listed = false;
+      try { await page.waitForFunction(() => Array.from(document.querySelectorAll('dialog[open] td')).some((td) => /AS-CHECK-0002/.test(td.textContent || '')), { timeout: 8000 }); listed = true; } catch { /* 아래 실패 */ }
+      if (listed) ok('복원수리 — 콘텐츠 후보 목록에 후보 건이 보임'); else fail('복원수리 — 콘텐츠 후보 목록', '목록에 후보 건이 없음');
+      await page.keyboard.press('Escape');
+    }
   }
 
   // 고객 검색 목록에 매장명 (2026-11-23 같은 이름 고객 구분)

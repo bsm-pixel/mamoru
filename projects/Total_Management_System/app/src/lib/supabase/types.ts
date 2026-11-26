@@ -507,6 +507,12 @@ export interface Database {
           google_event_id: string | null;        // Google Calendar 이벤트 ID (NULL=미동기화)
           google_event_updated_at: string | null; // 마지막 동기화 시각
           sale_id: string | null;                // 165: 출장 현장 맡김 — 결제한 판매(offline_sales). 금액은 판매 RS 줄, A 매출 합산 제외
+          // 173: 콘텐츠 후보 (작업실 19번) — 입고 점검 때 표시, 작업 전·후 촬영 확인, 고객 노출 동의
+          content_candidate: boolean;
+          content_symptom: string | null;
+          content_before_shot: boolean;
+          content_after_shot: boolean;
+          content_consent: 'yes' | 'no' | null;  // null = 미확인
           received_at: string;
           created_at: string;
           updated_at: string;

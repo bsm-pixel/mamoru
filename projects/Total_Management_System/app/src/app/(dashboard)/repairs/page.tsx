@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useIsLg } from '@/hooks/use-grid-mode';
 import { useRepairSync } from '@/hooks/use-repairs';
 import { useRepairDashboardStats } from '@/hooks/use-dashboard-stats';
-import { RefreshCw, Scissors, CreditCard, AlertTriangle, TrendingUp } from 'lucide-react';
+import { RefreshCw, Scissors, CreditCard, AlertTriangle, TrendingUp, Clapperboard } from 'lucide-react';
+import { ContentCandidateListModal } from '@/components/repairs/content-candidate';
 import { VisitBookingModal } from '@/components/repairs/visit-booking-modal';
 import { formatKRW } from '@/lib/utils/format';
 import { useListEscape } from '@/components/layout/list-keys';
@@ -24,6 +25,7 @@ export default function RepairsPage() {
   const [selectedId, setSelectedId] = useUrlSelection(); // 2026-11-15 고른 건을 주소(?id=)에 — 뒤로 가기 = 상세 닫기
   useListEscape(() => { if (selectedId) setSelectedId(null); }); // 2026-11-15 Esc = 상세 닫기
   const [bookingOpen, setBookingOpen] = useState(false);   // 방문 예약 등록 모달
+  const [contentOpen, setContentOpen] = useState(false);   // 콘텐츠 후보 목록
   const { data: stats } = useRepairDashboardStats();
   const [badgeFilter, setBadgeFilter] = useState<{ tab?: 'intake' | 'in_progress'; unpaidOnly?: boolean; staleOnly?: boolean } | null>(null);
 
@@ -123,12 +125,20 @@ export default function RepairsPage() {
       {/* 2026-10-19 상단바는 새로고침만 — 모바일에선 아이콘만(글자가 2줄로 꺾이던 문제).
           [방문 예약 등록]은 작업 영역(검색줄 수거 불가일 옆)으로 이동 */}
       <Topbar title="복원수리" count={stats?.workingCount} hideRefresh action={
-        <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending} className="whitespace-nowrap" title="목록 새로고침">
-          <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
-          <span className="hidden sm:inline">{sync.isPending ? '새로고침 중...' : '새로고침'}</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* 2026-11-26 콘텐츠 후보 목록 (작업실 19번) */}
+          <Button variant="secondary" size="sm" onClick={() => setContentOpen(true)} className="whitespace-nowrap" title="콘텐츠 후보 목록">
+            <Clapperboard size={14} />
+            <span className="hidden sm:inline">콘텐츠 후보</span>
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => sync.mutate()} disabled={sync.isPending} className="whitespace-nowrap" title="목록 새로고침">
+            <RefreshCw size={14} className={sync.isPending ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">{sync.isPending ? '새로고침 중...' : '새로고침'}</span>
+          </Button>
+        </div>
       } />
       <VisitBookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} onCreated={(id) => setSelectedId(id)} />
+      <ContentCandidateListModal open={contentOpen} onClose={() => setContentOpen(false)} onSelect={(id) => setSelectedId(id)} />
 
       {isLg ? (
         /* PC: 좌측(통계+밀집그리드) + 우측 상세(전체 높이) — 판매관리와 동일 IA */

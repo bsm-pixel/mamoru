@@ -6,6 +6,7 @@ import { RepairStatusBadge } from './repair-status-badge';
 import { RepairDetailCard } from './repair-detail-card';
 import { InspectionSummary } from './inspection-summary';
 import { SidebarActionCard } from './sidebar-action-card';
+import { ContentCandidateCard, ContentShotReminder } from './content-candidate';
 import { RepairTimeline } from './repair-timeline';
 import { StatusStepper } from '@/components/ui/status-stepper';
 import { RepairPrepSheetModal, RepairTagPrintModal } from '@/components/lazy-modals';
@@ -138,12 +139,17 @@ export function RepairDetailPanel({ repairId }: RepairDetailPanelProps) {
         <div className="flex-1 space-y-4 min-w-0">
           <RepairDetailCard repair={r} onUpdate={handleUpdate} />
 
+          {/* 2026-11-26 콘텐츠 후보 (작업실 19번) — 입고 점검 때 표시 */}
+          {r.status !== 'cancelled' && <ContentCandidateCard repair={r} />}
+
           {/* 검수 요약 (저장된 게 있을 때만) */}
           {inspections.length > 0 && <InspectionSummary inspections={inspections} />}
         </div>
 
         {/* 사이드바(액션) — 좁을 때 위로(order-first)/넓을 때 오른쪽 */}
         <div className="w-full @xl:w-72 shrink-0 space-y-4 order-first @xl:order-none">
+          {/* 콘텐츠 후보면 작업 버튼 위에 작업 전·후 촬영 확인 (진행은 막지 않음) */}
+          <ContentShotReminder repair={r} />
           <SidebarActionCard repair={r} inspections={inspections} />
           {/* 067: 리뷰 관리 카드 — 취소 외 상태에서 표시 (compact = 판매 패널과 동일 미니) */}
           {r.status !== 'cancelled' && (
