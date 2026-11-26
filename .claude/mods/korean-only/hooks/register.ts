@@ -1,6 +1,6 @@
 import type { Register } from 'claude-code'
 
-import { englishHeavy } from './lang'
+import { shouldRewrite } from './lang'
 
 const RULE = `[답변 언어 — 절대 규칙 (사장님 지시, korean-only mod)]
 사장님(사용자)에게 보이는 모든 글은 처음부터 끝까지 한국어로 쓴다: 최종 답변, 도구 사용 사이의 진행 메시지, 표, 목록, 제목, 체크리스트, 기술 설명 전부.
@@ -24,11 +24,12 @@ export const register: Register = on => {
   // 답변이 끝나면 영어 위주인지 검사 → 경고 + 한국어 재작성 자동 요청
   on('turn.complete', async ($, e, next) => {
     const done = await next(e)
+    if (e.agentId !== undefined) return done // 보조 에이전트의 끝은 보지 않는다(재작성 1회 표시도 건드리지 않음)
     if (isRewriting) {
       isRewriting = false
       return done
     }
-    if (e.reason === 'answer' && englishHeavy(done.text)) {
+    if (shouldRewrite(e, done.text)) {
       isRewriting = true
       $.ui.toast('⚠ 영어 답변 감지 — 한국어로 다시 쓰게 했습니다')
       void $.prompt.submit({ text: REWRITE })

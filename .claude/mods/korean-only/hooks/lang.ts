@@ -11,3 +11,11 @@ export function englishHeavy(text: string): boolean {
   if (latin < 60) return false // 짧은 영어(메뉴명·약어)는 허용
   return hangul / (hangul + latin) < 0.5
 }
+
+// 재작성을 걸지 판정 — 사장님 화면에 보이는 본 대화의 답변만 본다.
+// 2026-11-26 보조 에이전트(웹 문서 읽기 등)가 끝날 때도 같은 이벤트가 와서, 그 영어 보고 때문에
+// 한국어로 이미 쓴 본 답변을 다시 쓰게 하던 오탐을 막는다 (agentId 있음 = 보조 에이전트).
+export function shouldRewrite(e: { reason: string; agentId?: string }, text: string): boolean {
+  if (e.agentId !== undefined) return false
+  return e.reason === 'answer' && englishHeavy(text)
+}
