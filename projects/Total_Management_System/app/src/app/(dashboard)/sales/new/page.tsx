@@ -113,6 +113,11 @@ function NewSaleContent() {
   const [repShipping, setRepShipping] = useState(false); // 복원수리 배송비 3,000원 포함 여부
   // 165: 가위를 맡아 감(출장 현장 수거) → 저장 시 복원수리 건 자동 생성 + 맡김 확인 알림톡. 끄면 매출 줄만 남는다(현장 즉시 수리 등)
   const [repTakeAway, setRepTakeAway] = useState(true);
+  // 2026-11-27 추가 작업 — 날 변형 교정 · 날 교체처럼 표준 단가에 안 맞는 수리비. 거래처 매출 창의 「추가 항목」과 같은 방식(1줄 = 이름 + 금액)
+  //   전엔 「직접 입력」의 [복원수리] 버튼으로 넣었다(수리비가 두 곳으로 나뉘어 헷갈림) → 복원수리 입력 한 곳으로 모은다
+  const [repExtras, setRepExtras] = useState<Array<{ name: string; price: number }>>([]);
+  const [repExtraName, setRepExtraName] = useState('');
+  const [repExtraPrice, setRepExtraPrice] = useState('');
 
   // 073/074: B2B 납품처 catalog (customer별 납품명 + 단가 자동 입력용)
   const { data: customerCatalogData } = useCustomerCatalog(selectedCustomer?.id);
@@ -237,8 +242,17 @@ function NewSaleContent() {
   // 카트 전체에 이미 배정된 수동/자동 시리얼 — 품목 간 자동생성 중복 방지용 (2026-06-11 fix)
   const cartReservedSerials = cart.flatMap((it) => it.manualSerials || []);
   const REPAIR_SHIPPING_FEE = 3000;
-  const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice + (repShipping ? REPAIR_SHIPPING_FEE : 0);
-  const hasRepair = rep.mamoruQty > 0 || rep.otherQty > 0;
+  const repExtrasTotal = repExtras.reduce((s, e) => s + e.price, 0);
+  const repairTotal = rep.mamoruQty * rep.mamoruPrice + rep.otherQty * rep.otherPrice + repExtrasTotal + (repShipping ? REPAIR_SHIPPING_FEE : 0);
+  const repairQty = rep.mamoruQty + rep.otherQty; // 맡은 가위 자루 수(추가 작업은 자루가 아니라 금액만 더한다)
+  const hasRepair = repairQty > 0 || repExtras.length > 0;
+  function addRepExtra() {
+    const name = repExtraName.trim();
+    const price = parseInt(repExtraPrice) || 0;
+    if (!name || price <= 0) return;
+    setRepExtras((prev) => [...prev, { name, price }]);
+    setRepExtraName(''); setRepExtraPrice('');
+  }
   const totalAmount = productTotal + repairTotal; // 제품 + 복원수리 통합
   const finalAmount = totalAmount - discount;
   // 복합결제 = 받은 돈을 수단별로 쪼갠 것 → 합계가 곧 수납액. 결제상태/미수 자동 판정(회계 정합)
@@ -255,7 +269,6 @@ function NewSaleContent() {
   // 임시 제품 입력 상태
   const [customProductName, setCustomProductName] = useState('');
   const [customProductPrice, setCustomProductPrice] = useState('');
-  const [customProductIsRepair, setCustomProductIsRepair] = useState(false);   // 직접 입력 분류(복원수리 여부)
 
   function addToCart(product: Product, serialId?: string) {
     // 074: catalog.unit_price 우선 사용 (해당 customer 등록된 맞춤가) → 없으면 group 단가 fallback
@@ -308,12 +321,11 @@ function NewSaleContent() {
     if (!name || price <= 0) return;
     setCart((prev) => [
       ...prev,
-      { product: null, customName: name, customPrice: price, quantity: 1, unitPrice: price, selectedSerialIds: [],
-        customCategory: customProductIsRepair ? 'RS' : undefined },
+      // 2026-11-27 직접 입력 = 제품 전용(수리비는 복원수리 입력의 「추가 작업」). customCategory 는 옛 임시 저장분 호환용으로만 남는다
+      { product: null, customName: name, customPrice: price, quantity: 1, unitPrice: price, selectedSerialIds: [] },
     ]);
     setCustomProductName('');
     setCustomProductPrice('');
-    setCustomProductIsRepair(false);
   }
 
   // 고객 변경 시 장바구니 가격 재계산 (등록 제품만)
@@ -365,6 +377,8 @@ function NewSaleContent() {
     const repairItems = [
       ...(rep.mamoruQty > 0 ? [{ product_name: '복원수리 (마모루)', category: 'RS', quantity: rep.mamoruQty, unit_price: rep.mamoruPrice, total_price: rep.mamoruQty * rep.mamoruPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       ...(rep.otherQty > 0 ? [{ product_name: '복원수리 (타사)', category: 'RS', quantity: rep.otherQty, unit_price: rep.otherPrice, total_price: rep.otherQty * rep.otherPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
+      // 추가 작업 — 거래처 매출 창 「추가 항목」과 같은 저장 모양(RS · 수량 1)
+      ...repExtras.map((e) => ({ product_name: e.name, category: 'RS', quantity: 1, unit_price: e.price, total_price: e.price, serial_ids: [] as string[], manual_serials: [] as string[] })),
       ...(repShipping ? [{ product_name: '배송비', category: 'RS', quantity: 1, unit_price: REPAIR_SHIPPING_FEE, total_price: REPAIR_SHIPPING_FEE, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
     ];
 
@@ -372,7 +386,11 @@ function NewSaleContent() {
     // 165: 맡김 접수는 연락처가 있어야 한다(알림톡·출고 안내·고객 매칭)
     const phoneForRepair = selectedCustomer?.phone || customerPhone.trim();
     // 2026-11-09 출장 채널일 때만 수거 접수 (매장 손님이 두고 간 가위는 복원수리 접수에서 따로 받는다)
-    const takeAway = hasRepair && repTakeAway && saleChannel === 'field';
+    // 2026-11-27 추가 작업만 넣고 「수거했어요」를 켜 두면 접수가 안 만들어진다(자루 수 0) → 조용히 넘어가지 않고 막는다
+    if (hasRepair && repTakeAway && saleChannel === 'field' && repairQty === 0) {
+      toast.error('수거한 가위 자루 수를 마모루 · 타사 칸에 넣어 주세요 (추가 작업은 금액만 더합니다)'); return;
+    }
+    const takeAway = repairQty > 0 && repTakeAway && saleChannel === 'field';
     if (takeAway && !phoneForRepair) { toast.error('가위를 수거하려면 고객 연락처가 필요합니다'); return; }
 
     await createSale.mutateAsync({
@@ -529,12 +547,12 @@ function NewSaleContent() {
   const unsavedGuard = useUnsavedGuard(!createSale.isPending && !createSale.isSuccess && (cart.length > 0 || hasRepair || !!customerName.trim() || !!memo.trim()));
 
   // 2026-11-21 임시 저장 — 창을 닫거나 새로고침해도 이어서 쓰기. 상담 · 계약서에서 넘어온 입력(주소에 값이 붙은 경우)은 건드리지 않는다
-  const draftSnapshot = { cart, selectedCustomer, rep, repShipping, repTakeAway, customerName, customerPhone, paymentMethod, paymentStatus, depositAmount, saleChannel, discount, memo, mixedCard, mixedCash, mixedTransfer };
+  const draftSnapshot = { cart, selectedCustomer, rep, repExtras, repShipping, repTakeAway, customerName, customerPhone, paymentMethod, paymentStatus, depositAmount, saleChannel, discount, memo, mixedCard, mixedCash, mixedTransfer };
   const draft = useFormDraft('sale-new', 1, draftSnapshot, cart.length > 0 || hasRepair || !!customerName.trim() || !!memo.trim(), !contractId && !fromConsultationId);
   const resumeDraft = () => {
     const d = draft.take();
     if (!d) return;
-    setCart(d.cart); setSelectedCustomer(d.selectedCustomer); setRep(d.rep); setRepShipping(d.repShipping); setRepTakeAway(d.repTakeAway);
+    setCart(d.cart); setSelectedCustomer(d.selectedCustomer); setRep(d.rep); setRepExtras(d.repExtras || []); setRepShipping(d.repShipping); setRepTakeAway(d.repTakeAway);
     setCustomerName(d.customerName); setCustomerPhone(d.customerPhone); setPaymentMethod(d.paymentMethod); setPaymentStatus(d.paymentStatus);
     setDepositAmount(d.depositAmount); setSaleChannel(d.saleChannel); setDiscount(d.discount); setMemo(d.memo);
     setMixedCard(d.mixedCard); setMixedCash(d.mixedCash); setMixedTransfer(d.mixedTransfer);
@@ -774,25 +792,8 @@ function NewSaleContent() {
             {/* 임시 제품 직접 입력 */}
             <Card>
               <h3 className="text-sm font-semibold text-neutral-700 mb-2">+ 직접 입력</h3>
-              <p className="text-xs text-neutral-400 mb-2">등록되지 않은 제품을 직접 입력합니다 (빗, 소모품 등)</p>
-              {/* 분류 — 복원수리를 직접 입력할 때 제품 매출로 잡히지 않게 (2026-10-12) */}
-              <div className="flex gap-1.5 mb-2">
-                {([[false, '제품'], [true, '복원수리']] as const).map(([v, label]) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => setCustomProductIsRepair(v)}
-                    className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                      customProductIsRepair === v ? 'bg-neutral-900 text-white border-neutral-900' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-stone-50'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <span className="self-center text-[11px] text-neutral-400">
-                  {customProductIsRepair ? '복원수리 매출로 집계됩니다' : '제품 매출로 집계됩니다'}
-                </span>
-              </div>
+              {/* 2026-11-27 제품 전용 — [제품 / 복원수리] 분류 버튼은 빼고, 수리비는 아래 복원수리 입력의 「추가 작업」으로 */}
+              <p className="text-xs text-neutral-400 mb-2">등록되지 않은 제품을 직접 입력합니다 (빗, 소모품 등) · 수리비는 아래 복원수리 입력의 「추가 작업」에</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -846,6 +847,34 @@ function NewSaleContent() {
                     <p className="text-[10px] text-neutral-400">기본 {r.basePrice}원 · 수정 가능 · 소계 {formatKRW(r.qty * r.price)}</p>
                   </div>
                 ))}
+                {/* 추가 작업 — 날 변형 교정 · 날 교체 등 표준 단가에 안 맞는 수리비 (2026-11-27) */}
+                <div className="p-3 rounded-lg border border-neutral-200 bg-stone-50/40 space-y-2" data-rep-extra>
+                  <p className="text-xs font-semibold text-neutral-700">추가 작업 <span className="font-normal text-neutral-400">· 자루 수와 별개로 금액만 더해집니다</span></p>
+                  <div className="flex gap-2">
+                    <input type="text" value={repExtraName} onChange={(e) => setRepExtraName(e.target.value)} aria-label="추가 작업 이름"
+                      onKeyDown={(e) => { if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); addRepExtra(); } }}
+                      placeholder="예: 날 변형 교정"
+                      className="flex-1 min-w-0 h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                    <MoneyText value={repExtraPrice} onChange={(val) => setRepExtraPrice(val)} placeholder="금액" aria-label="추가 작업 금액"
+                      className="w-24 sm:w-28 shrink-0 h-9 px-3 rounded-lg border border-neutral-200 bg-white text-sm text-right placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300" />
+                    <Button size="sm" variant="secondary" onClick={addRepExtra}
+                      disabled={!repExtraName.trim() || !(parseInt(repExtraPrice) > 0)}>추가</Button>
+                  </div>
+                  {repExtras.length > 0 && (
+                    <div className="space-y-1">
+                      {repExtras.map((e, idx) => (
+                        <div key={idx} className="flex items-center justify-between gap-2 py-1 border-b border-neutral-100 last:border-0">
+                          <span className="text-sm min-w-0 truncate">{e.name}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm text-neutral-600">{formatKRW(e.price)}</span>
+                            <button type="button" title="삭제" aria-label={`${e.name} 삭제`} onClick={() => setRepExtras((prev) => prev.filter((_, i) => i !== idx))}
+                              className="w-7 h-7 rounded bg-red-50 flex items-center justify-center hover:bg-red-100 text-red-500"><Trash2 size={12} /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {/* 배송비 (택배 발송 시) */}
                 <button type="button" onClick={() => setRepShipping((v) => !v)}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition ${repShipping ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'}`}>
@@ -853,7 +882,7 @@ function NewSaleContent() {
                   {repShipping && <span>{formatKRW(REPAIR_SHIPPING_FEE)}</span>}
                 </button>
                 <div className="flex justify-between text-sm font-bold pt-1 border-t border-neutral-100">
-                  <span>복원수리 소계 ({rep.mamoruQty + rep.otherQty}자루{repShipping ? ' + 배송비' : ''})</span>
+                  <span>복원수리 소계 ({repairQty}자루{repExtras.length > 0 ? ' + 추가 작업' : ''}{repShipping ? ' + 배송비' : ''})</span>
                   <span className="text-stone-900">{formatKRW(repairTotal)}</span>
                 </div>
                 {/* 165: 출장 현장에서 가위를 맡아 감 → 복원수리 접수 자동 생성 (결제는 이 판매로 끝) */}
@@ -1023,6 +1052,7 @@ function NewSaleContent() {
                   {/* 복원수리 라인 (왼쪽 복원수리 입력 반영) */}
                   {rep.mamoruQty > 0 && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">복원수리 (마모루) × {rep.mamoruQty}자루</span><span className="text-neutral-600">{formatKRW(rep.mamoruQty * rep.mamoruPrice)}</span></div>}
                   {rep.otherQty > 0 && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">복원수리 (타사) × {rep.otherQty}자루</span><span className="text-neutral-600">{formatKRW(rep.otherQty * rep.otherPrice)}</span></div>}
+                  {repExtras.map((e, idx) => <div key={`rx-${idx}`} className="flex items-center justify-between text-sm py-1"><span className="font-medium min-w-0 truncate">복원수리 추가 · {e.name}</span><span className="text-neutral-600 shrink-0">{formatKRW(e.price)}</span></div>)}
                   {repShipping && <div className="flex items-center justify-between text-sm py-1"><span className="font-medium">배송비</span><span className="text-neutral-600">{formatKRW(REPAIR_SHIPPING_FEE)}</span></div>}
                 </div>
               )}

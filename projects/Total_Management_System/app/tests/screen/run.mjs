@@ -405,6 +405,37 @@ async function pcChecks(browser) {
     if (bad.length) fail('판매 입력 — 고객 먼저', bad.join(' / ')); else ok('판매 입력 — 고객 먼저: 첫 커서 · PC 왼쪽 · 고른 뒤 제품 검색 · 최근 구매 맨 위 · 세로 폭 순서');
   }
 
+  // 판매 입력 수리비 한 곳 (2026-11-27) — 직접 입력에 [복원수리] 분류 버튼이 없고, 복원수리 입력의 「추가 작업」으로 넣은 금액이 장바구니에 보인다
+  {
+    const bad = [];
+    const acceptLeave = (d) => { d.accept().catch(() => {}); };
+    page.on('dialog', acceptLeave);
+    await open(page, '/sales/new');
+    await sleep(600);
+    const toggle = await page.evaluate(() => {
+      const h = Array.from(document.querySelectorAll('main h3')).find((x) => (x.textContent || '').includes('직접 입력'));
+      if (!h || !h.parentElement) return null;
+      return Array.from(h.parentElement.querySelectorAll('button')).some((b) => (b.textContent || '').trim() === '복원수리');
+    });
+    if (toggle === null) bad.push('직접 입력 칸을 못 찾음');
+    else if (toggle) bad.push('직접 입력에 [복원수리] 분류 버튼이 남아 있음');
+    const nameInput = await page.$('[data-rep-extra] input[aria-label="추가 작업 이름"]');
+    const priceInput = await page.$('[data-rep-extra] input[aria-label="추가 작업 금액"]');
+    if (!nameInput || !priceInput) bad.push('「추가 작업」 칸을 못 찾음');
+    else {
+      await nameInput.click(); await page.keyboard.type('날 변형 교정');
+      await priceInput.click(); await page.keyboard.type('20000');
+      await page.evaluate(() => Array.from(document.querySelectorAll('[data-rep-extra] button')).find((b) => (b.textContent || '').trim() === '추가')?.click());
+      try {
+        await page.waitForFunction(() => /복원수리 추가 · 날 변형 교정/.test(document.getElementById('mm-cart')?.textContent || '') && /20,000/.test(document.getElementById('mm-cart')?.textContent || ''), { timeout: 5000 });
+      } catch { bad.push('장바구니에 「복원수리 추가 · 날 변형 교정 20,000원」이 안 보임'); }
+    }
+    await page.evaluate(() => { try { localStorage.removeItem('tms.draft.sale-new'); } catch { /* 무시 */ } });
+    await open(page, '/dashboard');
+    page.off('dialog', acceptLeave);
+    if (bad.length) fail('판매 입력 — 수리비 한 곳', bad.join(' / ')); else ok('판매 입력 — 수리비 한 곳: 직접 입력은 제품만 · 추가 작업이 장바구니에 담김');
+  }
+
   // 거래처 매출 입력 — 거래처 검색에서 ↓ · Enter 로 고른다 (결과가 1건이어도)
   await open(page, '/sales/new?mode=b2b');
   await sleep(500);
