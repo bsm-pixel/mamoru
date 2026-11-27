@@ -4,6 +4,8 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { normalizeImwebPayMethod } from '@/lib/sales/imweb-pay-method';
 import { errMsg } from '@/lib/utils/err';
 import { todayKST, monthStartKST } from '@/lib/utils/kst';
+// 2026-11-27 복원수리 자루 수 — 배송비 · 각인 · 「추가작업 · …」 줄은 금액만, 자루로 안 센다
+import { isNonScissorRepairLine } from '@/lib/repair/scissor-count';
 
 /**
  * GET /api/reports/summary — 매출/매입/VAT 기간별 집계
@@ -54,7 +56,7 @@ export async function GET(req: NextRequest) {
       if (it.category === 'RS' && (it.total_price || 0) > 0) {
         if (!offlineRsBySale[it.sale_id]) offlineRsBySale[it.sale_id] = { amount: 0, qty: 0 };
         offlineRsBySale[it.sale_id].amount += it.total_price || 0;
-        if (it.product_name !== '배송비') offlineRsBySale[it.sale_id].qty += it.quantity || 0;
+        if (!isNonScissorRepairLine(it.product_name)) offlineRsBySale[it.sale_id].qty += it.quantity || 0;
       }
     }
     const productSaleItems = saleItems.filter((it) => it.category !== 'RS'); // 제품 항목만 (COGS·랭킹용)
@@ -82,7 +84,7 @@ export async function GET(req: NextRequest) {
       if (it.category === 'RS' && (it.total_price || 0) > 0) {
         if (!retRsBySale[it.sale_id]) retRsBySale[it.sale_id] = { amount: 0, qty: 0 };
         retRsBySale[it.sale_id].amount += it.total_price || 0;
-        if (it.product_name !== '배송비') retRsBySale[it.sale_id].qty += it.quantity || 0;
+        if (!isNonScissorRepairLine(it.product_name)) retRsBySale[it.sale_id].qty += it.quantity || 0;
       }
     }
     const retProductItems = retItems.filter((it) => it.category !== 'RS'); // 반품 제품 항목(−) — allProductItems 에 음수로
@@ -144,7 +146,7 @@ export async function GET(req: NextRequest) {
       if (it.category === 'RS' && (it.total_price || 0) > 0) {
         if (!dlRsByDelivery[it.delivery_id]) dlRsByDelivery[it.delivery_id] = { amount: 0, qty: 0 };
         dlRsByDelivery[it.delivery_id].amount += it.total_price || 0;
-        if (it.product_name !== '배송비') dlRsByDelivery[it.delivery_id].qty += it.quantity || 0;
+        if (!isNonScissorRepairLine(it.product_name)) dlRsByDelivery[it.delivery_id].qty += it.quantity || 0;
       }
     }
     const productDlItems = dlItems.filter((it) => it.category !== 'RS');

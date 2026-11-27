@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { toLocalDateString } from '@/lib/utils/format';
 import { deliveryNet } from '@/lib/sales/amounts';
+// 2026-11-27 복원수리 자루 수 — 배송비 · 각인 · 「추가작업 · …」 줄은 금액만, 자루로 안 센다
+import { scissorQty, isNonScissorRepairLine } from '@/lib/repair/scissor-count';
 import type { Consultation } from '@/lib/supabase/types';
 
 // ============================================
@@ -284,9 +286,9 @@ export function useHubStats() {
       const deliveryRows = (monthDeliveries.data || []) as { total_amount: number; discount_amount: number }[];
       const deliveryMonthAmount = deliveryRows.reduce((s, r) => s + deliveryNet(r), 0); // 납품 total은 이미 net
 
-      // 납품 복원수리 B2B 수량 (배송비 항목은 자루 수에서 제외 — 금액엔 포함)
+      // 납품 복원수리 B2B 수량 (배송비 · 각인 · 추가작업 줄은 자루 수에서 제외 — 금액엔 포함)
       const deliveryRepairRows = (monthDeliveryRepairItems.data || []) as { quantity: number; total_price: number; product_name?: string }[];
-      const deliveryRepairB2BQty = deliveryRepairRows.reduce((s, r) => s + ((r.product_name || '') === '배송비' ? 0 : (r.quantity || 0)), 0);
+      const deliveryRepairB2BQty = deliveryRepairRows.reduce((s, r) => s + scissorQty(r.product_name, r.quantity || 0), 0);
       const deliveryRepairAmount = deliveryRepairRows.reduce((s, r) => s + (r.total_price || 0), 0);
 
       // 2단계 매출 3분할 — 제품 매출 B2C/B2B 분리 (RS 제외)
@@ -360,7 +362,7 @@ export function useHubStats() {
               const isB2B = ct === 'dealer' || ct === 'academy';
               const price = r.total_price || 0;
               // 배송비 항목은 매출(amount)엔 포함하되 자루 수(qty)엔 포함하지 않음
-              const qty = (r.product_name || '') === '배송비' ? 0 : (r.quantity || 1);
+              const qty = scissorQty(r.product_name, r.quantity || 1);
               if (isB2B) { bB2B += price; cB2B += qty; }
               else if ((r.product_name || '').includes('타사')) { bOther += price; cOther += qty; }
               else { bMamoru += price; cMamoru += qty; }
@@ -681,13 +683,13 @@ export function useRepairDashboardStats() {
             const isB2B = ct === 'dealer' || ct === 'academy';
             const price = r.total_price || 0;
             // 배송비 항목은 매출엔 포함, 자루 수엔 제외
-            const qty = (r.product_name || '') === '배송비' ? 0 : (r.quantity || 1);
+            const qty = scissorQty(r.product_name, r.quantity || 1);
             if (isB2B) { bB2B += price; cB2B += qty; }
             else if ((r.product_name || '').includes('타사')) { bOther += price; cOther += qty; }
             else { bMamoru += price; cMamoru += qty; }
           }
           const dlRepairAmount = ((dlRepairItems.data || []) as { total_price: number }[]).reduce((s, r) => s + (r.total_price || 0), 0);
-          const dlRepairQty = ((dlRepairItems.data || []) as { quantity: number; product_name?: string }[]).reduce((s, r) => s + ((r.product_name || '') === '배송비' ? 0 : (r.quantity || 0)), 0);
+          const dlRepairQty = ((dlRepairItems.data || []) as { quantity: number; product_name?: string }[]).reduce((s, r) => s + scissorQty(r.product_name, r.quantity || 0), 0);
           return {
             monthRepairAmount: repairATotal + bMamoru + bOther + bB2B + dlRepairAmount,
             // 복원수리 수량 전체 (자루) = A(repairs qty) + B(offline RS qty) + C(deliveries RS qty). useHubStats와 동일 기준
@@ -727,7 +729,7 @@ export function useRepairDashboardStats() {
           let b2b = 0;
           for (const r of salesRows) {
             const ct = r.offline_sales?.customer_type;
-            if ((ct === 'dealer' || ct === 'academy') && (r.product_name || '') !== '배송비') {
+            if ((ct === 'dealer' || ct === 'academy') && !isNonScissorRepairLine(r.product_name)) {
               b2b += r.quantity || 1;
             }
           }

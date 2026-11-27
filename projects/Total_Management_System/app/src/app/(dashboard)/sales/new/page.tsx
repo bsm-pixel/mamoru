@@ -33,6 +33,7 @@ import { createClient } from '@/lib/supabase/client';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { matchSearch } from '@/lib/utils/search-match';
 import { useTopProductIds, useCustomerRecentProductIds } from '@/hooks/use-top-products';
+import { repairExtraName } from '@/lib/repair/scissor-count';
 
 interface CartItem {
   product: Product | null; // null이면 임시 제품
@@ -378,7 +379,8 @@ function NewSaleContent() {
       ...(rep.mamoruQty > 0 ? [{ product_name: '복원수리 (마모루)', category: 'RS', quantity: rep.mamoruQty, unit_price: rep.mamoruPrice, total_price: rep.mamoruQty * rep.mamoruPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       ...(rep.otherQty > 0 ? [{ product_name: '복원수리 (타사)', category: 'RS', quantity: rep.otherQty, unit_price: rep.otherPrice, total_price: rep.otherQty * rep.otherPrice, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
       // 추가 작업 — 거래처 매출 창 「추가 항목」과 같은 저장 모양(RS · 수량 1)
-      ...repExtras.map((e) => ({ product_name: e.name, category: 'RS', quantity: 1, unit_price: e.price, total_price: e.price, serial_ids: [] as string[], manual_serials: [] as string[] })),
+      //   이름 앞에 「추가작업 · 」 → 대시보드 · 리포트가 자루 수로 세지 않는다(lib/repair/scissor-count)
+      ...repExtras.map((e) => ({ product_name: repairExtraName(e.name), category: 'RS', quantity: 1, unit_price: e.price, total_price: e.price, serial_ids: [] as string[], manual_serials: [] as string[] })),
       ...(repShipping ? [{ product_name: '배송비', category: 'RS', quantity: 1, unit_price: REPAIR_SHIPPING_FEE, total_price: REPAIR_SHIPPING_FEE, serial_ids: [] as string[], manual_serials: [] as string[] }] : []),
     ];
 

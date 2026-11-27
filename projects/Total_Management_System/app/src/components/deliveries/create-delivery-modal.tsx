@@ -28,6 +28,7 @@ import { useEnterSelect } from '@/hooks/use-enter-select';
 import { matchSearch } from '@/lib/utils/search-match';
 import { typingPhone } from '@/lib/utils/validate';
 import { MoneyInput, MoneyText } from '@/components/ui/money-input';
+import { repairExtraName as toRepairExtraName } from '@/lib/repair/scissor-count'; // 이 창에 같은 이름의 입력 칸 상태가 있어 별칭
 
 const PAYMENT_LABEL: Record<string, string> = { unpaid: '미결제', partial: '부분결제', paid: '결제완료' };
 const RECEIPT_LABEL: Record<string, string> = { expense_proof: '지출증빙', tax_invoice: '세금계산서', none: '미적용' };
@@ -181,7 +182,8 @@ export function CreateDeliveryModal({ onClose, onCreated }: Props) {
   // ── 통합 합계 (제품 + 복원수리 혼합, RS는 VAT 제외) ──
   const repairItems = [
     ...(repairQty > 0 ? [{ product_name: '복원수리', category: 'RS', quantity: repairQty, unit_price: repairUnitPrice }] : []),
-    ...repairExtras.map((e) => ({ ...e, category: 'RS' })),
+    // 2026-11-27 추가 항목은 「추가작업 · 」 이름으로 저장 → 자루 수로 세지 않는다(배송비는 그대로). lib/repair/scissor-count
+    ...repairExtras.map((e) => ({ ...e, product_name: toRepairExtraName(e.product_name), category: 'RS' })),
   ];
   const allItems = [...cart, ...repairItems];
   const productItemTotal = cart.reduce((s, c) => s + c.quantity * c.unit_price, 0);
