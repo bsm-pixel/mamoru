@@ -58,10 +58,11 @@ export function ShortcutHelp() {
         <div className="py-2">
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">판매 입력</p>
           <Row keys={['Ctrl', 'Enter']} desc="판매 등록" />
+          <Row keys={['F7']} desc="제품 검색 칸으로 (바코드 찍기)" />
           <Row keys={['F8']} desc="고객 칸으로" />
           <Row keys={['F9']} desc="결제 수단 바꾸기" />
           <Row keys={['←', '→']} desc="선택 버튼 묶음에서 옆으로 고르기" />
-          <Row keys={['Tab']} desc="제품 → 고객 → 결제 수단 → 메모 → 판매 등록" />
+          <Row keys={['Tab']} desc="고객 → 제품 → 결제 수단 → 메모 → 판매 등록" />
         </div>
         <div className="py-2">
           <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wide mb-1">입력 창</p>

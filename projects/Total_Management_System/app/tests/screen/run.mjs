@@ -56,7 +56,12 @@ const FIXTURES = {
     ],
     consultation_history: [],
     // 함께 맡은 가위 점검용 (2026-11-22) — 판매 1건에 작업완료 수리 1건이 연결돼 있다(repairs.sale_id)
+    // 판매 입력 「최근 구매」 점검용 (2026-11-27) — 점검고객가가 점검가위 나를 산 판매 1건
+    offline_sale_items: [
+      { id: 'si-check-2', sale_id: 's-check-2', product_id: 'p-check-2', product_name: '점검가위 나', sku: 'CHK-002', quantity: 1, unit_price: 980000, total_price: 980000, category: 'SCI', supply_amount: 890909, vat_amount: 89091 },
+    ],
     offline_sales: [
+      { id: 's-check-2', sale_number: 'OS-CHECK-002', customer_id: 'c-check-1', customer_name: '점검고객가', customer_phone: '010-0000-0001', customer_type: 'B2C', sale_date: '2026-11-10', total_amount: 980000, discount_amount: 0, paid_amount: 980000, payment_method: 'card', payment_status: 'paid', delivery_method: 'pickup', invoice_number: null, shipped_at: '2026-11-10T00:00:00Z', delivered_at: '2026-11-10T00:00:00Z', cancelled_at: null, returned_at: null, memo: null, created_at: '2026-11-10T00:00:00Z', updated_at: '2026-11-10T00:00:00Z' },
       { id: 's-check-1', sale_number: 'OS-CHECK-001', customer_id: null, customer_name: '점검판매', customer_phone: '01000000301', customer_type: 'B2C', sale_date: new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10), total_amount: 150000, discount_amount: 0, paid_amount: 150000, payment_method: 'card', payment_status: 'paid', delivery_method: 'pickup', invoice_number: null, shipped_at: null, delivered_at: null, cancelled_at: null, returned_at: null, memo: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
     ],
     // 목록 기능 점검용 (2026-11-21) — 주문 3건(메모 바로 고치기 · Shift 범위 선택) · 반품 1건(5초 되돌리기)
@@ -347,6 +352,57 @@ async function pcChecks(browser) {
     try { await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some((b) => /점검고객가/.test(b.textContent || '') && /· 점검매장/.test(b.textContent || '')), { timeout: 8000 }); shown = true; } catch { /* 아래 실패 */ }
     if (shown) ok('고객 검색 — 이름 · 번호 옆에 매장명이 보임'); else fail('고객 검색 — 매장명 표시', '「· 점검매장」이 안 보임');
     await page.keyboard.press('Escape');
+  }
+
+  // 판매 입력 순서 (2026-11-27) — 고객이 먼저: 처음 커서는 고객 칸 · PC는 고객 칸이 제품보다 왼쪽 ·
+  //   고객을 고르면 커서가 제품 검색 칸으로 가고, 그 고객이 산 제품이 「최근 구매」로 목록 맨 위 · 세로 모니터(1080)는 고객 → 제품 → 장바구니 → 결제
+  {
+    const bad = [];
+    const acceptLeave = (d) => { d.accept().catch(() => {}); };
+    page.on('dialog', acceptLeave);
+    await open(page, '/sales/new');
+    await sleep(700);
+    const focusId = await page.evaluate(() => document.activeElement?.id || document.activeElement?.tagName || '');
+    if (focusId !== 'sale-customer-input') bad.push(`처음 커서가 「${focusId}」`);
+    const pos = await page.evaluate(() => {
+      const c = document.getElementById('sale-customer-input')?.getBoundingClientRect();
+      const p = document.getElementById('sale-products')?.getBoundingClientRect();
+      return c && p ? { c: c.left, p: p.left } : null;
+    });
+    if (!pos) bad.push('고객 칸 · 제품 칸을 못 찾음');
+    else if (!(pos.c < pos.p)) bad.push('PC에서 고객 칸이 제품보다 왼쪽이 아님');
+    await page.click(CUST).catch(() => {});
+    await page.keyboard.type('점검고객가');
+    try {
+      await page.waitForFunction(() => Array.from(document.querySelectorAll('button')).some((b) => /점검고객가/.test(b.textContent || '') && /· 점검매장/.test(b.textContent || '')), { timeout: 8000 });
+      await page.evaluate(() => Array.from(document.querySelectorAll('button')).find((b) => /점검고객가/.test(b.textContent || '') && /· 점검매장/.test(b.textContent || ''))?.click());
+      await sleep(300);
+      const ph = await page.evaluate(() => document.activeElement?.getAttribute('placeholder') || '');
+      if (!ph.startsWith('제품 이름')) bad.push(`고객을 고른 뒤 커서가 제품 검색이 아님(「${ph}」)`);
+      try {
+        await page.waitForFunction(() => {
+          const first = document.querySelector('#sale-products tbody tr');
+          return !!first && /점검가위 나/.test(first.textContent || '') && !!first.querySelector('[data-recent-buy]');
+        }, { timeout: 8000 });
+      } catch { bad.push('고객이 산 제품(점검가위 나)이 「최근 구매」로 맨 위에 안 보임'); }
+    } catch { bad.push('고객을 고르지 못함'); }
+    // 세로 모니터 폭 — 위에서부터 고객 → 제품 → 장바구니 → 결제
+    await page.setViewport({ width: 1080, height: 1800 });
+    await sleep(500);
+    const order = await page.evaluate(() => {
+      const top = (el) => el ? el.getBoundingClientRect().top + window.scrollY : null;
+      const h3 = (t) => Array.from(document.querySelectorAll('main h3')).find((h) => (h.textContent || '').trim().startsWith(t));
+      return { cust: top(h3('고객 정보')), prod: top(document.getElementById('sale-products')), cart: top(document.getElementById('mm-cart')), pay: top(h3('결제 정보')) };
+    });
+    if (Object.values(order).some((v) => v == null)) bad.push('세로 폭에서 칸을 못 찾음');
+    else if (!(order.cust < order.prod && order.prod < order.cart && order.cart < order.pay)) bad.push(`세로 폭 순서가 다름 (고객 ${Math.round(order.cust)} · 제품 ${Math.round(order.prod)} · 장바구니 ${Math.round(order.cart)} · 결제 ${Math.round(order.pay)})`);
+    if (process.env.SCREEN_SHOT_DIR) await page.screenshot({ path: path.join(process.env.SCREEN_SHOT_DIR, 'sale_new_1080.png'), fullPage: true });
+    await page.setViewport({ width: 1440, height: 900 });
+    if (process.env.SCREEN_SHOT_DIR) { await sleep(400); await page.screenshot({ path: path.join(process.env.SCREEN_SHOT_DIR, 'sale_new_1440.png') }); }
+    await page.evaluate(() => { try { localStorage.removeItem('tms.draft.sale-new'); } catch { /* 무시 */ } });
+    await open(page, '/dashboard');
+    page.off('dialog', acceptLeave);
+    if (bad.length) fail('판매 입력 — 고객 먼저', bad.join(' / ')); else ok('판매 입력 — 고객 먼저: 첫 커서 · PC 왼쪽 · 고른 뒤 제품 검색 · 최근 구매 맨 위 · 세로 폭 순서');
   }
 
   // 거래처 매출 입력 — 거래처 검색에서 ↓ · Enter 로 고른다 (결과가 1건이어도)

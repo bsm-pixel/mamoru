@@ -32,7 +32,7 @@ import type { Product, Contract, ContractItem } from '@/lib/supabase/types';
 import { createClient } from '@/lib/supabase/client';
 import { SkeletonRows } from '@/components/ui/skeleton';
 import { matchSearch } from '@/lib/utils/search-match';
-import { useTopProductIds } from '@/hooks/use-top-products';
+import { useTopProductIds, useCustomerRecentProductIds } from '@/hooks/use-top-products';
 
 interface CartItem {
   product: Product | null; // null이면 임시 제품
@@ -452,6 +452,8 @@ function NewSaleContent() {
   useHotkeys([
     { combo: 'ctrl+s', allowInInput: true, handler: submitByKey },
     { combo: 'ctrl+enter', allowInInput: true, handler: submitByKey },
+    // 2026-11-27 커서가 고객 칸에서 시작하므로, 바코드를 먼저 찍을 때는 F7 로 제품 검색 칸에
+    { combo: 'f7', allowInInput: true, handler: () => { if (!isDialogOpen()) { productSearchRef.current?.focus(); productSearchRef.current?.select(); } } },
     { combo: 'f8', allowInInput: true, handler: () => { if (!isDialogOpen()) focusCustomer(); } },
     { combo: 'f9', allowInInput: true, handler: () => { if (!isDialogOpen()) cyclePayment(); } },
   ]);
@@ -470,11 +472,16 @@ function NewSaleContent() {
   }, []);
   const productSearchRef = useRef<HTMLInputElement>(null);
   const payGroupRef = useRef<HTMLDivElement>(null);
-  // 화면이 열리면 커서를 제품 검색 칸에(바코드 스캐너도 이 칸으로 들어온다). 터치 기기는 자판이 튀어나오므로 제외
+  // 2026-11-27 화면이 열리면 커서를 고객 칸에(고객 → 제품 → 결제 순서). 상담 · 계약서에서 넘어와 고객이 이미 정해진 판매는 제품 검색 칸에.
+  //   터치 기기는 자판이 튀어나오므로 제외
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) return;
-    productSearchRef.current?.focus();
+    if (contractId || fromConsultationId) { productSearchRef.current?.focus(); return; }
+    (document.getElementById('sale-customer-input') as HTMLInputElement | null)?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // 고객을 고르면 커서를 제품 검색 칸으로(고른 뒤엔 고객 검색 칸이 사라진다)
+  const focusProductSearch = () => requestAnimationFrame(() => productSearchRef.current?.focus());
 
   // 제품 검색/필터
   const [productSearch, setProductSearch] = useState('');
@@ -501,15 +508,19 @@ function NewSaleContent() {
   });
   // 2026-11-15 검색도 분류도 안 골랐을 때는 제품 전체(160여 줄) 대신 「자주 파는 제품 10개」만 먼저 보여 준다
   const { data: topIds = [] } = useTopProductIds();
+  // 2026-11-27 고객을 먼저 고르면 그 고객이 최근에 산 제품(최대 5개)을 목록 맨 위에 — 가위는 재구매가 많다
+  const { data: recentIds = [] } = useCustomerRecentProductIds(selectedCustomer?.id);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const browsing = !productSearch && productCategory === 'all' && !showAllProducts;
   const frequentProducts = (() => {
     const byId = new Map(matchedProducts.map((p) => [p.id, p]));
-    const top = topIds.map((id) => byId.get(id)).filter((p): p is Product => !!p);
+    const firstIds = [...recentIds, ...topIds.filter((id) => !recentIds.includes(id))];
+    const top = firstIds.map((id) => byId.get(id)).filter((p): p is Product => !!p);
     // 판매 기록이 아직 적으면 나머지를 목록 순서대로 채운다
-    const rest = matchedProducts.filter((p) => !topIds.includes(p.id));
+    const rest = matchedProducts.filter((p) => !firstIds.includes(p.id));
     return [...top, ...rest].slice(0, 10);
   })();
+  const recentShown = browsing ? frequentProducts.filter((p) => recentIds.includes(p.id)).length : 0;
   const filteredProducts = browsing ? frequentProducts : matchedProducts;
 
   const submitDisabled = (!selectedCustomer && !customerName.trim()) || (cart.length === 0 && !hasRepair) || createSale.isPending;
@@ -548,17 +559,94 @@ function NewSaleContent() {
           </div>
         )}
 
-        {/* 제목 + 검색 (그리드 밖, 좌열 너비만큼만) */}
-        <div className="xl:w-[33.33%]">
+        {/* 2026-11-27 3열 그리드 — 고객 → 제품 → 장바구니 → 결제 (IA: 마모루 판매는 「누구에게」가 먼저 정해진 상담형 판매)
+            PC(xl): [고객 · 결제] [제품] [장바구니]  /  좁은 화면(세로 모니터 · 태블릿 · 휴대폰): 고객 → 제품 → 장바구니 → 결제 순으로 쌓임
+            2행 = 1fr: 제품 · 장바구니(2행 걸침)가 길어도 고객과 결제 사이가 벌어지지 않게 */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 xl:grid-rows-[auto_1fr] gap-4 xl:items-start">
+          {/* 좌 위: 고객 정보 */}
+          <div className="space-y-3 xl:col-start-1 xl:row-start-1">
+            <Card>
+              <h3 className="text-sm font-semibold text-stone-900 mb-3">고객 정보</h3>
+              <CustomerAutocomplete
+                inputId="sale-customer-input"
+                inputTabIndex={1}
+                selectedCustomer={selectedCustomer}
+                onSelect={(c) => {
+                  setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type);
+                  // 고르면 검색 칸이 사라진다 → 커서를 다음 칸(제품 검색)으로 넘겨 Tab 흐름이 끊기지 않게
+                  focusProductSearch();
+                }}
+                onClear={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); recalcCartPrices(undefined); }}
+              />
+              {!selectedCustomer && (
+                <button type="button" onClick={() => setShowCreateCustomer(true)}
+                  className="w-full mt-2 py-2 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50 transition">
+                  + 신규 고객 등록
+                </button>
+              )}
+              {selectedCustomer && (
+                <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
+                  {selectedCustomer.address_road && (
+                    <div>
+                      <span className="text-neutral-400">주소: </span>
+                      <span>{selectedCustomer.postcode || ''} {selectedCustomer.address_road || ''} {selectedCustomer.address_detail || ''}</span>
+                    </div>
+                  )}
+                  {/* 태그 — 편집 가능 */}
+                  {availableTags.length > 0 && (
+                    <div>
+                      <span className="text-neutral-400 block mb-1">태그</span>
+                      <TagSelector
+                        availableTags={availableTags}
+                        selectedTags={selectedCustomer.tags || []}
+                        onChange={async (tags) => {
+                          setSelectedCustomer({ ...selectedCustomer, tags });
+                          // 즉시 DB 반영
+                          try {
+                            await fetch(`/api/customers/${selectedCustomer.id}`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ tags }),
+                            });
+                          } catch { /* 조용히 실패 */ }
+                        }}
+                      />
+                    </div>
+                  )}
+                  {/* 메모 — 고정 높이 영역 (메모 없어도 공간 유지) */}
+                  <div className="min-h-[48px] p-2 rounded-lg bg-neutral-50 border border-neutral-100">
+                    {selectedCustomer.memo ? (
+                      <p className="text-xs text-neutral-600">{selectedCustomer.memo}</p>
+                    ) : (
+                      <p className="text-xs text-neutral-300 italic">고객 메모 없음</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {customerType === 'dealer' && <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>}
+              {customerType === 'academy' && <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>}
+            </Card>
+
+            <CustomerCreateModal
+              open={showCreateCustomer}
+              onClose={() => setShowCreateCustomer(false)}
+              onCreated={(c) => { setSelectedCustomer({ id: c.id, name: c.name, phone: c.phone, customer_type: c.customer_type } as SelectedCustomer); setCustomerName(c.name); setCustomerPhone(c.phone); recalcCartPrices(c.customer_type); focusProductSearch(); }}
+            />
+          </div>
+
+          {/* 가운데: 제품 선택(검색) + 제품 목록 + 직접 입력 + 복원수리 입력 (한 장바구니에 함께) */}
+          <div className="space-y-3 min-w-0 xl:col-start-2 xl:row-start-1 xl:row-span-2" id="sale-products">
+          <div>
             <h3 className="text-sm font-semibold text-neutral-700 mb-2">제품 선택</h3>
             {/* 2026-11-15 바코드 칸과 제품 검색 칸을 하나로 — 정확히 맞는 코드(SKU·바코드·시리얼)면 바로 담고, 아니면 이름 검색 */}
             {/* 검색 + 카테고리 필터 — 모바일은 카테고리를 검색 아래 줄로 (전엔 한 줄에 몰려 검색칸이 80px 로 줄었다) */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            {/* PC 가운데 칸은 폭이 좁아 분류 버튼을 검색 아래 줄로 */}
+            <div className="flex flex-col sm:flex-row sm:items-center xl:flex-col xl:items-stretch gap-2">
               <div className="relative w-full sm:flex-1 min-w-0">
               <ScanLine size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
               <input
                 ref={productSearchRef}
-                tabIndex={1}
+                tabIndex={2}
                 type="text"
                 value={productSearch}
                 onChange={(e) => { setProductSearch(e.target.value); setActiveIdx(-1); }}
@@ -601,11 +689,6 @@ function NewSaleContent() {
               </div>
             </div>
           </div>
-
-        {/* 3열 그리드 — 검색바 아래 라인부터 동일 높이 시작 */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:items-start">
-          {/* 좌: 제품 목록 + 복원수리 입력 (한 장바구니에 함께) */}
-          <div className="space-y-3">
             <>
             {/* 제품 목록 테이블 */}
             {productsLoading ? (
@@ -614,7 +697,9 @@ function NewSaleContent() {
               <Card padding={false}>
                 <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-100 text-xs">
                   <span className="font-semibold text-neutral-600">
-                    {browsing ? '자주 파는 제품 10개' : `제품 ${filteredProducts.length}개`}
+                    {browsing
+                      ? (recentShown > 0 ? `이 고객이 산 제품 ${recentShown}개 · 자주 파는 제품` : '자주 파는 제품 10개')
+                      : `제품 ${filteredProducts.length}개`}
                   </span>
                   {!productSearch && productCategory === 'all' && (
                     <button type="button" tabIndex={-1} onClick={() => { setShowAllProducts((v) => !v); setActiveIdx(-1); }}
@@ -652,6 +737,7 @@ function NewSaleContent() {
                           >
                             <td className="px-3 py-2.5">
                               <span className="font-medium text-stone-900">{getProductDisplayName(p, customerType, priceGroups)}</span>
+                              {recentIds.includes(p.id) && <span className="ml-2 text-[11px] px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 font-semibold align-middle" data-recent-buy>최근 구매</span>}
                               {inCart && <span className="ml-2 text-xs font-bold text-neutral-900">×{inCart.quantity}</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right">
@@ -795,77 +881,8 @@ function NewSaleContent() {
             </Card>
           </div>
 
-          {/* 중: 고객 + 결제 */}
-          <div className="space-y-3">
-            {/* 고객 정보 */}
-            <Card>
-              <h3 className="text-sm font-semibold text-stone-900 mb-3">고객 정보</h3>
-              <CustomerAutocomplete
-                inputId="sale-customer-input"
-                inputTabIndex={2}
-                selectedCustomer={selectedCustomer}
-                onSelect={(c) => {
-                  setSelectedCustomer(c); setCustomerName(c.name); setCustomerPhone(c.phone || ''); recalcCartPrices(c.customer_type);
-                  // 고르면 검색 칸이 사라진다 → 커서를 다음 칸(결제 수단)으로 넘겨 Tab 흐름이 끊기지 않게
-                  requestAnimationFrame(() => payGroupRef.current?.querySelector<HTMLButtonElement>('button[aria-checked="true"]')?.focus());
-                }}
-                onClear={() => { setSelectedCustomer(null); setCustomerName(''); setCustomerPhone(''); recalcCartPrices(undefined); }}
-              />
-              {!selectedCustomer && (
-                <button type="button" onClick={() => setShowCreateCustomer(true)}
-                  className="w-full mt-2 py-2 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-500 hover:bg-neutral-50 transition">
-                  + 신규 고객 등록
-                </button>
-              )}
-              {selectedCustomer && (
-                <div className="mt-3 pt-3 border-t border-neutral-100 space-y-1.5 text-xs text-neutral-500">
-                  {selectedCustomer.address_road && (
-                    <div>
-                      <span className="text-neutral-400">주소: </span>
-                      <span>{selectedCustomer.postcode || ''} {selectedCustomer.address_road || ''} {selectedCustomer.address_detail || ''}</span>
-                    </div>
-                  )}
-                  {/* 태그 — 편집 가능 */}
-                  {availableTags.length > 0 && (
-                    <div>
-                      <span className="text-neutral-400 block mb-1">태그</span>
-                      <TagSelector
-                        availableTags={availableTags}
-                        selectedTags={selectedCustomer.tags || []}
-                        onChange={async (tags) => {
-                          setSelectedCustomer({ ...selectedCustomer, tags });
-                          // 즉시 DB 반영
-                          try {
-                            await fetch(`/api/customers/${selectedCustomer.id}`, {
-                              method: 'PATCH',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ tags }),
-                            });
-                          } catch { /* 조용히 실패 */ }
-                        }}
-                      />
-                    </div>
-                  )}
-                  {/* 메모 — 고정 높이 영역 (메모 없어도 공간 유지) */}
-                  <div className="min-h-[48px] p-2 rounded-lg bg-neutral-50 border border-neutral-100">
-                    {selectedCustomer.memo ? (
-                      <p className="text-xs text-neutral-600">{selectedCustomer.memo}</p>
-                    ) : (
-                      <p className="text-xs text-neutral-300 italic">고객 메모 없음</p>
-                    )}
-                  </div>
-                </div>
-              )}
-              {customerType === 'dealer' && <p className="text-xs text-purple-600 mt-1">딜러가 적용 중</p>}
-              {customerType === 'academy' && <p className="text-xs text-emerald-600 mt-1">아카데미가 적용 중</p>}
-            </Card>
-
-            <CustomerCreateModal
-              open={showCreateCustomer}
-              onClose={() => setShowCreateCustomer(false)}
-              onCreated={(c) => { setSelectedCustomer({ id: c.id, name: c.name, phone: c.phone, customer_type: c.customer_type } as SelectedCustomer); setCustomerName(c.name); setCustomerPhone(c.phone); recalcCartPrices(c.customer_type); }}
-            />
-
+          {/* 좌 아래: 결제 정보 — 좁은 화면에서는 장바구니 다음(맨 끝)으로 */}
+          <div className="space-y-3 order-last xl:order-none xl:col-start-1 xl:row-start-2">
             {/* 결제 정보 */}
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3">결제 정보</h3>
@@ -955,7 +972,7 @@ function NewSaleContent() {
 
           {/* 우: 장바구니 + 판매등록 */}
           {/* 2026-11-15 PC: 제품 목록을 내려도 장바구니 · [판매 등록]이 화면에 남는다 */}
-          <div className="space-y-3 xl:sticky xl:top-[72px] xl:self-start xl:max-h-[calc(100vh-88px)] xl:overflow-y-auto" id="mm-cart">
+          <div className="space-y-3 xl:col-start-3 xl:row-start-1 xl:row-span-2 xl:sticky xl:top-[72px] xl:self-start xl:max-h-[calc(100vh-88px)] xl:overflow-y-auto" id="mm-cart">
             <Card>
               <h3 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
                 <ShoppingBag size={16} />
