@@ -20,7 +20,8 @@ when_to_use: >-
 - `chrome --headless --window-size=390` **만으로 모바일 열수/비율 판정 금지.** vw·`auto-fit`·미디어쿼리가 실제 폰과 다르게 나옴(과거 2번 헛짚음).
 - 신뢰할 실측: **puppeteer `page.setViewport({width, height, isMobile:true})` + `getComputedStyle`** 로 실제 계산값 확인.
 - 헤드리스 스크린샷은 "대략 배치" 확인용. **열 개수·비율은 실측 수치로** 판단.
-- 렌더 레시피(대략 확인): `chrome --headless=new --no-sandbox --user-data-dir=<tmp> --window-size=W,H --virtual-time-budget=3000 --screenshot=out.png "file:///..."` → 캡처 Read.
+- 렌더 레시피(대략 확인): `chrome --headless=new --no-sandbox --user-data-dir=<tmp> --window-size=W,H --virtual-time-budget=3000 --screenshot=out.png "http://127.0.0.1:8765/..."` → 캡처 Read.
+- 🚨 **고객 페이지는 `file:///`로 열지 말고 로컬 서버로 띄워 시험한다** (2026-11-27 승인): 저장소 폴더에서 `py -m http.server 8765 --bind 127.0.0.1`(백그라운드) → `http://127.0.0.1:8765/projects/...`, 끝나면 그 프로세스 종료. (`python`은 무동작 스텁이라 `py` · npx로 내려받아 띄우는 서버는 자동 모드에서 막힘) `file:///`로 열면 페이지 안의 `fetch`로 불러오는 그림·자료(예: 수리내역서 상처 위치 그림 `img/diagram/*.svg`)가 막혀 **실제로는 없는 문제를 있다고 오판**한다(실제 사고: 2026-11-27 「저장 이미지에 상처 위치 그림 빠짐」 오보). 배포 후엔 실제 주소에서 한 번 더 본다.
 
 ## 2. 모바일 레이아웃 체크
 - **좌우 여백 20px** (히어로 아닌 콘텐츠·배너). 가로영역 100% 확장 기본.
