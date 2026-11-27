@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { generateWorkSummary } from '@/lib/repair/inspection-text';
 import { DIAGRAM_FILE, normalizeChecks, woundLayerColors, woundLayers, woundLines, woundViews } from '@/lib/repair/wound-catalog';
 import { errMsg } from '@/lib/utils/err';
+import { kstDateDots } from '@/lib/utils/kst';
 
 /** CORS 헤더 — GitHub Pages에서 호출 허용 */
 const CORS_HEADERS = {
@@ -97,8 +98,11 @@ export async function GET(req: NextRequest) {
       service_cost: repair.service_cost || 0,
       shipping_fee: repair.shipping_fee || 0,
       total_amount: repair.total_amount || 0,
-      in_date: repair.received_at ? new Date(repair.received_at).toLocaleDateString('ko-KR') : '',
-      out_date: repair.shipped_at ? new Date(repair.shipped_at).toLocaleDateString('ko-KR') : '',
+      // 2026-11-27 날짜는 한국 기준(서버 UTC로 오전 9시 전 건이 하루 밀리던 것)
+      in_date: kstDateDots(repair.received_at),
+      // 택배로 보낸 건 = 출고일(shipped_at). 송장 없이 손으로 건넨 건(직접 수령 · 직접방문) = 전달일(delivered_at)
+      out_date: kstDateDots(repair.shipped_at || repair.delivered_at),
+      out_label: !repair.shipped_at && repair.delivered_at ? '전달일' : '출고일',
       worker: scissors[0]?.worker || '백성민',
       comment: repair.admin_note || '',
       work_summary: workSummary,

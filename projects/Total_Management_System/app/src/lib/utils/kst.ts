@@ -17,6 +17,18 @@ export function kstDate(input: Date | string | number): string {
   return new Date(t + KST_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+/**
+ * 고객 화면용 한국 날짜 'YYYY. M. D.' (toLocaleDateString('ko-KR') 과 같은 모양) — 2026-11-27
+ * 서버(UTC)에서 toLocaleDateString 을 그냥 부르면 오전 9시 전 시각이 하루 전 날짜로 나온다. 값이 없으면 ''.
+ */
+export function kstDateDots(input: Date | string | number | null | undefined): string {
+  if (input == null || input === '') return '';
+  const s = kstDate(input);
+  if (!s) return '';
+  const [y, m, d] = s.split('-').map(Number);
+  return `${y}. ${m}. ${d}.`;
+}
+
 /** 오늘(한국) 'YYYY-MM-DD' */
 export function todayKST(): string {
   return kstDate(Date.now());

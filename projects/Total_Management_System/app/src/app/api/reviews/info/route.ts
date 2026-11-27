@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { resolvePurchaseUid } from '@/lib/reviews/resolve-purchase-uid';
 import { consultTypeLabel, saleChannelToConsultSubtype } from '@/lib/reviews/consult-subtype';
 import { errMsg } from '@/lib/utils/err';
+import { kstDateDots } from '@/lib/utils/kst';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -94,7 +95,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
           name: maskName(order.orderer_name),
           typeLabel: '제품구매',
-          date: order.ordered_at ? new Date(order.ordered_at).toLocaleDateString('ko-KR') : '',
+          date: kstDateDots(order.ordered_at), // 2026-11-27 한국 날짜 (서버 UTC로 하루 밀리던 것)
           items: allItems.map((it: { imweb_product_no: string; product_name: string; option_text: string | null; quantity: number }) => ({
             imweb_product_no: it.imweb_product_no,
             product_name: it.product_name,
